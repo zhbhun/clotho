@@ -141,6 +141,33 @@ describe('fileReferenceFromPath', () => {
 })
 
 describe('PromptMarkdownEditor', () => {
+  it('does not echo the mounted document back as a user edit', async () => {
+    const onChange = vi.fn()
+
+    const { rerender } = render(
+      <TooltipProvider>
+        <PromptMarkdownEditor value="" onChange={onChange} onSubmit={() => {}} />
+      </TooltipProvider>,
+    )
+
+    // setEditable on mount and on disabled transitions must not surface the
+    // document as an edit: the echo would clobber the persisted draft that
+    // hydration is about to restore.
+    rerender(
+      <TooltipProvider>
+        <PromptMarkdownEditor value="" disabled onChange={onChange} onSubmit={() => {}} />
+      </TooltipProvider>,
+    )
+    rerender(
+      <TooltipProvider>
+        <PromptMarkdownEditor value="" onChange={onChange} onSubmit={() => {}} />
+      </TooltipProvider>,
+    )
+
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
   it('does not submit on the Enter that confirms an IME composition', async () => {
     const onSubmit = vi.fn()
 

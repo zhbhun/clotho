@@ -214,7 +214,9 @@ export function PromptMarkdownEditor({
   }, [onChange, onFilesInserted, onPasteFiles, onSubmit])
 
   useEffect(() => {
-    editor?.setEditable(!disabled)
+    // setEditable re-emits "update" unless suppressed, which would echo the
+    // document back as an empty user edit before hydration restores the draft.
+    editor?.setEditable(!disabled, false)
   }, [disabled, editor])
 
   useEffect(() => {
