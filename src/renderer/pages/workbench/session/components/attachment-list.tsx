@@ -11,19 +11,10 @@ import {
   AttachmentMedia,
   AttachmentTitle,
 } from '@/shadcn/attachment'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip'
 import { cn } from '@/shadcn/utils'
 import type { ClaudeAttachment } from '@/shared/rpc'
 
 import { TransientScrollArea } from '../../../../components/transient-scroll-area'
-
-// Keeps tooltip paths readable; the head of a path carries less meaning than its tail.
-const TOOLTIP_PATH_MAX_LENGTH = 48
-
-function compactPath(path: string) {
-  if (path.length <= TOOLTIP_PATH_MAX_LENGTH) return path
-  return `…${path.slice(-(TOOLTIP_PATH_MAX_LENGTH - 1))}`
-}
 
 function useAttachmentImage(attachment: ClaudeAttachment) {
   const content = attachment.content
@@ -50,65 +41,58 @@ function AttachmentCard({
   const [failedSource, setFailedSource] = useState<string>()
   const { isImage, source } = useAttachmentImage(attachment)
   const extension = attachment.name.includes('.') ? attachment.name.split('.').at(-1) : undefined
-  const path = attachment.path ?? attachment.content?.source.path ?? attachment.name
 
   return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <Attachment
-            aria-label={attachment.name}
-            className={cn(
-              'h-16 flex-nowrap rounded-xl',
-              isImage ? 'w-16 min-w-16 overflow-hidden p-0!' : 'min-w-32 max-w-64',
-            )}
-            tabIndex={onRemove && !disabled ? 0 : undefined}
+    <Attachment
+      aria-label={attachment.name}
+      className={cn(
+        'h-16 flex-nowrap rounded-xl',
+        isImage ? 'w-16 min-w-16 overflow-hidden p-0!' : 'min-w-32 max-w-64',
+      )}
+      tabIndex={onRemove && !disabled ? 0 : undefined}
+      title={attachment.name}
+    >
+      <AttachmentMedia
+        className={isImage ? 'size-full rounded-none' : undefined}
+        variant={isImage ? 'image' : 'icon'}
+      >
+        {source && source !== failedSource ? (
+          <img
+            alt={attachment.name}
+            className="size-full object-cover"
+            src={source}
+            onError={() => setFailedSource(source)}
+          />
+        ) : isImage ? (
+          <ImageIcon />
+        ) : (
+          <FileText />
+        )}
+      </AttachmentMedia>
+      {!isImage ? (
+        <AttachmentContent className={onRemove ? 'pr-5' : undefined}>
+          <AttachmentTitle>{attachment.name}</AttachmentTitle>
+          <AttachmentDescription>{extension?.toUpperCase() ?? 'FILE'}</AttachmentDescription>
+        </AttachmentContent>
+      ) : null}
+      {onRemove ? (
+        <AttachmentActions className="absolute top-1 right-1 opacity-0 transition-opacity group-focus-within/attachment:opacity-100 group-hover/attachment:opacity-100">
+          <AttachmentAction
+            aria-label={t('workbench.prompt.removeFile', { name: attachment.name })}
+            className="rounded-full"
+            disabled={disabled}
+            variant="secondary"
+            onClick={onRemove}
+            onMouseDown={(event) => {
+              // Keep the composer focused while removing an attachment.
+              event.preventDefault()
+            }}
           >
-            <AttachmentMedia
-              className={isImage ? 'size-full rounded-none' : undefined}
-              variant={isImage ? 'image' : 'icon'}
-            >
-              {source && source !== failedSource ? (
-                <img
-                  alt={attachment.name}
-                  className="size-full object-cover"
-                  src={source}
-                  onError={() => setFailedSource(source)}
-                />
-              ) : isImage ? (
-                <ImageIcon />
-              ) : (
-                <FileText />
-              )}
-            </AttachmentMedia>
-            {!isImage ? (
-              <AttachmentContent className={onRemove ? 'pr-5' : undefined}>
-                <AttachmentTitle>{attachment.name}</AttachmentTitle>
-                <AttachmentDescription>{extension?.toUpperCase() ?? 'FILE'}</AttachmentDescription>
-              </AttachmentContent>
-            ) : null}
-            {onRemove ? (
-              <AttachmentActions className="absolute top-1 right-1 opacity-0 transition-opacity group-focus-within/attachment:opacity-100 group-hover/attachment:opacity-100">
-                <AttachmentAction
-                  aria-label={t('workbench.prompt.removeFile', { name: attachment.name })}
-                  className="rounded-full"
-                  disabled={disabled}
-                  variant="secondary"
-                  onClick={onRemove}
-                  onMouseDown={(event) => {
-                    // Keep the composer focused while removing an attachment.
-                    event.preventDefault()
-                  }}
-                >
-                  <X />
-                </AttachmentAction>
-              </AttachmentActions>
-            ) : null}
-          </Attachment>
-        }
-      />
-      <TooltipContent>{compactPath(path)}</TooltipContent>
-    </Tooltip>
+            <X />
+          </AttachmentAction>
+        </AttachmentActions>
+      ) : null}
+    </Attachment>
   )
 }
 
