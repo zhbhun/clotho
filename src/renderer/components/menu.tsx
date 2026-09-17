@@ -278,8 +278,10 @@ function MenuGroup({
   className,
   ...props
 }: React.ComponentProps<typeof CommandGroup>) {
+  // Collapse the group's own vertical padding; the heading's padding alone
+  // carries the spacing so gaps stay even above and below group headings.
   return (
-    <CommandGroup className={cn('px-0', heading ? 'first:-mt-1' : undefined, className)} {...props}>
+    <CommandGroup className={cn('px-0 py-0', className)} {...props}>
       {heading ? <MenuLabel>{heading}</MenuLabel> : null}
       {children}
     </CommandGroup>
