@@ -4,8 +4,6 @@ import type { ComponentProps, ComponentType } from 'react'
 import { afterEach, expect, it, vi } from 'vitest'
 
 import { ConversationView } from '.'
-import { ModelConfigurationProvider } from '../../../../stores/model-configuration-context'
-import { ProviderUsageProvider } from '../../../../stores/provider-usage-context'
 import { initializeAppI18n } from '../../../../i18n/runtime'
 import type { ClaudeSessionEditAnchor } from '../../../../services/claude/claude'
 import { commandCatalog } from '../../../../services/shortcuts/catalog'
@@ -13,6 +11,8 @@ import {
   ShortcutRuntimeProvider,
   createShortcutRuntime,
 } from '../../../../services/shortcuts/runtime'
+import { ModelConfigurationProvider } from '../../../../stores/model-configuration-context'
+import { ProviderUsageProvider } from '../../../../stores/provider-usage-context'
 import type { MessageEditConfig } from './historical-message-editor'
 
 const timelineRenderState = vi.hoisted(() => ({ shouldThrow: false }))
@@ -253,33 +253,33 @@ it('requires an explicit choice before rewinding files for a historical edit', a
   render(
     <ShortcutRuntimeProvider runtime={shortcutRuntime}>
       <ModelConfigurationProvider>
-      <ProviderUsageProvider>
-      <EditableConversation
-        expandedTurns={{}}
-        isStreaming={false}
-        messageEdit={messageEdit}
-        messages={[
-          {
-            id: 'user-1',
-            uuid: 'user-message-uuid',
-            role: 'user',
-            content: 'Original prompt',
-          },
-          {
-            id: 'assistant-1',
-            uuid: 'assistant-message-uuid',
-            role: 'assistant',
-            content: 'Old reply',
-            blocks: [{ type: 'text', text: 'Old reply' }],
-          },
-        ]}
-        pendingRequests={{}}
-        sentTurnIds={new Set()}
-        streamingElapsed={0}
-        onRespond={vi.fn()}
-        onToggle={vi.fn()}
-      />
-      </ProviderUsageProvider>
+        <ProviderUsageProvider>
+          <EditableConversation
+            expandedTurns={{}}
+            isStreaming={false}
+            messageEdit={messageEdit}
+            messages={[
+              {
+                id: 'user-1',
+                uuid: 'user-message-uuid',
+                role: 'user',
+                content: 'Original prompt',
+              },
+              {
+                id: 'assistant-1',
+                uuid: 'assistant-message-uuid',
+                role: 'assistant',
+                content: 'Old reply',
+                blocks: [{ type: 'text', text: 'Old reply' }],
+              },
+            ]}
+            pendingRequests={{}}
+            sentTurnIds={new Set()}
+            streamingElapsed={0}
+            onRespond={vi.fn()}
+            onToggle={vi.fn()}
+          />
+        </ProviderUsageProvider>
       </ModelConfigurationProvider>
     </ShortcutRuntimeProvider>,
   )

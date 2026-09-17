@@ -7,7 +7,7 @@ import { Card, CardContent, CardFooter } from '@/shadcn/card'
 import { Spinner } from '@/shadcn/spinner'
 import { toast } from '@/shadcn/toast'
 import { cn } from '@/shadcn/utils'
-import type { ClaudeAttachment } from '@/shared/rpc'
+import type { ClaudeAttachment, ClaudeAttachmentReadResult } from '@/shared/rpc'
 
 import {
   Menu,
@@ -32,7 +32,13 @@ import type {
 import { useModelConfigurationStore } from '../../../../stores/model-configuration-context'
 import { useProviderUsageStore } from '../../../../stores/provider-usage-context'
 import { AttachmentList } from '../components/attachment-list'
-import { type AttachmentUpdate, appendFileAttachments } from '../services/attachments'
+import {
+  type AttachmentUpdate,
+  appendLoadedAttachments,
+  loadedToAttachment,
+  readPastedFiles,
+  readPickedFiles,
+} from '../services/attachments'
 import { AddMenu } from './add-menu'
 import {
   type ContextUsage,
@@ -167,11 +173,50 @@ export function PromptComposer({
   const usageByProviderId = useProviderUsageStore((state) => state.usage)
   const refreshProviderUsage = useProviderUsageStore((state) => state.refreshAll)
 
+  function notifyRejected(rejected: ClaudeAttachmentReadResult['rejected']) {
+    if (!rejected.length) return
+    toast.add({
+      id: 'workbench-attachment-unsupported',
+      title: t('workbench.error.attachmentUnsupported'),
+      description: t('workbench.error.attachmentUnsupportedDetail', {
+        names: rejected.map((item) => item.name).join(', '),
+      }),
+      type: 'error',
+    })
+  }
+
+  function applyLoaded(result: ClaudeAttachmentReadResult) {
+    notifyRejected(result.rejected)
+    if (result.attachments.length) {
+      setAttachments((current) =>
+        appendLoadedAttachments(current, result.attachments.map(loadedToAttachment)),
+      )
+    }
+  }
+
+  function importFailed() {
+    toast.add({
+      id: 'workbench-attachment-import-failed',
+      title: t('workbench.error.attachmentImportFailed'),
+      type: 'error',
+    })
+  }
+
   async function handleAddFiles() {
     try {
       const selectedFiles = await onSelectFiles(projectPath)
       if (!selectedFiles.length) return
-      setAttachments((current) => appendFileAttachments(current, selectedFiles))
+      const existing = new Set(
+        attachments.map((attachment) => attachment.content?.source.path ?? null),
+      )
+      const files = selectedFiles
+        .filter((sourcePath) => !existing.has(sourcePath))
+        .map((sourcePath) => ({
+          name: sourcePath.split(/[\\/]/).filter(Boolean).at(-1) ?? sourcePath,
+          sourcePath,
+        }))
+      if (!files.length) return
+      applyLoaded(await readPickedFiles(files))
     } catch {
       toast.add({
         id: 'workbench-select-files-error',
@@ -179,6 +224,10 @@ export function PromptComposer({
         type: 'error',
       })
     }
+  }
+
+  function handlePasteFiles(files: File[]) {
+    readPastedFiles(files).then(applyLoaded, importFailed)
   }
 
   function handleSubmit() {
@@ -253,9 +302,9 @@ export function PromptComposer({
           <AttachmentList
             attachments={attachments}
             disabled={!canSelectFiles}
-            onRemove={(index) =>
+            onRemove={(index) => {
               setAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index))
-            }
+            }}
           />
         ) : null}
         <PromptMarkdownEditor
@@ -263,6 +312,7 @@ export function PromptComposer({
           availableCommands={availableCommands}
           disabled={isMockProject || !canUsePrompt || isStreaming || isSubmitting}
           interactionScope={interactionScope}
+          onPasteFiles={handlePasteFiles}
           placeholder={
             isMockProject
               ? t('workbench.prompt.mockReadonly')

@@ -1,19 +1,66 @@
-import type { ClaudeAttachment, ClaudeContentPart } from '@/shared/rpc'
+import type {
+  ClaudeAttachment,
+  ClaudeAttachmentReadResult,
+  ClaudeContentPart,
+  ClaudeLoadedAttachment,
+} from '@/shared/rpc'
+
+import { claude } from '../../../../services/claude/claude'
 
 export type AttachmentUpdate =
   ClaudeAttachment[] | ((current: ClaudeAttachment[]) => ClaudeAttachment[])
 
-export function appendFileAttachments(current: ClaudeAttachment[], paths: string[]) {
-  const existing = new Set(current.map((attachment) => attachment.path))
-  const added = paths.filter((path) => {
-    if (existing.has(path)) return false
-    existing.add(path)
-    return true
+/** Map a validated load to the content variant the composer persists in the session file. */
+export function loadedToAttachment(loaded: ClaudeLoadedAttachment): ClaudeAttachment {
+  return { name: loaded.name, content: loaded.content }
+}
+
+function attachmentSourcePath(attachment: ClaudeAttachment) {
+  return attachment.content?.source.path ?? null
+}
+
+function fileToBase64(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.addEventListener('error', () => reject(reader.error))
+    reader.addEventListener('load', () => {
+      const result = typeof reader.result === 'string' ? reader.result : ''
+      const index = result.indexOf(',')
+      resolve(index === -1 ? '' : result.slice(index + 1))
+    })
+    reader.readAsDataURL(file)
   })
-  return [
-    ...current,
-    ...added.map((path) => ({ path, name: path.split(/[\\/]/).filter(Boolean).at(-1) ?? path })),
-  ]
+}
+
+/** Read picked files into validated content blocks; `sourcePath` records the origin. */
+export function readPickedFiles(
+  files: { name: string; sourcePath?: string }[],
+): Promise<ClaudeAttachmentReadResult> {
+  return claude.loadAttachments({ files })
+}
+
+/** Read pasted clipboard bytes into validated content blocks. */
+export async function readPastedFiles(files: File[]): Promise<ClaudeAttachmentReadResult> {
+  const payloads = await Promise.all(
+    files.map(async (file) => ({
+      name: file.name || 'clipboard',
+      data: await fileToBase64(file),
+    })),
+  )
+  return claude.loadAttachments({ files: payloads })
+}
+
+/** Append loaded attachments, skipping picked files already attached (matched by source path). */
+export function appendLoadedAttachments(current: ClaudeAttachment[], added: ClaudeAttachment[]) {
+  const paths = new Set(current.map(attachmentSourcePath))
+  const next = [...current]
+  for (const attachment of added) {
+    const key = attachmentSourcePath(attachment)
+    if (key && paths.has(key)) continue
+    if (key) paths.add(key)
+    next.push(attachment)
+  }
+  return next
 }
 
 export function attachmentFromPart(part: ClaudeContentPart): ClaudeAttachment | undefined {

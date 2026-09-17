@@ -7,7 +7,12 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import type { ClaudeAttachment } from '@/shared/rpc'
 
-import { getAttachmentPreview, prepareAttachments, snapshotAttachments } from './attachments'
+import {
+  getAttachmentPreview,
+  loadAttachmentFiles,
+  prepareAttachments,
+  snapshotAttachments,
+} from './attachments'
 
 describe('attachment content preparation', () => {
   let directory: string
@@ -58,7 +63,7 @@ describe('attachment content preparation', () => {
     const attachment = await largeFixture(
       'huge.png',
       Buffer.from('iVBORw0KGgo=', 'base64'),
-      5 * 1024 * 1024 + 1,
+      20 * 1024 * 1024 + 1,
     )
 
     expect(await getAttachmentPreview({ path: attachment.path! })).toEqual({
@@ -182,7 +187,11 @@ describe('attachment content preparation', () => {
   })
 
   it.each([
-    { name: 'large.png', header: Buffer.from('iVBORw0KGgo=', 'base64'), size: 5 * 1024 * 1024 + 1 },
+    {
+      name: 'large.png',
+      header: Buffer.from('iVBORw0KGgo=', 'base64'),
+      size: 20 * 1024 * 1024 + 1,
+    },
     { name: 'large.pdf', header: '%PDF-1.4', size: 20 * 1024 * 1024 + 1 },
     { name: 'large.txt', header: 'text', size: 1024 * 1024 + 1 },
   ])(
@@ -265,5 +274,131 @@ describe('attachment content preparation', () => {
         signal,
       ),
     ).rejects.toThrow(/large.txt.*limit/i)
+  })
+
+  it('strips the composer-only source path before content reaches the SDK', async () => {
+    await expect(
+      prepareAttachments(
+        [
+          {
+            name: 'saved.png',
+            content: {
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: 'image/png',
+                data: 'iVBORw0KGgo=',
+                path: '/tmp/origin.png',
+              },
+            },
+          },
+          {
+            name: 'notes.txt',
+            content: {
+              type: 'document',
+              source: { type: 'text', media_type: 'text/plain', data: 'hello', path: '/tmp/notes' },
+            },
+          },
+        ],
+        signal,
+      ),
+    ).resolves.toEqual([
+      { type: 'image', source: { type: 'base64', media_type: 'image/png', data: 'iVBORw0KGgo=' } },
+      { type: 'document', source: { type: 'text', media_type: 'text/plain', data: 'hello' } },
+    ])
+  })
+})
+
+describe('composer attachment loading', () => {
+  let directory: string
+
+  beforeEach(async () => {
+    directory = await mkdtemp(path.join(tmpdir(), 'clotho-attachments-'))
+  })
+
+  afterEach(async () => {
+    await rm(directory, { recursive: true, force: true })
+  })
+
+  it('loads a picked file into a content block carrying its source path', async () => {
+    const filePath = path.join(directory, 'notes.txt')
+    await writeFile(filePath, 'Picked notes')
+
+    const result = await loadAttachmentFiles({
+      files: [{ name: 'notes.txt', sourcePath: filePath }],
+    })
+
+    expect(result.rejected).toEqual([])
+    expect(result.attachments).toEqual([
+      {
+        name: 'notes.txt',
+        path: filePath,
+        content: {
+          type: 'document',
+          title: 'notes.txt',
+          source: { type: 'text', media_type: 'text/plain', data: 'Picked notes', path: filePath },
+        },
+      },
+    ])
+  })
+
+  it('loads pasted bytes without a source path', async () => {
+    const result = await loadAttachmentFiles({
+      files: [{ name: 'pasted.png', data: 'iVBORw0KGgo=' }],
+    })
+
+    expect(result.rejected).toEqual([])
+    expect(result.attachments).toEqual([
+      {
+        name: 'pasted.png',
+        path: null,
+        content: {
+          type: 'image',
+          source: { type: 'base64', media_type: 'image/png', data: 'iVBORw0KGgo=', path: null },
+        },
+      },
+    ])
+  })
+
+  it('rejects unsupported, empty, and unreadable files by reason instead of throwing', async () => {
+    const zipPath = path.join(directory, 'archive.zip')
+    await writeFile(zipPath, Buffer.from([0x50, 0x4b, 3, 4, 0, 0]))
+    const emptyPath = path.join(directory, 'empty.txt')
+    await writeFile(emptyPath, '')
+
+    const result = await loadAttachmentFiles({
+      files: [
+        { name: 'archive.zip', sourcePath: zipPath },
+        { name: 'empty.txt', sourcePath: emptyPath },
+        { name: 'missing.txt', sourcePath: path.join(directory, 'missing.txt') },
+        { name: 'orphan.txt' },
+      ],
+    })
+
+    expect(result.attachments).toEqual([])
+    expect(result.rejected).toEqual([
+      { name: 'archive.zip', reason: 'unsupported' },
+      { name: 'empty.txt', reason: 'empty' },
+      { name: 'missing.txt', reason: 'unreadable' },
+      { name: 'orphan.txt', reason: 'unreadable' },
+    ])
+  })
+
+  it('rejects oversized images by reason instead of throwing', async () => {
+    const imagePath = path.join(directory, 'large.png')
+    await writeFile(imagePath, Buffer.from('iVBORw0KGgo=', 'base64'))
+    const file = await open(imagePath, 'r+')
+    try {
+      await file.truncate(20 * 1024 * 1024 + 1)
+    } finally {
+      await file.close()
+    }
+
+    const result = await loadAttachmentFiles({
+      files: [{ name: 'large.png', sourcePath: imagePath }],
+    })
+
+    expect(result.attachments).toEqual([])
+    expect(result.rejected).toEqual([{ name: 'large.png', reason: 'too-large' }])
   })
 })

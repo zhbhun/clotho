@@ -36,6 +36,8 @@ type PromptMarkdownEditorProps = {
   filesToInsert?: PromptFileReference[]
   interactionScope?: string
   onChange: (markdown: string) => void
+  /** Clipboard files (images, PDFs, copied files) pasted into the editor. */
+  onPasteFiles?: (files: File[]) => void
   onFilesInserted?: () => void
   onSubmit: () => void
   placeholder?: string
@@ -71,6 +73,7 @@ export function PromptMarkdownEditor({
   interactionScope,
   onChange,
   onFilesInserted,
+  onPasteFiles,
   onSubmit,
   placeholder,
   projectPath,
@@ -81,6 +84,7 @@ export function PromptMarkdownEditor({
   const { t } = useTranslation()
   const onChangeRef = useRef(onChange)
   const onFilesInsertedRef = useRef(onFilesInserted)
+  const onPasteFilesRef = useRef(onPasteFiles)
   const onSubmitRef = useRef(onSubmit)
   const promptCommands = useMemo(() => prepareSlashCommands(availableCommands), [availableCommands])
   const extensions = useMemo(
@@ -130,6 +134,14 @@ export function PromptMarkdownEditor({
             return true
           }
           return false
+        },
+        handlePaste(_view, event) {
+          const files = event.clipboardData?.files
+          const onPaste = onPasteFilesRef.current
+          if (!onPaste || !files?.length) return false
+          event.preventDefault()
+          onPaste(Array.from(files))
+          return true
         },
       },
       extensions,
@@ -197,8 +209,9 @@ export function PromptMarkdownEditor({
   useEffect(() => {
     onChangeRef.current = onChange
     onFilesInsertedRef.current = onFilesInserted
+    onPasteFilesRef.current = onPasteFiles
     onSubmitRef.current = onSubmit
-  }, [onChange, onFilesInserted, onSubmit])
+  }, [onChange, onFilesInserted, onPasteFiles, onSubmit])
 
   useEffect(() => {
     editor?.setEditable(!disabled)

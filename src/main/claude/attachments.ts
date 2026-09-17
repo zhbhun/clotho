@@ -6,15 +6,21 @@ import type {
   ClaudeAttachmentContent,
   ClaudeAttachmentPreview,
   ClaudeAttachmentPreviewParams,
+  ClaudeAttachmentReadParams,
+  ClaudeAttachmentReadResult,
+  ClaudeAttachmentRejectReason,
+  ClaudeLoadedAttachment,
   ClaudePrepareAttachmentsParams,
   ClaudePreparedAttachments,
 } from '@/shared/rpc'
 
 const MIB = 1024 * 1024
-const MAX_TOTAL_BYTES = 20 * MIB
+export const MAX_TOTAL_BYTES = 20 * MIB
+// Deliberately generous: the SDK resamples and compresses oversized images
+// before the API call, so a large source file is accepted and shrunk on send.
+export const MAX_IMAGE_BYTES = 20 * MIB
+export const MAX_TEXT_BYTES = MIB
 const MAX_ATTACHMENTS = 20
-const MAX_IMAGE_BYTES = 5 * MIB
-const MAX_TEXT_BYTES = MIB
 const UNSUPPORTED = 'Unsupported attachment data; choose PNG, JPEG, GIF, WebP, PDF or UTF-8 text'
 
 type BinaryMediaType = 'image/png' | 'image/jpeg' | 'image/gif' | 'image/webp' | 'application/pdf'
@@ -26,6 +32,29 @@ function binaryMediaType(data: Buffer): BinaryMediaType | undefined {
   if (header.startsWith('GIF87a') || header.startsWith('GIF89a')) return 'image/gif'
   if (header.startsWith('RIFF') && header.slice(8, 12) === 'WEBP') return 'image/webp'
   if (header.startsWith('%PDF-')) return 'application/pdf'
+}
+
+function hasControlCharacters(data: Buffer) {
+  return data.some((byte) => (byte < 32 && ![9, 10, 12, 13].includes(byte)) || byte === 127)
+}
+
+function isPlainText(data: Buffer) {
+  try {
+    new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(data)
+  } catch {
+    return false
+  }
+  return !hasControlCharacters(data)
+}
+
+/**
+ * Sniff the attachment media type from magic bytes, falling back to the UTF-8
+ * text heuristic. Undefined means the format is not accepted.
+ */
+export function sniffAttachmentType(data: Buffer): string | undefined {
+  const binary = binaryMediaType(data)
+  if (binary) return binary
+  return data.length && isPlainText(data) ? 'text/plain' : undefined
 }
 
 function assertSize(size: number, limit: number, label: string) {
@@ -41,7 +70,7 @@ function plainText(data: Buffer) {
   } catch {
     throw new Error(UNSUPPORTED)
   }
-  if (data.some((byte) => (byte < 32 && ![9, 10, 12, 13].includes(byte)) || byte === 127)) {
+  if (hasControlCharacters(data)) {
     throw new Error(UNSUPPORTED)
   }
   return text
@@ -132,6 +161,14 @@ function embeddedContent(content: ClaudeAttachmentContent, remainingBytes: numbe
   return data.length
 }
 
+/** `source.path` is clotho-local provenance; the API rejects unknown source fields. */
+function sdkContent(content: ClaudeAttachmentContent): ClaudeAttachmentContent {
+  if (content.source.path === undefined) return content
+  const clone = structuredClone(content)
+  delete clone.source.path
+  return clone
+}
+
 export async function prepareAttachments(
   attachments: ClaudeAttachment[],
   signal: AbortSignal,
@@ -146,7 +183,7 @@ export async function prepareAttachments(
     try {
       if (attachment.content) {
         remainingBytes -= embeddedContent(attachment.content, remainingBytes)
-        content.push(attachment.content)
+        content.push(sdkContent(attachment.content))
       } else {
         const data = await readLocalFile(attachment.path, remainingBytes, signal)
         remainingBytes -= data.length
@@ -159,6 +196,53 @@ export async function prepareAttachments(
     }
   }
   return content
+}
+
+function rejectReason(caught: unknown): ClaudeAttachmentRejectReason {
+  const message = caught instanceof Error ? caught.message : ''
+  if (message.includes('empty')) return 'empty'
+  if (message.includes('limit exceeded')) return 'too-large'
+  if (message.includes(UNSUPPORTED)) return 'unsupported'
+  return 'unreadable'
+}
+
+/**
+ * Lift picked files or pasted bytes into validated Claude-style content
+ * blocks. `source.path` records where picked files came from so the composer
+ * can dedupe re-adds; pasted bytes have no path.
+ */
+export async function loadAttachmentFiles(
+  params: ClaudeAttachmentReadParams,
+): Promise<ClaudeAttachmentReadResult> {
+  if (params.files.length > MAX_ATTACHMENTS) {
+    throw new Error(`Attachment count limit exceeded (${MAX_ATTACHMENTS} files)`)
+  }
+  const attachments: ClaudeLoadedAttachment[] = []
+  const rejected: ClaudeAttachmentReadResult['rejected'] = []
+  let remainingBytes = MAX_TOTAL_BYTES
+  for (const file of params.files) {
+    const reject = (reason: ClaudeAttachmentRejectReason) =>
+      rejected.push({ name: file.name, reason })
+    try {
+      let data: Buffer
+      if (file.data !== undefined) {
+        data = Buffer.from(file.data, 'base64')
+        assertSize(data.length, remainingBytes, 'Total attachment size')
+      } else if (file.sourcePath) {
+        data = await readLocalFile(file.sourcePath, remainingBytes, new AbortController().signal)
+      } else {
+        reject('unreadable')
+        continue
+      }
+      const content = fileContent(file.name, data)
+      content.source.path = file.sourcePath ?? null
+      remainingBytes -= data.length
+      attachments.push({ name: file.name, path: file.sourcePath ?? null, content })
+    } catch (caught) {
+      reject(rejectReason(caught))
+    }
+  }
+  return { attachments, rejected }
 }
 
 export async function getAttachmentPreview({

@@ -3,7 +3,6 @@ import os from 'node:os'
 import path from 'node:path'
 
 import { BrowserWindow, Menu, app, ipcMain, screen } from 'electron'
-
 import type { WebContents } from 'electron'
 
 import type { AppLogChannel } from '@/shared/logging'
@@ -12,6 +11,7 @@ import type { DesktopRPC } from '@/shared/rpc'
 import { clothoDir } from './app-data'
 import { applicationMenuItems } from './application-menu'
 import { createClaudeDesktopService } from './claude-service'
+import { loadAttachmentFiles } from './claude/attachments'
 import { createModelProxy } from './claude/model-proxy'
 import { createSessionFollowManager } from './claude/session-follow-manager'
 import { createSettingsStore, defaultSettings, readSettings } from './claude/settings'
@@ -222,6 +222,7 @@ export async function bootstrap() {
         claudeSelectFiles: (params) => service.selectFiles(params),
         claudeGetAttachmentPreview: (params) => service.getAttachmentPreview(params),
         claudePrepareAttachments: (params) => service.prepareAttachments(params),
+        attachmentRead: (params) => loadAttachmentFiles(params),
         claudeCanSearchProjectFiles: (params) => service.canSearchProjectFiles(params),
         claudeListProjectRootEntries: (params) => service.listProjectRootEntries(params),
         claudeEnterProjectFileSearchWarmup: (params) =>

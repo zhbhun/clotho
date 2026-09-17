@@ -4,6 +4,8 @@ import type {
   ClaudeAgentInfo as RpcClaudeAgentInfo,
   ClaudeAttachmentPreview as RpcClaudeAttachmentPreview,
   ClaudeAttachmentPreviewParams as RpcClaudeAttachmentPreviewParams,
+  ClaudeAttachmentReadParams as RpcClaudeAttachmentReadParams,
+  ClaudeAttachmentReadResult as RpcClaudeAttachmentReadResult,
   ClaudeContextUsageSnapshot as RpcClaudeContextUsageSnapshot,
   ClaudeCreateProjectParams as RpcClaudeCreateProjectParams,
   ClaudeDropTrailingTurnParams as RpcClaudeDropTrailingTurnParams,
@@ -63,6 +65,8 @@ import type { DraftSession, DraftSessionIndex, LocalSession } from '@/shared/ses
 import { isDesktopRuntime, listenDesktopEvent, requestFromDesktop } from '../desktop/client'
 
 export type ClaudeAgentInfo = RpcClaudeAgentInfo
+export type ClaudeAttachmentReadParams = RpcClaudeAttachmentReadParams
+export type ClaudeAttachmentReadResult = RpcClaudeAttachmentReadResult
 export type ClaudeAttachmentPreview = RpcClaudeAttachmentPreview
 export type ClaudeAttachmentPreviewParams = RpcClaudeAttachmentPreviewParams
 export type ClaudePrepareAttachmentsParams = RpcClaudePrepareAttachmentsParams
@@ -625,6 +629,10 @@ export const claude = {
       throw new Error('Attachment preparation is only available in the desktop app')
     }
     return requestFromDesktop('claudePrepareAttachments', params)
+  },
+  async loadAttachments(params: ClaudeAttachmentReadParams): Promise<ClaudeAttachmentReadResult> {
+    if (!isTauriRuntime()) return { attachments: [], rejected: [] }
+    return requestFromDesktop('attachmentRead', params)
   },
   async canSearchProjectFiles(params: ProjectFileSearchParams) {
     if (!isTauriRuntime()) {

@@ -205,6 +205,14 @@ export interface ClaudeImageSource {
   media_type?: string
 }
 
+export interface ClaudeImageSource {
+  type?: string
+  data?: string
+  media_type?: string
+  /** Original absolute source path kept alongside stored attachment content. */
+  path?: string | null
+}
+
 export interface ClaudeContentPart {
   type?: string
   id?: string
@@ -318,14 +326,15 @@ export type ClaudeAttachmentContent =
         type: 'base64'
         media_type: 'image/png' | 'image/jpeg' | 'image/gif' | 'image/webp'
         data: string
+        path?: string | null
       }
     }
   | {
       type: 'document'
       title?: string
       source:
-        | { type: 'base64'; media_type: 'application/pdf'; data: string }
-        | { type: 'text'; media_type: 'text/plain'; data: string }
+        | { type: 'base64'; media_type: 'application/pdf'; data: string; path?: string | null }
+        | { type: 'text'; media_type: 'text/plain'; data: string; path?: string | null }
     }
 
 export type ClaudeAttachment = { name: string } & (
@@ -346,6 +355,30 @@ export interface ClaudePrepareAttachmentsParams {
 
 export interface ClaudePreparedAttachments {
   attachments: ClaudeAttachment[]
+}
+
+export interface ClaudeAttachmentReadParams {
+  files: {
+    name: string
+    /** Absolute source path; omit when reading raw bytes. */
+    sourcePath?: string
+    /** Raw file bytes encoded as base64; used for clipboard pastes. */
+    data?: string
+  }[]
+}
+
+export interface ClaudeLoadedAttachment {
+  name: string
+  /** Original absolute source path; null for clipboard pastes. */
+  path: string | null
+  content: ClaudeAttachmentContent
+}
+
+export type ClaudeAttachmentRejectReason = 'unsupported' | 'too-large' | 'unreadable' | 'empty'
+
+export interface ClaudeAttachmentReadResult {
+  attachments: ClaudeLoadedAttachment[]
+  rejected: { name: string; reason: ClaudeAttachmentRejectReason }[]
 }
 
 export interface ClaudeQueryParams {
@@ -768,6 +801,10 @@ export type DesktopRPC = {
       claudePrepareAttachments: {
         params: ClaudePrepareAttachmentsParams
         response: ClaudePreparedAttachments
+      }
+      attachmentRead: {
+        params: ClaudeAttachmentReadParams
+        response: ClaudeAttachmentReadResult
       }
       claudeCanSearchProjectFiles: {
         params: ProjectFileSearchParams

@@ -15,36 +15,16 @@ import { cn } from '@/shadcn/utils'
 import type { ClaudeAttachment } from '@/shared/rpc'
 
 import { TransientScrollArea } from '../../../../components/transient-scroll-area'
-import { claude } from '../../../../services/claude/claude'
 
 function useAttachmentImage(attachment: ClaudeAttachment) {
-  const path = attachment.path
+  const content = attachment.content
   const isImage =
-    attachment.content?.type === 'image' || Boolean(path && /\.(png|jpe?g|gif|webp)$/i.test(path))
-  const [preview, setPreview] = useState<{ path: string; dataUrl: string | null }>()
-
-  useEffect(() => {
-    if (!path || !isImage) return
-    let cancelled = false
-    void claude
-      .getAttachmentPreview({ path })
-      .then(({ dataUrl }) => {
-        if (!cancelled) setPreview({ path, dataUrl })
-      })
-      .catch(() => {
-        if (!cancelled) setPreview({ path, dataUrl: null })
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [path, isImage])
-
+    content?.type === 'image' ||
+    Boolean(content?.source.path && /\.(png|jpe?g|gif|webp)$/i.test(content.source.path))
   const source =
-    attachment.content?.type === 'image'
-      ? `data:${attachment.content.source.media_type};base64,${attachment.content.source.data}`
-      : preview?.path === path
-        ? (preview?.dataUrl ?? undefined)
-        : undefined
+    content?.type === 'image'
+      ? `data:${content.source.media_type};base64,${content.source.data}`
+      : undefined
   return { isImage, source }
 }
 
@@ -155,7 +135,7 @@ export function AttachmentList({
       <div className="flex w-max min-w-0 gap-2 px-0.5 pt-0.5 pb-2" data-slot="attachment-list">
         {attachments.map((attachment, index) => (
           <AttachmentCard
-            key={attachment.path ?? `${attachment.name}:${index}`}
+            key={attachment.content?.source.path ?? `${attachment.name}:${index}`}
             attachment={attachment}
             disabled={disabled}
             onRemove={onRemove ? () => onRemove(index) : undefined}

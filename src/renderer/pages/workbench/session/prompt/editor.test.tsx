@@ -4,15 +4,14 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 import { TooltipProvider } from '@/shadcn/tooltip'
 
-import { ModelConfigurationProvider } from '../../../../stores/model-configuration-context'
-import { ProviderUsageProvider } from '../../../../stores/provider-usage-context'
-
 import { initializeAppI18n } from '../../../../i18n/runtime'
 import type {
   ProjectFileSearchOutline,
   ProjectFileSearchResult,
 } from '../../../../services/claude/claude'
 import { ShortcutRuntimeProvider, shortcutRuntime } from '../../../../services/shortcuts/runtime'
+import { ModelConfigurationProvider } from '../../../../stores/model-configuration-context'
+import { ProviderUsageProvider } from '../../../../stores/provider-usage-context'
 import { promptDocToMarkdown } from './content'
 import { type PromptEditorHandle, PromptMarkdownEditor } from './editor'
 import { fileReferenceFromPath } from './files'
@@ -1170,31 +1169,31 @@ describe('PromptComposer typography', () => {
       <ShortcutRuntimeProvider runtime={shortcutRuntime}>
         <ModelConfigurationProvider>
           <ProviderUsageProvider>
-          <TooltipProvider>
-            <PromptComposer
-              attachments={[]}
-            availableCommands={[]}
-            canSubmit={false}
-            canUsePrompt
-            contextUsage={null}
-            isMockProject={false}
-            isStreaming={false}
-            model="claude-sonnet"
-            modelOptions={[]}
-            permissionMode="bypassPermissions"
-            prompt=""
-            selectedModelLabel="Claude Sonnet"
-            selectedProviderId="anthropic"
-            setPermissionMode={() => undefined}
-            setPrompt={() => undefined}
-            setAttachments={() => undefined}
-            setSelectedProviderModel={() => undefined}
-            slashMenuPlacement="below"
-              onSelectFiles={async () => []}
-              onStop={() => undefined}
-              onSubmit={() => undefined}
-            />
-          </TooltipProvider>
+            <TooltipProvider>
+              <PromptComposer
+                attachments={[]}
+                availableCommands={[]}
+                canSubmit={false}
+                canUsePrompt
+                contextUsage={null}
+                isMockProject={false}
+                isStreaming={false}
+                model="claude-sonnet"
+                modelOptions={[]}
+                permissionMode="bypassPermissions"
+                prompt=""
+                selectedModelLabel="Claude Sonnet"
+                selectedProviderId="anthropic"
+                setPermissionMode={() => undefined}
+                setPrompt={() => undefined}
+                setAttachments={() => undefined}
+                setSelectedProviderModel={() => undefined}
+                slashMenuPlacement="below"
+                onSelectFiles={async () => []}
+                onStop={() => undefined}
+                onSubmit={() => undefined}
+              />
+            </TooltipProvider>
           </ProviderUsageProvider>
         </ModelConfigurationProvider>
       </ShortcutRuntimeProvider>,
@@ -1239,9 +1238,9 @@ describe('PromptComposer context usage loading', () => {
       <ShortcutRuntimeProvider runtime={shortcutRuntime}>
         <ModelConfigurationProvider>
           <ProviderUsageProvider>
-          <TooltipProvider>
-            <PromptComposer {...baseProps} {...props} />
-          </TooltipProvider>
+            <TooltipProvider>
+              <PromptComposer {...baseProps} {...props} />
+            </TooltipProvider>
           </ProviderUsageProvider>
         </ModelConfigurationProvider>
       </ShortcutRuntimeProvider>,
@@ -1257,9 +1256,9 @@ describe('PromptComposer context usage loading', () => {
       <ShortcutRuntimeProvider runtime={shortcutRuntime}>
         <ModelConfigurationProvider>
           <ProviderUsageProvider>
-          <TooltipProvider>
-            <PromptComposer {...baseProps} isSamplingContext />
-          </TooltipProvider>
+            <TooltipProvider>
+              <PromptComposer {...baseProps} isSamplingContext />
+            </TooltipProvider>
           </ProviderUsageProvider>
         </ModelConfigurationProvider>
       </ShortcutRuntimeProvider>,
@@ -1271,13 +1270,13 @@ describe('PromptComposer context usage loading', () => {
       <ShortcutRuntimeProvider runtime={shortcutRuntime}>
         <ModelConfigurationProvider>
           <ProviderUsageProvider>
-          <TooltipProvider>
-            <PromptComposer
-              {...baseProps}
-              contextUsage={{ usedTokens: 1200, maxTokens: 200000, percent: 1 }}
-              isSamplingContext
-            />
-          </TooltipProvider>
+            <TooltipProvider>
+              <PromptComposer
+                {...baseProps}
+                contextUsage={{ usedTokens: 1200, maxTokens: 200000, percent: 1 }}
+                isSamplingContext
+              />
+            </TooltipProvider>
           </ProviderUsageProvider>
         </ModelConfigurationProvider>
       </ShortcutRuntimeProvider>,
