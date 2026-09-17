@@ -95,7 +95,14 @@ export async function bootstrap() {
       architecture: process.arch,
       platform: process.platform,
     })
-    Menu.setApplicationMenu(Menu.buildFromTemplate(applicationMenuItems('en')))
+    // The Forge Vite plugin injects the dev-server URL as a compile-time
+    // constant; packaged builds leave it undefined and load the bundled view.
+    const devServerUrl =
+      typeof MAIN_WINDOW_VITE_DEV_SERVER_URL === 'string'
+        ? MAIN_WINDOW_VITE_DEV_SERVER_URL
+        : undefined
+    const isDev = devServerUrl !== undefined
+    Menu.setApplicationMenu(Menu.buildFromTemplate(applicationMenuItems('en', isDev)))
 
     let loadedState
     try {
@@ -109,16 +116,10 @@ export async function bootstrap() {
     const stateStore = createStateStore(loadedState)
     const sessionStorage = createSessionStorage(path.join(clothoDir(), 'sessions'))
 
-    // The Forge Vite plugin injects the dev-server URL as a compile-time
-    // constant; packaged builds leave it undefined and load the bundled view.
-    const devServerUrl =
-      typeof MAIN_WINDOW_VITE_DEV_SERVER_URL === 'string'
-        ? MAIN_WINDOW_VITE_DEV_SERVER_URL
-        : undefined
     const target = await getMainViewTarget({
       channel,
       mainDirectory: __dirname,
-      useDevServer: devServerUrl !== undefined,
+      useDevServer: isDev,
       devServerUrl: devServerUrl ?? DEV_SERVER_URL,
     })
     if (target.kind === 'dev-server') {
@@ -201,7 +202,7 @@ export async function bootstrap() {
     const requestHandlers = wrapRequestHandlers(
       {
         applicationMenuSetLanguage: ({ language }) => {
-          Menu.setApplicationMenu(Menu.buildFromTemplate(applicationMenuItems(language)))
+          Menu.setApplicationMenu(Menu.buildFromTemplate(applicationMenuItems(language, isDev)))
         },
         appGetPreferences: () => service.getAppPreferences(),
         appSavePreferences: (params) => service.saveAppPreferences(params),
