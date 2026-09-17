@@ -1,0 +1,227 @@
+.spotlight-command-dialog[data-slot='dialog-content'] {
+  --spotlight-border: oklch(0.2 0 0 / 16%);
+  --spotlight-highlight: oklch(1 0 0 / 28%);
+  --spotlight-selection: oklch(0.35 0 0 / 10%);
+
+  width: min(760px, calc(100% - 2.5rem));
+  height: min(560px, calc(84vh - 2rem));
+  max-width: min(760px, calc(100% - 2.5rem));
+  overflow: hidden;
+  border: 1px solid var(--spotlight-border);
+  border-radius: 22px;
+  box-shadow: var(--dialog-shadow);
+  isolation: isolate;
+}
+
+.dark .spotlight-command-dialog[data-slot='dialog-content'] {
+  --spotlight-border: oklch(1 0 0 / 15%);
+  --spotlight-highlight: oklch(1 0 0 / 18%);
+  --spotlight-selection: oklch(0.86 0 0 / 12%);
+}
+
+.spotlight-command-dialog[data-slot='dialog-content']::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(180deg, var(--spotlight-highlight), transparent 24%),
+    radial-gradient(circle at 50% -30%, var(--spotlight-highlight), transparent 54%);
+  content: '';
+  opacity: 0.24;
+  pointer-events: none;
+}
+
+.spotlight-command-dialog > [data-slot='command'] {
+  position: relative;
+  z-index: 1;
+}
+
+.spotlight-command[data-slot='command'] {
+  padding: 0;
+  border-radius: inherit;
+  background: transparent;
+}
+
+.spotlight-command-input {
+  position: relative;
+  padding: 0;
+}
+
+.spotlight-command-input::after {
+  position: absolute;
+  right: 16px;
+  bottom: 0;
+  left: 16px;
+  height: 1px;
+  background: var(--spotlight-border);
+  content: '';
+  pointer-events: none;
+}
+
+.spotlight-command-input [data-slot='command-input-wrapper'] {
+  padding: 0;
+}
+
+.spotlight-command-input [data-slot='input-group'] {
+  height: 62px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.spotlight-command-input [data-align='inline-start'] {
+  padding-right: 16px;
+  padding-left: 32px;
+}
+
+.spotlight-command-input [data-align='inline-start'] svg {
+  width: 24px;
+  height: 24px;
+  opacity: 0.62;
+  stroke-width: 1.8;
+}
+
+.spotlight-command-input [data-slot='command-input'] {
+  height: 100%;
+  padding: 0;
+  color: var(--foreground);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.spotlight-command-input [data-slot='command-input']::placeholder {
+  color: var(--foreground-subtlest);
+  opacity: 0.9;
+}
+
+.spotlight-command-input[data-has-actions='true'] [data-slot='command-input'] {
+  padding-right: 108px;
+}
+
+.spotlight-command-actions {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transform: translateY(-50%);
+}
+
+.spotlight-command-actions [data-slot='button'] {
+  border-radius: 9px;
+  color: var(--foreground-subtlest);
+}
+
+.spotlight-command-actions [data-slot='button'][aria-pressed='true'] {
+  background: var(--spotlight-selection);
+  color: var(--foreground);
+}
+
+.spotlight-command-list {
+  min-height: 0;
+  max-height: none;
+  flex: 1;
+  padding: 8px;
+}
+
+.spotlight-command-list > [cmdk-list-sizer] {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+}
+
+.spotlight-command-group {
+  padding: 4px;
+}
+
+.spotlight-command-empty {
+  display: grid;
+  min-height: 62px;
+  flex: 1;
+  place-items: center;
+  padding: 0;
+  color: var(--foreground-subtlest);
+  font-size: 14px;
+}
+
+.spotlight-command-item[data-slot='command-item'] {
+  min-height: 62px;
+  gap: 12px;
+  padding: 0 12px;
+  border-radius: 14px;
+}
+
+.spotlight-command-item + .spotlight-command-item {
+  margin-top: 3px;
+}
+
+.spotlight-command [data-slot='command-item'].spotlight-command-item[data-selected='true'] {
+  background: var(--spotlight-selection);
+}
+
+.spotlight-command-item > svg:last-child {
+  display: none;
+}
+
+.spotlight-command-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--foreground-subtle);
+}
+
+.spotlight-command-icon > svg {
+  width: 24px;
+  height: 24px;
+  stroke-width: 1.8;
+}
+
+.spotlight-command-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.spotlight-command-title,
+.spotlight-command-description {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spotlight-command-title {
+  color: var(--foreground);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.spotlight-command-description {
+  margin-top: 4px;
+  color: var(--foreground-subtlest);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.spotlight-command-trailing {
+  flex: 0 0 auto;
+  align-self: center;
+  color: var(--foreground-subtlest);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+}
+
+[data-reduced-motion='reduce'] .spotlight-command-dialog[data-slot='dialog-content'] {
+  animation: none;
+}

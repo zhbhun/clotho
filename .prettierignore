@@ -1,0 +1,12 @@
+.agents/
+.claude/
+.codex/
+.cursor/
+.vscode/
+dist/
+node_modules/
+coverage/
+out/
+.vite/
+package-lock.json
+build/

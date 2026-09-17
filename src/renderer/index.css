@@ -1,0 +1,66 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+@import '@fontsource-variable/inter';
+@import './styles/variables.css';
+@import './styles/glass.css';
+@import './styles/normalize.css';
+@import './styles/markdown.css';
+@import './styles/sidebar.css';
+
+@source '../shadcn';
+
+@plugin '@tailwindcss/typography';
+
+@custom-variant dark (&:is(.dark *));
+
+@layer base {
+  [data-pointer-cursor='true']
+    :where(
+      a[href],
+      button:not(:disabled),
+      label[for],
+      select:not(:disabled),
+      summary,
+      [role='button']:not([aria-disabled='true']),
+      [role='checkbox']:not([aria-disabled='true']),
+      [role='radio']:not([aria-disabled='true']),
+      [role='switch']:not([aria-disabled='true']),
+      [data-pointer-cursor-target]
+    ) {
+    cursor: pointer;
+  }
+
+  [data-reduced-motion='reduce'] {
+    scroll-behavior: auto;
+  }
+
+  html[data-reduced-motion='reduce'] *,
+  html[data-reduced-motion='reduce'] *::before,
+  html[data-reduced-motion='reduce'] *::after {
+    scroll-behavior: auto;
+    animation-duration: 0.001ms;
+    animation-iteration-count: 1;
+    transition-duration: 0.001ms;
+  }
+}
+
+@layer components {
+  :is([data-slot='dialog-portal'], [data-slot='alert-dialog-portal']):has(
+      :is([data-slot='dialog-portal'], [data-slot='alert-dialog-portal'])
+        > :is([data-slot='dialog-overlay'], [data-slot='alert-dialog-overlay'])[data-open]
+    )
+    > :is([data-slot='dialog-overlay'], [data-slot='alert-dialog-overlay']) {
+    pointer-events: none;
+    opacity: 0;
+  }
+}
+
+/* Electron frameless window drag regions (title bar areas). */
+.app-region-drag {
+  -webkit-app-region: drag;
+}
+
+.app-region-no-drag {
+  -webkit-app-region: no-drag;
+}

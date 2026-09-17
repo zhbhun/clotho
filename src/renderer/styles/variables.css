@@ -1,0 +1,218 @@
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: 'Inter Variable', sans-serif;
+
+  /* base-mira presets body text to text-xs (12px); the app default is 14px */
+  --text-xs: 0.875rem;
+  --text-xs--line-height: 1.25rem;
+
+  /* shadcn semantic colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Application color extensions */
+  --color-foreground-subtle: var(--foreground-subtle);
+  --color-foreground-subtlest: var(--foreground-subtlest);
+  --color-foreground-disabled: var(--foreground-disabled);
+  --color-status-confirm: var(--status-confirm);
+  --color-status-unread: var(--status-unread);
+  --color-code-surface: var(--code-surface);
+  --color-code-added: var(--code-added);
+  --color-code-keyword: var(--code-keyword);
+  --color-code-number: var(--code-number);
+  --color-code-property: var(--code-property);
+  --color-code-removed: var(--code-removed);
+  --color-code-string: var(--code-string);
+  --color-code-type: var(--code-type);
+  --color-project-icon-red: var(--project-icon-red);
+  --color-project-icon-orange: var(--project-icon-orange);
+  --color-project-icon-amber: var(--project-icon-amber);
+  --color-project-icon-green: var(--project-icon-green);
+  --color-project-icon-blue: var(--project-icon-blue);
+  --color-project-icon-violet: var(--project-icon-violet);
+  --color-project-icon-purple: var(--project-icon-purple);
+  --color-project-icon-pink: var(--project-icon-pink);
+  --color-project-icon-cyan: var(--project-icon-cyan);
+  --color-project-switcher-surface: var(--project-switcher-surface);
+  --color-sidebar-active: var(--sidebar-active);
+
+  --shadow-float: var(--float-shadow);
+  --shadow-popover: var(--popover-shadow);
+  --shadow-dialog: var(--dialog-shadow);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* These mix ratios reproduce the existing neutral scale while tinting it from active anchors. */
+:root {
+  /* shadcn semantic colors */
+  --background: var(--color-white);
+  --foreground: var(--color-neutral-900);
+  --card: var(--background);
+  --card-foreground: var(--foreground);
+  --popover: var(--background);
+  --popover-foreground: var(--foreground);
+  --primary: var(--color-neutral-900);
+  --primary-foreground: color-mix(in oklch, var(--background), var(--foreground) 1.8868%);
+  --secondary: color-mix(in oklch, var(--background), var(--foreground) 3.7736%);
+  --secondary-foreground: var(--foreground);
+  --muted: var(--secondary);
+  --muted-foreground: var(--foreground-subtlest);
+  --accent: var(--secondary);
+  --accent-foreground: var(--foreground);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: color-mix(in oklch, var(--background), var(--foreground) 9.8113%);
+  --input: var(--border);
+  --ring: var(--primary);
+  --chart-1: color-mix(in oklch, var(--background), var(--foreground) 16.3522%);
+  --chart-2: color-mix(in oklch, var(--background), var(--foreground) 55.8491%);
+  --chart-3: color-mix(in oklch, var(--background), var(--foreground) 70.566%);
+  --chart-4: color-mix(in oklch, var(--background), var(--foreground) 79.1195%);
+  --chart-5: color-mix(in oklch, var(--background), var(--foreground) 91.9497%);
+  --radius: 0.625rem;
+  --sidebar: color-mix(in oklch, var(--background), var(--foreground) 1.8868%);
+  --sidebar-foreground: var(--foreground-subtle);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: color-mix(in oklch, var(--sidebar), var(--sidebar-foreground) 5%);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+
+  /* Application theme extensions */
+  --foreground-subtle: color-mix(in oklch, var(--background), var(--foreground) 79.1195%);
+  --foreground-subtlest: color-mix(in oklch, var(--background), var(--foreground) 55.8491%);
+  --foreground-disabled: color-mix(in oklch, var(--background), var(--foreground) 36.7296%);
+  --float-shadow:
+    0 0 10px -4px color-mix(in oklch, var(--color-neutral-950) 18%, transparent),
+    0 0 28px -12px color-mix(in oklch, var(--color-neutral-950) 24%, transparent);
+  --popover-shadow:
+    0 4px 10px -4px color-mix(in oklch, var(--color-neutral-950) 18%, transparent),
+    0 8px 28px -12px color-mix(in oklch, var(--color-neutral-950) 24%, transparent);
+  --dialog-shadow: 0 0 30px oklch(0 0 0 / 18%), 0 0 20px -12px oklch(0 0 0 / 18%);
+  --status-confirm: oklch(0.68 0.17 65);
+  --status-unread: oklch(0.58 0.19 255);
+  --code-surface: color-mix(in oklch, var(--background), var(--foreground) 1.8868%);
+  --code-added: var(--color-green-600);
+  --code-keyword: var(--color-violet-600);
+  --code-number: var(--color-blue-600);
+  --code-property: var(--color-orange-600);
+  --code-removed: var(--color-red-600);
+  --code-string: var(--color-green-700);
+  --code-type: var(--color-violet-600);
+  --project-icon-red: var(--color-red-600);
+  --project-icon-orange: var(--color-orange-600);
+  --project-icon-amber: var(--color-amber-600);
+  --project-icon-green: var(--color-green-600);
+  --project-icon-blue: var(--color-blue-600);
+  --project-icon-violet: var(--color-violet-600);
+  --project-icon-purple: var(--color-purple-600);
+  --project-icon-pink: var(--color-pink-600);
+  --project-icon-cyan: var(--color-cyan-600);
+  --project-switcher-surface: var(--muted);
+  --session-tab-surface: var(--secondary);
+  --sidebar-active: var(--sidebar-accent);
+}
+
+.dark {
+  /* shadcn semantic colors */
+  --background: var(--color-neutral-950);
+  --foreground: var(--color-neutral-100);
+  --card: color-mix(in srgb, var(--background), var(--color-white) 5.3061%);
+  --card-foreground: var(--foreground);
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
+  --primary: var(--color-neutral-100);
+  --primary-foreground: color-mix(in oklch, var(--background), var(--foreground) 7.2727%);
+  --secondary: color-mix(in srgb, var(--background), var(--color-white) 11.4286%);
+  --secondary-foreground: var(--foreground);
+  --muted: var(--secondary);
+  --muted-foreground: var(--foreground-subtlest);
+  --accent: color-mix(in srgb, var(--background), var(--color-white) 14.5%);
+  --accent-foreground: color-mix(in oklch, var(--foreground), var(--color-white) 50%);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: var(--secondary);
+  --input: color-mix(in srgb, var(--background), var(--color-white) 22.0408%);
+  --ring: var(--primary);
+  --chart-1: color-mix(in oklch, var(--background), var(--foreground) 87.8788%);
+  --chart-2: color-mix(in oklch, var(--background), var(--foreground) 49.8182%);
+  --chart-3: color-mix(in oklch, var(--background), var(--foreground) 35.6364%);
+  --chart-4: color-mix(in oklch, var(--background), var(--foreground) 27.3939%);
+  --chart-5: var(--secondary);
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--secondary);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+
+  /* Application theme extensions */
+  --foreground-subtle: color-mix(in oklch, var(--background), var(--foreground) 87.8788%);
+  --foreground-subtlest: color-mix(in oklch, var(--background), var(--foreground) 68.2424%);
+  --foreground-disabled: color-mix(in oklch, var(--background), var(--foreground) 35.6364%);
+  --float-shadow:
+    0 0 12px -4px color-mix(in oklch, var(--color-neutral-950) 36%, transparent),
+    0 0 30px -12px color-mix(in oklch, var(--color-neutral-950) 52%, transparent);
+  --popover-shadow:
+    0 4px 12px -4px color-mix(in oklch, var(--color-neutral-950) 36%, transparent),
+    0 8px 30px -12px color-mix(in oklch, var(--color-neutral-950) 52%, transparent);
+  --dialog-shadow: 0 0 36px oklch(0 0 0 / 50%), 0 0 24px -14px oklch(0 0 0 / 36%);
+  --status-confirm: oklch(0.78 0.15 75);
+  --status-unread: oklch(0.72 0.16 255);
+  --code-surface: var(--card);
+  --code-added: var(--color-green-400);
+  --code-keyword: var(--color-fuchsia-400);
+  --code-number: var(--color-violet-400);
+  --code-property: var(--color-pink-400);
+  --code-removed: var(--color-red-400);
+  --code-string: var(--color-lime-300);
+  --code-type: var(--color-cyan-300);
+  --project-icon-red: var(--color-red-400);
+  --project-icon-orange: var(--color-orange-400);
+  --project-icon-amber: var(--color-amber-400);
+  --project-icon-green: var(--color-green-400);
+  --project-icon-blue: var(--color-blue-400);
+  --project-icon-violet: var(--color-violet-400);
+  --project-icon-purple: var(--color-purple-400);
+  --project-icon-pink: var(--color-pink-400);
+  --project-icon-cyan: var(--color-cyan-400);
+  --project-switcher-surface: color-mix(in srgb, var(--background), var(--color-white) 3%);
+  --session-tab-surface: color-mix(in srgb, var(--background), var(--color-white) 7.7551%);
+  --sidebar-active: var(--sidebar-accent);
+}

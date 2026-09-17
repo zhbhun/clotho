@@ -1,0 +1,132 @@
+@layer components {
+  .markdown-body {
+    line-height: 1.7;
+    color: var(--foreground);
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      scroll-margin-top: 1rem;
+      font-weight: 500;
+      color: var(--foreground);
+      margin-top: 1.5em;
+      margin-bottom: 0.5em;
+    }
+
+    h1 {
+      @apply text-lg;
+    }
+    h2 {
+      @apply text-base;
+    }
+    h3,
+    h4,
+    h5,
+    h6 {
+      @apply text-sm;
+    }
+
+    p {
+      margin-top: 0.75em;
+      margin-bottom: 0.75em;
+    }
+
+    pre {
+      @apply rounded-lg border border-border bg-code-surface px-3 py-2 overflow-x-auto;
+    }
+
+    pre.shiki {
+      background-color: var(--color-code-surface);
+    }
+
+    pre code {
+      @apply bg-transparent p-0 text-xs leading-relaxed;
+    }
+
+    code:not(pre code) {
+      @apply rounded bg-code-surface px-1.5 py-0.5 text-xs font-normal;
+    }
+
+    a {
+      @apply underline underline-offset-2 decoration-foreground-subtle/40 hover:decoration-foreground;
+      color: var(--foreground);
+    }
+
+    blockquote {
+      @apply border-l-2 border-border pl-4;
+      color: var(--foreground-subtle);
+    }
+
+    table {
+      @apply w-full border-collapse;
+    }
+
+    th {
+      @apply border border-border bg-muted/50 px-3 py-2 text-left font-medium;
+    }
+
+    td {
+      @apply border border-border px-3 py-2;
+    }
+
+    hr {
+      @apply border-border;
+      margin: 1.5em 0;
+    }
+
+    ul {
+      @apply list-disc pl-6;
+      margin: 0.75em 0;
+    }
+
+    ol {
+      @apply list-decimal pl-6;
+      margin: 0.75em 0;
+    }
+
+    li {
+      margin: 0.25em 0;
+    }
+
+    strong,
+    b {
+      font-weight: 500;
+    }
+  }
+
+  /* Shiki dual-theme output (defaultColor: false): token colors live in CSS variables and follow the theme. */
+  .markdown-body pre span {
+    color: var(--shiki-light);
+  }
+
+  .dark .markdown-body pre span {
+    color: var(--shiki-dark);
+  }
+
+  .assistant-summary .markdown-body > :first-child {
+    margin-top: 0;
+  }
+
+  .assistant-summary .markdown-body > :last-child {
+    margin-bottom: 0;
+  }
+
+  .prompt-markdown-editor {
+    caret-color: var(--foreground);
+  }
+
+  .prompt-markdown-editor p {
+    margin: 0;
+  }
+
+  .prompt-markdown-editor p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+    color: var(--foreground-subtlest);
+  }
+}

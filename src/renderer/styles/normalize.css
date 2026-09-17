@@ -1,0 +1,32 @@
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  html,
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-background text-sm text-foreground;
+  }
+  input,
+  textarea,
+  [contenteditable]:not([contenteditable='false']),
+  [contenteditable]:not([contenteditable='false']) *,
+  .select-text,
+  .select-text * {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+  html {
+    @apply font-sans;
+  }
+}

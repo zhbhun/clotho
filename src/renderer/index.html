@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      :root {
+        --startup-background: #ffffff;
+        --startup-foreground: #171717;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --startup-background: #0a0a0a;
+          --startup-foreground: #f5f5f5;
+        }
+      }
+
+      html,
+      body,
+      #root {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        background: var(--background, var(--startup-background));
+        color: var(--foreground, var(--startup-foreground));
+      }
+
+      body {
+        overflow: hidden;
+      }
+
+      .clotho-startup {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .clotho-startup-mark {
+        width: 80px;
+        height: 80px;
+        animation: clotho-startup-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+
+      @keyframes clotho-startup-pulse {
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .clotho-startup-mark {
+          animation: none;
+        }
+      }
+    </style>
+    <title>Clotho</title>
+  </head>
+
+  <body>
+    <div id="root">
+      <div class="clotho-startup">
+        <svg
+          aria-label="Clotho"
+          class="clotho-startup-mark"
+          fill="none"
+          focusable="false"
+          role="img"
+          viewBox="0 0 100 100"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <g stroke="currentColor" stroke-linecap="round" stroke-width="4.5">
+            <path d="M 70 50 L 80 50"></path>
+            <path d="M 65.07 58.7 L 78.22 66.3"></path>
+            <path d="M 58.7 65.07 L 66.3 78.22"></path>
+            <path d="M 50 70 L 50 80"></path>
+            <path d="M 38.7 69.57 L 36.3 73.73"></path>
+            <path d="M 30.43 61.3 L 26.27 63.7"></path>
+            <path d="M 30 50 L 20 50"></path>
+            <path d="M 34.93 41.3 L 21.78 33.7"></path>
+            <path d="M 41.3 34.93 L 33.7 21.78"></path>
+            <path d="M 50 30 L 50 20"></path>
+            <path d="M 61.3 30.43 L 63.7 26.27"></path>
+            <path d="M 69.57 38.7 L 73.73 36.3"></path>
+          </g>
+          <circle cx="50" cy="50" fill="currentColor" r="5"></circle>
+        </svg>
+      </div>
+    </div>
+    <script type="module" src="/main.tsx"></script>
+  </body>
+</html>

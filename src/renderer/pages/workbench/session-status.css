@@ -1,0 +1,19 @@
+.session-status-processing {
+  animation: session-status-breathe 1.8s ease-in-out infinite;
+}
+
+[data-reduced-motion='reduce'] .session-status-processing {
+  animation: none;
+}
+
+@keyframes session-status-breathe {
+  0%,
+  100% {
+    opacity: 0.4;
+    box-shadow: 0 0 0 0 color-mix(in oklch, var(--foreground-subtle), transparent 100%);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--foreground-subtle), transparent 80%);
+  }
+}

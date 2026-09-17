@@ -1,0 +1,80 @@
+.transient-scroll-area [data-slot='scroll-area-scrollbar'][data-orientation='vertical'] {
+  width: 16px;
+  border: 0;
+  background: transparent;
+  padding: 1px 2px 1px 7px;
+  transition: padding-left 140ms ease;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Keep hidden until visible (Base UI has no built-in auto-hide; the state machine drives data-state). */
+.transient-scroll-area [data-slot='scroll-area-scrollbar']:not([data-state='visible']) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.transient-scroll-area [data-slot='scroll-area-scrollbar'][data-state='visible'] {
+  animation: transient-scrollbar-fade-in 140ms ease-out both;
+}
+
+.transient-scroll-area [data-slot='scroll-area-scrollbar'][data-state='hidden'] {
+  animation: transient-scrollbar-fade-out 180ms ease-in both;
+  pointer-events: none;
+}
+
+.transient-scroll-area [data-slot='scroll-area-scrollbar'][data-orientation='vertical']:hover {
+  padding-left: 3px;
+}
+
+.transient-scroll-area [data-slot='scroll-area-scrollbar'][data-orientation='horizontal'] {
+  height: 12px;
+  border: 0;
+  background: transparent;
+  padding: 7px 1px 2px;
+  transition: padding-top 140ms ease;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.transient-scroll-area [data-slot='scroll-area-scrollbar'][data-orientation='horizontal']:hover {
+  padding-top: 3px;
+}
+
+body[data-transient-scrollbar-dragging='true'],
+body[data-transient-scrollbar-dragging='true'] * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.transient-scroll-area [data-slot='scroll-area-thumb'] {
+  background-color: var(
+    --transient-scrollbar-thumb,
+    color-mix(in oklch, var(--foreground) 24%, transparent)
+  );
+}
+
+@keyframes transient-scrollbar-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes transient-scrollbar-fade-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+[data-reduced-motion='reduce'] .transient-scroll-area [data-slot='scroll-area-scrollbar'] {
+  animation: none;
+  transition: none;
+}

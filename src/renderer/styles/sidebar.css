@@ -1,0 +1,23 @@
+.app-sidebar-layout {
+  --sidebar: color-mix(in srgb, var(--background), var(--color-black) 10.1961%);
+  --sidebar-accent: var(--color-accent);
+  --sidebar-active: color-mix(in srgb, var(--color-accent), var(--color-black) 4%);
+  --sidebar-divider: color-mix(in oklch, var(--border) 97%, var(--foreground) 3%);
+  --sidebar-separation-shadow: inset -4px 0 12px
+    color-mix(in oklch, var(--color-neutral-950) 2.5%, transparent);
+}
+
+.dark .app-sidebar-layout {
+  --sidebar: color-mix(in srgb, var(--background), var(--color-black) 30%);
+  --sidebar-separation-shadow: inset -4px 0 12px
+    color-mix(in oklch, var(--color-neutral-950) 22%, transparent);
+}
+
+.app-sidebar-layout [data-slot='sidebar-container'] {
+  border-right-color: var(--sidebar-divider);
+}
+
+.app-sidebar-layout [data-slot='sidebar-container'] > [data-slot='sidebar-inner'],
+.app-sidebar-layout [data-app-sidebar-panel] {
+  box-shadow: var(--sidebar-separation-shadow);
+}

@@ -1,15 +1,28 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "commonjs",
-    "allowJs": true,
+    "target": "es2023",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "types": ["node", "vite/client"],
     "skipLibCheck": true,
-    "esModuleInterop": true,
-    "noImplicitAny": true,
-    "sourceMap": true,
-    "baseUrl": ".",
-    "outDir": "dist",
-    "moduleResolution": "node",
-    "resolveJsonModule": true
-  }
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "@/shadcn": ["./src/shadcn"],
+      "@/shadcn/*": ["./src/shadcn/*"],
+      "@/shared": ["./src/shared"],
+      "@/shared/*": ["./src/shared/*"]
+    }
+  },
+  "include": ["src", "forge.env.d.ts", "vite.main.config.ts", "vite.preload.config.ts", "vite.renderer.config.ts", "vitest.config.ts", "vitest.setup.ts"]
 }

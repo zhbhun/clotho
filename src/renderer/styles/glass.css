@@ -1,0 +1,38 @@
+:root {
+  --floating-glass-background: color-mix(in oklch, var(--background) 80%, transparent);
+  --floating-glass-filter: blur(6px);
+}
+
+.dark {
+  --floating-glass-background: color-mix(in oklch, var(--popover) 72%, transparent);
+}
+
+/* Content bleeds through glass, so the default light accent (~4% darker than the
+   surface) vanishes; deepen the highlight on glass to a lift comparable to dark mode. */
+html:not(.dark) [data-glass='true'] {
+  --accent: color-mix(in oklch, var(--background), var(--foreground) 8%);
+}
+
+[data-glass='true'] {
+  background: var(--floating-glass-background);
+  -webkit-backdrop-filter: var(--floating-glass-filter);
+  backdrop-filter: var(--floating-glass-filter);
+}
+
+[data-glass='true'] > [data-slot='command'] {
+  background: transparent;
+}
+
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  [data-glass='true'] {
+    background: var(--popover);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  [data-glass='true'] {
+    background: var(--popover);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

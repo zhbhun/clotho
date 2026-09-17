@@ -1,0 +1,80 @@
+.session-sidebar-layout[data-sidebar-resizing='true'],
+.session-sidebar-layout[data-sidebar-resizing='true'] * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.session-sidebar-layout[data-sidebar-resizing='true'],
+.session-sidebar-layout[data-sidebar-resizing='true'] button:not(:disabled),
+.session-sidebar-layout[data-sidebar-resizing='true'] [role='button']:not(:disabled) {
+  cursor: col-resize;
+}
+
+.session-sidebar-layout [data-slot='sidebar-rail'] {
+  cursor: col-resize;
+}
+
+.session-sidebar-layout[data-transient-scrollbar-dragging='true'] [data-slot='sidebar-rail'] {
+  cursor: default;
+}
+
+.session-sidebar-layout[data-sidebar-resizing='true'] [data-slot='sidebar-gap'] {
+  transition: none;
+}
+
+.session-sidebar-layout {
+  --sidebar-divider-hover: color-mix(in oklch, var(--border) 89%, var(--foreground) 11%);
+}
+
+.session-sidebar-layout:has([data-slot='sidebar-rail']:hover) [data-slot='sidebar-container'],
+.session-sidebar-layout[data-sidebar-resizing='true'] [data-slot='sidebar-container'] {
+  border-right-color: var(--sidebar-divider-hover);
+}
+
+.session-sidebar-layout[data-sidebar-resizing='true'] [data-slot='sidebar-container'] {
+  transition-property: left, right;
+}
+
+.session-sidebar-layout[data-sidebar-resizing='true']
+  [data-state='collapsed']
+  [data-slot='sidebar-container'] {
+  border-right-color: transparent;
+}
+
+.session-sidebar-layout[data-sidebar-resizing='true']
+  [data-state='collapsed']
+  [data-slot='sidebar-rail']::after {
+  background-color: transparent;
+}
+
+.sidebar-session-scroll {
+  --transient-scrollbar-thumb: color-mix(in oklch, var(--sidebar-foreground) 27%, transparent);
+}
+
+/* Sticky group headers (z-index 10) must not cover the transient scrollbar. */
+.sidebar-session-scroll [data-slot='scroll-area-scrollbar'] {
+  z-index: 20;
+}
+
+/* Sticky list actions float above the pinned group headers (z-index 10) but under the
+   transient scrollbar (20). */
+.sidebar-session-scroll [data-session-list-actions] {
+  z-index: 15;
+}
+
+/* Rows slide under a stationary pointer while the list scrolls, so :hover would
+   re-target every session the pointer crosses. Suppress row hit-testing for the
+   gesture (React pins the scroll-start hover onto its row, see virtual-session-list);
+   :hover resumes under the pointer once the scroll settles. */
+[data-session-list-scrolling='true'] [data-session-item] button {
+  pointer-events: none;
+}
+
+/* Radix injects inline measurement styles that expand long vertical-only sidebar content. */
+/* eslint-disable css/no-important */
+.sidebar-session-scroll [data-slot='scroll-area-viewport'] > div {
+  display: block !important;
+  width: 100%;
+  min-width: 0 !important;
+}
+/* eslint-enable css/no-important */

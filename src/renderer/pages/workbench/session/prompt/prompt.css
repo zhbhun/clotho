@@ -1,0 +1,48 @@
+.prompt-composer-surface {
+  --prompt-composer-border: var(--border);
+  --prompt-composer-shadow:
+    0 0 28px -8px color-mix(in oklch, var(--color-neutral-950) 16%, transparent),
+    0 0 6px -2px color-mix(in oklch, var(--color-neutral-950) 6%, transparent);
+
+  position: relative;
+  border: 1px solid var(--prompt-composer-border);
+}
+
+.dark .prompt-composer-surface {
+  --prompt-composer-shadow:
+    0 0 32px -8px color-mix(in oklch, var(--color-neutral-950) 36%, transparent),
+    0 0 8px -2px color-mix(in oklch, var(--color-neutral-950) 16%, transparent);
+}
+
+.prompt-composer-surface[data-shadow-direction='downward'] {
+  --prompt-composer-shadow:
+    0 10px 16px -12px color-mix(in oklch, var(--color-neutral-950) 16%, transparent),
+    0 3px 6px -4px color-mix(in oklch, var(--color-neutral-950) 6%, transparent);
+}
+
+.dark .prompt-composer-surface[data-shadow-direction='downward'] {
+  --prompt-composer-shadow:
+    0 10px 16px -12px color-mix(in oklch, var(--color-neutral-950) 36%, transparent),
+    0 3px 6px -4px color-mix(in oklch, var(--color-neutral-950) 16%, transparent);
+}
+
+.prompt-composer-surface[data-elevated='true'] {
+  box-shadow: var(--prompt-composer-shadow);
+}
+
+.prompt-composer-send:not(:disabled) {
+  box-shadow: 0 4px 10px color-mix(in oklch, var(--color-neutral-950) 16%, transparent);
+}
+
+.prompt-composer-send:disabled {
+  background-color: color-mix(in oklch, var(--primary), var(--card) 50%);
+  color: var(--primary-foreground);
+  opacity: 1;
+  box-shadow: none;
+}
+
+.prompt-markdown-editor [contenteditable='false'],
+.prompt-markdown-editor [contenteditable='false'] * {
+  -webkit-user-select: none;
+  user-select: none;
+}
