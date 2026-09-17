@@ -1,5 +1,5 @@
 import { ArrowUp, ChevronDown, Play, Square, X } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
@@ -163,6 +163,7 @@ export function PromptComposer({
   const [isContextPanelOpen, setIsContextPanelOpen] = useState(false)
   const promptEditorRef = useRef<PromptEditorHandle | null>(null)
   const providers = useModelConfigurationStore((state) => state.providers)
+  const providersById = useMemo(() => new Map(providers.map((p) => [p.id, p])), [providers])
   const usageByProviderId = useProviderUsageStore((state) => state.usage)
   const refreshProviderUsage = useProviderUsageStore((state) => state.refreshAll)
 
@@ -401,6 +402,11 @@ export function PromptComposer({
                 <ModelBrandIcon
                   displayName={selectedModelIconOption.displayName}
                   value={selectedModelIconOption.value}
+                  provider={
+                    selectedModelIconOption.providerId
+                      ? providersById.get(selectedModelIconOption.providerId)
+                      : undefined
+                  }
                 />
                 {selectedModelDisplayName}
                 <ChevronDown data-icon="inline-end" strokeWidth={1} />
@@ -439,7 +445,13 @@ export function PromptComposer({
                               }
                             }}
                           >
-                            <ModelBrandIcon displayName={option.displayName} value={option.value} />
+                            <ModelBrandIcon
+                              displayName={option.displayName}
+                              value={option.value}
+                              provider={
+                                option.providerId ? providersById.get(option.providerId) : undefined
+                              }
+                            />
                             {option.displayName}
                           </MenuItem>
                         ))}
