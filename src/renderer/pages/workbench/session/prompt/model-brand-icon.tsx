@@ -1,6 +1,3 @@
-import { createElement } from 'react'
-import type { ComponentType, SVGProps } from 'react'
-
 import BaichuanIcon from '@thesvg/react/baichuan'
 import ClaudeIcon from '@thesvg/react/claude'
 import DeepseekIcon from '@thesvg/react/deepseek'
@@ -8,17 +5,20 @@ import DoubaoIcon from '@thesvg/react/doubao'
 import GeminiIcon from '@thesvg/react/gemini'
 import GrokIcon from '@thesvg/react/grok'
 import HunyuanIcon from '@thesvg/react/hunyuan'
-import KimiIcon from '@thesvg/react/kimi'
 import MetaIcon from '@thesvg/react/meta'
 import MinimaxIcon from '@thesvg/react/minimax'
 import MistralIcon from '@thesvg/react/mistral'
+import MoonshotIcon from '@thesvg/react/moonshot'
 import OpenaiChatgptIcon from '@thesvg/react/openai-chatgpt'
 import QwenIcon from '@thesvg/react/qwen'
 import StepfunIcon from '@thesvg/react/stepfun'
 import ZhipuIcon from '@thesvg/react/zhipu'
 import { Brain } from 'lucide-react'
+import { createElement } from 'react'
+import type { ComponentType, SVGProps } from 'react'
 
-import type { ClaudeModelInfo } from '../../../../services/claude/claude'
+import { providerPresets } from '../../../../components/model-configuration/provider-presets'
+import type { ClaudeModelInfo, ModelProvider } from '../../../../services/claude/claude'
 
 // Not all generated icons declare a `mono` variant; passing it to those that
 // lack one simply renders the default form.
@@ -36,7 +36,7 @@ const BRAND_MAPPINGS: BrandMapping[] = [
   { icon: ClaudeIcon, keywords: ['claude', 'sonnet', 'opus', 'haiku'] },
   { icon: OpenaiChatgptIcon, keywords: ['gpt', 'chatgpt', 'openai', 'codex'] },
   { icon: ZhipuIcon, keywords: ['glm', 'zhipu', 'chatglm'] },
-  { icon: KimiIcon, keywords: ['kimi', 'moonshot'] },
+  { icon: MoonshotIcon, keywords: ['kimi', 'moonshot'] },
   { icon: DeepseekIcon, keywords: ['deepseek'] },
   { icon: DoubaoIcon, keywords: ['doubao'] },
   { icon: MinimaxIcon, keywords: ['minimax', 'abab'] },
@@ -63,13 +63,25 @@ function resolveBrand(source: string): BrandMapping | null {
   return null
 }
 
-export function resolveModelIconModel(value: string, displayName: string): BrandMapping | null {
+// Preset provider groups inherit the preset's own brand for models whose
+// names carry none (e.g. Kimi K3); custom providers and multi-vendor
+// aggregator presets stay on the generic fallback.
+function resolvePresetBrand(provider: ModelProvider): BrandMapping | null {
+  const preset = providerPresets.find((candidate) => candidate.id === provider.presetId)
+  return preset ? resolveBrand(`${preset.id} ${preset.name}`) : null
+}
+
+export function resolveModelIconModel(
+  value: string,
+  displayName: string,
+  provider?: ModelProvider,
+): BrandMapping | null {
   for (const source of [displayName, value]) {
     const resolved = resolveBrand(source)
     if (resolved) return resolved
   }
 
-  return null
+  return provider ? resolvePresetBrand(provider) : null
 }
 
 export function resolveSelectedModelIconOption(
@@ -139,8 +151,16 @@ export function groupModelOptionsByProvider(
     : orderedGroups
 }
 
-export function ModelBrandIcon({ value, displayName }: { value: string; displayName: string }) {
-  const brand = resolveModelIconModel(value, displayName)
+export function ModelBrandIcon({
+  value,
+  displayName,
+  provider,
+}: {
+  value: string
+  displayName: string
+  provider?: ModelProvider
+}) {
+  const brand = resolveModelIconModel(value, displayName, provider)
   const BrandIcon = brand?.icon
 
   return (
@@ -151,14 +171,14 @@ export function ModelBrandIcon({ value, displayName }: { value: string; displayN
       data-model-icon={BrandIcon ? 'brand' : 'fallback'}
       data-slot="model-brand-icon"
     >
-      {BrandIcon
-        ? createElement(BrandIcon, {
-            className: 'size-3',
-            variant: 'mono',
-          } as SVGProps<SVGSVGElement>)
-        : (
-            <Brain className="size-3" />
-          )}
+      {BrandIcon ? (
+        createElement(BrandIcon, {
+          className: 'size-3',
+          variant: 'mono',
+        } as SVGProps<SVGSVGElement>)
+      ) : (
+        <Brain className="size-3" />
+      )}
     </span>
   )
 }
