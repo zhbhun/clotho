@@ -24,13 +24,13 @@ function ShinyText({
   disabled = false,
   speed = 2,
   className,
-  color = 'color-mix(in oklch, var(--foreground-subtle), transparent 25%)',
+  color = 'color-mix(in oklch, var(--foreground-subtle), transparent 40%)',
   shineColor = 'var(--foreground)',
   spread = 120,
   yoyo = false,
   pauseOnHover = false,
   direction = 'left',
-  delay = 0,
+  delay = 1,
 }: ShinyTextProps) {
   const [isPaused, setIsPaused] = useState(false)
   const progress = useMotionValue(0)
@@ -110,7 +110,7 @@ function ShinyText({
       className={cn('shiny-text', className)}
       data-slot="shiny-text"
       style={{
-        backgroundImage: `linear-gradient(${spread}deg, ${color} 0%, ${color} 35%, ${shineColor} 50%, ${color} 65%, ${color} 100%)`,
+        backgroundImage: `linear-gradient(${spread}deg, ${color} 0%, ${color} 40%, ${shineColor} 50%, ${color} 60%, ${color} 100%)`,
         backgroundPosition,
         backgroundSize: '200% auto',
         backgroundClip: 'text',
