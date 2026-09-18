@@ -878,6 +878,21 @@ export const claude = {
     }
     return requestFromDesktop('claudeGetProjectGitBranch', { projectPath })
   },
+  async renameSession({
+    projectId,
+    sessionId,
+    title,
+  }: {
+    projectId: string
+    sessionId: string
+    title: string
+  }) {
+    if (!isTauriRuntime()) {
+      return
+    }
+
+    return requestFromDesktop('claudeRenameSession', { projectId, sessionId, title })
+  },
   async deleteSession({ projectId, sessionId }: { projectId: string; sessionId: string }) {
     if (!isTauriRuntime()) {
       return

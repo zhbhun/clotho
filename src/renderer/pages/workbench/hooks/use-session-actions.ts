@@ -97,8 +97,19 @@ export function useSessionActions(options: SessionActionsOptions) {
       if (!nextTitle) throw new Error('Session title cannot be empty')
       const session = useWorkbenchStore.getState().sessions[sessionId]
       if (!session) throw new Error('Session not found')
-      // Local only: clotho never appends custom-title records to the transcript,
-      // so a rename holds until the app restarts and the SDK title takes over.
+
+      // The only clotho write to a transcript: an explicit user rename of a
+      // started session. Drafts stay local — their title lives in drafts.json.
+      if (session.isDraft !== true) {
+        if (!session.claudeSessionId || !session.project_id) {
+          throw new Error('Session is not ready yet; try again later')
+        }
+        await claude.renameSession({
+          projectId: session.project_id,
+          sessionId: session.claudeSessionId,
+          title: nextTitle,
+        })
+      }
       setSessionTitle(sessionId, nextTitle)
     },
     [setSessionTitle],

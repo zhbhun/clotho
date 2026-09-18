@@ -888,6 +888,10 @@ export type DesktopRPC = {
         params: { projectPath: string }
         response: string | null
       }
+      claudeRenameSession: {
+        params: { projectId: string; sessionId: string; title: string }
+        response: void
+      }
       claudeDeleteSession: {
         params: { projectId: string; sessionId: string }
         response: void

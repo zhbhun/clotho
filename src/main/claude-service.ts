@@ -56,6 +56,7 @@ import {
   listClaudeProjects,
   projectPathForId,
   removeProject,
+  renameSession,
   selectFiles,
   selectProjectFolder,
   setProjectLastOpened,
@@ -176,6 +177,7 @@ export function createClaudeDesktopService(
     sampleContextUsage: (params: ClaudeSampleContextUsageParams) =>
       sampleSessionContextUsage(params, proxy),
     getProjectGitBranch,
+    renameSession,
     deleteSession,
     listProviders: () => settingsStore.get().providers,
     listModelMappings: () => settingsStore.get().models,

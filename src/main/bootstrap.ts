@@ -256,6 +256,7 @@ export async function bootstrap() {
         },
         claudeSampleContextUsage: (params) => service.sampleContextUsage(params),
         claudeGetProjectGitBranch: (params) => service.getProjectGitBranch(params),
+        claudeRenameSession: (params) => service.renameSession(params),
         claudeDeleteSession: (params) => service.deleteSession(params),
         claudeRespondToolRequest: (params) =>
           service.respondToolRequest(params.streamId, params.toolUseId, params.result),

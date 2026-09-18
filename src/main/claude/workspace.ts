@@ -2,7 +2,11 @@ import { constants, promises as fs } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-import { getSessionInfo, deleteSession as sdkDeleteSession } from '@anthropic-ai/claude-agent-sdk'
+import {
+  getSessionInfo,
+  deleteSession as sdkDeleteSession,
+  renameSession as sdkRenameSession,
+} from '@anthropic-ai/claude-agent-sdk'
 
 import { projectPathForId } from './projects'
 import { type HeadTail, type SessionEntry } from './session-meta'
@@ -105,6 +109,26 @@ export async function getProjectSessions({ projectId }: { projectId: string }) {
     projectId,
     projectPath,
   })
+}
+
+/**
+ * User-initiated rename. Goes through the SDK's own store so the appended
+ * custom-title record carries the fields the CLI expects; nothing else in
+ * clotho may write to the transcript.
+ */
+export async function renameSession({
+  projectId,
+  sessionId,
+  title,
+}: {
+  projectId: string
+  sessionId: string
+  title: string
+}) {
+  assertPathSegment(projectId, 'project id')
+  assertPathSegment(sessionId, 'session id')
+  const projectPath = await projectPathForId(projectId)
+  await sdkRenameSession(sessionId, title, { dir: projectPath })
 }
 
 export function assertPathSegment(value: string, label: string) {
