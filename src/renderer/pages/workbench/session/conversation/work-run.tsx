@@ -68,7 +68,7 @@ export function WorkRunRow({
   const parts = COUNT_PARTS.filter(({ countKey }) => counts[countKey] > 0).map(
     ({ countKey, labelKey }) => translate(labelKey, { count: counts[countKey] }),
   )
-  if (!parts.length) parts.push(t('workbench.workRun.thoughtTimes', { count: thoughtCount }))
+  if (thoughtCount > 0) parts.push(t('workbench.workRun.thoughtTimes', { count: thoughtCount }))
   const separator = /^zh|ja/.test(i18n.language) ? '，' : ', '
 
   const runningTool = header.kind === 'running' ? header.tool : undefined
