@@ -73,7 +73,7 @@ export function SessionEmptyState({
         </div>
         <div className="flex flex-col gap-3">
           <div className="flex flex-col">
-            <div className="mx-2 flex min-h-14 items-center rounded-t-3xl bg-project-switcher-surface px-1 pt-2 pb-6">
+            <div className="mx-2 flex min-h-14 items-center rounded-t-3xl bg-project-switcher-surface px-2 pt-2 pb-6">
               <ProjectSwitcher
                 appearance="empty-surface"
                 branch={selectedBranch}
