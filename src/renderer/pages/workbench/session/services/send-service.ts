@@ -535,32 +535,11 @@ export class SendService {
       if (!this.controller.isDisposed) {
         if (!queryFailure && outcome === 'success' && hasAssistantResponse) {
           const session = useWorkbenchStore.getState().sessions[context.sessionId]
-          if (
-            session?.title === DEFAULT_SESSION_TITLE &&
-            !session.custom_title &&
-            (prompt.trim() || attachments.length)
-          ) {
-            useWorkbenchStore
-              .getState()
-              .setSessionTitle(context.sessionId, draftTitleFromPrompt(prompt, attachments))
-          }
-          const titledSession = useWorkbenchStore.getState().sessions[context.sessionId]
-          if (
-            titledSession?.custom_title &&
-            titledSession.claudeSessionId &&
-            titledSession.project_id
-          ) {
-            void this.controller.claudeService
-              .renameSession({
-                projectId: titledSession.project_id,
-                sessionId: titledSession.claudeSessionId,
-                title: titledSession.custom_title,
-              })
-              .catch((error) =>
-                this.logger.error('session.title_sync_failed', 'Failed to sync session title', {
-                  error,
-                }),
-              )
+          if (session?.title === DEFAULT_SESSION_TITLE && !session.custom_title) {
+            // A placeholder until the next catalog refresh brings the SDK title;
+            // the transcript must stay free of clotho-written custom-title records.
+            const title = draftTitleFromPrompt(prompt)
+            if (title) useWorkbenchStore.getState().setLocalTitle(context.sessionId, title)
           }
           // onPromptStarted already fired when the first agent content
           // streamed in; the draft is completed there, not here.

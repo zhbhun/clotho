@@ -79,6 +79,7 @@ export type WorkbenchState = WorkbenchDataState & {
   selectSession: (sessionId: string) => void
   closeSession: (sessionId: string) => void
   setSessionTitle: (sessionId: string, title: string) => void
+  setLocalTitle: (sessionId: string, title: string) => void
   togglePinSession: (sessionId: string) => void
   setSessionActivity: (sessionId: string, activity: SessionActivityEvent) => void
   bindClaudeSession: (sessionId: string, claudeSessionId: string) => void
@@ -608,6 +609,20 @@ export const useWorkbenchStore = create<WorkbenchState>()(
             sessions: {
               ...state.sessions,
               [sessionId]: { ...session, custom_title: title, title },
+            },
+          }
+        }),
+      // Derived titles must not touch custom_title: a session with one keeps its
+      // local title across catalog refreshes, which would pin the placeholder
+      // over the title the SDK later returns for a started session.
+      setLocalTitle: (sessionId, title) =>
+        set((state) => {
+          const session = state.sessions[sessionId]
+          if (!session) return state
+          return {
+            sessions: {
+              ...state.sessions,
+              [sessionId]: { ...session, title },
             },
           }
         }),

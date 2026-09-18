@@ -58,7 +58,6 @@ function createClient() {
     query: vi.fn(() => {
       throw new Error('query is not expected in this test')
     }),
-    renameSession: vi.fn(async () => {}),
     setProjectModel: vi.fn(async () => {}),
     listProviders: vi.fn(async (): Promise<ModelProvider[]> => []),
     sampleContextUsage: vi.fn(async (): Promise<ClaudeContextUsageSnapshot | null> => null),

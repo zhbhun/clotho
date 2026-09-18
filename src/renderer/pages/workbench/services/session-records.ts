@@ -27,8 +27,8 @@ export async function materializeUnsavedDraft(sessionId: string, composer: Sessi
   const session = store.sessions[sessionId]
   if (!session?.isDraft || !session.isUnsavedDraft) return
   if (!session.custom_title && session.title === DEFAULT_SESSION_TITLE) {
-    const title = draftTitleFromPrompt(composer.prompt, composer.attachments ?? [])
-    if (title) store.setSessionTitle(sessionId, title)
+    const title = draftTitleFromPrompt(composer.prompt)
+    if (title) store.setLocalTitle(sessionId, title)
   }
   useWorkbenchStore.getState().markDraftSaved(sessionId)
   const saved = useWorkbenchStore.getState().sessions[sessionId]

@@ -189,19 +189,16 @@ describe('useProjects session actions', () => {
     })
   })
 
-  it('renames a remote session after the desktop request succeeds', async () => {
+  it('renames a remote session locally without writing to the transcript', async () => {
     const { result } = renderHook(() => useProjects())
     await waitFor(() => expect(result.current.isLoading).toBe(false))
     const session = useWorkbenchStore.getState().sessions[REMOTE_SESSION.id]
+    vi.mocked(requestFromDesktop).mockClear()
 
     expect(result.current.renameSession).toBeTypeOf('function')
     await act(() => result.current.renameSession?.(session.id, 'Renamed session'))
 
-    expect(requestFromDesktop).toHaveBeenCalledWith('claudeRenameSession', {
-      projectId: PROJECT.id,
-      sessionId: REMOTE_SESSION.id,
-      title: 'Renamed session',
-    })
+    expect(requestFromDesktop).not.toHaveBeenCalledWith('claudeRenameSession', expect.anything())
     expect(useWorkbenchStore.getState().sessions[REMOTE_SESSION.id]?.title).toBe('Renamed session')
   })
 

@@ -107,32 +107,6 @@ export async function getProjectSessions({ projectId }: { projectId: string }) {
   })
 }
 
-export async function renameSession({
-  projectId,
-  sessionId,
-  title,
-}: {
-  projectId: string
-  sessionId: string
-  title: string
-}) {
-  const projectPath = await projectPathForId(projectId)
-  const sessionPath = path.join(
-    claudeDir(),
-    'projects',
-    projectDirNameFromPath(projectPath),
-    `${sessionId}.jsonl`,
-  )
-  const entry = JSON.stringify({
-    type: 'custom-title',
-    sessionId,
-    customTitle: title,
-  })
-
-  await fs.mkdir(path.dirname(sessionPath), { recursive: true })
-  await fs.appendFile(sessionPath, `${entry}\n`)
-}
-
 export function assertPathSegment(value: string, label: string) {
   if (!value || value === '.' || value === '..' || value.includes('/') || value.includes('\\')) {
     throw new Error(`Invalid ${label}: ${value}`)

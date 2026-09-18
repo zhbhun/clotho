@@ -29,8 +29,8 @@ export function useSessionNavigation(workbench: ReturnType<typeof useWorkbench>)
       return
     }
     if (session.title !== DEFAULT_SESSION_TITLE || session.custom_title) return
-    const title = composer ? draftTitleFromPrompt(composer.prompt, composer.attachments ?? []) : ''
-    if (title) state.setSessionTitle(session.id, title)
+    const title = composer ? draftTitleFromPrompt(composer.prompt) : ''
+    if (title) state.setLocalTitle(session.id, title)
   }, [registry])
 
   const handleStartNewSessionInCurrentWorkspace = useCallback(
