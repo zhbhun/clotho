@@ -54,7 +54,7 @@ export function SessionEmptyState({
       className={cn(
         'px-6',
         hasTabSessions
-          ? 'pointer-events-none absolute inset-x-0 top-10 bottom-0 flex items-center justify-center overflow-y-auto'
+          ? 'pointer-events-none absolute inset-x-0 top-11 bottom-0 flex items-center justify-center overflow-y-auto'
           : 'flex flex-1 items-center justify-center',
       )}
     >
