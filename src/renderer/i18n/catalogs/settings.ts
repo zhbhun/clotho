@@ -285,7 +285,6 @@ export const settingsCatalog = {
   'settings.provider.title': setting('Providers', '供应商', '供應商'),
   'settings.provider.unnamed': setting('Unnamed provider', '未命名供应商', '未命名供應商'),
   'settings.provider.usage.balance': setting('Balance', '余额', '餘額'),
-  'settings.provider.usage.exhausted': setting('Exhausted', '已用尽', '已用盡'),
   'settings.provider.usage.queryFailed': setting('Query failed', '查询失败', '查詢失敗'),
   'settings.provider.usage.refresh': setting('Refresh usage', '刷新用量', '重新整理用量'),
   'settings.provider.usage.remaining': setting('remaining', '剩余', '剩餘'),

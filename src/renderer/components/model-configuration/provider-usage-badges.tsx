@@ -80,9 +80,6 @@ function WindowDetail({ language, window }: { language: string; window: Provider
         <>
           {windowLabel(window.name)} {t('settings.provider.usage.remaining')}{' '}
           {remainingText(window)}
-          {window.utilization !== undefined && window.utilization >= 100 ? (
-            <span className="text-destructive"> ({t('settings.provider.usage.exhausted')})</span>
-          ) : null}
         </>
       )}
       {resetText ? <span className="opacity-70"> · {resetText}</span> : null}
@@ -162,7 +159,7 @@ export function ProviderUsageRings({ quota }: { quota: ProviderUsageQuota | unde
           })}
         </svg>
       </TooltipTrigger>
-      <TooltipContent className="flex-col items-start gap-0.5">
+      <TooltipContent className="max-w-none flex-col items-start gap-0.5">
         {/* Rings nest longest-first; the tooltip lists the shortest period on top. */}
         {[...windows].reverse().map((window, index) => (
           <WindowDetail key={window.name ?? index} language={i18n.language} window={window} />
@@ -247,7 +244,7 @@ export function ProviderUsageBadges({
         <UsageWindowsSummary windows={windows} />
         {refreshButton}
       </TooltipTrigger>
-      <TooltipContent className="flex-col items-start gap-0.5">
+      <TooltipContent className="max-w-none flex-col items-start gap-0.5">
         {windows.map((window, index) => (
           <WindowDetail key={window.name ?? index} language={i18n.language} window={window} />
         ))}
