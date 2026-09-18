@@ -1,4 +1,4 @@
-import { FileSearch } from 'lucide-react'
+import { FileScan } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { ToolIcon } from './shared/content'
@@ -6,7 +6,7 @@ import { fileSummary, formatDisplayPath } from './shared/file-path'
 import type { CoalescedRead, ToolRenderer } from './shared/types'
 
 export const readRenderer: ToolRenderer = {
-  icon: FileSearch,
+  icon: FileScan,
   label: 'tools.Read.label',
   description: 'tools.read.description',
   summary: (input) => fileSummary(input),
