@@ -131,6 +131,7 @@ export function SubagentConversation({
         <div className={rowClassName}>
           <TimelineEntry
             compactAfter={row.compactAfter}
+            defaultToolOpen={isRunning ? false : undefined}
             isLast={row.isLast}
             isStreaming={isRunning}
             item={row.item}

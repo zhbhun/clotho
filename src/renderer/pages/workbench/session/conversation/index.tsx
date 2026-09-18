@@ -345,6 +345,7 @@ function ConversationRowContent({
       <div className={cn('px-3', hasTopPadding && 'pt-2')}>
         <TimelineEntry
           compactAfter={row.compactAfter}
+          defaultToolOpen={row.isStreaming ? false : undefined}
           isLast={row.isLast}
           isStreaming={row.isStreaming}
           item={row.item}
