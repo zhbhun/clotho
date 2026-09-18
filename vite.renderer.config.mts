@@ -11,11 +11,11 @@ export default defineConfig({
     alias: [
       {
         find: '@/shadcn',
-        replacement: path.resolve(__dirname, './src/shadcn'),
+        replacement: path.resolve(import.meta.dirname, './src/shadcn'),
       },
       {
         find: '@/shared',
-        replacement: path.resolve(__dirname, './src/shared'),
+        replacement: path.resolve(import.meta.dirname, './src/shared'),
       },
     ],
   },

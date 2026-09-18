@@ -6,14 +6,14 @@
   "main": ".vite/build/main.js",
   "private": true,
   "scripts": {
-    "start": "VITE_CONFIG_NATIVE_IGNORE_WARNING=true electron-forge start",
+    "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
     "check": "tsc --noEmit",
     "test": "vitest run",
     "lint": "eslint",
-    "format": "prettier --write \"**/*.{css,js,md,ts,tsx}\""
+    "format": "prettier --write \"**/*.{css,js,md,mts,ts,tsx}\""
   },
   "keywords": [],
   "author": {
