@@ -34,6 +34,20 @@ describe('buildConversationRows', () => {
     expect(formatConversationDuration(65, instance.t)).toBe('1 分 5 秒')
   })
 
+  it('resolves work-run summary labels with natural plurals', async () => {
+    const instance = await createAppI18n('en', [])
+    expect(instance.t('workbench.workRun.ranCommands', { count: 1 })).toBe('ran 1 command')
+    expect(instance.t('workbench.workRun.ranCommands', { count: 2 })).toBe('ran 2 commands')
+    expect(instance.t('workbench.workRun.readFiles', { count: 1 })).toBe('read 1 file')
+
+    await instance.changeLanguage('zh-CN')
+    expect(instance.t('workbench.workRun.ranCommands', { count: 3 })).toBe('运行了 3 个命令')
+
+    // Russian needs one/few/many forms; unmatched counts fall back to the base label.
+    await instance.changeLanguage('ru')
+    expect(instance.t('workbench.workRun.ranCommands', { count: 2 })).toBe('выполнил команд: 2')
+  })
+
   it('flattens main-conversation turns into stable item-level rows', () => {
     const rows = buildConversationRows({
       expandedTurns: { 'user-1': true },
@@ -376,6 +390,138 @@ describe('buildConversationRows', () => {
     expect(rows).toHaveLength(2)
     expect(rows[1]).toMatchObject({ isLast: true, kind: 'status' })
   })
+
+  it('folds consecutive work items into one expandable run row', () => {
+    const rows = buildConversationRows({
+      expandedTurns: { 'user-1': true },
+      interruptedTurnIds: new Set(),
+      isStreaming: false,
+      lastSentTurnId: null,
+      streamingElapsed: 0,
+      turns: [
+        turn('user-1', [
+          { id: 'thinking-1', kind: 'thinking', text: 'Reasoning' },
+          { id: 'tool-1', kind: 'tool' },
+          { id: 'tool-2', kind: 'tool' },
+          { id: 'text-1', kind: 'text', text: 'Answer' },
+        ]),
+      ],
+    })
+
+    expect(rows.map((row) => row.kind)).toEqual(['user', 'status', 'work-run', 'timeline'])
+    expect(rows[2]).toMatchObject({
+      isActive: false,
+      isExpanded: false,
+      isLast: false,
+      items: [
+        expect.objectContaining({ id: 'thinking-1' }),
+        expect.objectContaining({ id: 'tool-1' }),
+        expect.objectContaining({ id: 'tool-2' }),
+      ],
+      key: 'turn:user-1:run:thinking-1',
+      kind: 'work-run',
+      runId: 'turn:user-1:run:thinking-1',
+    })
+  })
+
+  it('expands a run row through expandedRuns', () => {
+    const runId = 'turn:user-1:run:thinking-1'
+    const rows = buildConversationRows({
+      expandedRuns: { [runId]: true },
+      expandedTurns: { 'user-1': true },
+      interruptedTurnIds: new Set(),
+      isStreaming: false,
+      lastSentTurnId: null,
+      streamingElapsed: 0,
+      turns: [
+        turn('user-1', [
+          { id: 'thinking-1', kind: 'thinking', text: 'Reasoning' },
+          { id: 'tool-1', kind: 'tool' },
+          { id: 'text-1', kind: 'text', text: 'Answer' },
+        ]),
+      ],
+    })
+
+    expect(rows[2]).toMatchObject({ isExpanded: true, kind: 'work-run' })
+  })
+
+  it('marks the trailing run active while its turn streams', () => {
+    const rows = buildConversationRows({
+      expandedTurns: { 'user-1': true },
+      interruptedTurnIds: new Set(),
+      isStreaming: true,
+      lastSentTurnId: 'user-1',
+      streamingElapsed: 4,
+      turns: [
+        turn('user-1', [
+          { id: 'tool-1', kind: 'tool' },
+          { id: 'tool-2', kind: 'tool' },
+        ]),
+      ],
+    })
+
+    expect(rows.map((row) => row.kind)).toEqual(['user', 'status', 'work-run'])
+    expect(rows[2]).toMatchObject({ isActive: true, isExpanded: false, isLast: true })
+  })
+
+  it('keeps a tool with a pending request out of the surrounding run', () => {
+    const rows = buildConversationRows({
+      expandedTurns: { 'user-1': true },
+      interruptedTurnIds: new Set(),
+      isStreaming: false,
+      lastSentTurnId: null,
+      pendingRequests: {
+        'tool-2-use': {
+          kind: 'permission',
+          toolUseId: 'tool-2-use',
+          toolName: 'Bash',
+          input: {},
+        },
+      },
+      streamingElapsed: 0,
+      turns: [
+        turn('user-1', [
+          { id: 'thinking-1', kind: 'thinking', text: 'Reasoning' },
+          { id: 'tool-1', kind: 'tool' },
+          {
+            id: 'tool-2',
+            kind: 'tool',
+            use: { type: 'tool_use', name: 'Bash', toolUseId: 'tool-2-use', input: {} },
+          },
+        ]),
+      ],
+    })
+
+    expect(rows.map((row) => row.kind)).toEqual(['user', 'status', 'work-run', 'timeline'])
+    expect(rows[2]).toMatchObject({
+      items: [
+        expect.objectContaining({ id: 'thinking-1' }),
+        expect.objectContaining({ id: 'tool-1' }),
+      ],
+    })
+    expect(rows[3]).toMatchObject({ item: expect.objectContaining({ id: 'tool-2' }) })
+  })
+
+  it('shows the trailing run after the final text for a collapsed turn', () => {
+    const rows = buildConversationRows({
+      expandedTurns: {},
+      interruptedTurnIds: new Set(),
+      isStreaming: false,
+      lastSentTurnId: null,
+      streamingElapsed: 0,
+      turns: [
+        turn('user-1', [
+          { id: 'text-1', kind: 'text', text: 'Progress note' },
+          { id: 'tool-1', kind: 'tool' },
+          { id: 'tool-2', kind: 'tool' },
+        ]),
+      ],
+    })
+
+    expect(rows.map((row) => row.kind)).toEqual(['user', 'status', 'timeline', 'work-run'])
+    expect(rows[2]).toMatchObject({ item: expect.objectContaining({ id: 'text-1' }) })
+    expect(rows[3]).toMatchObject({ isActive: false, isExpanded: false, isLast: true })
+  })
 })
 
 describe('buildSubagentConversationRows', () => {
@@ -393,5 +539,23 @@ describe('buildSubagentConversationRows', () => {
       { key: 'subagent:timeline:agent-thinking', kind: 'timeline' },
       { key: 'subagent:timeline:agent-text', kind: 'timeline' },
     ])
+  })
+
+  it('folds consecutive work items into a run while streaming marks it active', () => {
+    const rows = buildSubagentConversationRows({
+      isStreaming: true,
+      items: [
+        { id: 'agent-thinking', kind: 'thinking', text: 'Working' },
+        { id: 'agent-tool-1', kind: 'tool' },
+        { id: 'agent-tool-2', kind: 'tool' },
+      ],
+    })
+
+    expect(rows.map((row) => row.kind)).toEqual(['work-run'])
+    expect(rows[0]).toMatchObject({
+      isActive: true,
+      isExpanded: false,
+      key: 'subagent:run:agent-thinking',
+    })
   })
 })

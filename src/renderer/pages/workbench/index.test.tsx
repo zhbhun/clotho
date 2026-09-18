@@ -2987,9 +2987,22 @@ describe('mock project history', () => {
 
     fireEvent.click(workToggle)
 
+    expect(workToggle).toHaveAttribute('aria-expanded', 'true')
+    // Standalone WebSearch/WebFetch steps sit between text replies and stay directly visible.
+    expect(await screen.findAllByLabelText(/^WebSearch /)).toHaveLength(1)
+    expect(await screen.findAllByLabelText(/^WebFetch /)).toHaveLength(1)
+    // The trailing consecutive pair folds into a collapsed run summary line.
+    const runToggle = await screen.findByRole('button', { name: /visited 2 web page/i })
+    expect(runToggle).toHaveAttribute('aria-expanded', 'false')
+
+    fireEvent.click(runToggle)
+
     expect(await screen.findAllByLabelText(/^WebSearch /)).toHaveLength(2)
     expect(await screen.findAllByLabelText(/^WebFetch /)).toHaveLength(2)
-    expect(workToggle).toHaveAttribute('aria-expanded', 'true')
+    // Run tools stay collapsed until clicked; the two standalone tools keep their open bodies.
+    expect(screen.getAllByTestId('tool-item-body')).toHaveLength(2)
+    fireEvent.click(screen.getAllByLabelText(/^WebSearch /)[1])
+    expect(await screen.findAllByTestId('tool-item-body')).toHaveLength(3)
     expect(screen.getByRole('textbox', { name: 'Prompt' })).toHaveAttribute(
       'contenteditable',
       'false',

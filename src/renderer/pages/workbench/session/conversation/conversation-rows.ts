@@ -4,6 +4,7 @@ import type { ClaudeToolRequest } from '../../../../services/claude/claude'
 import type { ClaudeMessage } from '../services/message'
 import { type TurnTerminalStatus, isTimelineToolRunning } from './tool-state'
 import type { ConversationTimelineItem, ConversationTurn } from './types'
+import { groupWorkRuns } from './work-runs'
 
 export type ConversationRow =
   | {
@@ -32,6 +33,19 @@ export type ConversationRow =
       kind: 'timeline'
       turnTerminalStatus?: TurnTerminalStatus
       turnId?: string
+    }
+  | {
+      compactAfter: boolean
+      isActive: boolean
+      isExpanded: boolean
+      isLast: boolean
+      isStreaming: boolean
+      items: ConversationTimelineItem[]
+      key: string
+      kind: 'work-run'
+      runId: string
+      turnId?: string
+      turnTerminalStatus?: TurnTerminalStatus
     }
   | {
       isStreaming: boolean
@@ -101,6 +115,7 @@ function toolRequestFor(
 }
 
 export function buildConversationRows(options: {
+  expandedRuns?: Record<string, boolean>
   expandedTurns: Record<string, boolean>
   interruptedTurnDurations?: Record<string, number>
   interruptedTurnIds: Set<string>
@@ -171,18 +186,22 @@ export function buildConversationRows(options: {
           timelineItems.slice(lastTextIndex + 1).some((item) => item.kind !== 'text')
         const trailingStartIndex = hasWorkAfterLastText ? lastTextIndex : timelineItems.length
         const visibleItems = isExpanded ? timelineItems : timelineItems.slice(trailingStartIndex)
-        const latestItem = timelineItems.at(-1)
-        const latestPendingRequest = latestItem
-          ? toolRequestFor(options.pendingRequests, latestItem)
-          : undefined
+        const slices = groupWorkRuns(visibleItems, `turn:${turnId}`, (item) =>
+          Boolean(toolRequestFor(options.pendingRequests, item) === undefined),
+        )
+        const lastSlice = slices.at(-1)
+        const lastVisibleItem = visibleItems.at(-1)
+        const lastItemInCollapsedRun =
+          lastSlice?.kind === 'run' && !options.expandedRuns?.[lastSlice.runId]
         const showThinkingAfterLatestTool = Boolean(
           (isExpanded || hasWorkAfterLastText) &&
           isStreaming &&
-          latestItem?.kind === 'tool' &&
-          !latestPendingRequest &&
-          !isTimelineToolRunning(latestItem, {
+          lastVisibleItem?.kind === 'tool' &&
+          !lastItemInCollapsedRun &&
+          !toolRequestFor(options.pendingRequests, lastVisibleItem) &&
+          !isTimelineToolRunning(lastVisibleItem, {
             isStreaming,
-            pendingRequest: latestPendingRequest,
+            pendingRequest: toolRequestFor(options.pendingRequests, lastVisibleItem),
             turnTerminalStatus,
           }),
         )
@@ -203,13 +222,34 @@ export function buildConversationRows(options: {
           turnId,
         })
 
-        visibleItems.forEach((item, itemIndex) => {
-          const nextItem = visibleItems[itemIndex + 1]
+        slices.forEach((slice, sliceIndex) => {
+          const nextSlice = slices[sliceIndex + 1]
+          const isLastSlice = sliceIndex === slices.length - 1
+          const nextIsWork = nextSlice
+            ? nextSlice.kind === 'run' || nextSlice.item.kind !== 'text'
+            : showThinkingAfterLatestTool
+
+          if (slice.kind === 'run') {
+            rows.push({
+              compactAfter: nextIsWork,
+              isActive: isStreaming && isLastSlice,
+              isExpanded: Boolean(options.expandedRuns?.[slice.runId]),
+              isLast: isLastSlice && !showThinkingAfterLatestTool,
+              isStreaming,
+              items: slice.items,
+              key: slice.runId,
+              kind: 'work-run',
+              runId: slice.runId,
+              turnId,
+              turnTerminalStatus,
+            })
+            return
+          }
+
+          const item = slice.item
           rows.push({
-            compactAfter:
-              item.kind !== 'text' &&
-              (nextItem ? nextItem.kind !== 'text' : showThinkingAfterLatestTool),
-            isLast: itemIndex === visibleItems.length - 1 && !showThinkingAfterLatestTool,
+            compactAfter: item.kind !== 'text' && nextIsWork,
+            isLast: isLastSlice && !showThinkingAfterLatestTool,
             isStreaming,
             item,
             key: `turn:${turnId}:timeline:${item.id}`,
@@ -293,10 +333,13 @@ export function buildConversationRows(options: {
 }
 
 export function buildSubagentConversationRows(options: {
+  expandedRuns?: Record<string, boolean>
   initialUserMessage?: ClaudeMessage
+  isStreaming?: boolean
   items: ConversationTimelineItem[]
 }): ConversationRow[] {
   const rows: ConversationRow[] = []
+  const isStreaming = Boolean(options.isStreaming)
 
   if (options.initialUserMessage) {
     rows.push({
@@ -306,12 +349,34 @@ export function buildSubagentConversationRows(options: {
     })
   }
 
-  options.items.forEach((item, index) => {
-    const nextItem = options.items[index + 1]
+  const slices = groupWorkRuns(options.items, 'subagent')
+  slices.forEach((slice, sliceIndex) => {
+    const nextSlice = slices[sliceIndex + 1]
+    const isLastSlice = sliceIndex === slices.length - 1
+    const nextIsWork = nextSlice
+      ? nextSlice.kind === 'run' || nextSlice.item.kind !== 'text'
+      : false
+
+    if (slice.kind === 'run') {
+      rows.push({
+        compactAfter: nextIsWork,
+        isActive: isStreaming && isLastSlice,
+        isExpanded: Boolean(options.expandedRuns?.[slice.runId]),
+        isLast: isLastSlice,
+        isStreaming,
+        items: slice.items,
+        key: slice.runId,
+        kind: 'work-run',
+        runId: slice.runId,
+      })
+      return
+    }
+
+    const item = slice.item
     rows.push({
-      compactAfter: Boolean(item.kind !== 'text' && nextItem && nextItem.kind !== 'text'),
-      isLast: index === options.items.length - 1,
-      isStreaming: false,
+      compactAfter: Boolean(item.kind !== 'text' && nextIsWork),
+      isLast: isLastSlice,
+      isStreaming,
       item,
       key: `subagent:timeline:${item.id}`,
       kind: 'timeline',

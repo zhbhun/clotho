@@ -21,6 +21,7 @@ import { TimelineEntry, TimelineRow, UserCard } from './timeline'
 import { computeLastSentTurnId, computeTurns } from './turns'
 import type { ConversationTurn } from './types'
 import { type VirtualConversationHandle, VirtualConversationList } from './virtual-conversation'
+import { WorkRunRow } from './work-run'
 
 const EMPTY_INTERRUPTED_TURN_IDS = new Set<string>()
 
@@ -92,6 +93,10 @@ export function ConversationView({
 }: ConversationViewProps) {
   const { t } = useTranslation()
   const [editingMessageId, setEditingMessageId] = useState<string>()
+  const [expandedRuns, setExpandedRuns] = useState<Record<string, boolean>>({})
+  const toggleRun = useCallback((runId: string) => {
+    setExpandedRuns((current) => ({ ...current, [runId]: !current[runId] }))
+  }, [])
   const turns = useMemo(() => suppliedTurns ?? computeTurns(messages), [messages, suppliedTurns])
   const lastSentTurnId = useMemo(
     () => computeLastSentTurnId(turns, sentTurnIds),
@@ -101,6 +106,7 @@ export function ConversationView({
   const rows = useMemo(
     () =>
       buildConversationRows({
+        expandedRuns,
         expandedTurns,
         formatDuration: (seconds) => formatConversationDuration(seconds, t),
         interruptedTurnIds,
@@ -113,6 +119,7 @@ export function ConversationView({
         turns,
       }),
     [
+      expandedRuns,
       expandedTurns,
       interruptedTurnIds,
       interruptedTurnDurations,
@@ -164,6 +171,7 @@ export function ConversationView({
           onOpenSubagent={onOpenSubagent}
           onRespond={onRespond}
           onToggle={onToggle}
+          onToggleRun={toggleRun}
         />
       )
 
@@ -187,6 +195,7 @@ export function ConversationView({
       pendingRequests,
       projectPath,
       t,
+      toggleRun,
       visibleEditingMessageId,
     ],
   )
@@ -222,6 +231,9 @@ function estimateConversationRowSize(row: ConversationRow) {
   if (row.kind === 'status') return 48
   if (row.kind === 'actions') return 32
   if (row.kind === 'thinking') return 48
+  if (row.kind === 'work-run') {
+    return row.isExpanded ? 32 + row.items.length * 96 : 32
+  }
   return 120
 }
 
@@ -235,6 +247,7 @@ function ConversationRowContent({
   onOpenSubagent,
   onRespond,
   onToggle,
+  onToggleRun,
   pendingRequests,
   projectPath,
   row,
@@ -248,6 +261,7 @@ function ConversationRowContent({
   onOpenSubagent?: (toolUseId: string) => void
   onRespond: (toolUseId: string, result: ClaudeToolResult) => Promise<void>
   onToggle: (turnId: string) => void
+  onToggleRun: (runId: string) => void
   pendingRequests: Record<string, ClaudeToolRequest>
   projectPath?: string
   row: ConversationRow
@@ -339,6 +353,27 @@ function ConversationRowContent({
           projectPath={projectPath}
           turnTerminalStatus={row.turnTerminalStatus}
           onRespond={onRespond}
+        />
+      </div>
+    )
+  }
+
+  if (row.kind === 'work-run') {
+    return (
+      <div className={cn('px-3', hasTopPadding && 'pt-2')}>
+        <WorkRunRow
+          compactAfter={row.compactAfter}
+          isActive={row.isActive}
+          isExpanded={row.isExpanded}
+          isLast={row.isLast}
+          isStreaming={row.isStreaming}
+          items={row.items}
+          onOpenSubagent={onOpenSubagent}
+          pendingRequests={pendingRequests}
+          projectPath={projectPath}
+          turnTerminalStatus={row.turnTerminalStatus}
+          onRespond={onRespond}
+          onToggle={() => onToggleRun(row.runId)}
         />
       </div>
     )

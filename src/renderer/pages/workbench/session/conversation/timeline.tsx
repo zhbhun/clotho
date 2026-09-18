@@ -595,6 +595,7 @@ function buildTimelineItemsFromBlocks(blocks: ClaudeContentBlock[]): Conversatio
 /** Shared timeline renderer for the main conversation and subagent dialog (dots, Thinking, and tool cards). */
 export function TimelineEntry({
   compactAfter = false,
+  defaultToolOpen,
   isLast,
   isStreaming,
   item,
@@ -605,6 +606,7 @@ export function TimelineEntry({
   onRespond,
 }: {
   compactAfter?: boolean
+  defaultToolOpen?: boolean
   isLast: boolean
   isStreaming?: boolean
   item: ConversationTimelineItem
@@ -629,6 +631,7 @@ export function TimelineEntry({
         <ToolItem
           backgroundTask={item.backgroundTask}
           coalescedReads={item.coalescedReads}
+          defaultOpen={defaultToolOpen}
           images={item.result?.images}
           input={item.use?.input}
           isError={item.isError}
@@ -743,8 +746,8 @@ function ThinkingBlock({ isRunning = false, text }: { isRunning?: boolean; text:
         </span>
         <ChevronRight
           className={cn(
-            'size-3.5 shrink-0 text-foreground-subtlest transition-transform',
-            open && 'rotate-90',
+            'size-3.5 shrink-0 text-foreground-subtlest opacity-0 transition-[opacity,transform] group-hover:opacity-100 group-focus-visible:opacity-100',
+            open && 'rotate-90 opacity-100',
           )}
         />
       </div>

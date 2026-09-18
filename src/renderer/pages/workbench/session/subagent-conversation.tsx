@@ -1,5 +1,5 @@
 import { CircleAlert, Loader2, RefreshCw } from 'lucide-react'
-import { type Ref, useCallback, useMemo } from 'react'
+import { type Ref, useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
@@ -24,6 +24,7 @@ import {
   type VirtualConversationHandle,
   VirtualConversationList,
 } from './conversation/virtual-conversation'
+import { WorkRunRow } from './conversation/work-run'
 import type { ClaudeMessage } from './services/message'
 import { type SessionSubagent, isNaturalSubagentUserMessage } from './subagents'
 
@@ -60,6 +61,10 @@ export function SubagentConversation({
 }) {
   const { t } = useTranslation()
   const isRunning = status === 'running'
+  const [expandedRuns, setExpandedRuns] = useState<Record<string, boolean>>({})
+  const toggleRun = useCallback((runId: string) => {
+    setExpandedRuns((current) => ({ ...current, [runId]: !current[runId] }))
+  }, [])
   const { initialUserMessage, items } = useMemo(() => {
     const userMessageIndex = messages.findIndex(isNaturalSubagentUserMessage)
     const timelineMessages =
@@ -73,10 +78,18 @@ export function SubagentConversation({
     }
   }, [messages])
   const rows = useMemo(
-    () => buildSubagentConversationRows({ initialUserMessage, items }),
-    [initialUserMessage, items],
+    () =>
+      buildSubagentConversationRows({
+        expandedRuns,
+        initialUserMessage,
+        isStreaming: isRunning,
+        items,
+      }),
+    [expandedRuns, initialUserMessage, isRunning, items],
   )
-  const firstTimelineKey = rows.find((row) => row.kind === 'timeline')?.key
+  const firstTimelineKey = rows.find(
+    (row) => row.kind === 'timeline' || row.kind === 'work-run',
+  )?.key
   const renderRow = useCallback(
     (row: ConversationRow) => {
       if (row.kind === 'user') {
@@ -86,14 +99,36 @@ export function SubagentConversation({
           </div>
         )
       }
-      if (row.kind !== 'timeline') return null
+      if (row.kind !== 'timeline' && row.kind !== 'work-run') return null
+
+      const rowClassName =
+        row.key === firstTimelineKey ? (initialUserMessage ? 'px-3 pt-4' : 'px-3 pt-1') : 'px-3'
+
+      if (row.kind === 'work-run') {
+        return (
+          <div className={rowClassName}>
+            <WorkRunRow
+              compactAfter={row.compactAfter}
+              isActive={row.isActive}
+              isExpanded={row.isExpanded}
+              isLast={row.isLast}
+              isStreaming={row.isStreaming}
+              items={row.items}
+              onOpenSubagent={onOpenSubagent}
+              pendingRequests={pendingRequests}
+              projectPath={projectPath}
+              turnTerminalStatus={
+                status === 'failed' ? 'failed' : status === 'stopped' ? 'interrupted' : undefined
+              }
+              onRespond={onRespond}
+              onToggle={() => toggleRun(row.runId)}
+            />
+          </div>
+        )
+      }
 
       return (
-        <div
-          className={
-            row.key === firstTimelineKey ? (initialUserMessage ? 'px-3 pt-4' : 'px-3 pt-1') : 'px-3'
-          }
-        >
+        <div className={rowClassName}>
           <TimelineEntry
             compactAfter={row.compactAfter}
             isLast={row.isLast}
@@ -119,6 +154,7 @@ export function SubagentConversation({
       pendingRequests,
       projectPath,
       status,
+      toggleRun,
     ],
   )
 
@@ -180,5 +216,9 @@ export function SubagentConversation({
 }
 
 function estimateSubagentRowSize(row: ConversationRow) {
-  return row.kind === 'user' ? 120 : 96
+  if (row.kind === 'user') return 120
+  if (row.kind === 'work-run') {
+    return row.isExpanded ? 32 + row.items.length * 96 : 32
+  }
+  return 96
 }
