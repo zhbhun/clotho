@@ -202,7 +202,7 @@ describe('buildConversationRows', () => {
     })
   })
 
-  it('preserves prior tool work below an expandable failure status', () => {
+  it('places an expandable failure status after prior tool work', () => {
     const rows = buildConversationRows({
       expandedTurns: { 'user-1': true },
       interruptedTurnIds: new Set(),
@@ -213,11 +213,40 @@ describe('buildConversationRows', () => {
       turns: [turn('user-1', [{ id: 'tool-1', kind: 'tool' }])],
     })
 
-    expect(rows[1]).toMatchObject({ canToggle: true, kind: 'status', status: 'failed' })
-    expect(rows[2]).toMatchObject({
+    expect(rows.map((row) => row.kind)).toEqual(['user', 'timeline', 'status'])
+    expect(rows[1]).toMatchObject({
+      isLast: false,
       isStreaming: false,
       kind: 'timeline',
       turnTerminalStatus: 'failed',
+    })
+    expect(rows[2]).toMatchObject({
+      canToggle: true,
+      error: 'model offline',
+      isLast: true,
+      kind: 'status',
+      status: 'failed',
+    })
+  })
+
+  it('places the failure status after the reply text of a text-only turn', () => {
+    const rows = buildConversationRows({
+      expandedTurns: {},
+      interruptedTurnIds: new Set(),
+      isStreaming: false,
+      lastSentTurnId: 'user-1',
+      streamingElapsed: 0,
+      turnFailures: { 'user-1': { elapsed: 12, message: 'model offline' } },
+      turns: [turn('user-1', [{ id: 'text-1', kind: 'text', text: 'Partial reply' }])],
+    })
+
+    expect(rows.map((row) => row.kind)).toEqual(['user', 'text', 'status'])
+    expect(rows[2]).toMatchObject({
+      canToggle: false,
+      error: 'model offline',
+      isLast: true,
+      kind: 'status',
+      status: 'failed',
     })
   })
 

@@ -210,17 +210,21 @@ export function buildConversationRows(options: {
             ? textItems.findLast((item) => Boolean(item.text.trim()))
             : undefined
 
-        rows.push({
-          canToggle: true,
-          duration,
-          error: failureMessage,
-          isExpanded,
-          isLast: visibleItems.length === 0 && !showThinkingAfterLatestTool && !collapsedSummary,
-          key: `turn:${turnId}:status`,
-          kind: 'status',
-          status,
-          turnId,
-        })
+        // A failure ends the turn after its work, so the status row closes the turn instead
+        // of heading it; other statuses stay on top as the turn's expandable header.
+        if (!hasFailure) {
+          rows.push({
+            canToggle: true,
+            duration,
+            error: failureMessage,
+            isExpanded,
+            isLast: visibleItems.length === 0 && !showThinkingAfterLatestTool && !collapsedSummary,
+            key: `turn:${turnId}:status`,
+            kind: 'status',
+            status,
+            turnId,
+          })
+        }
 
         slices.forEach((slice, sliceIndex) => {
           const nextSlice = slices[sliceIndex + 1]
@@ -234,7 +238,7 @@ export function buildConversationRows(options: {
               compactAfter: nextIsWork,
               isActive: isStreaming && isLastSlice,
               isExpanded: Boolean(options.expandedRuns?.[slice.runId]),
-              isLast: isLastSlice && !showThinkingAfterLatestTool,
+              isLast: isLastSlice && !showThinkingAfterLatestTool && !hasFailure,
               isStreaming,
               items: slice.items,
               key: slice.runId,
@@ -249,7 +253,7 @@ export function buildConversationRows(options: {
           const item = slice.item
           rows.push({
             compactAfter: item.kind !== 'text' && nextIsWork,
-            isLast: isLastSlice && !showThinkingAfterLatestTool,
+            isLast: isLastSlice && !showThinkingAfterLatestTool && !hasFailure,
             isStreaming,
             item,
             key: `turn:${turnId}:timeline:${item.id}`,
@@ -271,7 +275,7 @@ export function buildConversationRows(options: {
         if (collapsedSummary) {
           rows.push({
             compactAfter: false,
-            isLast: true,
+            isLast: !hasFailure,
             isStreaming,
             item: collapsedSummary,
             key: `turn:${turnId}:summary:${collapsedSummary.id}`,
@@ -281,17 +285,19 @@ export function buildConversationRows(options: {
           })
         }
       } else {
-        rows.push({
-          canToggle: false,
-          duration,
-          error: failureMessage,
-          isExpanded: false,
-          isLast: textItems.length === 0,
-          key: `turn:${turnId}:status`,
-          kind: 'status',
-          status,
-          turnId,
-        })
+        if (!hasFailure) {
+          rows.push({
+            canToggle: false,
+            duration,
+            error: failureMessage,
+            isExpanded: false,
+            isLast: textItems.length === 0,
+            key: `turn:${turnId}:status`,
+            kind: 'status',
+            status,
+            turnId,
+          })
+        }
 
         textItems.forEach((item) => {
           rows.push({
@@ -312,6 +318,20 @@ export function buildConversationRows(options: {
           messageUuid: finalTextMessage?.uuid,
           text: finalTextItem.text,
           timestamp: finalTextItem.timestamp,
+          turnId,
+        })
+      }
+
+      if (hasFailure) {
+        rows.push({
+          canToggle: hasStructuredTimeline,
+          duration,
+          error: failureMessage,
+          isExpanded: hasStructuredTimeline ? isExpanded : false,
+          isLast: true,
+          key: `turn:${turnId}:status`,
+          kind: 'status',
+          status,
           turnId,
         })
       }
