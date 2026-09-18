@@ -129,7 +129,7 @@ export function UserCard({
 
                   {showCommand ? (
                     <p className="whitespace-pre-wrap wrap-break-word leading-6">
-                      <span className="mx-0.5 inline-flex h-5 items-center rounded-md bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_8%)] px-1.5 leading-5 text-foreground">
+                      <span className="mx-0.5 inline-flex h-5 items-center rounded-md bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_8%)] px-1.5 leading-5 text-foreground">
                         /{message.commandName}
                       </span>
                       {message.commandArgs ? (

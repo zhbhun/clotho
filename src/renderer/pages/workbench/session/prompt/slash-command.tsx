@@ -76,7 +76,7 @@ function SlashCommandView({ node }: NodeViewProps) {
           render={
             <span
               aria-label={`/${name}`}
-              className="mx-0.5 inline-flex h-6 max-w-64 items-center rounded-md bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_8%)] px-1.5 align-top leading-6 transition-colors hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_12%)]"
+              className="mx-0.5 inline-flex h-6 max-w-64 items-center rounded-md bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_8%)] px-1.5 align-top leading-6 transition-colors hover:bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_12%)]"
               data-pointer-cursor-target=""
             />
           }

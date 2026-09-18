@@ -113,7 +113,7 @@ function FileMentionView({ deleteNode, node }: NodeViewProps) {
   const trigger = (
     <span
       aria-label={`${name}: ${path}`}
-      className="group/file mx-0.5 inline-flex h-6 max-w-56 items-center gap-1.5 rounded-md bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_8%)] px-1.5 align-top text-sm leading-6 text-foreground transition-colors hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_12%)]"
+      className="group/file mx-0.5 inline-flex h-6 max-w-56 items-center gap-1.5 rounded-md bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_8%)] px-1.5 align-top text-sm leading-6 text-foreground transition-colors hover:bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_12%)]"
       data-pointer-cursor-target=""
     />
   )
