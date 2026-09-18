@@ -227,22 +227,14 @@ export const settingsCatalog = {
     '请输入模型 ID',
     '請輸入模型 ID',
   ),
-  'settings.provider.modelIdPlaceholder': setting(
-    'Actual model name, e.g. glm-5.2[1M]',
-    '实际模型名，如 glm-5.2[1M]',
-    '實際模型名稱，如 glm-5.2[1M]',
-  ),
+  'settings.provider.modelIdPlaceholder': setting('Unique ID', '唯一 ID'),
   'settings.provider.modelMultimodal': setting('Multimodal', '多模态', '多模態'),
   'settings.provider.modelMultimodalAria': setting(
     'Model {{number}} multimodal input',
     '模型 {{number}} 多模态输入',
     '模型 {{number}} 多模態輸入',
   ),
-  'settings.provider.modelNamePlaceholder': setting(
-    'Display name, e.g. GLM-5.2 1M',
-    '显示名，如 GLM-5.2 1M',
-    '顯示名稱，如 GLM-5.2 1M',
-  ),
+  'settings.provider.modelNamePlaceholder': setting('Display name', '显示名称'),
   'settings.provider.modelReasoning': setting(
     'Model {{number}} reasoning',
     '模型 {{number}} 推理',
