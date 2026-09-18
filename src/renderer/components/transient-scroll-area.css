@@ -50,7 +50,7 @@ body[data-transient-scrollbar-dragging='true'] * {
 .transient-scroll-area [data-slot='scroll-area-thumb'] {
   background-color: var(
     --transient-scrollbar-thumb,
-    color-mix(in oklch, var(--foreground) 24%, transparent)
+    color-mix(in oklab, var(--foreground) 24%, transparent)
   );
 }
 

@@ -24,7 +24,7 @@ function ShinyText({
   disabled = false,
   speed = 2,
   className,
-  color = 'color-mix(in oklch, var(--foreground-subtle), transparent 40%)',
+  color = 'color-mix(in oklab, var(--foreground-subtle), transparent 40%)',
   shineColor = 'var(--foreground)',
   spread = 120,
   yoyo = false,

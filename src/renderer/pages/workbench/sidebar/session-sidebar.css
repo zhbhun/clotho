@@ -23,7 +23,7 @@
 }
 
 .session-sidebar-layout {
-  --sidebar-divider-hover: color-mix(in oklch, var(--border) 89%, var(--foreground) 11%);
+  --sidebar-divider-hover: color-mix(in oklab, var(--border) 89%, var(--foreground) 11%);
 }
 
 .session-sidebar-layout:has([data-slot='sidebar-rail']:hover) [data-slot='sidebar-container'],
@@ -48,7 +48,7 @@
 }
 
 .sidebar-session-scroll {
-  --transient-scrollbar-thumb: color-mix(in oklch, var(--sidebar-foreground) 27%, transparent);
+  --transient-scrollbar-thumb: color-mix(in oklab, var(--sidebar-foreground) 27%, transparent);
 }
 
 /* Sticky group headers (z-index 10) must not cover the transient scrollbar. */

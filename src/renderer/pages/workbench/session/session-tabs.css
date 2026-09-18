@@ -1,5 +1,5 @@
 .session-tabs {
-  --session-tab-divider: color-mix(in oklch, var(--border) 80%, transparent);
+  --session-tab-divider: color-mix(in oklab, var(--border) 80%, transparent);
 
   isolation: isolate;
   transition: box-shadow 140ms ease;
@@ -7,7 +7,7 @@
 
 .session-tabs[data-content-scrolled='true'] {
   z-index: 10;
-  box-shadow: 0 8px 16px -12px color-mix(in oklch, var(--foreground) 18%, transparent);
+  box-shadow: 0 8px 16px -12px color-mix(in oklab, var(--foreground) 18%, transparent);
 }
 
 .session-tabs::after {

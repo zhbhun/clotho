@@ -48,8 +48,9 @@ function ThemeMiniature({
   palette: ThemePalettes[keyof ThemePalettes]
 }) {
   const style = {
-    '--preview-canvas': `color-mix(in oklch, ${palette.background}, ${palette.foreground} 7%)`,
-    '--preview-line': `color-mix(in oklch, ${palette.foreground}, transparent 58%)`,
+    // oklab, not oklch: preview swatches share the divider-hue Chromium bug.
+    '--preview-canvas': `color-mix(in oklab, ${palette.background}, ${palette.foreground} 7%)`,
+    '--preview-line': `color-mix(in oklab, ${palette.foreground}, transparent 58%)`,
     '--preview-surface': palette.background,
   } as CSSProperties
 

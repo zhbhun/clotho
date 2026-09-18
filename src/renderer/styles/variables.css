@@ -87,46 +87,46 @@
   --popover: var(--background);
   --popover-foreground: var(--foreground);
   --primary: var(--color-neutral-900);
-  --primary-foreground: color-mix(in oklch, var(--background), var(--foreground) 1.8868%);
-  --secondary: color-mix(in oklch, var(--background), var(--foreground) 3.7736%);
+  --primary-foreground: color-mix(in oklab, var(--background), var(--foreground) 1.8868%);
+  --secondary: color-mix(in oklab, var(--background), var(--foreground) 3.7736%);
   --secondary-foreground: var(--foreground);
   --muted: var(--secondary);
   --muted-foreground: var(--foreground-subtlest);
   --accent: var(--secondary);
   --accent-foreground: var(--foreground);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: color-mix(in oklch, var(--background), var(--foreground) 9.8113%);
+  --border: color-mix(in oklab, var(--background), var(--foreground) 9.8113%);
   --input: var(--border);
   --ring: var(--primary);
-  --chart-1: color-mix(in oklch, var(--background), var(--foreground) 16.3522%);
-  --chart-2: color-mix(in oklch, var(--background), var(--foreground) 55.8491%);
-  --chart-3: color-mix(in oklch, var(--background), var(--foreground) 70.566%);
-  --chart-4: color-mix(in oklch, var(--background), var(--foreground) 79.1195%);
-  --chart-5: color-mix(in oklch, var(--background), var(--foreground) 91.9497%);
+  --chart-1: color-mix(in oklab, var(--background), var(--foreground) 16.3522%);
+  --chart-2: color-mix(in oklab, var(--background), var(--foreground) 55.8491%);
+  --chart-3: color-mix(in oklab, var(--background), var(--foreground) 70.566%);
+  --chart-4: color-mix(in oklab, var(--background), var(--foreground) 79.1195%);
+  --chart-5: color-mix(in oklab, var(--background), var(--foreground) 91.9497%);
   --radius: 0.625rem;
-  --sidebar: color-mix(in oklch, var(--background), var(--foreground) 1.8868%);
+  --sidebar: color-mix(in oklab, var(--background), var(--foreground) 1.8868%);
   --sidebar-foreground: var(--foreground-subtle);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
-  --sidebar-accent: color-mix(in oklch, var(--sidebar), var(--sidebar-foreground) 5%);
+  --sidebar-accent: color-mix(in oklab, var(--sidebar), var(--sidebar-foreground) 5%);
   --sidebar-accent-foreground: var(--foreground);
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
 
   /* Application theme extensions */
-  --foreground-subtle: color-mix(in oklch, var(--background), var(--foreground) 79.1195%);
-  --foreground-subtlest: color-mix(in oklch, var(--background), var(--foreground) 55.8491%);
-  --foreground-disabled: color-mix(in oklch, var(--background), var(--foreground) 36.7296%);
+  --foreground-subtle: color-mix(in oklab, var(--background), var(--foreground) 79.1195%);
+  --foreground-subtlest: color-mix(in oklab, var(--background), var(--foreground) 55.8491%);
+  --foreground-disabled: color-mix(in oklab, var(--background), var(--foreground) 36.7296%);
   --float-shadow:
-    0 0 10px -4px color-mix(in oklch, var(--color-neutral-950) 18%, transparent),
-    0 0 28px -12px color-mix(in oklch, var(--color-neutral-950) 24%, transparent);
+    0 0 10px -4px color-mix(in oklab, var(--color-neutral-950) 18%, transparent),
+    0 0 28px -12px color-mix(in oklab, var(--color-neutral-950) 24%, transparent);
   --popover-shadow:
-    0 4px 10px -4px color-mix(in oklch, var(--color-neutral-950) 18%, transparent),
-    0 8px 28px -12px color-mix(in oklch, var(--color-neutral-950) 24%, transparent);
+    0 4px 10px -4px color-mix(in oklab, var(--color-neutral-950) 18%, transparent),
+    0 8px 28px -12px color-mix(in oklab, var(--color-neutral-950) 24%, transparent);
   --dialog-shadow: 0 0 30px oklch(0 0 0 / 18%), 0 0 20px -12px oklch(0 0 0 / 18%);
   --status-confirm: oklch(0.68 0.17 65);
   --status-unread: oklch(0.58 0.19 255);
-  --code-surface: color-mix(in oklch, var(--background), var(--foreground) 1.8868%);
+  --code-surface: color-mix(in oklab, var(--background), var(--foreground) 1.8868%);
   --code-added: var(--color-green-600);
   --code-keyword: var(--color-violet-600);
   --code-number: var(--color-blue-600);
@@ -157,21 +157,21 @@
   --popover: var(--card);
   --popover-foreground: var(--foreground);
   --primary: var(--color-neutral-100);
-  --primary-foreground: color-mix(in oklch, var(--background), var(--foreground) 7.2727%);
+  --primary-foreground: color-mix(in oklab, var(--background), var(--foreground) 7.2727%);
   --secondary: color-mix(in srgb, var(--background), var(--color-white) 11.4286%);
   --secondary-foreground: var(--foreground);
   --muted: var(--secondary);
   --muted-foreground: var(--foreground-subtlest);
   --accent: color-mix(in srgb, var(--background), var(--color-white) 14.5%);
-  --accent-foreground: color-mix(in oklch, var(--foreground), var(--color-white) 50%);
+  --accent-foreground: color-mix(in oklab, var(--foreground), var(--color-white) 50%);
   --destructive: oklch(0.704 0.191 22.216);
   --border: var(--secondary);
   --input: color-mix(in srgb, var(--background), var(--color-white) 22.0408%);
   --ring: var(--primary);
-  --chart-1: color-mix(in oklch, var(--background), var(--foreground) 87.8788%);
-  --chart-2: color-mix(in oklch, var(--background), var(--foreground) 49.8182%);
-  --chart-3: color-mix(in oklch, var(--background), var(--foreground) 35.6364%);
-  --chart-4: color-mix(in oklch, var(--background), var(--foreground) 27.3939%);
+  --chart-1: color-mix(in oklab, var(--background), var(--foreground) 87.8788%);
+  --chart-2: color-mix(in oklab, var(--background), var(--foreground) 49.8182%);
+  --chart-3: color-mix(in oklab, var(--background), var(--foreground) 35.6364%);
+  --chart-4: color-mix(in oklab, var(--background), var(--foreground) 27.3939%);
   --chart-5: var(--secondary);
   --sidebar: var(--card);
   --sidebar-foreground: var(--foreground);
@@ -183,15 +183,15 @@
   --sidebar-ring: var(--ring);
 
   /* Application theme extensions */
-  --foreground-subtle: color-mix(in oklch, var(--background), var(--foreground) 87.8788%);
-  --foreground-subtlest: color-mix(in oklch, var(--background), var(--foreground) 68.2424%);
-  --foreground-disabled: color-mix(in oklch, var(--background), var(--foreground) 35.6364%);
+  --foreground-subtle: color-mix(in oklab, var(--background), var(--foreground) 87.8788%);
+  --foreground-subtlest: color-mix(in oklab, var(--background), var(--foreground) 68.2424%);
+  --foreground-disabled: color-mix(in oklab, var(--background), var(--foreground) 35.6364%);
   --float-shadow:
-    0 0 12px -4px color-mix(in oklch, var(--color-neutral-950) 36%, transparent),
-    0 0 30px -12px color-mix(in oklch, var(--color-neutral-950) 52%, transparent);
+    0 0 12px -4px color-mix(in oklab, var(--color-neutral-950) 36%, transparent),
+    0 0 30px -12px color-mix(in oklab, var(--color-neutral-950) 52%, transparent);
   --popover-shadow:
-    0 4px 12px -4px color-mix(in oklch, var(--color-neutral-950) 36%, transparent),
-    0 8px 30px -12px color-mix(in oklch, var(--color-neutral-950) 52%, transparent);
+    0 4px 12px -4px color-mix(in oklab, var(--color-neutral-950) 36%, transparent),
+    0 8px 30px -12px color-mix(in oklab, var(--color-neutral-950) 52%, transparent);
   --dialog-shadow: 0 0 36px oklch(0 0 0 / 50%), 0 0 24px -14px oklch(0 0 0 / 36%);
   --status-confirm: oklch(0.78 0.15 75);
   --status-unread: oklch(0.72 0.16 255);

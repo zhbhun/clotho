@@ -1,16 +1,16 @@
 :root {
-  --floating-glass-background: color-mix(in oklch, var(--background) 80%, transparent);
+  --floating-glass-background: color-mix(in oklab, var(--background) 80%, transparent);
   --floating-glass-filter: blur(6px);
 }
 
 .dark {
-  --floating-glass-background: color-mix(in oklch, var(--popover) 72%, transparent);
+  --floating-glass-background: color-mix(in oklab, var(--popover) 72%, transparent);
 }
 
 /* Content bleeds through glass, so the default light accent (~4% darker than the
    surface) vanishes; deepen the highlight on glass to a lift comparable to dark mode. */
 html:not(.dark) [data-glass='true'] {
-  --accent: color-mix(in oklch, var(--background), var(--foreground) 8%);
+  --accent: color-mix(in oklab, var(--background), var(--foreground) 8%);
 }
 
 [data-glass='true'] {
