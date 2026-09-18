@@ -298,8 +298,12 @@ function ConversationRowContent({
             ? t('workbench.conversation.failedAfter', { duration: row.duration })
             : t('workbench.conversation.failed')
           : row.status === 'completed'
-            ? t('workbench.conversation.worked')
-            : t('workbench.conversation.processing')
+            ? row.duration
+              ? t('workbench.conversation.workedFor', { duration: row.duration })
+              : t('workbench.conversation.worked')
+            : row.duration
+              ? t('workbench.conversation.workingFor', { duration: row.duration })
+              : t('workbench.conversation.processing')
 
     const statusContent = (
       <span className="min-w-0">

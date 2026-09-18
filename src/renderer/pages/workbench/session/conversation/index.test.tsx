@@ -66,8 +66,8 @@ it('renders the approved Chinese turn status wording', async () => {
     />,
   )
 
-  expect(screen.getByText('已完成')).toBeInTheDocument()
-  expect(screen.queryByRole('button', { name: '已完成' })).not.toBeInTheDocument()
+  expect(screen.getByText('已完成，耗时 12 秒')).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: '已完成，耗时 12 秒' })).not.toBeInTheDocument()
 
   rerender(
     <ConversationView
@@ -121,6 +121,33 @@ it('renders the approved Chinese turn status wording', async () => {
     />,
   )
   expect(screen.getByText('工作中')).toBeInTheDocument()
+
+  rerender(
+    <ConversationView
+      expandedTurns={{}}
+      isStreaming
+      messages={[
+        {
+          id: 'user-6',
+          role: 'user',
+          content: 'continue',
+          timestamp: new Date(Date.now() - 5_000).toISOString(),
+        },
+        {
+          id: 'assistant-6',
+          role: 'assistant',
+          content: 'Partial',
+          blocks: [{ type: 'text', text: 'Partial' }],
+        },
+      ]}
+      pendingRequests={{}}
+      sentTurnIds={new Set(['user-6'])}
+      streamingElapsed={5}
+      onRespond={onRespond}
+      onToggle={onToggle}
+    />,
+  )
+  expect(screen.getByText(/已运行 \d+ 秒/)).toBeInTheDocument()
 
   rerender(
     <ConversationView
