@@ -93,7 +93,7 @@ export function UserCard({
   }, [isEditing, message.content, message.attachments])
 
   return (
-    <article className={cn('flex w-full justify-end bg-background pt-4', className)}>
+    <article className={cn('flex w-full justify-end bg-background pt-10', className)}>
       {editor ?? (
         <div className="group/user-message min-w-16 max-w-[75%]">
           <div
