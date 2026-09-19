@@ -5,6 +5,7 @@ import { toast } from '@/shadcn/toast'
 import type { ModelProvider, ProviderModel } from '../../services/claude/claude'
 import { claude } from '../../services/claude/claude'
 import {
+  autoThinkingForModel,
   createFetchedModelDraft,
   createModelDraft,
   providerFromPreset,
@@ -41,7 +42,18 @@ export function useProviderDraft({
 
   function patchProvider(patch: Partial<ModelProvider>) {
     if (patch.id !== undefined) setProviderIdError(null)
-    setProvider((current) => ({ ...current, ...patch }))
+    setProvider((current) => {
+      const next = { ...current, ...patch }
+      if (patch.id !== undefined && patch.id !== current.id) {
+        // Provider ID drives preset matching; refill models that are still
+        // on their untouched default mappings.
+        next.models = next.models.map((model) => {
+          const thinking = autoThinkingForModel(patch.id!, model.id, model)
+          return thinking ? { ...model, ...thinking } : model
+        })
+      }
+      return next
+    })
   }
 
   /** Apply a preset to the draft, keeping the credential already entered. */
@@ -60,9 +72,15 @@ export function useProviderDraft({
     }
     setProvider((current) => ({
       ...current,
-      models: current.models.map((model, modelIndex) =>
-        modelIndex === index ? { ...model, ...patch } : model,
-      ),
+      models: current.models.map((model, modelIndex) => {
+        if (modelIndex !== index) return model
+        const next = { ...model, ...patch }
+        if (patch.id !== undefined && patch.id !== model.id) {
+          const thinking = autoThinkingForModel(current.id, patch.id, model)
+          if (thinking) Object.assign(next, thinking)
+        }
+        return next
+      }),
     }))
   }
 
@@ -80,12 +98,13 @@ export function useProviderDraft({
       const ids = await claude.fetchProviderModels({
         baseURL: provider.baseURL,
         authToken: provider.authToken,
-        authField: provider.authField,
         modelsUrl: provider.modelsUrl,
       })
       setProvider((current) => {
         const existing = new Set(current.models.map((model) => model.id))
-        const additions = ids.filter((id) => !existing.has(id)).map(createFetchedModelDraft)
+        const additions = ids
+          .filter((id) => !existing.has(id))
+          .map((id) => createFetchedModelDraft(id, current.id))
         return { ...current, models: [...current.models, ...additions] }
       })
     } catch {

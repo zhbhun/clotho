@@ -146,6 +146,7 @@ function createEvents(): ClaudeEventSink {
 const proxy = {
   baseURL: 'http://127.0.0.1:43123',
   authToken: 'local-proxy-secret',
+  sessionThinking: vi.fn(() => undefined),
   settingsEnv: vi.fn((model?: string) => ({
     ANTHROPIC_API_KEY: '',
     ANTHROPIC_AUTH_TOKEN: 'local-proxy-secret',

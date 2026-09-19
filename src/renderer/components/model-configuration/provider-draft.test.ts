@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { ModelProvider, ProviderModel } from '../../services/claude/claude'
 import {
+  autoThinkingForModel,
   createFetchedModelDraft,
   createModelDraft,
   friendlyModelName,
@@ -19,7 +20,6 @@ const PROVIDER: ModelProvider = {
   name: 'Zhipu GLM',
   baseURL: 'https://open.bigmodel.cn/api/anthropic',
   authToken: 'sk-test',
-  authField: 'ANTHROPIC_AUTH_TOKEN',
   models: [{ id: 'glm-5.2', displayName: 'GLM 5.2', contextWindow: 200_000 }],
 }
 
@@ -48,16 +48,31 @@ describe('getProviderIdErrorKind', () => {
 })
 
 describe('model validation', () => {
-  it('defaults new models to high reasoning', () => {
-    expect(createModelDraft()).toMatchObject({ reasoning: 'high' })
+  it('defaults new models to the generic thinking preset', () => {
+    expect(createModelDraft()).toMatchObject({
+      thinkingLevel: 'on',
+      thinkingPresetId: 'generic',
+    })
   })
 
-  it('defaults fetched models to high reasoning', () => {
+  it('defaults fetched models to the generic thinking preset', () => {
     expect(createFetchedModelDraft('vendor/glm-fast')).toEqual({
       id: 'vendor/glm-fast',
       displayName: 'Glm Fast',
       contextWindow: 250_000,
-      reasoning: 'high',
+      thinkingLevel: 'on',
+      thinkingPresetId: 'generic',
+    })
+  })
+
+  it('prefills fetched models with the preset matched by model id', () => {
+    expect(createFetchedModelDraft('glm-5.3-flash', 'zhipu-glm')).toMatchObject({
+      thinkingLevel: 'high',
+      thinkingPresetId: 'glm-5-3',
+    })
+    expect(createFetchedModelDraft('qwen3.8-max', 'qianwen')).toMatchObject({
+      thinkingLevel: 'medium',
+      thinkingPresetId: 'qwen',
     })
   })
 
@@ -111,7 +126,6 @@ describe('providerFromPreset', () => {
       id: 'zhipu-glm',
       name: 'Zhipu GLM',
       baseURL: 'https://open.bigmodel.cn/api/anthropic',
-      authField: 'ANTHROPIC_AUTH_TOKEN' as const,
       models: [model('glm-5.2')],
       modelsUrl: 'https://open.bigmodel.cn/api/paas/v4/models',
     }
@@ -121,11 +135,41 @@ describe('providerFromPreset', () => {
       name: 'Zhipu GLM',
       baseURL: preset.baseURL,
       authToken: '',
-      authField: 'ANTHROPIC_AUTH_TOKEN',
-      models: [{ ...preset.models[0], reasoning: 'high' }],
+      apiType: 'anthropic-messages',
+      models: [
+        {
+          ...preset.models[0],
+          thinkingLevel: 'high',
+          thinkingPresetId: 'glm-5-2',
+        },
+      ],
       presetId: 'zhipu-glm',
       modelsUrl: preset.modelsUrl,
     })
     expect(provider.models[0]).not.toBe(preset.models[0])
+  })
+})
+
+describe('autoThinkingForModel', () => {
+  it('fills the preset options for an untouched model', () => {
+    expect(autoThinkingForModel('zhipu-glm', 'glm-5.3-flash', {})).toEqual({
+      thinkingLevel: 'high',
+      thinkingPresetId: 'glm-5-3',
+    })
+    expect(
+      autoThinkingForModel('zhipu-glm', 'glm-5.3-flash', {
+        thinkingLevel: 'on',
+        thinkingPresetId: 'generic',
+      }),
+    ).toEqual({ thinkingLevel: 'high', thinkingPresetId: 'glm-5-3' })
+  })
+
+  it('keeps an explicit non-default level untouched', () => {
+    expect(
+      autoThinkingForModel('zhipu-glm', 'glm-5.3-flash', { thinkingLevel: 'max' }),
+    ).toBeUndefined()
+    expect(
+      autoThinkingForModel('zhipu-glm', 'glm-5.3-flash', { thinkingLevel: 'off' }),
+    ).toBeUndefined()
   })
 })

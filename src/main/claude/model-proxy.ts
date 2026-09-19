@@ -1,15 +1,24 @@
 import { randomBytes, timingSafeEqual } from 'node:crypto'
 import { createServer } from 'node:http'
-import { pipeline } from 'node:stream/promises'
-import { Readable } from 'node:stream'
-
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import { Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
 import type { ReadableStream as NodeWebReadableStream } from 'node:stream/web'
 
-import { normalizeProviderModelReasoning } from '@/shared/provider'
 import type { ClaudeModelMappings, ModelProvider, ProviderModel } from '@/shared/rpc'
 
+import { anthropicToChatCompletions, estimatePromptTokens } from './chat-completions-request'
+import { chatCompletionsToAnthropic, chatErrorToAnthropic } from './chat-completions-response'
+import { createChatCompletionsStream } from './chat-completions-stream'
 import type { ClaudeskSettings } from './settings'
+import {
+  type SessionThinking,
+  applyThinking,
+  chatThinkingConfig,
+  sessionThinkingFor,
+} from './thinking-mapping'
+
+export type { SessionThinking } from './thinking-mapping'
 
 export type ModelProxyFetch = (request: Request) => Promise<Response>
 
@@ -34,6 +43,8 @@ export interface ModelProxy {
   authToken: string
   replaceSettings: (settings: ClaudeskSettings) => void
   settingsEnv: (model?: string) => Record<string, string>
+  /** Forward mapping: the claude effort/thinking for a session on this model. */
+  sessionThinking: (model?: string) => SessionThinking | undefined
   stop: () => Promise<void>
 }
 
@@ -104,6 +115,16 @@ function upstreamURL(baseURL: string, requestURL: string) {
   return upstream
 }
 
+/**
+ * Chat Completions upstreams only expose one completion endpoint. The base URL
+ * follows the OpenAI convention (including `/v1`); an explicit
+ * `/chat/completions` suffix is kept as-is.
+ */
+function chatCompletionsURL(baseURL: string) {
+  const trimmed = baseURL.replace(/\/+$/, '')
+  return trimmed.endsWith('/chat/completions') ? trimmed : `${trimmed}/chat/completions`
+}
+
 const REQUEST_HEADERS_TO_REMOVE = [
   'authorization',
   'connection',
@@ -121,49 +142,12 @@ const REQUEST_HEADERS_TO_REMOVE = [
 
 const PROXY_ENDPOINTS = new Set(['/v1/messages', '/v1/messages/count_tokens'])
 
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
-}
-
-/**
- * Pin a request's thinking and effort to the model's configured reasoning
- * level. `none` disables thinking; the remaining levels send adaptive thinking
- * with that effort. Missing or unsupported levels fall back to `high`. Other
- * `output_config` keys (such as format) are preserved.
- */
-function applyReasoning(
-  body: Record<string, unknown>,
-  reasoning: ProviderModel['reasoning'],
-): Record<string, unknown> {
-  const level = normalizeProviderModelReasoning(reasoning)
-  const next: Record<string, unknown> = {
-    ...body,
-    thinking: level === 'none' ? { type: 'disabled' } : { type: 'adaptive' },
-  }
-  const outputConfig = isPlainObject(body.output_config) ? { ...body.output_config } : {}
-  if (level === 'none') {
-    delete outputConfig.effort
-  } else {
-    outputConfig.effort = level
-  }
-  if (Object.keys(outputConfig).length) {
-    next.output_config = outputConfig
-  } else {
-    delete next.output_config
-  }
-  return next
-}
-
 function providerHeaders(request: Request, provider: ModelProvider) {
   const headers = new Headers(request.headers)
   for (const header of REQUEST_HEADERS_TO_REMOVE) {
     headers.delete(header)
   }
-  if (provider.authField === 'ANTHROPIC_API_KEY') {
-    headers.set('x-api-key', provider.authToken)
-  } else {
-    headers.set('authorization', `Bearer ${provider.authToken}`)
-  }
+  headers.set('authorization', `Bearer ${provider.authToken}`)
   return headers
 }
 
@@ -184,6 +168,78 @@ function proxyResponseHeaders(response: Response) {
     headers.delete(header)
   }
   return headers
+}
+
+async function upstreamPayload(response: Response): Promise<unknown> {
+  const text = await response.text().catch(() => '')
+  if (!text) return null
+  try {
+    return JSON.parse(text)
+  } catch {
+    return text
+  }
+}
+
+/**
+ * Translate an Anthropic Messages request through a Chat Completions upstream:
+ * request in, Anthropic response (streaming or not) back out.
+ */
+async function serveChatCompletions({
+  request,
+  body,
+  isCountTokens,
+  provider,
+  model,
+  qualifiedModel,
+  modelId,
+  fetchUpstream,
+}: {
+  request: Request
+  body: Record<string, unknown>
+  isCountTokens: boolean
+  provider: ModelProvider
+  model: ProviderModel
+  qualifiedModel: string
+  modelId: string
+  fetchUpstream: ModelProxyFetch
+}): Promise<Response> {
+  if (isCountTokens) {
+    return Response.json({ input_tokens: estimatePromptTokens(body) })
+  }
+
+  const chatBody = anthropicToChatCompletions(
+    { ...body, model: modelId },
+    chatThinkingConfig(model, body),
+  )
+  const upstreamRequest = new Request(chatCompletionsURL(provider.baseURL), {
+    method: 'POST',
+    headers: providerHeaders(request, provider),
+    body: JSON.stringify(chatBody),
+    signal: request.signal,
+  })
+  const response = await fetchUpstream(upstreamRequest)
+
+  const headers = proxyResponseHeaders(response)
+  if (!response.ok) {
+    const { status, body: errorBody } = chatErrorToAnthropic(
+      response.status,
+      await upstreamPayload(response),
+    )
+    headers.set('content-type', 'application/json')
+    return new Response(JSON.stringify(errorBody), { status, headers })
+  }
+  if (chatBody.stream === true && response.body) {
+    return new Response(response.body.pipeThrough(createChatCompletionsStream(qualifiedModel)), {
+      status: response.status,
+      headers,
+    })
+  }
+  const chat = await upstreamPayload(response)
+  headers.set('content-type', 'application/json')
+  return new Response(JSON.stringify(chatCompletionsToAnthropic(chat, qualifiedModel)), {
+    status: response.status,
+    headers,
+  })
 }
 
 function serveWithNode(options: ModelProxyServeOptions): Promise<ModelProxyServer> {
@@ -318,10 +374,22 @@ export async function createModelProxy({
       }
 
       try {
+        if (provider.apiType === 'chat-completions') {
+          return await serveChatCompletions({
+            request,
+            body,
+            isCountTokens: requestURL.pathname === '/v1/messages/count_tokens',
+            provider,
+            model,
+            qualifiedModel,
+            modelId,
+            fetchUpstream,
+          })
+        }
         const upstreamRequest = new Request(upstreamURL(provider.baseURL, request.url), {
           method: request.method,
           headers: providerHeaders(request, provider),
-          body: JSON.stringify({ ...applyReasoning(body, model.reasoning), model: modelId }),
+          body: JSON.stringify({ ...applyThinking(body, model), model: modelId }),
           signal: request.signal,
         })
         const response = await fetchUpstream(upstreamRequest)
@@ -342,6 +410,9 @@ export async function createModelProxy({
     replaceSettings(settings) {
       routes = providerMap(settings.providers)
       modelMappings = { ...settings.models }
+    },
+    sessionThinking(model) {
+      return sessionThinkingFor(resolveModel(routes, model)?.model)
     },
     settingsEnv(model) {
       const env: Record<string, string> = {

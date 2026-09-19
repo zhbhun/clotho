@@ -8,7 +8,6 @@ const PROVIDER: ModelProvider = {
   name: 'Zhipu',
   baseURL: 'https://open.bigmodel.cn/api/anthropic',
   authToken: 'secret',
-  authField: 'ANTHROPIC_AUTH_TOKEN',
   models: [{ id: 'glm-5.2', displayName: 'GLM-5.2', contextWindow: 200_000 }],
 }
 

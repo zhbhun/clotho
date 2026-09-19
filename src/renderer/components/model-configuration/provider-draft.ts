@@ -1,8 +1,9 @@
+import { DEFAULT_PROVIDER_API_TYPE, PROVIDER_ID_PATTERN } from '@/shared/provider'
 import {
-  DEFAULT_PROVIDER_MODEL_REASONING,
-  PROVIDER_ID_PATTERN,
-  normalizeProviderModelReasoning,
-} from '@/shared/provider'
+  GENERIC_REASONING_PRESET,
+  findReasoningPreset,
+  matchReasoningPreset,
+} from '@/shared/reasoning'
 
 import type { ModelProvider, ProviderModel } from '../../services/claude/claude'
 import type { ProviderPreset } from './provider-presets'
@@ -16,7 +17,7 @@ export function createProviderDraft(): ModelProvider {
     name: '',
     baseURL: '',
     authToken: '',
-    authField: 'ANTHROPIC_AUTH_TOKEN',
+    apiType: DEFAULT_PROVIDER_API_TYPE,
     models: [],
   }
 }
@@ -26,7 +27,8 @@ export function createModelDraft(): ProviderModel {
     id: '',
     displayName: '',
     contextWindow: DEFAULT_CONTEXT_WINDOW,
-    reasoning: DEFAULT_PROVIDER_MODEL_REASONING,
+    thinkingLevel: GENERIC_REASONING_PRESET.defaultModelLevel,
+    thinkingPresetId: GENERIC_REASONING_PRESET.id,
   }
 }
 
@@ -36,11 +38,15 @@ export function providerFromPreset(preset: ProviderPreset): ModelProvider {
     name: preset.name,
     baseURL: preset.baseURL,
     authToken: '',
-    authField: preset.authField,
-    models: preset.models.map((model) => ({
-      ...model,
-      reasoning: normalizeProviderModelReasoning(model.reasoning),
-    })),
+    apiType: DEFAULT_PROVIDER_API_TYPE,
+    models: preset.models.map((model) => {
+      const reasoningPreset = matchReasoningPreset(preset.id, model.id)
+      return {
+        ...model,
+        thinkingLevel: model.thinkingLevel ?? reasoningPreset.defaultModelLevel,
+        thinkingPresetId: model.thinkingPresetId ?? reasoningPreset.id,
+      }
+    }),
     presetId: preset.id,
     modelsUrl: preset.modelsUrl,
   }
@@ -55,12 +61,37 @@ export function friendlyModelName(id: string): string {
     .trim()
 }
 
-export function createFetchedModelDraft(id: string): ProviderModel {
+export function createFetchedModelDraft(id: string, providerId?: string): ProviderModel {
+  const reasoningPreset = matchReasoningPreset(providerId ?? '', id)
   return {
     id,
     displayName: friendlyModelName(id),
     contextWindow: DEFAULT_CONTEXT_WINDOW,
-    reasoning: DEFAULT_PROVIDER_MODEL_REASONING,
+    thinkingLevel: reasoningPreset.defaultModelLevel,
+    thinkingPresetId: reasoningPreset.id,
+  }
+}
+
+/**
+ * Preset thinking config for a model ID (matched against the provider ID
+ * too), or undefined when the current level should be kept: models whose
+ * level was hand-picked stay as-is.
+ */
+export function autoThinkingForModel(
+  providerId: string,
+  modelId: string,
+  current: { thinkingLevel?: string; thinkingPresetId?: string },
+): Pick<ProviderModel, 'thinkingLevel' | 'thinkingPresetId'> | undefined {
+  if (current.thinkingLevel !== undefined) {
+    // A hand-picked level survives; only a level that still equals the
+    // default of the preset it came from is treated as untouched.
+    const currentPreset = findReasoningPreset(current.thinkingPresetId)
+    if (current.thinkingLevel !== currentPreset?.defaultModelLevel) return undefined
+  }
+  const reasoningPreset = matchReasoningPreset(providerId, modelId)
+  return {
+    thinkingLevel: reasoningPreset.defaultModelLevel,
+    thinkingPresetId: reasoningPreset.id,
   }
 }
 

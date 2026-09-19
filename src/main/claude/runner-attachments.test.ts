@@ -14,7 +14,7 @@ vi.mock('../logging/runtime', () => ({
   getLogger: () => ({ info: vi.fn(), error: vi.fn() }),
 }))
 
-const proxy = { settingsEnv: () => ({}) }
+const proxy = { sessionThinking: () => undefined, settingsEnv: () => ({}) }
 
 describe('query attachment input', () => {
   let directory: string

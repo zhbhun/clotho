@@ -17,11 +17,7 @@ describe('fetchProviderModels', () => {
       .mockResolvedValueOnce({ ok: true, json: async () => ({ data: [{ id: 'm1' }] }) } as Response)
 
     await expect(
-      fetchProviderModels({
-        baseURL: 'https://api.x.com/anthropic',
-        authToken: 'sk-x',
-        authField: 'ANTHROPIC_AUTH_TOKEN',
-      }),
+      fetchProviderModels({ baseURL: 'https://api.x.com/anthropic', authToken: 'sk-x' }),
     ).resolves.toEqual(['m1'])
   })
 
@@ -29,11 +25,20 @@ describe('fetchProviderModels', () => {
     vi.mocked(fetch).mockResolvedValue({ ok: false, status: 404 } as Response)
 
     await expect(
-      fetchProviderModels({
-        baseURL: 'https://api.x.com/anthropic',
-        authToken: 'sk-x',
-        authField: 'ANTHROPIC_AUTH_TOKEN',
-      }),
+      fetchProviderModels({ baseURL: 'https://api.x.com/anthropic', authToken: 'sk-x' }),
     ).rejects.toThrow(/All candidates failed/)
+  })
+
+  test('authenticates with a bearer token', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ data: [{ id: 'm1' }] }),
+    } as Response)
+
+    await fetchProviderModels({ baseURL: 'https://api.x.com', authToken: 'sk-x' })
+
+    const headers = new Headers(vi.mocked(fetch).mock.calls[0]?.[1]?.headers)
+    expect(headers.get('authorization')).toBe('Bearer sk-x')
+    expect(headers.has('x-api-key')).toBe(false)
   })
 })

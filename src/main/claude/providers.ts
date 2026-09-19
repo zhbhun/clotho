@@ -1,13 +1,17 @@
 import {
+  PROVIDER_API_TYPES,
   PROVIDER_ID_PATTERN,
-  PROVIDER_MODEL_REASONING_LEVELS,
-  normalizeProviderModelReasoning,
+  normalizeProviderApiType,
 } from '@/shared/provider'
 import type { ModelProvider, ProviderModel } from '@/shared/rpc'
 
-const AUTH_FIELDS = ['ANTHROPIC_AUTH_TOKEN', 'ANTHROPIC_API_KEY']
+function normalizeThinkingLevel(value: unknown): string {
+  return typeof value === 'string' && value.trim().length > 0 ? value : 'on'
+}
 
-const REASONING_LEVELS: readonly string[] = PROVIDER_MODEL_REASONING_LEVELS
+function normalizeThinkingPresetId(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim().length > 0 ? value : undefined
+}
 
 function isProviderModel(value: unknown): value is ProviderModel {
   if (!value || typeof value !== 'object') {
@@ -23,8 +27,9 @@ function isProviderModel(value: unknown): value is ProviderModel {
     candidate.contextWindow > 0 &&
     (candidate.supportsMultimodal === undefined ||
       typeof candidate.supportsMultimodal === 'boolean') &&
-    (candidate.reasoning === undefined ||
-      (typeof candidate.reasoning === 'string' && REASONING_LEVELS.includes(candidate.reasoning)))
+    (candidate.thinkingLevel === undefined ||
+      (typeof candidate.thinkingLevel === 'string' && candidate.thinkingLevel.trim().length > 0)) &&
+    (candidate.thinkingPresetId === undefined || typeof candidate.thinkingPresetId === 'string')
   )
 }
 
@@ -39,12 +44,12 @@ export function isProvider(value: unknown): value is ModelProvider {
     typeof candidate.name === 'string' &&
     typeof candidate.baseURL === 'string' &&
     typeof candidate.authToken === 'string' &&
-    typeof candidate.authField === 'string' &&
-    AUTH_FIELDS.includes(candidate.authField) &&
     Array.isArray(candidate.models) &&
     candidate.models.every(isProviderModel) &&
     (candidate.presetId === undefined || typeof candidate.presetId === 'string') &&
-    (candidate.modelsUrl === undefined || typeof candidate.modelsUrl === 'string')
+    (candidate.modelsUrl === undefined || typeof candidate.modelsUrl === 'string') &&
+    (candidate.apiType === undefined ||
+      (PROVIDER_API_TYPES as readonly string[]).includes(candidate.apiType as string))
   )
 }
 
@@ -53,18 +58,28 @@ export function normalizeProvider(value: unknown): ModelProvider | null {
   const candidate = value as Record<string, unknown>
   if (!Array.isArray(candidate.models)) return null
 
-  const normalized = {
-    ...candidate,
+  const normalized: Record<string, unknown> = {
+    id: candidate.id,
+    name: candidate.name,
+    baseURL: candidate.baseURL,
+    authToken: candidate.authToken,
+    apiType: normalizeProviderApiType(candidate.apiType),
     models: candidate.models.map((model) =>
       model && typeof model === 'object' && !Array.isArray(model)
         ? {
-            ...model,
-            reasoning: normalizeProviderModelReasoning(
-              (model as Record<string, unknown>).reasoning,
+            id: (model as Record<string, unknown>).id,
+            displayName: (model as Record<string, unknown>).displayName,
+            contextWindow: (model as Record<string, unknown>).contextWindow,
+            supportsMultimodal: (model as Record<string, unknown>).supportsMultimodal,
+            thinkingLevel: normalizeThinkingLevel((model as Record<string, unknown>).thinkingLevel),
+            thinkingPresetId: normalizeThinkingPresetId(
+              (model as Record<string, unknown>).thinkingPresetId,
             ),
           }
         : model,
     ),
   }
-  return isProvider(normalized) ? normalized : null
+  if (typeof candidate.presetId === 'string') normalized.presetId = candidate.presetId
+  if (typeof candidate.modelsUrl === 'string') normalized.modelsUrl = candidate.modelsUrl
+  return isProvider(normalized) ? (normalized as ModelProvider) : null
 }

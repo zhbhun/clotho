@@ -34,7 +34,6 @@ const provider: ModelProvider = {
   name: 'Zhipu',
   baseURL: 'https://open.bigmodel.cn/api/anthropic',
   authToken: 'provider-secret',
-  authField: 'ANTHROPIC_AUTH_TOKEN',
   models: [{ id: 'glm-5.2/fast', displayName: 'GLM 5.2 Fast', contextWindow: 200000 }],
 }
 
@@ -62,13 +61,16 @@ describe('Clotho settings store', () => {
     fsMock.writeFile.mockResolvedValue(undefined)
   })
 
-  test('normalizes an unsupported persisted model reasoning level to high', async () => {
+  test('keeps persisted thinking levels and defaults missing ones to on', async () => {
     fsMock.readFile.mockResolvedValue(
       JSON.stringify({
         providers: [
           {
             ...provider,
-            models: [{ ...provider.models[0], reasoning: 'turbo' }],
+            models: [
+              { ...provider.models[0], thinkingLevel: 'turbo' },
+              { id: 'second', displayName: 'Second', contextWindow: 200000 },
+            ],
           },
         ],
         models: {},
@@ -76,7 +78,7 @@ describe('Clotho settings store', () => {
     )
 
     await expect(readSettings('/test/settings.json')).resolves.toMatchObject({
-      providers: [{ models: [{ reasoning: 'high' }] }],
+      providers: [{ models: [{ thinkingLevel: 'turbo' }, { thinkingLevel: 'on' }] }],
     })
   })
 
@@ -98,7 +100,8 @@ describe('Clotho settings store', () => {
       providers: [
         {
           ...provider,
-          models: [{ ...provider.models[0], reasoning: 'high' }],
+          apiType: 'anthropic-messages',
+          models: [{ ...provider.models[0], thinkingLevel: 'on' }],
         },
       ],
       models: { sonnet: 'zhipu/glm-5.2/fast' },

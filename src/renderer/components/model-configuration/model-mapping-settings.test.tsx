@@ -14,7 +14,6 @@ const PROVIDERS: ModelProvider[] = [
     name: 'Zhipu',
     baseURL: 'https://open.bigmodel.cn/api/anthropic',
     authToken: 'secret',
-    authField: 'ANTHROPIC_AUTH_TOKEN',
     models: [
       { id: 'glm-5.2', displayName: 'GLM-5.2', contextWindow: 200_000 },
       { id: 'glm-4.7', displayName: 'GLM-4.7', contextWindow: 128_000 },
@@ -25,7 +24,6 @@ const PROVIDERS: ModelProvider[] = [
     name: 'Kimi',
     baseURL: 'https://api.moonshot.cn/anthropic',
     authToken: 'secret',
-    authField: 'ANTHROPIC_AUTH_TOKEN',
     models: [{ id: 'k3/long', displayName: 'K3 Long', contextWindow: 256_000 }],
   },
 ]

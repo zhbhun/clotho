@@ -317,7 +317,7 @@ function logQueryTerminal(
 
 type SdkInitializationResult = Omit<ClaudeInitializationResult, 'cwd' | 'resume'>
 
-export type ClaudeProxyConnection = Pick<ModelProxy, 'settingsEnv'>
+export type ClaudeProxyConnection = Pick<ModelProxy, 'sessionThinking' | 'settingsEnv'>
 
 function normalizeOptions(
   options: ClaudeOptions | undefined,
@@ -338,6 +338,14 @@ function normalizeOptions(
   if (isClaudeModel) normalized.model = qualifiedModel?.slice('claude/'.length)
   if (isCustomModel && proxy) {
     normalized.settings = { env: proxy.settingsEnv(qualifiedModel) }
+    // Forward mapping: run the session at the claude effort derived from the
+    // model's configured thinking level. Re-injected on every query on
+    // purpose — the model configuration is the single source of truth for
+    // thinking, so an in-session `/effort` pick is intentionally overridden.
+    const thinking = proxy.sessionThinking(qualifiedModel)
+    if (thinking?.disabled) normalized.thinking = { type: 'disabled' }
+    else if (thinking?.enabled) normalized.thinking = { type: 'enabled' }
+    else if (thinking?.effort) normalized.effort = thinking.effort
   }
   return normalized
 }

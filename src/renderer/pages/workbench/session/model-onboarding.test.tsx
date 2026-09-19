@@ -38,7 +38,7 @@ describe('ModelOnboarding', () => {
       </ModelConfigurationProvider>,
     )
 
-    await user.type(screen.getByLabelText('认证凭证'), 'secret')
+    await user.type(screen.getByLabelText('API Key'), 'secret')
     await user.click(screen.getByRole('button', { name: '下一步' }))
 
     await waitFor(() =>

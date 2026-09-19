@@ -1,5 +1,6 @@
 import type { SDKMessage, SDKUserMessage } from '@anthropic-ai/claude-agent-sdk'
 
+import type { ProviderApiType as RpcProviderApiType } from '@/shared/provider'
 import type {
   ClaudeAgentInfo as RpcClaudeAgentInfo,
   ClaudeAttachmentPreview as RpcClaudeAttachmentPreview,
@@ -54,7 +55,6 @@ import type {
   ProjectFileSearchQueryParams as RpcProjectFileSearchQueryParams,
   ProjectFileSearchResult as RpcProjectFileSearchResult,
   ProjectIcon as RpcProjectIcon,
-  ProviderAuthField as RpcProviderAuthField,
   ProviderModel as RpcProviderModel,
   ProviderModelSelection as RpcProviderModelSelection,
   ProviderUsageQuota as RpcProviderUsageQuota,
@@ -100,7 +100,7 @@ export type GetProviderUsageParams = RpcGetProviderUsageParams
 export type ProviderUsageQuota = RpcProviderUsageQuota
 export type ProviderUsageWindow = RpcProviderUsageWindow
 export type ModelProvider = RpcModelProvider
-export type ProviderAuthField = RpcProviderAuthField
+export type ProviderApiType = RpcProviderApiType
 export type ProviderModel = RpcProviderModel
 export type ProviderModelSelection = RpcProviderModelSelection
 export type ClaudeSession = RpcClaudeSession

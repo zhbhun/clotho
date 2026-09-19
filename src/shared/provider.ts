@@ -21,9 +21,22 @@ export const CLAUDE_MODEL_MAPPING_ROLES = [
 
 export type ClaudeModelMappingRole = (typeof CLAUDE_MODEL_MAPPING_ROLES)[number]
 
+/** Upstream API dialect a provider speaks. */
+export const PROVIDER_API_TYPES = ['anthropic-messages', 'chat-completions'] as const
+
+export type ProviderApiType = (typeof PROVIDER_API_TYPES)[number]
+
+export const DEFAULT_PROVIDER_API_TYPE: ProviderApiType = 'anthropic-messages'
+
+export function normalizeProviderApiType(value: unknown): ProviderApiType {
+  return typeof value === 'string' && (PROVIDER_API_TYPES as readonly string[]).includes(value)
+    ? (value as ProviderApiType)
+    : DEFAULT_PROVIDER_API_TYPE
+}
+
 /**
- * Reasoning policy a provider model is pinned to. `none` disables thinking;
- * the remaining levels send adaptive thinking with that effort.
+ * Claude SDK reasoning effort levels. `none` disables thinking; the remaining
+ * values are the effort tiers Claude can send in a request.
  */
 export const PROVIDER_MODEL_REASONING_LEVELS = [
   'none',
@@ -35,15 +48,6 @@ export const PROVIDER_MODEL_REASONING_LEVELS = [
 ] as const
 
 export type ProviderModelReasoning = (typeof PROVIDER_MODEL_REASONING_LEVELS)[number]
-
-export const DEFAULT_PROVIDER_MODEL_REASONING: ProviderModelReasoning = 'high'
-
-export function normalizeProviderModelReasoning(value: unknown): ProviderModelReasoning {
-  return typeof value === 'string' &&
-    (PROVIDER_MODEL_REASONING_LEVELS as readonly string[]).includes(value)
-    ? (value as ProviderModelReasoning)
-    : DEFAULT_PROVIDER_MODEL_REASONING
-}
 
 /**
  * baseURL fragments of providers with a known quota endpoint. Only providers

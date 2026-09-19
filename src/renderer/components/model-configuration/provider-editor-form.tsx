@@ -13,7 +13,6 @@ import {
   FieldSet,
 } from '@/shadcn/field'
 import { Input } from '@/shadcn/input'
-import { RadioGroup, RadioGroupItem } from '@/shadcn/radio-group'
 import {
   Select,
   SelectContent,
@@ -26,13 +25,10 @@ import { Separator } from '@/shadcn/separator'
 import { Spinner } from '@/shadcn/spinner'
 import { Switch } from '@/shadcn/switch'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip'
-import {
-  PROVIDER_MODEL_REASONING_LEVELS,
-  type ProviderModelReasoning,
-  normalizeProviderModelReasoning,
-} from '@/shared/provider'
+import { normalizeProviderApiType } from '@/shared/provider'
+import { GENERIC_REASONING_PRESET, findReasoningPreset } from '@/shared/reasoning'
 
-import type { ModelProvider, ProviderAuthField, ProviderModel } from '../../services/claude/claude'
+import type { ModelProvider, ProviderModel } from '../../services/claude/claude'
 import { ContextWindowInput } from './context-window-input'
 import { type ProviderPreset, providerPresets } from './provider-presets'
 
@@ -57,6 +53,65 @@ function ProviderField({
     </Field>
   )
 }
+
+const LEVEL_LABEL_KEYS = {
+  off: 'settings.provider.reasoning.off',
+  on: 'settings.provider.reasoning.on',
+  low: 'settings.provider.reasoning.low',
+  medium: 'settings.provider.reasoning.medium',
+  high: 'settings.provider.reasoning.high',
+  xhigh: 'settings.provider.reasoning.xhigh',
+  max: 'settings.provider.reasoning.max',
+} as const
+
+/** Reasoning dropdown fed by the model's linked reasoning preset. */
+function ThinkingLevelSelect({
+  model,
+  label,
+  onChange,
+}: {
+  model: ProviderModel
+  label: string
+  onChange: (value: string) => void
+}) {
+  const { t } = useTranslation()
+  const preset = model.thinkingPresetId ? findReasoningPreset(model.thinkingPresetId) : undefined
+  const mappings = (preset ?? GENERIC_REASONING_PRESET).mappings
+  const defaultLevel = (preset ?? GENERIC_REASONING_PRESET).defaultModelLevel
+  const items = mappings.map((row) => ({
+    value: row.modelLevel,
+    label: t(LEVEL_LABEL_KEYS[row.modelLevel as keyof typeof LEVEL_LABEL_KEYS]),
+  }))
+  const current = mappings.some((row) => row.modelLevel === model.thinkingLevel)
+    ? model.thinkingLevel!
+    : defaultLevel
+
+  return (
+    <Select items={items} value={current} onValueChange={(value) => onChange(String(value))}>
+      <SelectTrigger
+        aria-label={label}
+        chevron={false}
+        className="w-full border-transparent bg-transparent!"
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent glass alignItemWithTrigger={false} align="end">
+        <SelectGroup>
+          {items.map((item) => (
+            <SelectItem key={item.value} value={item.value}>
+              {item.label}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
+  )
+}
+
+const API_TYPE_ITEMS = [
+  { value: 'anthropic-messages', labelKey: 'settings.provider.apiType.anthropicMessages' },
+  { value: 'chat-completions', labelKey: 'settings.provider.apiType.chatCompletions' },
+] as const
 
 export function ProviderEditorForm({
   provider,
@@ -85,10 +140,7 @@ export function ProviderEditorForm({
 }) {
   const { t } = useTranslation()
   const suffix = provider.id || 'new'
-  const reasoningItems = PROVIDER_MODEL_REASONING_LEVELS.map((value) => ({
-    label: t(`settings.provider.reasoning.${value}`),
-    value,
-  }))
+  const apiType = normalizeProviderApiType(provider.apiType)
 
   return (
     <FieldGroup className="gap-5 px-6 py-4">
@@ -135,7 +187,7 @@ export function ProviderEditorForm({
           />
         </ProviderField>
         <div className="md:col-span-2">
-          <ProviderField id={`provider-${suffix}-base`} label={t('settings.provider.requestUrl')}>
+          <ProviderField id={`provider-${suffix}-base`} label={t('settings.provider.baseUrl')}>
             <Input
               id={`provider-${suffix}-base`}
               value={provider.baseURL}
@@ -144,6 +196,30 @@ export function ProviderEditorForm({
             />
           </ProviderField>
         </div>
+        <ProviderField
+          id={`provider-${suffix}-api-type`}
+          hint={apiType === 'chat-completions' ? t('settings.provider.apiTypeHint') : undefined}
+          label={t('settings.provider.apiType')}
+        >
+          <Select
+            items={API_TYPE_ITEMS.map((item) => ({ ...item, label: t(item.labelKey) }))}
+            value={apiType}
+            onValueChange={(value) => onChange({ apiType: normalizeProviderApiType(value) })}
+          >
+            <SelectTrigger id={`provider-${suffix}-api-type`} className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {API_TYPE_ITEMS.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {t(item.labelKey)}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </ProviderField>
         <ProviderField id={`provider-${suffix}-token`} label={t('settings.provider.credential')}>
           <Input
             id={`provider-${suffix}-token`}
@@ -152,33 +228,6 @@ export function ProviderEditorForm({
             placeholder="sk-***"
             onChange={(event) => onChange({ authToken: event.target.value })}
           />
-        </ProviderField>
-        <ProviderField id={`provider-${suffix}-auth`} label={t('settings.provider.authField')}>
-          <RadioGroup
-            aria-label={t('settings.provider.authField')}
-            className="grid-cols-2"
-            value={provider.authField}
-            onValueChange={(value) => onChange({ authField: value as ProviderAuthField })}
-          >
-            <Field orientation="horizontal">
-              <RadioGroupItem id={`provider-${suffix}-token-field`} value="ANTHROPIC_AUTH_TOKEN" />
-              <FieldLabel
-                className="font-normal text-foreground"
-                htmlFor={`provider-${suffix}-token-field`}
-              >
-                AUTH_TOKEN
-              </FieldLabel>
-            </Field>
-            <Field orientation="horizontal">
-              <RadioGroupItem id={`provider-${suffix}-apikey-field`} value="ANTHROPIC_API_KEY" />
-              <FieldLabel
-                className="font-normal text-foreground"
-                htmlFor={`provider-${suffix}-apikey-field`}
-              >
-                API_KEY
-              </FieldLabel>
-            </Field>
-          </RadioGroup>
         </ProviderField>
       </FieldGroup>
 
@@ -223,7 +272,7 @@ export function ProviderEditorForm({
           </div>
         </div>
         <div className="overflow-hidden rounded-lg border border-border">
-          <div className="hidden gap-2 border-b border-border bg-muted/40 px-3 py-1.5 md:grid md:grid-cols-[1fr_1fr_100px_80px_50px_50px]">
+          <div className="hidden gap-2 border-b border-border bg-muted/40 px-3 py-1.5 md:grid md:grid-cols-[1fr_1fr_100px_110px_50px_50px]">
             <div className="px-2 text-xs text-muted-foreground">
               {t('settings.provider.modelColumnId')}
             </div>
@@ -249,7 +298,7 @@ export function ProviderEditorForm({
                 const hasModelIdError = modelIdErrorIndexes.includes(index)
                 return (
                   <div
-                    className="grid items-center gap-2 px-3 py-1 hover:bg-muted/30 md:grid-cols-[1fr_1fr_100px_80px_50px_50px]"
+                    className="grid items-center gap-2 px-3 py-1 hover:bg-muted/30 md:grid-cols-[1fr_1fr_100px_110px_50px_50px]"
                     key={index}
                   >
                     <Field className="gap-1" data-invalid={hasModelIdError}>
@@ -281,30 +330,11 @@ export function ProviderEditorForm({
                       value={model.contextWindow}
                       onChange={(contextWindow) => onUpdateModel(index, { contextWindow })}
                     />
-                    <Select
-                      items={reasoningItems}
-                      value={normalizeProviderModelReasoning(model.reasoning)}
-                      onValueChange={(reasoning) =>
-                        onUpdateModel(index, { reasoning: reasoning as ProviderModelReasoning })
-                      }
-                    >
-                      <SelectTrigger
-                        aria-label={t('settings.provider.modelReasoning', { number: index + 1 })}
-                        chevron={false}
-                        className="w-full border-transparent bg-transparent!"
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent glass alignItemWithTrigger={false} align="end">
-                        <SelectGroup>
-                          {reasoningItems.map((item) => (
-                            <SelectItem key={item.value} value={item.value}>
-                              {item.label}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
+                    <ThinkingLevelSelect
+                      model={model}
+                      label={t('settings.provider.modelReasoning', { number: index + 1 })}
+                      onChange={(thinkingLevel) => onUpdateModel(index, { thinkingLevel })}
+                    />
                     <div className="flex items-center gap-2 md:justify-self-center">
                       <Switch
                         aria-label={t('settings.provider.modelMultimodalAria', {

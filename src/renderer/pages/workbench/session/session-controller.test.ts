@@ -568,7 +568,6 @@ describe('SessionController', () => {
           name: 'Zhipu',
           baseURL: 'https://example.com',
           authToken: 'token',
-          authField: 'ANTHROPIC_AUTH_TOKEN',
           models: [
             {
               id: 'glm-text',
@@ -2500,7 +2499,6 @@ describe('SessionController', () => {
         name: 'First',
         baseURL: 'https://first.example.com',
         authToken: 'first-token',
-        authField: 'ANTHROPIC_AUTH_TOKEN',
         models: [
           {
             id: 'model-a',
@@ -2514,7 +2512,6 @@ describe('SessionController', () => {
         name: 'Fallback',
         baseURL: 'https://fallback.example.com',
         authToken: 'fallback-token',
-        authField: 'ANTHROPIC_AUTH_TOKEN',
         models: [
           {
             id: 'model-b',
@@ -2568,7 +2565,6 @@ describe('SessionController', () => {
         name: 'Fallback',
         baseURL: 'https://fallback.example.com',
         authToken: 'fallback-token',
-        authField: 'ANTHROPIC_AUTH_TOKEN',
         models: [
           {
             id: 'model-b',
@@ -2632,7 +2628,6 @@ describe('SessionController', () => {
         name: 'Selected provider',
         baseURL: 'https://selected.example.com',
         authToken: 'selected-token',
-        authField: 'ANTHROPIC_AUTH_TOKEN',
         models: [
           {
             id: 'selected-model',
@@ -2662,7 +2657,6 @@ describe('SessionController', () => {
         name: 'Stale provider',
         baseURL: 'https://stale.example.com',
         authToken: 'stale-token',
-        authField: 'ANTHROPIC_AUTH_TOKEN',
         models: [{ id: 'stale-model', displayName: 'Stale model', contextWindow: 200_000 }],
       },
     ])
@@ -3114,7 +3108,6 @@ describe('SessionController', () => {
         name: 'Zhipu GLM',
         baseURL: 'https://open.bigmodel.cn/api/anthropic',
         authToken: 'secret',
-        authField: 'ANTHROPIC_AUTH_TOKEN',
         models: [{ id: 'glm-5.2', displayName: 'GLM 5.2', contextWindow: 200_000 }],
       },
     ])

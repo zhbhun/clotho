@@ -17,7 +17,6 @@ const existingProvider: ModelProvider = {
   name: 'Zhipu',
   baseURL: 'https://open.bigmodel.cn/api/anthropic',
   authToken: 'zhipu-secret',
-  authField: 'ANTHROPIC_AUTH_TOKEN',
   models: [
     { id: 'glm-5.2', displayName: 'GLM 5.2', contextWindow: 200000 },
     { id: 'glm-4.7', displayName: 'GLM 4.7', contextWindow: 128000 },
@@ -29,7 +28,6 @@ const newProvider: ModelProvider = {
   name: 'MiniMax',
   baseURL: 'https://api.minimax.io/anthropic',
   authToken: 'minimax-secret',
-  authField: 'ANTHROPIC_AUTH_TOKEN',
   models: [{ id: 'MiniMax-M2.7', displayName: 'MiniMax M2.7', contextWindow: 200000 }],
 }
 
@@ -47,6 +45,7 @@ function createProxy(): ModelProxy {
     baseURL: 'http://127.0.0.1:43123',
     authToken: 'local-secret',
     replaceSettings: vi.fn(),
+    sessionThinking: vi.fn(() => undefined),
     settingsEnv: vi.fn(() => ({})),
     stop: vi.fn(async () => {}),
   }
@@ -71,7 +70,7 @@ function createService(settings: Pick<ClaudeskSettings, 'models' | 'providers'>)
 }
 
 describe('Claude desktop service settings', () => {
-  test('normalizes an unsupported model reasoning level to high before saving', async () => {
+  test('normalizes unsupported model reasoning levels before saving', async () => {
     const { service, store } = createService({ providers: [], models: {} })
     const provider = {
       ...newProvider,
@@ -80,7 +79,7 @@ describe('Claude desktop service settings', () => {
 
     await service.createProvider({ provider })
 
-    expect(store.get().providers[0]?.models[0]?.reasoning).toBe('high')
+    expect(store.get().providers[0]?.models[0]?.thinkingLevel).toBe('on')
   })
 
   test('reserves the Claude provider ID for authenticated first-party models', async () => {

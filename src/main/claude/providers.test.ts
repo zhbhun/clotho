@@ -10,7 +10,6 @@ const provider: ModelProvider = {
   name: 'GLM',
   baseURL: 'https://api.glm.com/anthropic',
   authToken: 'sk-xxx',
-  authField: 'ANTHROPIC_AUTH_TOKEN',
   models: [{ id: 'glm-5.2[1M]', displayName: 'GLM-5.2 1M', contextWindow: 1048576 }],
 }
 
@@ -34,12 +33,29 @@ describe('model provider validation', () => {
     ).toBe(false)
   })
 
-  test('accepts an optional reasoning level per model', () => {
+  test('accepts any thinking level string per model', () => {
     expect(
-      isProvider({ ...provider, models: [{ ...provider.models[0]!, reasoning: 'xhigh' }] }),
+      isProvider({ ...provider, models: [{ ...provider.models[0]!, thinkingLevel: 'xhigh' }] }),
     ).toBe(true)
     expect(
-      isProvider({ ...provider, models: [{ ...provider.models[0]!, reasoning: 'turbo' }] }),
+      isProvider({ ...provider, models: [{ ...provider.models[0]!, thinkingLevel: 'turbo' }] }),
+    ).toBe(true)
+    expect(
+      isProvider({ ...provider, models: [{ ...provider.models[0]!, thinkingLevel: '  ' }] }),
     ).toBe(false)
+  })
+
+  test('accepts an optional reasoning preset reference per model', () => {
+    expect(
+      isProvider({
+        ...provider,
+        models: [{ ...provider.models[0]!, thinkingPresetId: 'glm-5-3' }],
+      }),
+    ).toBe(true)
+  })
+
+  test('accepts a known api type and rejects an unknown one', () => {
+    expect(isProvider({ ...provider, apiType: 'chat-completions' })).toBe(true)
+    expect(isProvider({ ...provider, apiType: 'openai' })).toBe(false)
   })
 })

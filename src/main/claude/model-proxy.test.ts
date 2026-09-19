@@ -11,7 +11,6 @@ const provider: ModelProvider = {
   name: 'Zhipu',
   baseURL: 'https://open.bigmodel.cn/api/anthropic',
   authToken: 'provider-secret',
-  authField: 'ANTHROPIC_AUTH_TOKEN',
   models: [{ id: 'glm-5.2/fast', displayName: 'GLM 5.2 Fast', contextWindow: 200000 }],
 }
 
@@ -20,7 +19,6 @@ const kimiProvider: ModelProvider = {
   name: 'Kimi',
   baseURL: 'https://api.kimi.com/coding',
   authToken: 'kimi-secret',
-  authField: 'ANTHROPIC_AUTH_TOKEN',
   models: [{ id: 'k3/long', displayName: 'K3 Long', contextWindow: 1048576 }],
 }
 
@@ -99,9 +97,9 @@ describe('model proxy', () => {
     })
   })
 
-  test('pins thinking and effort to the reasoning level configured per model', async () => {
+  test('honors the claude effort within the support set and falls back to the default level', async () => {
     const harness = createServeHarness()
-    const upstreamBodies: unknown[] = []
+    const upstreamBodies: Record<string, unknown>[] = []
     const upstreamFetch = vi.fn(async (request: Request) => {
       upstreamBodies.push(await request.clone().json())
       return Response.json({ ok: true })
@@ -113,26 +111,35 @@ describe('model proxy', () => {
         {
           ...provider,
           models: [
-            { id: 'glm-default', displayName: 'GLM Default', contextWindow: 200000 },
-            { id: 'glm-none', displayName: 'GLM None', contextWindow: 200000, reasoning: 'none' },
-            { id: 'glm-high', displayName: 'GLM High', contextWindow: 200000, reasoning: 'high' },
             {
-              id: 'glm-invalid',
-              displayName: 'GLM Invalid',
+              id: 'tiered',
+              displayName: 'Tiered',
               contextWindow: 200000,
-              reasoning: 'turbo',
+              thinkingLevel: 'high',
+              thinkingPresetId: 'glm-5-3',
             },
+            {
+              id: 'switchable',
+              displayName: 'Switchable',
+              contextWindow: 200000,
+              thinkingLevel: 'on',
+              thinkingPresetId: 'kimi-k2-6',
+            },
+            { id: 'pinned', displayName: 'Pinned', contextWindow: 200000, thinkingLevel: 'low' },
           ],
-        } as unknown as ModelProvider,
+        },
       ],
       serve: harness.serve,
     })
 
     const cases = [
-      { model: 'zhipu/glm-default', output_config: { effort: 'low', format: { type: 'json' } } },
-      { model: 'zhipu/glm-none', output_config: { effort: 'low' } },
-      { model: 'zhipu/glm-high', output_config: { effort: 'low' } },
-      { model: 'zhipu/glm-invalid', output_config: { effort: 'low' } },
+      { model: 'zhipu/tiered', output_config: { effort: 'low', format: { type: 'json' } } },
+      { model: 'zhipu/tiered', output_config: { effort: 'medium' } },
+      { model: 'zhipu/tiered' },
+      { model: 'zhipu/tiered', output_config: { effort: 'high' }, thinking: { type: 'disabled' } },
+      { model: 'zhipu/switchable', output_config: { effort: 'xhigh' } },
+      { model: 'zhipu/switchable', thinking: { type: 'disabled' } },
+      { model: 'zhipu/pinned', output_config: { effort: 'xhigh' } },
     ]
     for (const body of cases) {
       await harness.request(
@@ -145,7 +152,6 @@ describe('model proxy', () => {
           body: JSON.stringify({
             ...body,
             messages: [{ role: 'user', content: 'Hello' }],
-            thinking: { type: 'enabled', budget_tokens: 2048 },
           }),
         }),
       )
@@ -153,27 +159,44 @@ describe('model proxy', () => {
 
     expect(upstreamBodies).toEqual([
       {
-        model: 'glm-default',
+        model: 'tiered',
         messages: [{ role: 'user', content: 'Hello' }],
-        thinking: { type: 'adaptive' },
-        output_config: { effort: 'high', format: { type: 'json' } },
+        thinking: { type: 'enabled' },
+        output_config: { effort: 'low', format: { type: 'json' } },
       },
       {
-        model: 'glm-none',
+        model: 'tiered',
+        messages: [{ role: 'user', content: 'Hello' }],
+        thinking: { type: 'enabled' },
+        output_config: { effort: 'high' },
+      },
+      {
+        model: 'tiered',
+        messages: [{ role: 'user', content: 'Hello' }],
+        thinking: { type: 'enabled' },
+        output_config: { effort: 'high' },
+      },
+      {
+        model: 'tiered',
+        messages: [{ role: 'user', content: 'Hello' }],
+        thinking: { type: 'enabled' },
+        output_config: { effort: 'high' },
+      },
+      {
+        model: 'switchable',
+        messages: [{ role: 'user', content: 'Hello' }],
+        thinking: { type: 'enabled' },
+      },
+      {
+        model: 'switchable',
         messages: [{ role: 'user', content: 'Hello' }],
         thinking: { type: 'disabled' },
       },
       {
-        model: 'glm-high',
+        model: 'pinned',
         messages: [{ role: 'user', content: 'Hello' }],
-        thinking: { type: 'adaptive' },
-        output_config: { effort: 'high' },
-      },
-      {
-        model: 'glm-invalid',
-        messages: [{ role: 'user', content: 'Hello' }],
-        thinking: { type: 'adaptive' },
-        output_config: { effort: 'high' },
+        thinking: { type: 'enabled' },
+        output_config: { effort: 'low' },
       },
     ])
   })
@@ -565,6 +588,49 @@ describe('model proxy', () => {
     expect(second.authToken).not.toBe(first.authToken)
   })
 
+  test('derives the session thinking from the linked reasoning preset', async () => {
+    const harness = createServeHarness()
+    const proxy = await createModelProxy({
+      authToken: 'local-secret',
+      fetch: vi.fn(async () => Response.json({ ok: true })),
+      providers: [
+        {
+          ...provider,
+          models: [
+            {
+              id: 'tiered',
+              displayName: 'Tiered',
+              contextWindow: 200000,
+              thinkingLevel: 'max',
+              thinkingPresetId: 'glm-5-3',
+            },
+            {
+              id: 'switch-off',
+              displayName: 'Switch Off',
+              contextWindow: 200000,
+              thinkingLevel: 'off',
+              thinkingPresetId: 'glm-5-2',
+            },
+            { id: 'plain', displayName: 'Plain', contextWindow: 200000 },
+            {
+              id: 'switched-off',
+              displayName: 'Switched Off',
+              contextWindow: 200000,
+              thinkingLevel: 'off',
+            },
+          ],
+        },
+      ],
+      serve: harness.serve,
+    })
+
+    expect(proxy.sessionThinking('zhipu/tiered')).toEqual({ effort: 'max' })
+    expect(proxy.sessionThinking('zhipu/switch-off')).toEqual({ disabled: true })
+    // Unknown models speak the claude thinking vocabulary directly.
+    expect(proxy.sessionThinking('zhipu/plain')).toEqual({ enabled: true })
+    expect(proxy.sessionThinking('zhipu/switched-off')).toEqual({ disabled: true })
+  })
+
   test('stops the listener and active connections', async () => {
     const harness = createServeHarness()
     const proxy = await createModelProxy({
@@ -577,5 +643,439 @@ describe('model proxy', () => {
     await proxy.stop()
 
     expect(harness.stop).toHaveBeenCalledWith(true)
+  })
+
+  test('translates anthropic messages into chat completions and back for chat providers', async () => {
+    const harness = createServeHarness()
+    const upstreamFetch = vi.fn<(request: Request) => Promise<Response>>(async () =>
+      Response.json({
+        id: 'chat-1',
+        choices: [
+          {
+            index: 0,
+            finish_reason: 'stop',
+            message: { role: 'assistant', content: '42', reasoning_content: '7*6 is 42' },
+          },
+        ],
+        usage: { prompt_tokens: 25, completion_tokens: 44 },
+      }),
+    )
+    const proxy = await createModelProxy({
+      authToken: 'local-secret',
+      fetch: upstreamFetch,
+      providers: [
+        {
+          ...provider,
+          apiType: 'chat-completions',
+          baseURL: 'https://model-router.meitu.com/v1',
+          models: [
+            {
+              id: 'glm-5.3-flash',
+              displayName: 'GLM 5.3 Flash',
+              contextWindow: 250000,
+              thinkingLevel: 'max',
+              thinkingPresetId: 'glm-5-3',
+            },
+          ],
+        },
+      ],
+      serve: harness.serve,
+    })
+
+    const response = await harness.request(
+      new Request(`${proxy.baseURL}/v1/messages`, {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer local-secret',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'zhipu/glm-5.3-flash',
+          max_tokens: 1024,
+          system: 'You are helpful.',
+          messages: [{ role: 'user', content: 'Hello' }],
+          output_config: { effort: 'low' },
+        }),
+      }),
+    )
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({
+      id: 'chat-1',
+      type: 'message',
+      role: 'assistant',
+      model: 'zhipu/glm-5.3-flash',
+      content: [
+        { type: 'thinking', thinking: '7*6 is 42' },
+        { type: 'text', text: '42' },
+      ],
+      stop_reason: 'end_turn',
+      stop_sequence: null,
+      usage: { input_tokens: 25, output_tokens: 44 },
+    })
+
+    expect(upstreamFetch).toHaveBeenCalledOnce()
+    const upstreamRequest = upstreamFetch.mock.calls[0]?.[0]
+    expect(upstreamRequest?.url).toBe('https://model-router.meitu.com/v1/chat/completions')
+    expect(upstreamRequest?.headers.get('authorization')).toBe('Bearer provider-secret')
+    expect(await upstreamRequest?.clone().json()).toEqual({
+      model: 'glm-5.3-flash',
+      max_tokens: 1024,
+      messages: [
+        { role: 'system', content: 'You are helpful.' },
+        { role: 'user', content: 'Hello' },
+      ],
+      reasoning_effort: 'low',
+    })
+  })
+
+  test('streams chat completions back as anthropic sse events', async () => {
+    const harness = createServeHarness()
+    const encoder = new TextEncoder()
+    const upstreamFetch = vi.fn<(request: Request) => Promise<Response>>(async () => {
+      const chunks = [
+        `data: ${JSON.stringify({
+          id: 'chat-1',
+          choices: [{ index: 0, delta: { role: 'assistant', content: 'Hi' } }],
+        })}\n\n`,
+        'data: [DONE]\n\n',
+      ]
+      return new Response(
+        new ReadableStream({
+          start(controller) {
+            for (const chunk of chunks) controller.enqueue(encoder.encode(chunk))
+            controller.close()
+          },
+        }),
+        { headers: { 'content-type': 'text/event-stream' } },
+      )
+    })
+    const proxy = await createModelProxy({
+      authToken: 'local-secret',
+      fetch: upstreamFetch,
+      providers: [{ ...provider, apiType: 'chat-completions' }],
+      serve: harness.serve,
+    })
+
+    const response = await harness.request(
+      new Request(`${proxy.baseURL}/v1/messages`, {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer local-secret',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'zhipu/glm-5.2/fast',
+          stream: true,
+          messages: [{ role: 'user', content: 'Hello' }],
+        }),
+      }),
+    )
+
+    expect(response.status).toBe(200)
+    const text = await response.text()
+    expect(text).toContain('"type":"message_start"')
+    expect(text).toContain('event: content_block_delta')
+    expect(text).toContain('"type":"text_delta","text":"Hi"')
+    expect(text).toContain('"type":"message_stop"')
+
+    const upstreamRequest = upstreamFetch.mock.calls[0]?.[0]
+    expect(await upstreamRequest?.clone().json()).toMatchObject({
+      model: 'glm-5.2/fast',
+      stream: true,
+      stream_options: { include_usage: true },
+    })
+  })
+
+  test('answers count_tokens locally for chat completions providers', async () => {
+    const harness = createServeHarness()
+    const upstreamFetch = vi.fn()
+    const proxy = await createModelProxy({
+      authToken: 'local-secret',
+      fetch: upstreamFetch,
+      providers: [{ ...provider, apiType: 'chat-completions' }],
+      serve: harness.serve,
+    })
+
+    const response = await harness.request(
+      new Request(`${proxy.baseURL}/v1/messages/count_tokens`, {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer local-secret',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'zhipu/glm-5.2/fast',
+          messages: [{ role: 'user', content: 'Hello' }],
+        }),
+      }),
+    )
+
+    expect(response.status).toBe(200)
+    const body = await response.json()
+    expect(body.input_tokens).toBeGreaterThanOrEqual(1)
+    expect(upstreamFetch).not.toHaveBeenCalled()
+  })
+
+  test('expresses the thinking switch per family on chat providers', async () => {
+    const harness = createServeHarness()
+    const upstreamBodies: Record<string, unknown>[] = []
+    const upstreamFetch = vi.fn(async (request: Request) => {
+      upstreamBodies.push(await request.clone().json())
+      return Response.json({
+        choices: [
+          { index: 0, finish_reason: 'stop', message: { role: 'assistant', content: 'ok' } },
+        ],
+      })
+    })
+    const proxy = await createModelProxy({
+      authToken: 'local-secret',
+      fetch: upstreamFetch,
+      providers: [
+        {
+          ...provider,
+          apiType: 'chat-completions',
+          models: [
+            {
+              id: 'qwen3.8-flash',
+              displayName: 'Qwen 3.8 Flash',
+              contextWindow: 250000,
+              thinkingLevel: 'off',
+              thinkingPresetId: 'qwen',
+            },
+            {
+              id: 'deepseek-flash',
+              displayName: 'DeepSeek Flash',
+              contextWindow: 250000,
+              thinkingLevel: 'off',
+              thinkingPresetId: 'deepseek',
+            },
+          ],
+        },
+      ],
+      serve: harness.serve,
+    })
+
+    for (const model of ['zhipu/qwen3.8-flash', 'zhipu/deepseek-flash']) {
+      await harness.request(
+        new Request(`${proxy.baseURL}/v1/messages`, {
+          method: 'POST',
+          headers: {
+            authorization: 'Bearer local-secret',
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({
+            model,
+            messages: [{ role: 'user', content: 'Hello' }],
+            thinking: { type: 'disabled' },
+          }),
+        }),
+      )
+    }
+
+    expect(upstreamBodies).toEqual([
+      {
+        model: 'qwen3.8-flash',
+        messages: [{ role: 'user', content: 'Hello' }],
+        enable_thinking: false,
+      },
+      {
+        model: 'deepseek-flash',
+        messages: [{ role: 'user', content: 'Hello' }],
+        thinking: { type: 'disabled' },
+      },
+    ])
+  })
+
+  test('translates the claude thinking param directly for unknown chat models', async () => {
+    const harness = createServeHarness()
+    const upstreamBodies: Record<string, unknown>[] = []
+    const upstreamFetch = vi.fn(async (request: Request) => {
+      upstreamBodies.push(await request.clone().json())
+      return Response.json({
+        choices: [
+          { index: 0, finish_reason: 'stop', message: { role: 'assistant', content: 'ok' } },
+        ],
+      })
+    })
+    const proxy = await createModelProxy({
+      authToken: 'local-secret',
+      fetch: upstreamFetch,
+      providers: [
+        {
+          ...provider,
+          apiType: 'chat-completions',
+          models: [
+            {
+              id: 'mystery',
+              displayName: 'Mystery',
+              contextWindow: 200000,
+              thinkingLevel: 'off',
+            },
+          ],
+        },
+      ],
+      serve: harness.serve,
+    })
+
+    const send = (thinking: unknown) =>
+      harness.request(
+        new Request(`${proxy.baseURL}/v1/messages`, {
+          method: 'POST',
+          headers: { authorization: 'Bearer local-secret', 'content-type': 'application/json' },
+          body: JSON.stringify({
+            model: 'zhipu/mystery',
+            messages: [{ role: 'user', content: 'Hello' }],
+            ...(thinking ? { thinking } : {}),
+          }),
+        }),
+      )
+
+    await send({ type: 'disabled' })
+    await send({ type: 'adaptive' })
+    await send(undefined)
+
+    expect(upstreamBodies).toEqual([
+      {
+        model: 'mystery',
+        messages: [{ role: 'user', content: 'Hello' }],
+        thinking: { type: 'disabled' },
+      },
+      {
+        model: 'mystery',
+        messages: [{ role: 'user', content: 'Hello' }],
+        thinking: { type: 'enabled' },
+      },
+      {
+        model: 'mystery',
+        messages: [{ role: 'user', content: 'Hello' }],
+        thinking: { type: 'disabled' },
+      },
+    ])
+  })
+
+  test('minimax m3 expresses thinking-on as adaptive on both paths', async () => {
+    const harness = createServeHarness()
+    const upstreamBodies: Record<string, unknown>[] = []
+    const upstreamFetch = vi.fn(async (request: Request) => {
+      upstreamBodies.push(await request.clone().json())
+      return Response.json({
+        choices: [
+          { index: 0, finish_reason: 'stop', message: { role: 'assistant', content: 'ok' } },
+        ],
+      })
+    })
+    const proxy = await createModelProxy({
+      authToken: 'local-secret',
+      fetch: upstreamFetch,
+      providers: [
+        {
+          ...provider,
+          apiType: 'chat-completions',
+          models: [
+            {
+              id: 'minimax-m3',
+              displayName: 'MiniMax M3',
+              contextWindow: 200000,
+              thinkingLevel: 'on',
+              thinkingPresetId: 'minimax-m3',
+            },
+          ],
+        },
+      ],
+      serve: harness.serve,
+    })
+
+    const send = () =>
+      harness.request(
+        new Request(`${proxy.baseURL}/v1/messages`, {
+          method: 'POST',
+          headers: { authorization: 'Bearer local-secret', 'content-type': 'application/json' },
+          body: JSON.stringify({
+            model: 'zhipu/minimax-m3',
+            messages: [{ role: 'user', content: 'Hello' }],
+          }),
+        }),
+      )
+    await send()
+    const chatOn = upstreamBodies[0]
+    expect(chatOn.thinking).toEqual({ type: 'adaptive' })
+
+    // Anthropic passthrough keeps thinking adaptive for MiniMax too.
+    const anthropicProxy = await createModelProxy({
+      authToken: 'local-secret',
+      fetch: upstreamFetch,
+      providers: [
+        {
+          ...provider,
+          models: [
+            {
+              id: 'minimax-m3',
+              displayName: 'MiniMax M3',
+              contextWindow: 200000,
+              thinkingLevel: 'on',
+              thinkingPresetId: 'minimax-m3',
+            },
+          ],
+        },
+      ],
+      serve: harness.serve,
+    })
+    const response = await harness.request(
+      new Request(`${anthropicProxy.baseURL}/v1/messages`, {
+        method: 'POST',
+        headers: { authorization: 'Bearer local-secret', 'content-type': 'application/json' },
+        body: JSON.stringify({
+          model: 'zhipu/minimax-m3',
+          messages: [{ role: 'user', content: 'Hello' }],
+        }),
+      }),
+    )
+    expect(response.status).toBe(200)
+    expect(upstreamBodies[1].thinking).toEqual({ type: 'adaptive' })
+  })
+
+  test('wraps chat completions upstream errors in anthropic error payloads', async () => {
+    const harness = createServeHarness()
+    const upstreamFetch = vi.fn(async () =>
+      Response.json(
+        {
+          error: {
+            code: '1210',
+            message: '该模型始终思考，不支持关闭思考；请使用 low、high 或 max。',
+          },
+        },
+        { status: 400 },
+      ),
+    )
+    const proxy = await createModelProxy({
+      authToken: 'local-secret',
+      fetch: upstreamFetch,
+      providers: [{ ...provider, apiType: 'chat-completions' }],
+      serve: harness.serve,
+    })
+
+    const response = await harness.request(
+      new Request(`${proxy.baseURL}/v1/messages`, {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer local-secret',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'zhipu/glm-5.2/fast',
+          messages: [{ role: 'user', content: 'Hello' }],
+        }),
+      }),
+    )
+
+    expect(response.status).toBe(400)
+    expect(await response.json()).toEqual({
+      type: 'error',
+      error: {
+        type: 'invalid_request_error',
+        message: '该模型始终思考，不支持关闭思考；请使用 low、high 或 max。',
+      },
+    })
   })
 })

@@ -41,7 +41,6 @@ function makeProvider(overrides: Partial<ModelProvider>): ModelProvider {
     name: 'Test Provider',
     baseURL: 'https://example.com',
     authToken: '',
-    authField: 'ANTHROPIC_AUTH_TOKEN',
     models: [],
     ...overrides,
   }

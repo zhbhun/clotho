@@ -130,8 +130,24 @@ export const settingsCatalog = {
   'settings.provider.add': setting('Add provider', '新增供应商', '新增供應商'),
   'settings.provider.addFromPreset': setting('Add from preset', '从预设添加', '從預設新增'),
   'settings.provider.addModel': setting('Add model', '添加模型', '新增模型'),
-  'settings.provider.authField': setting('Authentication field', '认证字段', '驗證欄位'),
-  'settings.provider.credential': setting('Credentials', '认证凭证', '驗證憑證'),
+  'settings.provider.apiType': setting('API Type', 'API 类型', 'API 類型'),
+  'settings.provider.apiType.anthropicMessages': setting(
+    'Anthropic Messages (/v1/messages)',
+    'Anthropic Messages (/v1/messages)',
+    'Anthropic Messages (/v1/messages)',
+  ),
+  'settings.provider.apiType.chatCompletions': setting(
+    'Chat Completions (/chat/completions)',
+    'Chat Completions (/chat/completions)',
+    'Chat Completions (/chat/completions)',
+  ),
+  'settings.provider.apiTypeHint': setting(
+    'The base URL follows the OpenAI convention and includes /v1, e.g. https://api.example.com/v1',
+    'Base URL 按 OpenAI 惯例包含 /v1,例如 https://api.example.com/v1',
+    'Base URL 按 OpenAI 慣例包含 /v1,例如 https://api.example.com/v1',
+  ),
+  'settings.provider.baseUrl': setting('Base URL', 'Base URL', 'Base URL'),
+  'settings.provider.credential': setting('API Key', 'API Key', 'API Key'),
   'settings.provider.deleteModel': setting(
     'Delete model {{number}}',
     '删除模型 {{number}}',
@@ -184,7 +200,6 @@ export const settingsCatalog = {
     '建立後無法修改',
   ),
   'settings.provider.idRequired': setting('Enter a provider', '请输入供应商', '請輸入供應商'),
-  'settings.provider.requestUrl': setting('Request URL', '请求地址', '請求位址'),
   'settings.provider.loadingDescription': setting(
     'Reading model configuration.',
     '正在读取模型配置。',
@@ -253,8 +268,9 @@ export const settingsCatalog = {
   'settings.provider.reasoning.low': setting('Low', '低', '低'),
   'settings.provider.reasoning.max': setting('Max', '最大', '最大'),
   'settings.provider.reasoning.medium': setting('Medium', '中', '中'),
-  'settings.provider.reasoning.none': setting('None', '无', '無'),
   'settings.provider.reasoning.xhigh': setting('XHigh', '超高', '超高'),
+  'settings.provider.reasoning.on': setting('On', '开启', '開啟'),
+  'settings.provider.reasoning.off': setting('Off', '关闭', '關閉'),
   'settings.provider.saveError': setting(
     'Provider could not be saved. Please try again.',
     '供应商保存失败，请重试',

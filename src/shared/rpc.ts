@@ -1,13 +1,13 @@
 import type { SDKMessage, SDKUserMessage } from '@anthropic-ai/claude-agent-sdk'
 
 import type { WebviewLogBatch } from './logging'
-import type { ClaudeModelMappingRole, ProviderModelReasoning } from './provider'
+import type { ClaudeModelMappingRole, ProviderApiType } from './provider'
 import type { DraftSession, DraftSessionIndex, LocalSession } from './session'
 import type { ShortcutBinding, ShortcutOverrides } from './shortcuts'
 
 export type { DraftSession, DraftSessionIndex, LocalSession, SessionInput } from './session'
 
-export type { ClaudeModelMappingRole } from './provider'
+export type { ClaudeModelMappingRole, ProviderModelReasoning } from './provider'
 
 /** Shape of one side of the desktop RPC contract (requests + push messages). */
 export type RPCSchemaSide<Config extends RPCSchemaSideConfig> = Config
@@ -600,9 +600,6 @@ export interface ClaudeModelInfo {
   supportsFastMode?: boolean
 }
 
-/** Authentication method used when a local model proxy forwards to an upstream. */
-export type ProviderAuthField = 'ANTHROPIC_AUTH_TOKEN' | 'ANTHROPIC_API_KEY'
-
 /** A single model belonging to a provider. */
 export interface ProviderModel {
   id: string
@@ -610,8 +607,19 @@ export interface ProviderModel {
   contextWindow: number
   /** Whether the model accepts multimodal attachments; undefined falls back to capable. */
   supportsMultimodal?: boolean
-  /** Reasoning effort the proxy pins for this model; undefined falls back to 'high'. */
-  reasoning?: ProviderModelReasoning
+  /**
+   * The model's selected thinking level (a model-native level from the linked
+   * reasoning preset, e.g. `high` or `on`). Also the fallback for requests
+   * whose effort is outside the preset mapping. Undefined falls back to `on`.
+   */
+  thinkingLevel?: string
+  /**
+   * Id of the reasoning preset linked to this model. The preset provides the
+   * selectable model levels and their mapping to Claude effort levels, which
+   * the local proxy uses to translate requests. Undefined pins
+   * `thinkingLevel` unconditionally.
+   */
+  thinkingPresetId?: string
 }
 
 /** A third-party Claude-compatible endpoint and its model list. */
@@ -620,9 +628,10 @@ export interface ModelProvider {
   name: string
   baseURL: string
   authToken: string
-  authField: ProviderAuthField
+  /** Upstream API dialect; undefined falls back to Anthropic Messages. */
+  apiType?: ProviderApiType
   models: ProviderModel[]
-  /** Source preset ID; when present, the preset determines the read-only auth field. */
+  /** Source preset ID; when present, the preset came from the built-in list. */
   presetId?: string
   /** Override the exact models endpoint used when fetching models. */
   modelsUrl?: string
@@ -641,7 +650,6 @@ export interface ProviderModelSelection {
 export interface FetchProviderModelsParams {
   baseURL: string
   authToken: string
-  authField: ProviderAuthField
   /** Override the exact models endpoint used by candidate discovery. */
   modelsUrl?: string
 }

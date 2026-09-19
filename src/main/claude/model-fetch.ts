@@ -1,4 +1,4 @@
-import type { FetchProviderModelsParams, ProviderAuthField } from '@/shared/rpc'
+import type { FetchProviderModelsParams } from '@/shared/rpc'
 
 /** Build candidate model URLs, falling back to baseURL variants when modelsUrl is absent. */
 export function buildCandidates(baseURL: string, modelsUrl?: string): string[] {
@@ -10,13 +10,6 @@ export function buildCandidates(baseURL: string, modelsUrl?: string): string[] {
     candidates.push(`${stripped}/v1/models`, `${stripped}/models`)
   }
   return candidates
-}
-
-/** Build authentication headers from the configured auth field. */
-export function authHeader(authField: ProviderAuthField, token: string): Record<string, string> {
-  return authField === 'ANTHROPIC_API_KEY'
-    ? { 'x-api-key': token }
-    : { Authorization: `Bearer ${token}` }
 }
 
 /** Parse model IDs from OpenAI-shaped `{ data: [{ id }] }` or bare-array responses. */
@@ -32,11 +25,10 @@ export function parseModelIds(json: unknown): string[] {
 export async function fetchProviderModels({
   baseURL,
   authToken,
-  authField,
   modelsUrl,
 }: FetchProviderModelsParams): Promise<string[]> {
   const candidates = buildCandidates(baseURL, modelsUrl)
-  const headers = { ...authHeader(authField, authToken), Accept: 'application/json' }
+  const headers = { Authorization: `Bearer ${authToken}`, Accept: 'application/json' }
   const errors: string[] = []
 
   for (const url of candidates) {
