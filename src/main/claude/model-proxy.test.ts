@@ -877,7 +877,7 @@ describe('model proxy', () => {
       {
         model: 'qwen3.8-flash',
         messages: [{ role: 'user', content: 'Hello' }],
-        enable_thinking: false,
+        reasoning_effort: 'none',
       },
       {
         model: 'deepseek-flash',
@@ -940,16 +940,25 @@ describe('model proxy', () => {
         model: 'mystery',
         messages: [{ role: 'user', content: 'Hello' }],
         thinking: { type: 'disabled' },
+        enable_thinking: false,
+        reasoning_effort: 'none',
+        reasoning: { effort: 'none' },
       },
       {
         model: 'mystery',
         messages: [{ role: 'user', content: 'Hello' }],
         thinking: { type: 'enabled' },
+        enable_thinking: true,
+        reasoning_effort: 'high',
+        reasoning: { effort: 'high' },
       },
       {
         model: 'mystery',
         messages: [{ role: 'user', content: 'Hello' }],
         thinking: { type: 'disabled' },
+        enable_thinking: false,
+        reasoning_effort: 'none',
+        reasoning: { effort: 'none' },
       },
     ])
   })

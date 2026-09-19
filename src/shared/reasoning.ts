@@ -1,12 +1,18 @@
 /**
  * Reasoning presets shared by the renderer (Reasoning dropdown options) and
- * the model proxy (claude level ⇄ model level translation). Each preset has a
- * stable id — models reference it through `thinkingPresetId` — and maps every
- * selectable model thinking level to a Claude SDK effort level.
+ * the model proxy (claude level ⇄ native request translation). Each preset has
+ * a stable id — models reference it through `thinkingPresetId` — and carries
+ * the selectable model levels plus the wire params each upstream API type
+ * receives for a level.
  *
- * Levels reflect each family's official thinking controls as of 2026-09;
- * values Claude cannot request (e.g. OpenAI `minimal`, GLM `none` aliases) are
- * folded away. `off` maps to the claude `none` level, which disables thinking.
+ * Level sets and wire vocabularies follow ZCode's builtin model rules as of
+ * 2026-09, with two compatibility deviations: gpt models send bare
+ * `reasoning_effort` on chat upstreams (ZCode's own gpt-5.4 chat map; the
+ * kitchen-sink default is reserved for unknown families), and the unknown-
+ * model fallback sends `thinking.type: enabled` on anthropic upstreams —
+ * the older, more widely supported value over `adaptive`. Claude values it
+ * cannot request (e.g. `minimal`) are folded away; `disabled`/`none` map to
+ * the UI level `off`, `enabled` to `on`.
  */
 import type { ProviderModelReasoning } from './provider'
 
@@ -16,21 +22,8 @@ export interface ReasoningMappingRow {
   claudeLevel: ProviderModelReasoning
 }
 
-/**
- * How a preset's on/off switch is expressed on a Chat Completions upstream:
- * `thinking` is the DeepSeek/GLM/Kimi/MiMo convention (`thinking.type`
- * enabled/disabled), `thinking-adaptive` is MiniMax M3 (on = adaptive), and
- * Qwen uses a boolean `enable_thinking`. Effort tiers are always
- * `reasoning_effort` on that endpoint shape.
- */
-export type ReasoningSwitchStyle = 'thinking' | 'thinking-adaptive' | 'enable-thinking'
-
-/**
- * How "thinking on" is expressed on an Anthropic-compatible upstream: real
- * Claude/Gemini/Grok/OpenAI proxies take `adaptive`, while DeepSeek/GLM/Kimi/
- * Qwen/MiMo/MiniMax document `enabled` (MiniMax M3 takes `adaptive`).
- */
-export type AnthropicThinkingStyle = 'adaptive' | 'enabled'
+/** Request params one upstream API type receives for a model thinking level. */
+export type ReasoningWireParams = Record<string, unknown>
 
 /** A named thinking-level mapping for one model family. */
 export interface ReasoningPreset {
@@ -39,55 +32,198 @@ export interface ReasoningPreset {
   mappings: ReasoningMappingRow[]
   /** Level selected when a model is added or auto-filled. */
   defaultModelLevel: string
-  /** Switch wire style, consulted only for presets offering on/off levels. */
-  switchStyle: ReasoningSwitchStyle
-  /** Wire value of `thinking.type` for "thinking on" on anthropic upstreams. */
-  anthropicOn: AnthropicThinkingStyle
+  /** Params for an anthropic-messages upstream, by model level. */
+  anthropicParams(level: string): ReasoningWireParams
+  /** Params for a chat-completions upstream, by model level. */
+  chatParams(level: string): ReasoningWireParams
+}
+
+type WireParams = ReasoningWireParams
+
+/** Switch families speak `on`, upstreams expect a tier; `on` maps to high. */
+function effortOf(level: string): string {
+  return level === 'on' ? 'high' : level
+}
+
+function thinkingSwitch(type: 'disabled' | 'enabled' | 'adaptive'): WireParams {
+  return { thinking: { type } }
+}
+
+function anthropicAdaptiveEffort(level: string): WireParams {
+  if (level === 'off') return thinkingSwitch('disabled')
+  return { thinking: { type: 'adaptive' }, output_config: { effort: effortOf(level) } }
+}
+
+/** Families whose anthropic dialect always thinks (glm-5.3, deepseek, generic). */
+function anthropicEnabledEffort(level: string): WireParams {
+  if (level === 'off') return thinkingSwitch('disabled')
+  return { thinking: { type: 'enabled' }, output_config: { effort: effortOf(level) } }
+}
+
+/** Kimi's anthropic dialect: the effort alone, thinking deleted. */
+function anthropicEffortOnly(level: string): WireParams {
+  return { output_config: { effort: effortOf(level) } }
+}
+
+function anthropicSwitch(level: string): WireParams {
+  return thinkingSwitch(level === 'off' ? 'disabled' : 'enabled')
+}
+
+function anthropicAdaptiveSwitch(level: string): WireParams {
+  return thinkingSwitch(level === 'off' ? 'disabled' : 'adaptive')
+}
+
+function chatEffort(level: string): WireParams {
+  return { reasoning_effort: level === 'off' ? 'none' : effortOf(level) }
+}
+
+/** Default for families without a known chat dialect: set every switch. */
+function chatKitchenSink(level: string): WireParams {
+  const off = level === 'off'
+  const effort = off ? 'none' : effortOf(level)
+  return {
+    thinking: { type: off ? 'disabled' : 'enabled' },
+    enable_thinking: !off,
+    reasoning_effort: effort,
+    reasoning: { effort },
+  }
+}
+
+function chatSwitchEffort(level: string): WireParams {
+  if (level === 'off') return thinkingSwitch('disabled')
+  return { thinking: { type: 'enabled' }, reasoning_effort: effortOf(level) }
+}
+
+function chatEnableThinking(level: string): WireParams {
+  return { enable_thinking: level !== 'off' }
+}
+
+function chatSwitch(level: string): WireParams {
+  return thinkingSwitch(level === 'off' ? 'disabled' : 'enabled')
+}
+
+function chatAdaptiveSwitch(level: string): WireParams {
+  return thinkingSwitch(level === 'off' ? 'disabled' : 'adaptive')
 }
 
 function preset(
   id: string,
   rows: Array<[modelLevel: string, claudeLevel: ProviderModelReasoning]>,
+  wire: {
+    anthropic: (level: string) => WireParams
+    chat: (level: string) => WireParams
+  },
   defaultModelLevel = 'high',
-  options: {
-    switchStyle?: ReasoningSwitchStyle
-    anthropicOn?: AnthropicThinkingStyle
-  } = {},
 ): ReasoningPreset {
   return {
     id,
     mappings: rows.map(([modelLevel, claudeLevel]) => ({ modelLevel, claudeLevel })),
     defaultModelLevel,
-    switchStyle: options.switchStyle ?? 'thinking',
-    anthropicOn: options.anthropicOn ?? 'enabled',
+    anthropicParams: wire.anthropic,
+    chatParams: wire.chat,
   }
 }
 
 /** Match order decides precedence; keep more specific model versions first. */
 const MODEL_REASONING_PRESETS: Array<{ modelPatterns: RegExp[]; preset: ReasoningPreset }> = [
-  // GLM-5.3 always thinks; reasoning_effort only accepts low/high/max.
+  // GLM-5.3 always thinks; the effort only accepts low/high/max.
   {
     modelPatterns: [/glm-5\.3/],
-    preset: preset('glm-5-3', [
-      ['low', 'low'],
-      ['high', 'high'],
-      ['max', 'max'],
-    ]),
+    preset: preset(
+      'glm-5-3',
+      [
+        ['low', 'low'],
+        ['high', 'high'],
+        ['max', 'max'],
+      ],
+      { anthropic: anthropicEnabledEffort, chat: chatEffort },
+    ),
   },
-  // GLM-5.2 accepts the full ladder plus thinking disabled.
+  // GLM-5.2 accepts off/high/max only.
   {
     modelPatterns: [/glm-5\.2/],
-    preset: preset('glm-5-2', [
-      ['off', 'none'],
-      ['low', 'low'],
-      ['medium', 'medium'],
-      ['high', 'high'],
-      ['xhigh', 'xhigh'],
-      ['max', 'max'],
-    ]),
+    preset: preset(
+      'glm-5-2',
+      [
+        ['off', 'none'],
+        ['high', 'high'],
+        ['max', 'max'],
+      ],
+      { anthropic: anthropicEnabledEffort, chat: chatKitchenSink },
+    ),
   },
-  // OpenAI reasoning models: none/minimal exist but map poorly to Claude; no
-  // official anthropic-compat endpoint, so proxies decide (CLI retries).
+  // Older GLM models (5.2-, 5.1, 5v, 4.x) only expose a thinking switch.
+  {
+    modelPatterns: [/glm-5(?:[.\-:/[].*)?$/, /glm-5v/, /glm-4/],
+    preset: preset(
+      'glm',
+      [
+        ['off', 'none'],
+        ['on', 'high'],
+      ],
+      { anthropic: anthropicSwitch, chat: chatKitchenSink },
+      'on',
+    ),
+  },
+  // GPT ladders differ per generation: 5.6 reaches max and can disable
+  // thinking, 5.4 stops at xhigh, 5.3-codex has neither off nor max.
+  {
+    modelPatterns: [/gpt-5\.6/],
+    preset: preset(
+      'gpt-5-6',
+      [
+        ['off', 'none'],
+        ['low', 'low'],
+        ['medium', 'medium'],
+        ['high', 'high'],
+        ['xhigh', 'xhigh'],
+        ['max', 'max'],
+      ],
+      { anthropic: anthropicAdaptiveEffort, chat: chatEffort },
+    ),
+  },
+  {
+    modelPatterns: [/gpt-5\.4/],
+    preset: preset(
+      'gpt-5-4',
+      [
+        ['off', 'none'],
+        ['low', 'low'],
+        ['medium', 'medium'],
+        ['high', 'high'],
+        ['xhigh', 'xhigh'],
+      ],
+      { anthropic: anthropicAdaptiveEffort, chat: chatEffort },
+    ),
+  },
+  {
+    modelPatterns: [/gpt-5\.3-codex/],
+    preset: preset(
+      'gpt-5-3-codex',
+      [
+        ['low', 'low'],
+        ['medium', 'medium'],
+        ['high', 'high'],
+        ['xhigh', 'xhigh'],
+      ],
+      { anthropic: anthropicAdaptiveEffort, chat: chatEffort },
+    ),
+  },
+  {
+    modelPatterns: [/gpt-6/],
+    preset: preset(
+      'gpt-6',
+      [
+        ['low', 'low'],
+        ['medium', 'medium'],
+        ['high', 'high'],
+        ['xhigh', 'xhigh'],
+        ['max', 'max'],
+      ],
+      { anthropic: anthropicAdaptiveEffort, chat: chatEffort },
+    ),
+  },
+  // Remaining OpenAI reasoning models (o-series, unspecificed gpt-5.x).
   {
     modelPatterns: [/gpt-5/, /\bo[0-9]/],
     preset: preset(
@@ -99,48 +235,86 @@ const MODEL_REASONING_PRESETS: Array<{ modelPatterns: RegExp[]; preset: Reasonin
         ['xhigh', 'xhigh'],
         ['max', 'max'],
       ],
-      'high',
-      { anthropicOn: 'adaptive' },
+      { anthropic: anthropicAdaptiveEffort, chat: chatEffort },
     ),
   },
-  // Gemini 3 Flash exposes minimal/low/medium/high; minimal is dropped.
+  // Qwen 3.8 exposes reasoning_effort low/medium/xhigh; no high level, so the
+  // closest lower level (medium) is the default.
   {
-    modelPatterns: [/gemini-3-flash/],
+    modelPatterns: [/qwen3\.8/],
     preset: preset(
-      'gemini-3-flash',
+      'qwen',
       [
         ['low', 'low'],
         ['medium', 'medium'],
-        ['high', 'high'],
+        ['xhigh', 'xhigh'],
       ],
-      'high',
-      { anthropicOn: 'adaptive' },
+      { anthropic: anthropicEnabledEffort, chat: chatEffort },
+      'medium',
     ),
   },
-  // Gemini 3.1 adds a medium thinking level over Gemini 3's low/high.
+  // Qwen 3.7 and older speak the boolean enable_thinking switch.
   {
-    modelPatterns: [/gemini-3\.1/],
+    modelPatterns: [/qwen/],
     preset: preset(
-      'gemini-3-1',
+      'qwen-switch',
       [
-        ['low', 'low'],
-        ['medium', 'medium'],
-        ['high', 'high'],
+        ['off', 'none'],
+        ['on', 'high'],
       ],
-      'high',
-      { anthropicOn: 'adaptive' },
+      { anthropic: anthropicSwitch, chat: chatEnableThinking },
+      'on',
+    ),
+  },
+  // DeepSeek: reasoning_effort low/high/max plus the thinking switch (other
+  // values are aliases of these three tiers).
+  {
+    modelPatterns: [/deepseek/],
+    preset: preset(
+      'deepseek',
+      [
+        ['off', 'none'],
+        ['low', 'low'],
+        ['high', 'high'],
+        ['max', 'max'],
+      ],
+      { anthropic: anthropicEnabledEffort, chat: chatSwitchEffort },
+    ),
+  },
+  // Kimi: effort tiers on k3-class models, and the anthropic dialect takes
+  // the effort alone (thinking deleted); k2.7-code always thinks; k2.5/2.6
+  // are plain thinking switches.
+  {
+    modelPatterns: [/kimi-k2\.7/],
+    preset: preset(
+      'kimi-k2-7-code',
+      [['on', 'high']],
+      { anthropic: anthropicSwitch, chat: chatSwitch },
+      'on',
     ),
   },
   {
-    modelPatterns: [/gemini-3/],
+    modelPatterns: [/kimi-k2\.[56]/],
     preset: preset(
-      'gemini-3',
+      'kimi-k2-6',
+      [
+        ['off', 'none'],
+        ['on', 'high'],
+      ],
+      { anthropic: anthropicSwitch, chat: chatSwitch },
+      'on',
+    ),
+  },
+  {
+    modelPatterns: [/k3/, /kimi|moonshot/],
+    preset: preset(
+      'kimi',
       [
         ['low', 'low'],
         ['high', 'high'],
+        ['max', 'max'],
       ],
-      'high',
-      { anthropicOn: 'adaptive' },
+      { anthropic: anthropicEffortOnly, chat: chatEffort },
     ),
   },
   // MiMo: a plain thinking switch (mimo-v2.5 / v2.5-pro, default on).
@@ -152,6 +326,7 @@ const MODEL_REASONING_PRESETS: Array<{ modelPatterns: RegExp[]; preset: Reasonin
         ['off', 'none'],
         ['on', 'high'],
       ],
+      { anthropic: anthropicSwitch, chat: chatSwitch },
       'on',
     ),
   },
@@ -165,59 +340,45 @@ const MODEL_REASONING_PRESETS: Array<{ modelPatterns: RegExp[]; preset: Reasonin
         ['off', 'none'],
         ['on', 'high'],
       ],
+      { anthropic: anthropicAdaptiveSwitch, chat: chatAdaptiveSwitch },
       'off',
-      { switchStyle: 'thinking-adaptive', anthropicOn: 'adaptive' },
     ),
   },
-  // Kimi: effort tiers only on kimi-k3. K2.7-code always thinks; K2.6 is a
-  // plain thinking switch.
+  // Gemini 3 Flash exposes minimal/low/medium/high; minimal is dropped.
   {
-    modelPatterns: [/kimi-k2\.7/],
-    preset: preset('kimi-k2-7-code', [['on', 'high']], 'on'),
-  },
-  {
-    modelPatterns: [/kimi-k2\.6/],
+    modelPatterns: [/gemini-3-flash/],
     preset: preset(
-      'kimi-k2-6',
-      [
-        ['off', 'none'],
-        ['on', 'high'],
-      ],
-      'on',
-    ),
-  },
-  {
-    modelPatterns: [/kimi|moonshot|k3/],
-    preset: preset('kimi', [
-      ['low', 'low'],
-      ['high', 'high'],
-      ['max', 'max'],
-    ]),
-  },
-  // DeepSeek: reasoning_effort low/high/max plus the thinking switch (other
-  // values are aliases of these three tiers).
-  {
-    modelPatterns: [/deepseek/],
-    preset: preset('deepseek', [
-      ['off', 'none'],
-      ['low', 'low'],
-      ['high', 'high'],
-      ['max', 'max'],
-    ]),
-  },
-  // Qwen 3.8 exposes reasoning_effort low/medium/xhigh; no high level, so the
-  // closest lower level (medium) is the default.
-  {
-    modelPatterns: [/qwen/],
-    preset: preset(
-      'qwen',
+      'gemini-3-flash',
       [
         ['low', 'low'],
         ['medium', 'medium'],
-        ['xhigh', 'xhigh'],
+        ['high', 'high'],
       ],
-      'medium',
-      { switchStyle: 'enable-thinking' },
+      { anthropic: anthropicAdaptiveEffort, chat: chatKitchenSink },
+    ),
+  },
+  // Gemini 3.1 adds a medium thinking level over Gemini 3's low/high.
+  {
+    modelPatterns: [/gemini-3\.1/],
+    preset: preset(
+      'gemini-3-1',
+      [
+        ['low', 'low'],
+        ['medium', 'medium'],
+        ['high', 'high'],
+      ],
+      { anthropic: anthropicAdaptiveEffort, chat: chatKitchenSink },
+    ),
+  },
+  {
+    modelPatterns: [/gemini-3/],
+    preset: preset(
+      'gemini-3',
+      [
+        ['low', 'low'],
+        ['high', 'high'],
+      ],
+      { anthropic: anthropicAdaptiveEffort, chat: chatKitchenSink },
     ),
   },
   // Grok 4.6 accepts reasoning_effort low/medium/high/xhigh (4.5 treats xhigh
@@ -232,8 +393,7 @@ const MODEL_REASONING_PRESETS: Array<{ modelPatterns: RegExp[]; preset: Reasonin
         ['high', 'high'],
         ['xhigh', 'xhigh'],
       ],
-      'high',
-      { anthropicOn: 'adaptive' },
+      { anthropic: anthropicAdaptiveEffort, chat: chatKitchenSink },
     ),
   },
   // Meta Muse Spark exposes reasoning.effort minimal/low/medium/high/xhigh.
@@ -247,8 +407,7 @@ const MODEL_REASONING_PRESETS: Array<{ modelPatterns: RegExp[]; preset: Reasonin
         ['high', 'high'],
         ['xhigh', 'xhigh'],
       ],
-      'high',
-      { anthropicOn: 'adaptive' },
+      { anthropic: anthropicAdaptiveEffort, chat: chatKitchenSink },
     ),
   },
   // Claude via Anthropic-compatible endpoints: 1:1 effort ladder.
@@ -263,18 +422,17 @@ const MODEL_REASONING_PRESETS: Array<{ modelPatterns: RegExp[]; preset: Reasonin
         ['xhigh', 'xhigh'],
         ['max', 'max'],
       ],
-      'high',
-      { anthropicOn: 'adaptive' },
+      { anthropic: anthropicAdaptiveEffort, chat: chatKitchenSink },
     ),
   },
 ]
 
 /** Provider defaults for new models that match no specific preset above. */
 const PROVIDER_REASONING_PRESETS: Array<{ providerPatterns: RegExp[]; preset: ReasoningPreset }> = [
-  { providerPatterns: [/zhipu/], preset: MODEL_REASONING_PRESETS[0]!.preset },
+  { providerPatterns: [/zhipu|zai|bigmodel/], preset: findInCatalog('glm')! },
   { providerPatterns: [/deepseek/], preset: findInCatalog('deepseek')! },
   { providerPatterns: [/kimi|moonshot/], preset: findInCatalog('kimi')! },
-  { providerPatterns: [/qwen|tongyi|qianwen/], preset: findInCatalog('qwen')! },
+  { providerPatterns: [/qwen|tongyi|qianwen/], preset: findInCatalog('qwen-switch')! },
   { providerPatterns: [/openai/], preset: findInCatalog('openai')! },
   { providerPatterns: [/gemini|google/], preset: findInCatalog('gemini-3')! },
   { providerPatterns: [/xai|grok/], preset: findInCatalog('grok')! },
@@ -286,13 +444,18 @@ function findInCatalog(id: string): ReasoningPreset | undefined {
   return MODEL_REASONING_PRESETS.find((entry) => entry.preset.id === id)?.preset
 }
 
-/** Fallback preset for models matching no family: a plain thinking switch. */
+/**
+ * Fallback preset for models matching no family: a plain thinking switch.
+ * The anthropic dialect uses the older `enabled` value — unknown gateways are
+ * likelier to predate the `adaptive` extension.
+ */
 export const GENERIC_REASONING_PRESET: ReasoningPreset = preset(
   'generic',
   [
     ['off', 'none'],
     ['on', 'high'],
   ],
+  { anthropic: anthropicEnabledEffort, chat: chatKitchenSink },
   'on',
 )
 

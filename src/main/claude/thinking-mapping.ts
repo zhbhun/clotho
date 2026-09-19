@@ -3,19 +3,19 @@
  * (`sessionThinkingFor`) picks the claude query vocabulary a session runs
  * with; the reverse direction (`resolveRequestThinking` and friends) maps one
  * request's claude thinking params back to the model's native level through
- * its reasoning preset.
+ * its reasoning preset, whose wire params then drive the upstream request.
  */
 import { PROVIDER_MODEL_REASONING_LEVELS } from '@/shared/provider'
 import {
-  type AnthropicThinkingStyle,
-  type ReasoningSwitchStyle,
+  GENERIC_REASONING_PRESET,
+  type ReasoningPreset,
+  type ReasoningWireParams,
   claudeLevelFor,
   findReasoningPreset,
   modelLevelFor,
 } from '@/shared/reasoning'
 import type { ProviderModel, ProviderModelReasoning } from '@/shared/rpc'
 
-import type { ChatThinkingConfig } from './chat-completions-request'
 import { isPlainObject } from './object'
 
 /** Session-level thinking config derived from the model's reasoning preset. */
@@ -45,87 +45,84 @@ function claudeThinkingType(body: Record<string, unknown>): string | undefined {
 
 /**
  * Resolve the model thinking level for one request. The request's claude
- * `thinking` param carries the on/off axis (translated per upstream, no preset
- * needed); a claude effort tier is reverse-mapped through the model's linked
- * preset. Out-of-set efforts and missing signals fall back to the configured
- * `thinkingLevel`.
+ * `thinking` param carries the on/off axis; a claude effort tier is
+ * reverse-mapped through the model's linked preset. Out-of-set efforts and
+ * missing signals fall back to the configured `thinkingLevel`.
  */
 export function resolveRequestThinking(
   model: ProviderModel,
   body: Record<string, unknown>,
-): {
-  level: string
-  switchStyle: ReasoningSwitchStyle
-  anthropicOn: AnthropicThinkingStyle
-} {
+): { level: string; preset: ReasoningPreset | undefined } {
   const preset = findReasoningPreset(model.thinkingPresetId)
   const defaultLevel = model.thinkingLevel ?? preset?.defaultModelLevel ?? 'on'
-  const switchStyle = preset?.switchStyle ?? 'thinking'
-  const anthropicOn = preset?.anthropicOn ?? 'enabled'
   const thinkingType = claudeThinkingType(body)
 
   if (thinkingType === 'disabled') {
     if (preset) {
       const offRow = preset.mappings.find((row) => row.claudeLevel === 'none')
-      if (offRow) return { level: offRow.modelLevel, switchStyle, anthropicOn }
-      return { level: defaultLevel, switchStyle, anthropicOn }
+      if (offRow) return { level: offRow.modelLevel, preset }
+      return { level: defaultLevel, preset }
     }
-    return { level: 'off', switchStyle, anthropicOn }
+    return { level: 'off', preset }
   }
 
   const claudeEffort = claudeEffortOf(body)
   if (claudeEffort && preset) {
-    return {
-      level: modelLevelFor(preset, claudeEffort, defaultLevel),
-      switchStyle,
-      anthropicOn,
-    }
+    return { level: modelLevelFor(preset, claudeEffort, defaultLevel), preset }
   }
 
   // Explicit "thinking on" without a tier (unknown models run this path).
   if (thinkingType === 'adaptive' || thinkingType === 'enabled') {
     const hasOnLevel = !preset || preset.mappings.some((row) => row.modelLevel === 'on')
-    if (hasOnLevel) return { level: 'on', switchStyle, anthropicOn }
+    if (hasOnLevel) return { level: 'on', preset }
   }
 
-  return { level: defaultLevel, switchStyle, anthropicOn }
-}
-
-export function chatThinkingConfig(
-  model: ProviderModel,
-  body: Record<string, unknown>,
-): ChatThinkingConfig | undefined {
-  const { level, switchStyle } = resolveRequestThinking(model, body)
-  if (level === 'off') return { mode: 'off', switchStyle }
-  if (level === 'on') {
-    // An explicit claude thinking signal or a stored selection sends the
-    // switch; fully unconfigured models keep the upstream default.
-    const explicit = model.thinkingLevel !== undefined || claudeThinkingType(body) !== undefined
-    return explicit ? { mode: 'on', switchStyle } : undefined
-  }
-  return { mode: 'effort', level }
+  return { level: defaultLevel, preset }
 }
 
 /**
- * Rewrite a request's thinking config to the resolved thinking level. Effort
- * tiers pin `output_config.effort`, `off` disables thinking, and `on` sends
- * adaptive thinking without an effort. Other `output_config` keys (such as
- * format) are preserved.
+ * Thinking params for a Chat Completions upstream, derived from the model's
+ * preset. Fully unconfigured models (no stored level, no claude signal) keep
+ * the upstream default.
+ */
+export function chatThinkingParams(
+  model: ProviderModel,
+  body: Record<string, unknown>,
+): ReasoningWireParams | undefined {
+  const { level, preset } = resolveRequestThinking(model, body)
+  if (
+    level === 'on' &&
+    model.thinkingLevel === undefined &&
+    claudeThinkingType(body) === undefined
+  ) {
+    return undefined
+  }
+  return (preset ?? GENERIC_REASONING_PRESET).chatParams(level)
+}
+
+/**
+ * Rewrite a request's thinking config to the resolved thinking level via the
+ * preset's anthropic wire params. Other `output_config` keys (such as format)
+ * are preserved.
  */
 export function applyThinking(
   body: Record<string, unknown>,
   model: ProviderModel,
 ): Record<string, unknown> {
-  const { level, anthropicOn } = resolveRequestThinking(model, body)
-  const next: Record<string, unknown> = {
-    ...body,
-    thinking: level === 'off' ? { type: 'disabled' } : { type: anthropicOn },
+  const { level, preset } = resolveRequestThinking(model, body)
+  const params = (preset ?? GENERIC_REASONING_PRESET).anthropicParams(level)
+  const next: Record<string, unknown> = { ...body }
+  if (isPlainObject(params.thinking)) {
+    next.thinking = params.thinking
+  } else {
+    delete next.thinking
   }
   const outputConfig = isPlainObject(body.output_config) ? { ...body.output_config } : {}
-  if (level === 'off' || level === 'on') {
-    delete outputConfig.effort
+  const paramOutput = isPlainObject(params.output_config) ? params.output_config : undefined
+  if (paramOutput && 'effort' in paramOutput) {
+    outputConfig.effort = paramOutput.effort
   } else {
-    outputConfig.effort = level
+    delete outputConfig.effort
   }
   if (Object.keys(outputConfig).length) {
     next.output_config = outputConfig

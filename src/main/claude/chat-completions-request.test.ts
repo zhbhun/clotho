@@ -15,7 +15,7 @@ describe('anthropicToChatCompletions', () => {
           { role: 'assistant', content: [{ type: 'text', text: 'Hi there' }] },
         ],
       },
-      { mode: 'effort', level: 'max' },
+      { reasoning_effort: 'max' },
     )
 
     expect(chat).toEqual({
@@ -41,36 +41,36 @@ describe('anthropicToChatCompletions', () => {
     expect(chat.messages).toEqual([{ role: 'user', content: 'Hi' }])
   })
 
-  test('sends the thinking switch for on/off models', () => {
+  test('merges the preset thinking params into the chat body', () => {
     const on = anthropicToChatCompletions(
       { model: 'm', messages: [{ role: 'user', content: 'Hi' }] },
-      { mode: 'on', switchStyle: 'thinking' },
+      { thinking: { type: 'enabled' } },
     )
     expect(on.thinking).toEqual({ type: 'enabled' })
     expect(on).not.toHaveProperty('reasoning_effort')
 
     const off = anthropicToChatCompletions(
       { model: 'm', messages: [{ role: 'user', content: 'Hi' }] },
-      { mode: 'off', switchStyle: 'thinking' },
+      { thinking: { type: 'disabled' } },
     )
     expect(off.thinking).toEqual({ type: 'disabled' })
     expect(off).not.toHaveProperty('reasoning_effort')
   })
 
-  test('expresses the switch as enable_thinking for qwen-style families', () => {
-    const on = anthropicToChatCompletions(
+  test('merges multi-field hedge params for unknown families', () => {
+    const chat = anthropicToChatCompletions(
       { model: 'm', messages: [{ role: 'user', content: 'Hi' }] },
-      { mode: 'on', switchStyle: 'enable-thinking' },
+      {
+        thinking: { type: 'enabled' },
+        enable_thinking: true,
+        reasoning_effort: 'high',
+        reasoning: { effort: 'high' },
+      },
     )
-    expect(on.enable_thinking).toBe(true)
-    expect(on).not.toHaveProperty('thinking')
-
-    const off = anthropicToChatCompletions(
-      { model: 'm', messages: [{ role: 'user', content: 'Hi' }] },
-      { mode: 'off', switchStyle: 'enable-thinking' },
-    )
-    expect(off.enable_thinking).toBe(false)
-    expect(off).not.toHaveProperty('thinking')
+    expect(chat.thinking).toEqual({ type: 'enabled' })
+    expect(chat.enable_thinking).toBe(true)
+    expect(chat.reasoning_effort).toBe('high')
+    expect(chat.reasoning).toEqual({ effort: 'high' })
   })
 
   test('converts tool definitions, assistant tool calls, and tool results', () => {

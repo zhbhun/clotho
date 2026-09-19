@@ -14,7 +14,7 @@ import type { ClaudeskSettings } from './settings'
 import {
   type SessionThinking,
   applyThinking,
-  chatThinkingConfig,
+  chatThinkingParams,
   sessionThinkingFor,
 } from './thinking-mapping'
 
@@ -209,7 +209,7 @@ async function serveChatCompletions({
 
   const chatBody = anthropicToChatCompletions(
     { ...body, model: modelId },
-    chatThinkingConfig(model, body),
+    chatThinkingParams(model, body),
   )
   const upstreamRequest = new Request(chatCompletionsURL(provider.baseURL), {
     method: 'POST',

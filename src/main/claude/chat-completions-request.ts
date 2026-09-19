@@ -4,6 +4,8 @@
  * system prompts, text/image/tool_result blocks, tool definitions, sampling
  * parameters, and streaming.
  */
+import type { ReasoningWireParams } from '@/shared/reasoning'
+
 import { isPlainObject } from './object'
 
 type AnthropicBlock = Record<string, unknown>
@@ -165,20 +167,10 @@ function toolChoiceToChat(choice: unknown): unknown {
   return undefined
 }
 
-/** Thinking configuration forwarded to a Chat Completions upstream. */
-export interface ChatThinkingConfig {
-  /** `off`/`on` send the thinking switch; `effort` sends reasoning_effort. */
-  mode: 'off' | 'on' | 'effort'
-  /** Effort tier for `mode: 'effort'` (e.g. `low`, `high`, `max`). */
-  level?: string
-  /** Wire style of the switch; defaults to the `thinking` convention. */
-  switchStyle?: 'thinking' | 'thinking-adaptive' | 'enable-thinking'
-}
-
 /** Convert an Anthropic /v1/messages body into a Chat Completions body. */
 export function anthropicToChatCompletions(
   body: Record<string, unknown>,
-  thinking?: ChatThinkingConfig,
+  thinking?: ReasoningWireParams,
 ): Record<string, unknown> {
   const messages: Record<string, unknown>[] = []
   const system = systemText(body.system)
@@ -204,16 +196,7 @@ export function anthropicToChatCompletions(
     chat.stream = true
     chat.stream_options = { include_usage: true }
   }
-  if (thinking?.mode === 'off') {
-    if (thinking.switchStyle === 'enable-thinking') chat.enable_thinking = false
-    else chat.thinking = { type: 'disabled' }
-  } else if (thinking?.mode === 'on') {
-    if (thinking.switchStyle === 'enable-thinking') chat.enable_thinking = true
-    else if (thinking.switchStyle === 'thinking-adaptive') chat.thinking = { type: 'adaptive' }
-    else chat.thinking = { type: 'enabled' }
-  } else if (thinking?.mode === 'effort' && thinking.level) {
-    chat.reasoning_effort = thinking.level
-  }
+  if (thinking) Object.assign(chat, thinking)
   return chat
 }
 
