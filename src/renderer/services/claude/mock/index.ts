@@ -28,7 +28,7 @@ export { MOCK_PROJECT_ID } from './project'
 
 export const MOCK_PROJECT: ClaudeProject = {
   id: MOCK_PROJECT_ID,
-  path: '/mock/tools-preview',
+  path: '/mock',
   sessions: [],
   created_at: new Date('2026-07-11T09:00:00.000Z').getTime(),
 }
