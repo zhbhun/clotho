@@ -149,7 +149,8 @@ describe('Claude session reading', () => {
       ])
 
     // Point the registry at the empty temp directory so no real ~/.clotho file is read.
-    const [project] = await listClaudeProjects(path.join(tempDir, 'projects.json'))
+    // The temp-dir fixture itself sits under a non-project root, so disable the filter.
+    const [project] = await listClaudeProjects(path.join(tempDir, 'projects.json'), undefined, [])
     expect(project?.path).toBe(projectPath)
     await getProjectSessions({ projectId: project!.id })
 

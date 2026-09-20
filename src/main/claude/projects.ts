@@ -15,6 +15,7 @@ import type {
 import { clothoDir } from '../app-data'
 import { getLogger } from '../logging/runtime'
 import { getProjectRepositoryRoot, isWorktreePath } from './git'
+import { isNonProjectPath, resolvedNonProjectRoots } from './project-filter'
 import { listProjectsFromSessions, projectIdFromPath, projectWorkspaceId } from './sessions'
 
 export type RegisteredProject = {
@@ -378,13 +379,20 @@ function rememberProjectPaths(projects: ClaudeProject[]) {
 export async function listClaudeProjects(
   filePath = projectsJsonPath(),
   sessionProjects?: ClaudeProject[],
+  nonProjectRootList?: string[],
 ) {
-  const [registeredProjects, discoveredProjects] = await Promise.all([
+  const [registeredProjects, discoveredProjects, hiddenRoots] = await Promise.all([
     readRegisteredProjectsStrict(filePath).then(canonicalizeRegisteredProjects),
     sessionProjects ?? listProjectsFromSessions(),
+    nonProjectRootList ?? resolvedNonProjectRoots(),
   ])
+  // Only session-discovered projects are hidden: a path the user explicitly
+  // registered stays listed even inside a temp or app-managed location.
+  const visibleProjects = discoveredProjects.filter(
+    (project) => !isNonProjectPath(project.path, hiddenRoots),
+  )
   const projects = await filterInvalidProjectPaths(
-    mergeProjects(registeredProjects, discoveredProjects),
+    mergeProjects(registeredProjects, visibleProjects),
   )
   rememberProjectPaths(projects)
   return projects

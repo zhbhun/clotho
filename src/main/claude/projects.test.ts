@@ -139,7 +139,8 @@ describe('project registry', () => {
       },
     ])
 
-    await expect(listClaudeProjects(filePath)).resolves.toEqual([
+    // The temp-dir fixtures sit under a non-project root, so disable the filter.
+    await expect(listClaudeProjects(filePath, undefined, [])).resolves.toEqual([
       {
         id: projectIdFromPath(worktreePath),
         workspace_id: projectWorkspaceId(repositoryPath),
@@ -149,6 +150,60 @@ describe('project registry', () => {
         created_at: 10,
       },
     ])
+  })
+
+  it('hides discovered projects under non-project roots but keeps registered ones', async () => {
+    const filePath = await tempProjectsFile()
+    const registeredPath = path.join(tempDir!, 'registered')
+    const discoveredPath = path.join(tempDir!, 'clotho-probe-XuEDrR')
+    await mkdir(registeredPath)
+    await mkdir(discoveredPath)
+    await writeRegisteredProjects(
+      [{ id: 'registered', path: registeredPath, created_at: 10 }],
+      filePath,
+    )
+    sessionMocks.listProjects.mockResolvedValue([
+      {
+        id: projectIdFromPath(discoveredPath),
+        workspace_id: projectWorkspaceId(discoveredPath),
+        path: discoveredPath,
+        sessions: ['session-1'],
+        created_at: 5,
+      },
+      {
+        id: projectIdFromPath(registeredPath),
+        workspace_id: projectWorkspaceId(registeredPath),
+        path: registeredPath,
+        sessions: ['session-2'],
+        created_at: 5,
+      },
+    ])
+
+    await expect(listClaudeProjects(filePath, undefined, [tempDir!])).resolves.toEqual([
+      expect.objectContaining({ path: registeredPath, sessions: [] }),
+    ])
+    // The same session-discovered path survives when it matches no root.
+    await expect(listClaudeProjects(filePath, undefined, [])).resolves.toEqual([
+      expect.objectContaining({ path: registeredPath, sessions: ['session-2'] }),
+      expect.objectContaining({ path: discoveredPath, sessions: ['session-1'] }),
+    ])
+  })
+
+  it('hides discovered projects in the OS temp directory by default', async () => {
+    const filePath = await tempProjectsFile()
+    const probePath = path.join(tempDir!, 'clotho-probe-JtNBiZ')
+    await mkdir(probePath)
+    sessionMocks.listProjects.mockResolvedValue([
+      {
+        id: projectIdFromPath(probePath),
+        workspace_id: projectWorkspaceId(probePath),
+        path: probePath,
+        sessions: ['session-1'],
+        created_at: 5,
+      },
+    ])
+
+    await expect(listClaudeProjects(filePath)).resolves.toEqual([])
   })
 
   it('restores a deleted project without losing its existing settings', async () => {
