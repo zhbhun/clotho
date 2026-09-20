@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { describe, expect, it } from 'vitest'
 
 import { Button } from '@/shadcn/button'
@@ -63,6 +63,36 @@ function ChainedDialogFlow() {
 
 function renderDialogFlow() {
   return render(<DialogFlow />)
+}
+
+function ClickContainerDialogFlow() {
+  const [open, setOpen] = useState(false)
+
+  // The project picker opens via a global shortcut, which never moves focus.
+  useEffect(() => {
+    const openOnShortcut = (event: KeyboardEvent) => {
+      if (event.key === 'p') setOpen(true)
+    }
+    document.addEventListener('keydown', openOnShortcut)
+    return () => document.removeEventListener('keydown', openOnShortcut)
+  }, [])
+
+  return (
+    <ShortcutRuntimeProvider runtime={shortcutRuntime}>
+      <div data-testid="shell" tabIndex={-1}>
+        <Button data-testid="shell-button" type="button">
+          shell button
+        </Button>
+      </div>
+      <AppDialog open={open} onOpenChange={setOpen}>
+        <AppDialogContent>
+          <Button data-testid="close" onClick={() => setOpen(false)} type="button">
+            close
+          </Button>
+        </AppDialogContent>
+      </AppDialog>
+    </ShortcutRuntimeProvider>
+  )
 }
 
 describe('AppDialogContent', () => {
@@ -137,5 +167,25 @@ describe('AppDialogContent', () => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     })
     expect(document.activeElement).not.toBe(origin)
+  })
+
+  it('never redirects focus to the first tabbable child of a click-focused container', async () => {
+    // Clicking blank space focuses the nearest click-focusable ancestor (a
+    // tabIndex=-1 layout container). Base UI would redirect that return target
+    // to its first tabbable descendant (e.g. the sidebar toggle), so the
+    // container must be focused directly instead.
+    render(<ClickContainerDialogFlow />)
+
+    const shell = screen.getByTestId('shell')
+    shell.focus()
+    fireEvent.keyDown(document, { key: 'p' })
+    await screen.findByRole('dialog')
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
+    expect(document.activeElement).not.toBe(screen.getByTestId('shell-button'))
+    expect(document.activeElement).toBe(shell)
   })
 })

@@ -72,7 +72,16 @@ export function useDialogFocusReturn(open?: boolean) {
       flowOrigins.length = 0
     }
 
-    return closeType === 'keyboard' && returnFocus ? returnFocus : false
+    if (closeType !== 'keyboard' || !returnFocus) return false
+    // A tabIndex=-1 container focused by a blank-area click is not tabbable,
+    // so Base UI would redirect the return target to its first tabbable
+    // descendant (e.g. the sidebar toggle). Focus such click-only containers
+    // directly — invisibly — instead of handing them to Base UI.
+    if (returnFocus.tabIndex < 0) {
+      returnFocus.focus({ focusVisible: false, preventScroll: true })
+      return false
+    }
+    return returnFocus
   }, [])
 
   return { captureReturnFocus, finalFocus }
