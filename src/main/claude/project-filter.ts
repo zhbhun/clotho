@@ -71,6 +71,23 @@ export function isNonProjectPath(
   })
 }
 
+/**
+ * Session-discovered projects outside the user's home directory are usually
+ * scratch or tool-managed locations, so they stay hidden. Windows is exempt:
+ * projects there commonly live on other drives (D:\, E:\).
+ */
+export function isOutsideHomePath(
+  candidatePath: string,
+  homedir: string,
+  platform: NodeJS.Platform = process.platform,
+) {
+  if (platform === 'win32') return false
+  const pathApi = pathApiFor(platform)
+  const home = pathApi.resolve(homedir)
+  const candidate = pathApi.resolve(candidatePath)
+  return candidate !== home && !candidate.startsWith(home + pathApi.sep)
+}
+
 let cachedRoots: Promise<string[]> | undefined
 
 /**

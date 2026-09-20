@@ -1,7 +1,12 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
 
-import { isNonProjectPath, nonProjectRoots, resolvedNonProjectRoots } from './project-filter'
+import {
+  isNonProjectPath,
+  isOutsideHomePath,
+  nonProjectRoots,
+  resolvedNonProjectRoots,
+} from './project-filter'
 
 describe('nonProjectRoots', () => {
   it('covers macOS temp and app-managed Library folders', () => {
@@ -110,6 +115,21 @@ describe('isNonProjectPath', () => {
       isNonProjectPath('c:\\users\\ALICE\\appdata\\local\\temp\\probe', windowsRoots, 'win32'),
     ).toBe(true)
     expect(isNonProjectPath('D:\\work\\clotho', windowsRoots, 'win32')).toBe(false)
+  })
+})
+
+describe('isOutsideHomePath', () => {
+  it('matches only paths outside the home directory on POSIX platforms', () => {
+    expect(isOutsideHomePath('/Users/alice', '/Users/alice', 'darwin')).toBe(false)
+    expect(isOutsideHomePath('/Users/alice/Projects/clotho', '/Users/alice', 'darwin')).toBe(false)
+    expect(isOutsideHomePath('/Users/alice2/scratch', '/Users/alice', 'darwin')).toBe(true)
+    expect(isOutsideHomePath('/mock', '/Users/alice', 'darwin')).toBe(true)
+    expect(isOutsideHomePath('/opt/repos/clotho', '/home/alice', 'linux')).toBe(true)
+  })
+
+  it('never matches on Windows, where projects often live on other drives', () => {
+    expect(isOutsideHomePath('D:\\work\\clotho', 'C:\\Users\\alice', 'win32')).toBe(false)
+    expect(isOutsideHomePath('C:\\Users\\alice\\clotho', 'C:\\Users\\alice', 'win32')).toBe(false)
   })
 })
 

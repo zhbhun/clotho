@@ -15,7 +15,7 @@ import type {
 import { clothoDir } from '../app-data'
 import { getLogger } from '../logging/runtime'
 import { getProjectRepositoryRoot, isWorktreePath } from './git'
-import { isNonProjectPath, resolvedNonProjectRoots } from './project-filter'
+import { isNonProjectPath, isOutsideHomePath, resolvedNonProjectRoots } from './project-filter'
 import { listProjectsFromSessions, projectIdFromPath, projectWorkspaceId } from './sessions'
 
 export type RegisteredProject = {
@@ -77,10 +77,21 @@ function isSameProjectPath(left: string, right: string) {
   return path.resolve(left) === path.resolve(right)
 }
 
-function projectTime(
-  project: Pick<ClaudeProject, 'created_at' | 'most_recent_session' | 'last_opened_at'>,
+function projectSortName(project: Pick<ClaudeProject, 'name' | 'path'>) {
+  const name = project.name?.trim()
+  if (name) return name
+  const parts = project.path.split(/[\\/]/).filter(Boolean)
+  return parts.at(-1) ?? project.path
+}
+
+function compareProjectsByName(
+  left: Pick<ClaudeProject, 'name' | 'path'>,
+  right: Pick<ClaudeProject, 'name' | 'path'>,
 ) {
-  return project.last_opened_at ?? project.most_recent_session ?? project.created_at
+  const byName = projectSortName(left).localeCompare(projectSortName(right), undefined, {
+    sensitivity: 'base',
+  })
+  return byName || left.path.localeCompare(right.path, undefined, { sensitivity: 'base' })
 }
 
 async function canonicalProjectPath(projectPath: string) {
@@ -352,7 +363,7 @@ export function mergeProjects(
     )
   }
 
-  return Array.from(byPath.values()).sort((left, right) => projectTime(right) - projectTime(left))
+  return Array.from(byPath.values()).sort(compareProjectsByName)
 }
 
 async function shouldListProject(project: ClaudeProject) {
@@ -380,6 +391,7 @@ export async function listClaudeProjects(
   filePath = projectsJsonPath(),
   sessionProjects?: ClaudeProject[],
   nonProjectRootList?: string[],
+  homedir = os.homedir(),
 ) {
   const [registeredProjects, discoveredProjects, hiddenRoots] = await Promise.all([
     readRegisteredProjectsStrict(filePath).then(canonicalizeRegisteredProjects),
@@ -387,9 +399,10 @@ export async function listClaudeProjects(
     nonProjectRootList ?? resolvedNonProjectRoots(),
   ])
   // Only session-discovered projects are hidden: a path the user explicitly
-  // registered stays listed even inside a temp or app-managed location.
+  // registered stays listed even inside a temp, app-managed, or non-home location.
   const visibleProjects = discoveredProjects.filter(
-    (project) => !isNonProjectPath(project.path, hiddenRoots),
+    (project) =>
+      !isNonProjectPath(project.path, hiddenRoots) && !isOutsideHomePath(project.path, homedir),
   )
   const projects = await filterInvalidProjectPaths(
     mergeProjects(registeredProjects, visibleProjects),

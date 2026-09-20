@@ -139,8 +139,9 @@ describe('project registry', () => {
       },
     ])
 
-    // The temp-dir fixtures sit under a non-project root, so disable the filter.
-    await expect(listClaudeProjects(filePath, undefined, [])).resolves.toEqual([
+    // The temp-dir fixtures sit under a non-project root outside the home
+    // directory, so disable both filters.
+    await expect(listClaudeProjects(filePath, undefined, [], tempDir!)).resolves.toEqual([
       {
         id: projectIdFromPath(worktreePath),
         workspace_id: projectWorkspaceId(repositoryPath),
@@ -183,9 +184,10 @@ describe('project registry', () => {
       expect.objectContaining({ path: registeredPath, sessions: [] }),
     ])
     // The same session-discovered path survives when it matches no root.
-    await expect(listClaudeProjects(filePath, undefined, [])).resolves.toEqual([
-      expect.objectContaining({ path: registeredPath, sessions: ['session-2'] }),
+    // Entries are ordered by project name ascending.
+    await expect(listClaudeProjects(filePath, undefined, [], tempDir!)).resolves.toEqual([
       expect.objectContaining({ path: discoveredPath, sessions: ['session-1'] }),
+      expect.objectContaining({ path: registeredPath, sessions: ['session-2'] }),
     ])
   })
 
@@ -204,6 +206,36 @@ describe('project registry', () => {
     ])
 
     await expect(listClaudeProjects(filePath)).resolves.toEqual([])
+  })
+
+  it('hides discovered projects outside the home directory but keeps registered ones', async () => {
+    const filePath = await tempProjectsFile()
+    const insidePath = path.join(tempDir!, 'inside')
+    const outsidePath = os.tmpdir()
+    await mkdir(insidePath)
+    await writeRegisteredProjects([{ id: 'outside', path: outsidePath, created_at: 10 }], filePath)
+    sessionMocks.listProjects.mockResolvedValue([
+      {
+        id: projectIdFromPath(insidePath),
+        workspace_id: projectWorkspaceId(insidePath),
+        path: insidePath,
+        sessions: ['session-1'],
+        created_at: 5,
+      },
+      {
+        id: projectIdFromPath(outsidePath),
+        workspace_id: projectWorkspaceId(outsidePath),
+        path: outsidePath,
+        sessions: ['session-2'],
+        created_at: 5,
+      },
+    ])
+
+    // Entries are ordered by project name ascending.
+    await expect(listClaudeProjects(filePath, undefined, [], tempDir!)).resolves.toEqual([
+      expect.objectContaining({ path: insidePath, sessions: ['session-1'] }),
+      expect.objectContaining({ path: outsidePath, sessions: [] }),
+    ])
   })
 
   it('restores a deleted project without losing its existing settings', async () => {
