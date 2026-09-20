@@ -698,3 +698,75 @@ describe('conversation state', () => {
     )
   })
 })
+
+describe('API retry folding', () => {
+  function retryMessage(attempt: number, timestamp: string) {
+    return claudeJsonToMessage({
+      type: 'system',
+      subtype: 'api_retry',
+      uuid: `retry-${attempt}`,
+      attempt,
+      max_retries: 10,
+      retry_delay_ms: attempt * 1000,
+      error_status: 429,
+      error: 'rate_limit',
+      timestamp,
+    })
+  }
+
+  it('folds consecutive retry notices into one timeline item with the latest attempt', () => {
+    const messages = [
+      claudeJsonToMessage({
+        type: 'user',
+        uuid: 'user-1',
+        timestamp: '2026-09-20T09:03:27.443Z',
+        message: { role: 'user', content: 'hello' },
+      }),
+      retryMessage(1, '2026-09-20T09:03:27.904Z'),
+      retryMessage(2, '2026-09-20T09:03:28.770Z'),
+      retryMessage(3, '2026-09-20T09:03:30.132Z'),
+    ].filter((message): message is NonNullable<typeof message> => Boolean(message))
+
+    const [turn] = computeTurns(messages)
+
+    expect(turn?.timelineItems).toEqual([
+      {
+        id: expect.stringContaining('api-retry'),
+        kind: 'api-retry',
+        attempt: 3,
+        maxRetries: 10,
+        retryDelayMs: 3000,
+        status: 429,
+        errorKind: 'rate_limit',
+        detail: undefined,
+        timestamp: '2026-09-20T09:03:30.132Z',
+      },
+    ])
+  })
+
+  it('starts a new card when retry notices are separated by other content', () => {
+    const messages = [
+      claudeJsonToMessage({
+        type: 'user',
+        uuid: 'user-1',
+        message: { role: 'user', content: 'hello' },
+      }),
+      retryMessage(1, '2026-09-20T09:03:27.904Z'),
+      claudeJsonToMessage({
+        type: 'assistant',
+        uuid: 'assistant-1',
+        parentUuid: 'user-1',
+        message: { role: 'assistant', content: [{ type: 'text', text: 'partial' }] },
+      }),
+      retryMessage(1, '2026-09-20T09:04:00.000Z'),
+    ].filter((message): message is NonNullable<typeof message> => Boolean(message))
+
+    const [turn] = computeTurns(messages)
+
+    expect(turn?.timelineItems.map((item) => item.kind)).toEqual(['api-retry', 'text', 'api-retry'])
+  })
+
+  it('drops retry notices that arrive before any user message', () => {
+    expect(computeTurns([retryMessage(1, '2026-09-20T09:03:27.904Z')!])).toEqual([])
+  })
+})

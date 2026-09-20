@@ -167,13 +167,17 @@ describe('buildConversationRows', () => {
       turns: [turn('user-1', [])],
     })
 
-    expect(rows).toHaveLength(2)
+    expect(rows).toHaveLength(3)
     expect(rows[1]).toMatchObject({
       canToggle: false,
       duration: '12s',
-      error: 'model offline',
       kind: 'status',
       status: 'failed',
+    })
+    expect(rows[2]).toMatchObject({
+      kind: 'error-card',
+      message: 'model offline',
+      turnId: 'user-1',
     })
   })
 
@@ -192,14 +196,96 @@ describe('buildConversationRows', () => {
       turns: [failedTurn],
     })
 
-    expect(rows).toHaveLength(2)
+    expect(rows).toHaveLength(3)
     expect(rows[1]).toMatchObject({
       canToggle: false,
       duration: '12s',
-      error: 'API Error: model does not exist',
       kind: 'status',
       status: 'failed',
     })
+    expect(rows[2]).toMatchObject({
+      kind: 'error-card',
+      message: 'API Error: model does not exist',
+    })
+  })
+
+  it('prefers the persisted assistant error frame over the runtime process error', () => {
+    const failedTurn = turn('user-1', [])
+    failedTurn.failure = { message: 'API Error: Request rejected (429) · quota exhausted' }
+
+    const rows = buildConversationRows({
+      expandedTurns: {},
+      interruptedTurnIds: new Set(),
+      isStreaming: false,
+      lastSentTurnId: 'user-1',
+      streamingElapsed: 0,
+      turnFailures: {
+        'user-1': { elapsed: 185, message: 'Claude Code process exited with code 1' },
+      },
+      turns: [failedTurn],
+    })
+
+    const status = rows.find((row) => row.kind === 'status')
+    const card = rows.find((row) => row.kind === 'error-card')
+    expect(status).toMatchObject({ duration: '3m 5s', status: 'failed' })
+    expect(card).toMatchObject({ message: 'API Error: Request rejected (429) · quota exhausted' })
+  })
+
+  it('renders an api-retry timeline item as its own card row, never inside a run', () => {
+    const rows = buildConversationRows({
+      expandedTurns: { 'user-1': true },
+      interruptedTurnIds: new Set(),
+      isStreaming: true,
+      lastSentTurnId: 'user-1',
+      streamingElapsed: 0,
+      turns: [
+        turn('user-1', [
+          { id: 'tool-1', kind: 'tool' },
+          { id: 'tool-2', kind: 'tool' },
+          {
+            id: 'retry-1',
+            kind: 'api-retry',
+            attempt: 2,
+            maxRetries: 10,
+            retryDelayMs: 30000,
+            status: 429,
+          },
+        ]),
+      ],
+    })
+
+    expect(rows.map((row) => row.kind)).toEqual(['user', 'status', 'work-run', 'api-retry'])
+    expect(rows[3]).toMatchObject({
+      isLast: true,
+      isStreaming: true,
+      item: expect.objectContaining({ attempt: 2 }),
+      kind: 'api-retry',
+      turnId: 'user-1',
+    })
+  })
+
+  it('shows the retry card instead of the thinking placeholder while retrying', () => {
+    const rows = buildConversationRows({
+      expandedTurns: {},
+      interruptedTurnIds: new Set(),
+      isStreaming: true,
+      lastSentTurnId: 'user-1',
+      streamingElapsed: 0,
+      turns: [
+        turn('user-1', [
+          {
+            id: 'retry-1',
+            kind: 'api-retry',
+            attempt: 1,
+            maxRetries: 10,
+            retryDelayMs: 1000,
+            status: 429,
+          },
+        ]),
+      ],
+    })
+
+    expect(rows.map((row) => row.kind)).toEqual(['user', 'status', 'api-retry'])
   })
 
   it('places an expandable failure status after prior tool work', () => {
@@ -213,7 +299,7 @@ describe('buildConversationRows', () => {
       turns: [turn('user-1', [{ id: 'tool-1', kind: 'tool' }])],
     })
 
-    expect(rows.map((row) => row.kind)).toEqual(['user', 'timeline', 'status'])
+    expect(rows.map((row) => row.kind)).toEqual(['user', 'timeline', 'status', 'error-card'])
     expect(rows[1]).toMatchObject({
       isLast: false,
       isStreaming: false,
@@ -222,11 +308,11 @@ describe('buildConversationRows', () => {
     })
     expect(rows[2]).toMatchObject({
       canToggle: true,
-      error: 'model offline',
       isLast: true,
       kind: 'status',
       status: 'failed',
     })
+    expect(rows[3]).toMatchObject({ kind: 'error-card', message: 'model offline' })
   })
 
   it('places the failure status after the reply text of a text-only turn', () => {
@@ -240,14 +326,14 @@ describe('buildConversationRows', () => {
       turns: [turn('user-1', [{ id: 'text-1', kind: 'text', text: 'Partial reply' }])],
     })
 
-    expect(rows.map((row) => row.kind)).toEqual(['user', 'text', 'status'])
+    expect(rows.map((row) => row.kind)).toEqual(['user', 'text', 'status', 'error-card'])
     expect(rows[2]).toMatchObject({
       canToggle: false,
-      error: 'model offline',
       isLast: true,
       kind: 'status',
       status: 'failed',
     })
+    expect(rows[3]).toMatchObject({ kind: 'error-card', message: 'model offline' })
   })
 
   it('attaches an interrupted terminal status to retained tool rows', () => {

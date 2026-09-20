@@ -45,6 +45,18 @@ export type ConversationTimelineItem =
     }
   | {
       id: string
+      /** SDK-internal API retry sequence; consecutive notices fold into one item. */
+      kind: 'api-retry'
+      attempt: number
+      maxRetries: number
+      retryDelayMs: number
+      status: number | null
+      errorKind?: string
+      detail?: string
+      timestamp?: string
+    }
+  | {
+      id: string
       kind: 'thinking'
       text: string
       timestamp?: string

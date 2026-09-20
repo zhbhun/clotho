@@ -16,7 +16,6 @@ export type ConversationRow =
   | {
       canToggle: boolean
       duration?: string
-      error?: string
       isExpanded: boolean
       isLast: boolean
       key: string
@@ -52,6 +51,22 @@ export type ConversationRow =
       item: Extract<ConversationTimelineItem, { kind: 'text' }>
       key: string
       kind: 'text'
+      turnId: string
+    }
+  | {
+      isLast: boolean
+      isStreaming: boolean
+      item: Extract<ConversationTimelineItem, { kind: 'api-retry' }>
+      key: string
+      kind: 'api-retry'
+      turnId: string
+      turnTerminalStatus?: TurnTerminalStatus
+    }
+  | {
+      /** Terminal turn failure, rendered as a standalone error card under the status row. */
+      key: string
+      kind: 'error-card'
+      message: string
       turnId: string
     }
   | {
@@ -136,7 +151,9 @@ export function buildConversationRows(options: {
     const isInterrupted =
       turn.isInterrupted === true || options.interruptedTurnIds.has(turn.userMessage.id)
     const runtimeFailure = options.turnFailures?.[turnId]
-    const failureMessage = runtimeFailure?.message ?? turn.failure?.message
+    // The persisted assistant error frame (e.g. the 429 quota message) is more
+    // meaningful than the process-exit text carried by the runtime failure.
+    const failureMessage = turn.failure?.message ?? runtimeFailure?.message
     const hasFailure = Boolean(failureMessage)
     const turnTerminalStatus: TurnTerminalStatus | undefined = hasFailure
       ? 'failed'
@@ -216,7 +233,6 @@ export function buildConversationRows(options: {
           rows.push({
             canToggle: true,
             duration,
-            error: failureMessage,
             isExpanded,
             isLast: visibleItems.length === 0 && !showThinkingAfterLatestTool && !collapsedSummary,
             key: `turn:${turnId}:status`,
@@ -251,6 +267,18 @@ export function buildConversationRows(options: {
           }
 
           const item = slice.item
+          if (item.kind === 'api-retry') {
+            rows.push({
+              isLast: isLastSlice && !showThinkingAfterLatestTool && !hasFailure,
+              isStreaming,
+              item,
+              key: `turn:${turnId}:api-retry:${item.id}`,
+              kind: 'api-retry',
+              turnId,
+              turnTerminalStatus,
+            })
+            return
+          }
           rows.push({
             compactAfter: item.kind !== 'text' && nextIsWork,
             isLast: isLastSlice && !showThinkingAfterLatestTool && !hasFailure,
@@ -289,7 +317,6 @@ export function buildConversationRows(options: {
           rows.push({
             canToggle: false,
             duration,
-            error: failureMessage,
             isExpanded: false,
             isLast: textItems.length === 0,
             key: `turn:${turnId}:status`,
@@ -322,16 +349,21 @@ export function buildConversationRows(options: {
         })
       }
 
-      if (hasFailure) {
+      if (hasFailure && failureMessage) {
         rows.push({
           canToggle: hasStructuredTimeline,
           duration,
-          error: failureMessage,
           isExpanded: hasStructuredTimeline ? isExpanded : false,
           isLast: true,
           key: `turn:${turnId}:status`,
           kind: 'status',
           status,
+          turnId,
+        })
+        rows.push({
+          key: `turn:${turnId}:error-card`,
+          kind: 'error-card',
+          message: failureMessage,
           turnId,
         })
       }

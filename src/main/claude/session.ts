@@ -235,6 +235,39 @@ function mergeLocalCommandResults(
   ])
 }
 
+/**
+ * SDK-internal API retries persist as `system/api_error` entries, which
+ * getSessionMessages omits. Merge them back at their transcript position so a
+ * reopened session replays the retry cards. Consecutive entries fold into one
+ * card downstream, so their relative order is all that matters here.
+ */
+function mergeApiRetryEntries(
+  messages: ClaudeJsonLine[],
+  entries: SessionEntry[],
+): ClaudeJsonLine[] {
+  const retryEntries = entries.filter(
+    (entry) =>
+      entryType(entry) === 'system' &&
+      entry.subtype === 'api_error' &&
+      entry.source === 'request_retry' &&
+      !entryBool(entry, 'isSidechain'),
+  )
+  if (!retryEntries.length) return messages
+
+  const rawIndex = new Map<string, number>()
+  entries.forEach((entry, index) => {
+    const uuid = entryUuid(entry)
+    if (uuid) rawIndex.set(uuid, index)
+  })
+
+  const rawPosition = (message: ClaudeJsonLine) =>
+    (typeof message.uuid === 'string' ? rawIndex.get(message.uuid) : undefined) ??
+    Number.MAX_SAFE_INTEGER
+  // Array.sort is stable: entries without a transcript position keep their
+  // relative order at the end.
+  return [...messages, ...retryEntries].sort((a, b) => rawPosition(a) - rawPosition(b))
+}
+
 async function loadRawSessionEntries(sessionId: string, projectPath: string) {
   try {
     assertPathSegment(sessionId, 'session id')
@@ -261,8 +294,11 @@ export async function loadSessionMessages({
     getSessionMessages(sessionId, { dir: projectPath }),
     loadRawSessionEntries(sessionId, projectPath),
   ])
-  const merged = mergeLocalCommandResults(
-    messages.map((message) => sessionMessageToClaudeJsonLine(message)),
+  const merged = mergeApiRetryEntries(
+    mergeLocalCommandResults(
+      messages.map((message) => sessionMessageToClaudeJsonLine(message)),
+      entries,
+    ),
     entries,
   )
   return Promise.all(

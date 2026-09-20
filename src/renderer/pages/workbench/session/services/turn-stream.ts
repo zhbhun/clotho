@@ -127,7 +127,9 @@ export class TurnStreamService {
       return false
     }
 
-    if (result.isAgentEvent || result.isLocalCommandResult) this.startTimer()
+    // API retries produce no agent content but can stretch for minutes; keep the
+    // elapsed ticker running so the status row and retry card stay live.
+    if (result.isAgentEvent || result.isLocalCommandResult || result.isApiRetry) this.startTimer()
     return hasConfirmedResponse
   }
 

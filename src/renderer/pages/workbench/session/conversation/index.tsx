@@ -10,11 +10,13 @@ import type { ClaudeToolRequest, ClaudeToolResult } from '../../../../services/c
 import type { ClaudeMessage } from '../services/message'
 import type { TurnFailure } from '../session-types'
 import { AgentReplyErrorBoundary } from './agent-reply-error-boundary'
+import { ApiErrorCard } from './api-error-card'
 import {
   type ConversationRow,
   buildConversationRows,
   formatConversationDuration,
 } from './conversation-rows'
+import { parseFailureMessage } from './failure-info'
 import { HistoricalMessageEditor, type MessageEditConfig } from './historical-message-editor'
 import { AgentMessageActions } from './message-actions'
 import { TimelineEntry, TimelineRow, UserCard } from './timeline'
@@ -231,6 +233,8 @@ function estimateConversationRowSize(row: ConversationRow) {
   if (row.kind === 'status') return 48
   if (row.kind === 'actions') return 32
   if (row.kind === 'thinking') return 48
+  if (row.kind === 'api-retry') return 76
+  if (row.kind === 'error-card') return 96
   if (row.kind === 'work-run') {
     return row.isExpanded ? 32 + row.items.length * 96 : 32
   }
@@ -305,16 +309,7 @@ function ConversationRowContent({
               ? t('workbench.conversation.workingFor', { duration: row.duration })
               : t('workbench.conversation.processing')
 
-    const statusContent = (
-      <span className="min-w-0">
-        <span className="block">{statusLabel}</span>
-        {row.error ? (
-          <span className="block whitespace-pre-wrap wrap-break-word text-destructive">
-            {row.error}
-          </span>
-        ) : null}
-      </span>
-    )
+    const statusContent = <span className="min-w-0">{statusLabel}</span>
 
     return (
       <div className={cn('px-3', hasTopPadding && 'pt-2')}>
@@ -340,6 +335,37 @@ function ConversationRowContent({
             </span>
           )}
         </TimelineRow>
+      </div>
+    )
+  }
+
+  if (row.kind === 'api-retry') {
+    return (
+      <div className={cn('px-3', hasTopPadding && 'pt-2')}>
+        <ApiErrorCard
+          attempt={row.item.attempt}
+          detail={row.item.detail}
+          kind={row.item.errorKind}
+          maxRetries={row.item.maxRetries}
+          retryDelayMs={row.item.retryDelayMs}
+          state={row.isStreaming && row.isLast && !row.turnTerminalStatus ? 'retrying' : 'settled'}
+          status={row.item.status}
+          timestamp={row.item.timestamp}
+        />
+      </div>
+    )
+  }
+
+  if (row.kind === 'error-card') {
+    const failure = parseFailureMessage(row.message)
+    return (
+      <div className={cn('px-3 pt-1', hasTopPadding && 'pt-2')}>
+        <ApiErrorCard
+          detail={failure.detail}
+          kind={failure.kind}
+          state="failed"
+          status={failure.status}
+        />
       </div>
     )
   }

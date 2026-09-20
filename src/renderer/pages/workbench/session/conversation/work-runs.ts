@@ -65,7 +65,8 @@ export function groupWorkRuns(
   }
 
   for (const item of items) {
-    if (item.kind === 'text' || !isGroupable(item)) {
+    // api-retry cards stay standalone like text: never folded into a tool run.
+    if (item.kind === 'text' || item.kind === 'api-retry' || !isGroupable(item)) {
       flush()
       slices.push({ kind: 'single', item })
       continue

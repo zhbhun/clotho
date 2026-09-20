@@ -86,6 +86,35 @@ export function computeTurns(messages: ClaudeMessage[]): ConversationTurn[] {
       if (currentTurn) applyAgentTaskNotification(currentTurn.timelineItems, message)
       continue
     }
+    // API-retry notices fold into a single timeline card per retry sequence:
+    // consecutive notices update the trailing card instead of stacking.
+    if (message.apiRetry) {
+      if (!currentTurn) continue
+      const retry = message.apiRetry
+      const last = currentTurn.timelineItems.at(-1)
+      if (last?.kind === 'api-retry') {
+        last.attempt = retry.attempt
+        last.maxRetries = retry.maxRetries
+        last.retryDelayMs = retry.retryDelayMs
+        last.status = retry.status
+        last.errorKind = retry.kind ?? last.errorKind
+        last.detail = retry.detail ?? last.detail
+        if (message.timestamp) last.timestamp = message.timestamp
+      } else {
+        currentTurn.timelineItems.push({
+          id: `${message.id}-api-retry`,
+          kind: 'api-retry',
+          attempt: retry.attempt,
+          maxRetries: retry.maxRetries,
+          retryDelayMs: retry.retryDelayMs,
+          status: retry.status,
+          errorKind: retry.kind,
+          detail: retry.detail,
+          timestamp: message.timestamp,
+        })
+      }
+      continue
+    }
     if (message.role === 'system') continue
 
     // Subagent output (non-empty parentToolUseId) stays out of the main timeline and becomes children of its Task entry.

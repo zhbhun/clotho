@@ -30,6 +30,22 @@ export interface ClaudeContentBlock {
   parentToolUseId?: string
 }
 
+/**
+ * An SDK-internal API retry notice. Arrives live as `system/api_retry` (snake_case
+ * counters) and replays from the transcript as `system/api_error` with
+ * `source: 'request_retry'` (camelCase counters plus the provider error body).
+ */
+export interface ApiRetryInfo {
+  attempt: number
+  maxRetries: number
+  retryDelayMs: number
+  status: number | null
+  /** SDKAssistantMessageError kind, e.g. 'rate_limit' | 'overloaded'. */
+  kind?: string
+  /** Provider error text; only present on transcript entries, not on the wire. */
+  detail?: string
+}
+
 export interface ClaudeMessage {
   id: string
   uuid?: string
@@ -37,6 +53,8 @@ export interface ClaudeMessage {
   parentUuid?: string
   role: ClaudeRole
   content: string
+  /** SDK API-retry notice; rendered as a per-sequence error card in the turn timeline. */
+  apiRetry?: ApiRetryInfo
   attachments?: ClaudeAttachment[]
   blocks?: ClaudeContentBlock[]
   type?: string
@@ -87,8 +105,66 @@ export function parseClaudeLine(line: string, index = 0): ClaudeMessage | null {
   }
 }
 
+function numberField(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined
+}
+
+/** Parse an SDK API-retry entry (wire `api_retry` or transcript `api_error`) into ApiRetryInfo. */
+export function parseApiRetry(entry: ClaudeJsonLine): ApiRetryInfo | null {
+  if (entry.type !== 'system') return null
+
+  if (entry.subtype === 'api_retry') {
+    const attempt = numberField(entry.attempt)
+    const retryDelayMs = numberField(entry.retry_delay_ms)
+    if (attempt === undefined || retryDelayMs === undefined) return null
+    return {
+      attempt,
+      maxRetries: numberField(entry.max_retries) ?? 0,
+      retryDelayMs,
+      status: numberField(entry.error_status) ?? null,
+      kind: typeof entry.error === 'string' ? entry.error : undefined,
+    }
+  }
+
+  if (entry.subtype === 'api_error' && entry.source === 'request_retry') {
+    const attempt = numberField(entry.retryAttempt)
+    const retryDelayMs = numberField(entry.retryInMs)
+    if (attempt === undefined || retryDelayMs === undefined) return null
+    const error =
+      entry.error && typeof entry.error === 'object'
+        ? (entry.error as Record<string, unknown>)
+        : undefined
+    const formatted = typeof error?.formatted === 'string' ? error.formatted.trim() : ''
+    const message = typeof error?.message === 'string' ? error.message.trim() : ''
+    return {
+      attempt,
+      maxRetries: numberField(entry.maxRetries) ?? 0,
+      retryDelayMs,
+      status: numberField(error?.status) ?? null,
+      detail: formatted || message || undefined,
+    }
+  }
+
+  return null
+}
+
 export function claudeJsonToMessage(entry: ClaudeJsonLine, index = 0): ClaudeMessage | null {
   if (shouldSkipEntry(entry)) return null
+
+  const apiRetry = parseApiRetry(entry)
+  if (apiRetry) {
+    return {
+      id: `${entry.type}-api-retry-${entry.timestamp ?? index}-${index}`,
+      uuid: typeof entry.uuid === 'string' ? entry.uuid : undefined,
+      parentUuid: typeof entry.parentUuid === 'string' ? entry.parentUuid : undefined,
+      role: 'system',
+      content: '',
+      type: entry.type,
+      timestamp: entry.timestamp,
+      rawType: entry.subtype ?? entry.type,
+      apiRetry,
+    }
+  }
 
   const { role, blocks } = parseEntry(entry)
   const taskNotification = parseTaskNotification(entry)

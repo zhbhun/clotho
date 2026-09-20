@@ -321,11 +321,11 @@ export function AssistantWork({
                 toolUseId={item.use?.toolUseId}
                 toolUseResult={item.result?.toolUseResult}
               />
-            ) : (
+            ) : item.kind === 'text' ? (
               <div className="assistant-summary min-w-0 leading-6 text-foreground">
                 <MarkdownRenderer content={item.text} isStreaming={isStreaming} />
               </div>
-            )}
+            ) : null}
           </TimelineRow>
         )
       })}
@@ -649,11 +649,11 @@ export function TimelineEntry({
           toolUseId={item.use?.toolUseId}
           toolUseResult={item.result?.toolUseResult}
         />
-      ) : (
+      ) : item.kind === 'text' ? (
         <div className="assistant-summary min-w-0 leading-6 text-foreground">
           <MarkdownRenderer content={item.text} isStreaming={isStreaming} />
         </div>
-      )}
+      ) : null}
     </TimelineRow>
   )
 }

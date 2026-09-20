@@ -930,3 +930,77 @@ describe('session chain building', () => {
     expect(finalizeChain(entries, chain).map((entry) => entry.uuid)).toEqual(['a', 'b'])
   })
 })
+
+describe('API retry transcript replay', () => {
+  it('merges persisted api_error retry entries at their transcript position', async () => {
+    vi.mocked(getSessionMessages).mockResolvedValue([
+      {
+        type: 'user',
+        uuid: 'user-1',
+        session_id: 'session-1',
+        message: { role: 'user', content: 'hello' },
+        parent_tool_use_id: null,
+      },
+      {
+        type: 'assistant',
+        uuid: 'assistant-1',
+        session_id: 'session-1',
+        message: { role: 'assistant', content: [{ type: 'text', text: 'API Error: 429' }] },
+        parent_tool_use_id: null,
+      },
+    ] as unknown as Awaited<ReturnType<typeof getSessionMessages>>)
+    fsMocks.readFile.mockResolvedValue(
+      [
+        JSON.stringify({ type: 'user', uuid: 'user-1', parentUuid: null }),
+        JSON.stringify({
+          type: 'system',
+          subtype: 'api_error',
+          source: 'request_retry',
+          uuid: 'retry-1',
+          parentUuid: 'user-1',
+          retryAttempt: 1,
+          retryInMs: 1000,
+          maxRetries: 10,
+          error: { status: 429, formatted: '429 quota' },
+        }),
+        JSON.stringify({
+          type: 'system',
+          subtype: 'api_error',
+          source: 'request_retry',
+          uuid: 'retry-2',
+          parentUuid: 'retry-1',
+          retryAttempt: 2,
+          retryInMs: 2000,
+          maxRetries: 10,
+          error: { status: 429, formatted: '429 quota' },
+        }),
+        JSON.stringify({
+          type: 'system',
+          subtype: 'api_error',
+          source: 'request_retry',
+          uuid: 'retry-sidechain',
+          parentUuid: 'user-1',
+          isSidechain: true,
+          retryAttempt: 1,
+          retryInMs: 1000,
+        }),
+        JSON.stringify({ type: 'assistant', uuid: 'assistant-1', parentUuid: 'retry-2' }),
+      ].join('\n'),
+    )
+
+    const messages = await loadSessionMessages({
+      sessionId: 'session-1',
+      projectPath: '/Users/me/app',
+    })
+
+    // Sidechain retries stay out; the main-chain retry pair lands between the
+    // user prompt and the assistant error frame.
+    expect(messages.map((message) => message.uuid)).toEqual([
+      'user-1',
+      'retry-1',
+      'retry-2',
+      'assistant-1',
+    ])
+    expect(messages[1]).toMatchObject({ subtype: 'api_error', retryAttempt: 1 })
+  })
+})

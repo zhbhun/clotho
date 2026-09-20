@@ -11,6 +11,7 @@ export type HistoryIngestResult = {
     message: ClaudeMessage
   }
   isAgentEvent: boolean
+  isApiRetry: boolean
   isLocalCommandResult: boolean
   wasSuppressed?: boolean
 }
@@ -270,7 +271,13 @@ export class HistoryService {
           this.isRecalledTail = false
       }
       if (this.isRecalledTail)
-        return { json, isAgentEvent: false, isLocalCommandResult: false, wasSuppressed: true }
+        return {
+          json,
+          isAgentEvent: false,
+          isApiRetry: false,
+          isLocalCommandResult: false,
+          wasSuppressed: true,
+        }
     }
 
     const isLocalCommandResult =
@@ -284,10 +291,19 @@ export class HistoryService {
       }
     }
 
+    // SDK-internal API retries surface as conversation cards; the wire event
+    // carries no timestamp, so stamp the receive time for the countdown.
+    const isApiRetry =
+      json?.type === 'system' && (json.subtype === 'api_retry' || json.subtype === 'api_error')
+    if (json && isApiRetry && !isTimestampValid(json.timestamp)) {
+      json = { ...json, timestamp: new Date().toISOString() }
+      messageLine = JSON.stringify(json)
+    }
+
     // Synthetic frames (the auto-continuation nudge) replay as isMeta user
     // lines: never rendered, never confirming history for a pending send.
     if (json?.type === 'user' && json.isMeta === true) {
-      return { json, isAgentEvent: false, isLocalCommandResult: false }
+      return { json, isAgentEvent: false, isApiRetry, isLocalCommandResult: false }
     }
 
     if (json?.type === 'user' && options.shouldDeferRootUserHistory) {
@@ -307,6 +323,7 @@ export class HistoryService {
           json,
           rootUserHistory: { message },
           isAgentEvent: false,
+          isApiRetry,
           isLocalCommandResult,
         }
       }
@@ -319,6 +336,7 @@ export class HistoryService {
           return {
             json,
             isAgentEvent: false,
+            isApiRetry,
             isLocalCommandResult,
           }
         }
@@ -329,6 +347,7 @@ export class HistoryService {
       return {
         json,
         isAgentEvent: false,
+        isApiRetry,
         isLocalCommandResult: false,
         wasSuppressed: true,
       }
@@ -344,6 +363,7 @@ export class HistoryService {
     return {
       json,
       isAgentEvent: Boolean(json && isAgentContentEvent(json)),
+      isApiRetry,
       isLocalCommandResult,
     }
   }

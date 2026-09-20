@@ -116,3 +116,66 @@ describe('Claude message parsing', () => {
     })
   })
 })
+
+describe('API retry parsing', () => {
+  it('parses a live wire api_retry event into an apiRetry message', () => {
+    expect(
+      claudeJsonToMessage({
+        type: 'system',
+        subtype: 'api_retry',
+        uuid: 'retry-uuid',
+        attempt: 3,
+        max_retries: 10,
+        retry_delay_ms: 38609,
+        error_status: 429,
+        error: 'rate_limit',
+        timestamp: '2026-09-20T09:04:05.706Z',
+      }),
+    ).toMatchObject({
+      role: 'system',
+      uuid: 'retry-uuid',
+      apiRetry: {
+        attempt: 3,
+        maxRetries: 10,
+        retryDelayMs: 38609,
+        status: 429,
+        kind: 'rate_limit',
+      },
+    })
+  })
+
+  it('parses a persisted transcript api_error retry with the provider detail', () => {
+    expect(
+      claudeJsonToMessage({
+        type: 'system',
+        subtype: 'api_error',
+        source: 'request_retry',
+        retryAttempt: 6,
+        maxRetries: 10,
+        retryInMs: 18115,
+        error: {
+          status: 429,
+          formatted: '429 [1310][您已达到每周/每月使用上限][2026092017034786ee1474d7fa4242]',
+        },
+      }),
+    ).toMatchObject({
+      role: 'system',
+      apiRetry: {
+        attempt: 6,
+        maxRetries: 10,
+        retryDelayMs: 18115,
+        status: 429,
+        detail: '429 [1310][您已达到每周/每月使用上限][2026092017034786ee1474d7fa4242]',
+      },
+    })
+  })
+
+  it('ignores non-retry api_error entries and malformed retry events', () => {
+    expect(
+      claudeJsonToMessage({ type: 'system', subtype: 'api_error', error: { status: 500 } }),
+    ).toBeNull()
+    expect(
+      claudeJsonToMessage({ type: 'system', subtype: 'api_retry', error_status: 429 }),
+    ).toBeNull()
+  })
+})
