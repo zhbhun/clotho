@@ -1,13 +1,13 @@
 import { act, fireEvent, renderHook } from '@testing-library/react'
 import type { ReactNode } from 'react'
-import { describe, expect, test, vi } from 'vitest'
+import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import {
   type ShortcutRuntime,
   ShortcutRuntimeProvider,
   createShortcutRuntime,
 } from '../../../services/shortcuts/runtime'
-import { usePrimaryModifierHeld } from './use-primary-modifier-held'
+import { PRIMARY_HINT_HOLD_MS, usePrimaryModifierHeld } from './use-primary-modifier-held'
 
 function createWrapper(platform: 'mac' | 'linux') {
   const runtime: ShortcutRuntime = createShortcutRuntime({
@@ -24,17 +24,48 @@ function createWrapper(platform: 'mac' | 'linux') {
   }
 }
 
+afterEach(() => {
+  vi.useRealTimers()
+})
+
 describe('usePrimaryModifierHeld', () => {
-  test('tracks the meta key as primary on mac', () => {
+  test('reveals the meta key as primary on mac only after the hold delay', async () => {
+    vi.useFakeTimers()
     const { result } = renderHook(() => usePrimaryModifierHeld(), {
       wrapper: createWrapper('mac'),
     })
     expect(result.current).toBe(false)
 
-    act(() => fireEvent.keyDown(window, { key: 'Meta', metaKey: true }))
+    await act(async () => {
+      fireEvent.keyDown(window, { key: 'Meta', metaKey: true })
+    })
+    expect(result.current).toBe(false)
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(PRIMARY_HINT_HOLD_MS)
+    })
     expect(result.current).toBe(true)
 
-    act(() => fireEvent.keyUp(window, { key: 'Meta' }))
+    await act(async () => {
+      fireEvent.keyUp(window, { key: 'Meta' })
+    })
+    expect(result.current).toBe(false)
+  })
+
+  test('cancels the hint when the modifier is released before the delay', async () => {
+    vi.useFakeTimers()
+    const { result } = renderHook(() => usePrimaryModifierHeld(), {
+      wrapper: createWrapper('mac'),
+    })
+
+    await act(async () => {
+      fireEvent.keyDown(window, { key: 'Meta', metaKey: true })
+      await vi.advanceTimersByTimeAsync(PRIMARY_HINT_HOLD_MS - 1)
+      fireEvent.keyUp(window, { key: 'Meta' })
+    })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1)
+    })
     expect(result.current).toBe(false)
   })
 
@@ -47,15 +78,25 @@ describe('usePrimaryModifierHeld', () => {
     expect(result.current).toBe(false)
   })
 
-  test('tracks the ctrl key as primary on other platforms and resets on blur', () => {
+  test('tracks the ctrl key as primary on other platforms and resets on blur', async () => {
+    vi.useFakeTimers()
     const { result } = renderHook(() => usePrimaryModifierHeld(), {
       wrapper: createWrapper('linux'),
     })
 
-    act(() => fireEvent.keyDown(window, { key: 'Control', ctrlKey: true }))
+    await act(async () => {
+      fireEvent.keyDown(window, { key: 'Control', ctrlKey: true })
+    })
+    expect(result.current).toBe(false)
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(PRIMARY_HINT_HOLD_MS)
+    })
     expect(result.current).toBe(true)
 
-    act(() => fireEvent.blur(window))
+    await act(async () => {
+      fireEvent.blur(window)
+    })
     expect(result.current).toBe(false)
   })
 })
