@@ -253,9 +253,16 @@ const MODEL_REASONING_PRESETS: Array<{ modelPatterns: RegExp[]; preset: Reasonin
       'medium',
     ),
   },
-  // Qwen 3.7 and older speak the boolean enable_thinking switch.
+  // Qwen 3.7 and older — plus the unversioned commercial names — speak the
+  // boolean enable_thinking switch; newer qwen ids fall through to the
+  // provider default (the 3.8 effort tiers).
   {
-    modelPatterns: [/qwen/],
+    modelPatterns: [
+      /qwen2/,
+      /qwen3\.[1-7]/,
+      /qwen3-(?:vl|coder)/,
+      /qwen-(?:plus|flash|turbo|max|long|vl|omni)/,
+    ],
     preset: preset(
       'qwen-switch',
       [
@@ -429,10 +436,10 @@ const MODEL_REASONING_PRESETS: Array<{ modelPatterns: RegExp[]; preset: Reasonin
 
 /** Provider defaults for new models that match no specific preset above. */
 const PROVIDER_REASONING_PRESETS: Array<{ providerPatterns: RegExp[]; preset: ReasoningPreset }> = [
-  { providerPatterns: [/zhipu|zai|bigmodel/], preset: findInCatalog('glm')! },
+  { providerPatterns: [/zhipu|zai|bigmodel/], preset: findInCatalog('glm-5-3')! },
   { providerPatterns: [/deepseek/], preset: findInCatalog('deepseek')! },
   { providerPatterns: [/kimi|moonshot/], preset: findInCatalog('kimi')! },
-  { providerPatterns: [/qwen|tongyi|qianwen/], preset: findInCatalog('qwen-switch')! },
+  { providerPatterns: [/qwen|tongyi|qianwen/], preset: findInCatalog('qwen')! },
   { providerPatterns: [/openai/], preset: findInCatalog('openai')! },
   { providerPatterns: [/gemini|google/], preset: findInCatalog('gemini-3')! },
   { providerPatterns: [/xai|grok/], preset: findInCatalog('grok')! },

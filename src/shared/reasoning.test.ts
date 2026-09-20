@@ -81,11 +81,15 @@ describe('matchReasoningPreset', () => {
     expect(matchReasoningPreset('zhipu-glm', 'glm-5v-turbo')?.id).toBe('glm')
     expect(matchReasoningPreset('qianwen', 'qwen-plus')?.id).toBe('qwen-switch')
     expect(matchReasoningPreset('qianwen', 'qwen3.7-max')?.id).toBe('qwen-switch')
+    expect(matchReasoningPreset('qianwen', 'qwen2.5-coder')?.id).toBe('qwen-switch')
+    // Unreleased qwen generations follow the 3.8 effort dialect.
+    expect(matchReasoningPreset('qianwen', 'qwen3.9-plus')?.id).toBe('qwen')
+    expect(matchReasoningPreset('qianwen', 'qwen4-max')?.id).toBe('qwen')
   })
 
   test('falls back to provider defaults for opaque model ids', () => {
-    expect(matchReasoningPreset('zhipu-glm', 'flagship')?.id).toBe('glm')
-    expect(matchReasoningPreset('qianwen', 'mystery')?.id).toBe('qwen-switch')
+    expect(matchReasoningPreset('zhipu-glm', 'flagship')?.id).toBe('glm-5-3')
+    expect(matchReasoningPreset('qianwen', 'mystery')?.id).toBe('qwen')
   })
 
   test('falls back to the generic on/off preset when nothing matches', () => {
