@@ -131,7 +131,7 @@ export function ProviderSettings() {
         }}
       >
         <DialogContent
-          className="gap-0 overflow-hidden p-0 sm:max-w-3xl"
+          className="gap-0 overflow-hidden p-0 sm:max-w-4xl"
           finalFocus={(closeType) => {
             if (closeType !== 'keyboard') {
               return false

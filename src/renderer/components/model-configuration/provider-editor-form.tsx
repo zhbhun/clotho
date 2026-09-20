@@ -272,23 +272,23 @@ export function ProviderEditorForm({
           </div>
         </div>
         <div className="overflow-hidden rounded-lg border border-border">
-          <div className="hidden gap-2 border-b border-border bg-muted/40 px-3 py-1.5 md:grid md:grid-cols-[1fr_1fr_100px_110px_50px_50px]">
-            <div className="px-2 text-xs text-muted-foreground">
+          <div className="hidden gap-2 border-b border-border bg-muted/40 px-3 py-1.5 md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_100px_110px_50px_50px]">
+            <div className="px-2 text-xs whitespace-nowrap text-muted-foreground">
               {t('settings.provider.modelColumnId')}
             </div>
-            <div className="px-2 text-xs text-muted-foreground">
+            <div className="px-2 text-xs whitespace-nowrap text-muted-foreground">
               {t('settings.provider.modelColumnName')}
             </div>
-            <div className="px-2 text-xs text-muted-foreground">
+            <div className="px-2 text-xs whitespace-nowrap text-muted-foreground">
               {t('settings.provider.modelColumnContext')}
             </div>
-            <div className="px-2 text-xs text-muted-foreground">
+            <div className="px-2 text-xs whitespace-nowrap text-muted-foreground">
               {t('settings.provider.modelColumnReasoning')}
             </div>
-            <div className="text-center text-xs text-muted-foreground">
+            <div className="text-center text-xs whitespace-nowrap text-muted-foreground">
               {t('settings.provider.modelColumnVision')}
             </div>
-            <div className="text-center text-xs text-muted-foreground">
+            <div className="text-center text-xs whitespace-nowrap text-muted-foreground">
               {t('settings.provider.modelColumnActions')}
             </div>
           </div>
@@ -298,7 +298,7 @@ export function ProviderEditorForm({
                 const hasModelIdError = modelIdErrorIndexes.includes(index)
                 return (
                   <div
-                    className="grid items-center gap-2 px-3 py-1 hover:bg-muted/30 md:grid-cols-[1fr_1fr_100px_110px_50px_50px]"
+                    className="grid items-center gap-2 px-3 py-1 hover:bg-muted/30 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_100px_110px_50px_50px]"
                     key={index}
                   >
                     <Field className="gap-1" data-invalid={hasModelIdError}>
