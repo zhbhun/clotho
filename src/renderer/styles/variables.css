@@ -2,10 +2,6 @@
   --font-heading: var(--font-sans);
   --font-sans: 'Inter Variable', sans-serif;
 
-  /* base-mira presets body text to text-xs (12px); the app default is 14px */
-  --text-xs: 0.875rem;
-  --text-xs--line-height: 1.25rem;
-
   /* shadcn semantic colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);

@@ -85,7 +85,7 @@ function ReducedMotionControl({
         return (
           <FieldLabel
             className={cn(
-              'relative min-w-14 items-center justify-center rounded-md px-3 py-1.5 text-center text-xs font-medium transition-colors',
+              'relative min-w-14 items-center justify-center rounded-md px-3 py-1.5 text-center font-medium transition-colors',
               selected
                 ? 'bg-accent text-accent-foreground'
                 : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',

@@ -5,11 +5,7 @@ import { cn } from '@/shadcn/utils'
 function Table({ className, ...props }: React.ComponentProps<'table'>) {
   return (
     <div data-slot="table-container" className="relative w-full overflow-x-auto">
-      <table
-        data-slot="table"
-        className={cn('w-full caption-bottom text-xs', className)}
-        {...props}
-      />
+      <table data-slot="table" className={cn('w-full caption-bottom', className)} {...props} />
     </div>
   )
 }
