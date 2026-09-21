@@ -17,6 +17,18 @@ const THEME_OPTIONS = [
 
 const PREVIEW_ROWS = [0, 1, 2] as const
 
+const CANVAS_TINT = 7
+// The light split half sits flush against the selection outline; fade its
+// canvas from a deep tint so the near-white outline stays readable against it.
+const SPLIT_LIGHT_CANVAS_TINT = 45
+
+function isDarkBackground(hex: string): boolean {
+  const value = Number.parseInt(hex.slice(1), 16)
+  const luminance =
+    0.2126 * ((value >> 16) & 0xff) + 0.7152 * ((value >> 8) & 0xff) + 0.0722 * (value & 0xff)
+  return luminance < 128
+}
+
 function PreviewLines({ isSplit = false }: { isSplit?: boolean }) {
   return (
     <div className="flex h-full min-w-0 flex-col justify-center gap-1.5 px-3">
@@ -49,9 +61,14 @@ function ThemeMiniature({
 }) {
   const style = {
     // oklab, not oklch: preview swatches share the divider-hue Chromium bug.
-    '--preview-canvas': `color-mix(in oklab, ${palette.background}, ${palette.foreground} 7%)`,
+    '--preview-canvas': `color-mix(in oklab, ${palette.background}, ${palette.foreground} ${CANVAS_TINT}%)`,
     '--preview-line': `color-mix(in oklab, ${palette.foreground}, transparent 58%)`,
     '--preview-surface': palette.background,
+    ...(isSplit && !isDarkBackground(palette.background)
+      ? {
+          backgroundImage: `linear-gradient(120deg, color-mix(in oklab, ${palette.background}, ${palette.foreground} ${SPLIT_LIGHT_CANVAS_TINT}%), color-mix(in oklab, ${palette.background}, ${palette.foreground} ${CANVAS_TINT}%))`,
+        }
+      : null),
   } as CSSProperties
 
   return (
