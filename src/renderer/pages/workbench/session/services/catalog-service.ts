@@ -18,6 +18,9 @@ export class CatalogService {
     const initialization = await this.controller.claudeService.startup({
       options: {
         cwd: context.isHomeMode ? undefined : (context.projectPath ?? undefined),
+        ...(!context.isHomeMode && context.additionalDirectories?.length
+          ? { additionalDirectories: context.additionalDirectories }
+          : {}),
         agent: composer.selectedAgent ?? undefined,
         permissionMode: composer.permissionMode,
       },

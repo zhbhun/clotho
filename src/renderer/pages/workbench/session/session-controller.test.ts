@@ -998,6 +998,25 @@ describe('SessionController', () => {
     })
   })
 
+  it('passes context additional directories through to the catalog startup options', async () => {
+    const client = createClient()
+    const store = trackedStore({
+      ...createOptions('local:catalog-additional-directories'),
+      additionalDirectories: ['/Users/me/docs', '/Users/me/assets'],
+      client,
+    })
+
+    await store.getState().initialize()
+
+    expect(client.startup).toHaveBeenCalledWith({
+      options: expect.objectContaining({
+        cwd: '/Users/me/project',
+        additionalDirectories: ['/Users/me/docs', '/Users/me/assets'],
+      }),
+      initializeTimeoutMs: 60_000,
+    })
+  })
+
   it('waits for history but not catalog initialization before starting a send', async () => {
     let resolveHistory!: (history: []) => void
     const history = new Promise<[]>((resolve) => {
