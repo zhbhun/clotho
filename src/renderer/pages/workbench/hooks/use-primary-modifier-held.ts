@@ -4,7 +4,7 @@ import { useShortcutRuntime } from '../../../services/shortcuts/runtime'
 
 // `primary+<n>` is quick to hit by accident, so the badges appear only once the
 // modifier has been held like a deliberate hint request.
-export const PRIMARY_HINT_HOLD_MS = 500
+export const PRIMARY_HINT_HOLD_MS = 1_000
 
 // Tracks whether the platform-resolved primary modifier (⌘ on macOS, Ctrl elsewhere)
 // has been held long enough that tabs may hint their `primary+<n>` switch shortcut.
