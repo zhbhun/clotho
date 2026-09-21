@@ -25,6 +25,7 @@ import {
   shutdownLogging,
 } from './logging/runtime'
 import { DEV_SERVER_URL, getMainViewTarget } from './main-view-url'
+import { applyNativeAppearance } from './native-appearance'
 import { createSessionStorage } from './session-storage'
 import { createShortcutStore, readShortcutOverrides } from './shortcuts'
 import { createStateStore, readState } from './state'
@@ -135,6 +136,7 @@ export async function bootstrap() {
       recoverSettings = readSettings
     }
     const settingsStore = createSettingsStore(loadedSettings, undefined, recoverSettings)
+    applyNativeAppearance(loadedSettings.appearance.theme)
     const shortcutStore = createShortcutStore(await readShortcutOverrides())
     const proxySettings = settingsStore.get()
     let modelProxy
@@ -205,7 +207,11 @@ export async function bootstrap() {
           Menu.setApplicationMenu(Menu.buildFromTemplate(applicationMenuItems(language, isDev)))
         },
         appGetPreferences: () => service.getAppPreferences(),
-        appSavePreferences: (params) => service.saveAppPreferences(params),
+        appSavePreferences: async (params) => {
+          const saved = await service.saveAppPreferences(params)
+          applyNativeAppearance(saved.appearance.theme)
+          return saved
+        },
         claudeStartup: (params) => service.startup(params),
         claudeQueryStart: (params) => service.startQuery(params),
         claudeQueryControl: (params) => service.controlQuery(params),
