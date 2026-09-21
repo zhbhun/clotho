@@ -81,7 +81,6 @@ export type SessionAreaProps = {
   onStartNewSession: (draft?: SessionComposerDraft) => void
   onTogglePinSession: (session: WorkbenchSession) => void
   refreshProjects: () => Promise<void>
-  selectedBranch?: string | null
   selectedProject?: WorkbenchProject
   selectedSession: WorkbenchSession | null
   selectPromptFiles: (startingFolder?: string) => Promise<string[]>
@@ -239,13 +238,10 @@ function SessionAreaContent({
   projectMode,
   projects,
   sessionId,
-  selectedBranch,
   selectedProject,
   selectedSession,
   selectPromptFiles,
-  setSelectedProjectId,
   tabSessions,
-  onAddProject,
   onContentScrolledChange,
   onOpenSettings,
   onRenameSession,
@@ -715,12 +711,6 @@ function SessionAreaContent({
           composerProps={promptComposerProps}
           error={error}
           hasTabSessions={tabSessions.length > 0}
-          projectMode={projectMode}
-          projects={projects}
-          selectedBranch={selectedBranch}
-          selectedProject={selectedProject}
-          onAddProject={onAddProject}
-          onSelectProject={setSelectedProjectId}
         />
       )}
     </>

@@ -74,6 +74,7 @@ export function ConversationHeader({
         showSidebarTrigger ? 'pl-[84px]' : 'pl-3',
       )}
       data-content-scrolled={isContentScrolled ? 'true' : undefined}
+      data-has-tabs={sessions.length > 0 ? 'true' : undefined}
     >
       {showSidebarTrigger ? (
         <ShortcutTooltip

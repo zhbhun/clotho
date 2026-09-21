@@ -142,7 +142,6 @@ function WorkbenchContent() {
     onStartNewSession: handleStartNewSessionInCurrentWorkspace,
     onTogglePinSession: workbench.togglePinSession,
     refreshProjects: workbench.refreshProjects,
-    selectedBranch: workbench.selectedBranch,
     selectedProject: workbench.selectedProject,
     isProjectSessionLoading: workbench.selectedProject
       ? workbench.loadingProjectSessionIds.has(workbench.selectedProject.id)

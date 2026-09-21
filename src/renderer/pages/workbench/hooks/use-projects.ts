@@ -376,7 +376,6 @@ export function useProjects(
     renameSession,
     sessionList,
     sessionTimeline,
-    selectedBranch: selectedProject?.gitBranch ?? null,
     selectedProject,
     selectedSession,
     sessionActivity,

@@ -368,6 +368,7 @@ describe('ConversationHeader', () => {
     renderHeader()
 
     expect(document.querySelector('.session-tabs')).toBeInTheDocument()
+    expect(document.querySelector('.session-tabs')).not.toHaveAttribute('data-has-tabs')
     expect(document.querySelector('[data-window-project-title]')).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: appI18n.t('workbench.history.title') }),
@@ -403,6 +404,7 @@ describe('ConversationHeader', () => {
     )
 
     expect(tabs).toHaveLength(2)
+    expect(document.querySelector('.session-tabs')).toHaveAttribute('data-has-tabs', 'true')
     expect(closeButtons).toHaveLength(2)
     for (const tab of tabs) expect(tab).toHaveAttribute('tabindex', '-1')
     for (const button of closeButtons) expect(button).toHaveAttribute('tabindex', '-1')
@@ -999,7 +1001,7 @@ describe('prompt composer surface', () => {
     expect(screen.queryByLabelText('Checking context usage')).toBeNull()
   })
 
-  it('renders project controls before the branded elevated composer', async () => {
+  it('renders the branded elevated composer without project controls', async () => {
     await initializeAppI18n('en', ['en-US'])
     vi.mocked(requestFromDesktop).mockImplementation(async (command) => {
       switch (command) {
@@ -1023,15 +1025,10 @@ describe('prompt composer surface', () => {
     expect(screen.getByRole('img', { name: 'Clotho' })).toBeInTheDocument()
 
     const composer = getPromptComposerCard()
-    const projectTrigger = screen.getByLabelText('Switch project')
-    const emptyControls = projectTrigger.closest('.bg-project-switcher-surface')
     expect(composer).toHaveAttribute('data-elevated', 'true')
     expect(composer.querySelector('[data-slot="card-footer"]')).toBeInTheDocument()
-    expect(composer).not.toContainElement(projectTrigger)
-    expect(emptyControls).toContainElement(projectTrigger)
-    expect(
-      projectTrigger.compareDocumentPosition(composer) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(document.querySelector('.bg-project-switcher-surface')).toBeNull()
+    expect(within(composer).queryByLabelText('Switch project')).toBeNull()
   })
 
   it('creates an empty draft as a normal session', async () => {
@@ -1769,7 +1766,7 @@ describe('prompt composer surface', () => {
     ).toBeInTheDocument()
   })
 
-  it('shows a project-name switcher without the full path before a conversation starts', async () => {
+  it('shows the project name without the full path in the header before a conversation starts', async () => {
     vi.mocked(requestFromDesktop).mockImplementation(async (command) => {
       switch (command) {
         case 'claudeListProjects':
@@ -1795,10 +1792,12 @@ describe('prompt composer surface', () => {
 
     renderWorkbenchPage()
 
-    const switcher = await screen.findByLabelText('切换项目')
-
-    expect(switcher).toHaveTextContent('project')
-    expect(switcher).not.toHaveTextContent('/Users/test/project')
+    await waitFor(() => {
+      expect(document.querySelector('[data-window-project-title]')).toHaveTextContent('project')
+    })
+    expect(document.querySelector('[data-window-project-title]')).not.toHaveTextContent(
+      '/Users/test/project',
+    )
   })
 
   it('starts a draft after switching to a project', async () => {
@@ -1826,7 +1825,12 @@ describe('prompt composer surface', () => {
 
     renderWorkbenchPage()
 
-    fireEvent.click(await screen.findByLabelText('切换项目', undefined, SDK_STARTUP_WAIT_OPTIONS))
+    const projectTitle = await waitFor(() => {
+      const element = document.querySelector<HTMLElement>('[data-window-project-title]')
+      expect(element).not.toBeNull()
+      return element!
+    })
+    fireEvent.click(projectTitle)
     const projectOption = await screen.findByText('/Users/test/project')
     fireEvent.click(projectOption)
 
@@ -1842,40 +1846,10 @@ describe('prompt composer surface', () => {
       isDraft: true,
       project_id: 'project-1',
     })
-    expect(screen.getByLabelText('切换项目')).toHaveTextContent('project')
+    expect(document.querySelector('[data-window-project-title]')).toHaveTextContent('project')
   })
 
-  it('shows the selected project branch before a conversation starts', async () => {
-    vi.mocked(requestFromDesktop).mockImplementation(async (command) => {
-      switch (command) {
-        case 'claudeListProjects':
-          return [
-            {
-              id: 'project-1',
-              path: '/Users/test/project',
-              sessions: [],
-              created_at: 0,
-            },
-          ]
-        case 'claudeListSessions':
-          return []
-        case 'claudeGetProjectGitBranch':
-          return 'main'
-        case 'claudeStartup':
-          return { cwd: '/Users/test/project', commands: [], agents: [], models: [] }
-        default:
-          return null
-      }
-    })
-    useWorkbenchStore.setState({ currentProjectId: 'project-1', projectMode: 'project' })
-
-    renderWorkbenchPage()
-
-    const branchLabel = await screen.findByText('main')
-    expect(branchLabel).toBeInTheDocument()
-  })
-
-  it('opens project actions from the empty conversation switcher', async () => {
+  it('opens project actions from the header project switcher', async () => {
     vi.mocked(requestFromDesktop).mockImplementation(async (command) => {
       switch (command) {
         case 'claudeListProjects':
@@ -1900,13 +1874,18 @@ describe('prompt composer surface', () => {
 
     renderWorkbenchPage()
 
-    fireEvent.click(await screen.findByLabelText('切换项目'))
+    const projectTitle = await waitFor(() => {
+      const element = document.querySelector<HTMLElement>('[data-window-project-title]')
+      expect(element).not.toBeNull()
+      return element!
+    })
+    fireEvent.click(projectTitle)
 
     expect(await screen.findByPlaceholderText('搜索项目')).toBeInTheDocument()
     const dialog = screen.getByRole('dialog', { name: '切换项目' })
     expect(within(dialog).getByRole('button', { name: '添加项目' })).toBeInTheDocument()
     expect(within(dialog).queryByRole('button', { name: '不使用项目' })).not.toBeInTheDocument()
-    expect(within(dialog).getByText('tools-preview')).toBeInTheDocument()
+    expect(within(dialog).getByText('/Users/test/project')).toBeInTheDocument()
   })
 
   it('opens the shared project form from the project switcher', async () => {
@@ -1923,7 +1902,12 @@ describe('prompt composer surface', () => {
 
     renderWorkbenchPage()
 
-    await userEvent.click(await screen.findByRole('button', { name: '切换项目' }))
+    const projectTitle = await waitFor(() => {
+      const element = document.querySelector<HTMLElement>('[data-window-project-title]')
+      expect(element).not.toBeNull()
+      return element!
+    })
+    await userEvent.click(projectTitle)
     const switcher = screen.getByRole('dialog', { name: '切换项目' })
     await userEvent.click(within(switcher).getByRole('button', { name: '添加项目' }))
 
@@ -2098,8 +2082,7 @@ describe('prompt composer surface', () => {
 
     renderWorkbenchPage()
 
-    expect(await screen.findByLabelText('Switch project')).toHaveTextContent('Select project')
-    const prompt = screen.getByLabelText('Prompt')
+    const prompt = await screen.findByLabelText('Prompt')
     expect(prompt).not.toBeDisabled()
 
     await addComposerAttachment()
@@ -2148,7 +2131,7 @@ describe('prompt composer surface', () => {
 
     renderWorkbenchPage()
 
-    expect(await screen.findByLabelText('Switch project')).toHaveTextContent('Select project')
+    await screen.findByLabelText('Prompt')
     await addComposerAttachment()
     await waitFor(() => {
       expect(screen.getByLabelText('Send')).not.toBeDisabled()

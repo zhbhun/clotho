@@ -10,7 +10,7 @@
   box-shadow: 0 8px 16px -12px color-mix(in oklab, var(--foreground) 18%, transparent);
 }
 
-.session-tabs::after {
+.session-tabs[data-has-tabs='true']::after {
   position: absolute;
   z-index: 0;
   right: 0;
