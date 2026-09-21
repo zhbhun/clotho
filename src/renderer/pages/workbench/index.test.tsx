@@ -760,7 +760,7 @@ describe('workbench catalog loading states', () => {
     expect(screen.queryByText('New chat')).not.toBeInTheDocument()
     expect(
       screen.queryByRole('heading', {
-        name: 'What would you like to make together today?',
+        name: 'What should we build?',
       }),
     ).not.toBeInTheDocument()
 
@@ -1019,7 +1019,7 @@ describe('prompt composer surface', () => {
 
     expect(
       await screen.findByRole('heading', {
-        name: 'What would you like to make together today?',
+        name: 'What should we build?',
       }),
     ).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'Clotho' })).toBeInTheDocument()
