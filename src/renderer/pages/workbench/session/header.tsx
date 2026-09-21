@@ -1,14 +1,15 @@
-import { ChevronDown } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
 import { SidebarTrigger, useSidebar } from '@/shadcn/sidebar'
 import { cn } from '@/shadcn/utils'
 
+import { DEFAULT_PROJECT_ICON, ProjectIcon } from '../../../components/project-icon'
 import { SidebarToggleIcon } from '../../../components/sidebar-toggle-icon'
 import { ShortcutTooltip } from '../components/shortcut-tooltip'
 import type { SessionActivity, WorkbenchProject, WorkbenchSession } from '../stores/workbench-store'
 import { ProjectSwitchDialog } from './project-switcher'
+import { SessionHistory } from './session-history'
 import { SessionTabs } from './session-tabs'
 
 export function ConversationHeader({
@@ -35,7 +36,6 @@ export function ConversationHeader({
   onRetryHistory = () => {},
   onSelectProject,
   onSelectSession,
-  onStartNewSession,
   onTogglePinSession,
 }: {
   activeSessionId: string | null
@@ -61,7 +61,6 @@ export function ConversationHeader({
   onRetryHistory?: () => void
   onSelectProject: (projectId: string) => void
   onSelectSession: (session: WorkbenchSession) => void
-  onStartNewSession: () => void
   onTogglePinSession: (session: WorkbenchSession) => void
 }) {
   const { state } = useSidebar()
@@ -69,26 +68,27 @@ export function ConversationHeader({
   const showSidebarTrigger = state === 'collapsed'
 
   return (
-    <>
-      <header
-        className={cn(
-          'app-region-drag relative flex h-11 shrink-0 items-center bg-background pr-2 text-foreground-subtle',
-          showSidebarTrigger ? 'pl-[84px]' : 'pl-3',
-        )}
-      >
-        {showSidebarTrigger ? (
-          <ShortcutTooltip
-            commandId="workbench.sidebar.toggle"
-            label={t('workbench.nav.toggleSidebar')}
-            side="bottom"
-          >
-            <SidebarTrigger
-              className="app-region-no-drag shrink-0"
-              icon={SidebarToggleIcon}
-              size="icon"
-            />
-          </ShortcutTooltip>
-        ) : null}
+    <header
+      className={cn(
+        'session-tabs app-region-drag relative flex h-10 shrink-0 items-stretch bg-background pr-2 text-foreground-subtle',
+        showSidebarTrigger ? 'pl-[84px]' : 'pl-3',
+      )}
+      data-content-scrolled={isContentScrolled ? 'true' : undefined}
+    >
+      {showSidebarTrigger ? (
+        <ShortcutTooltip
+          commandId="workbench.sidebar.toggle"
+          label={t('workbench.nav.toggleSidebar')}
+          side="bottom"
+        >
+          <SidebarTrigger
+            className="app-region-no-drag mr-1.5 shrink-0 self-center"
+            icon={SidebarToggleIcon}
+            size="icon"
+          />
+        </ShortcutTooltip>
+      ) : null}
+      <div className="app-region-no-drag mr-3 flex min-w-0 items-center self-center">
         <ProjectSwitchDialog
           open={projectSwitcherOpen}
           projectMode={projectMode}
@@ -101,13 +101,18 @@ export function ConversationHeader({
               side="bottom"
             >
               <Button
-                className="app-region-no-drag ml-1 max-w-[60vw]"
+                className="min-w-0 max-w-[50vw]"
                 data-window-project-title
                 type="button"
                 variant="ghost"
               >
+                <ProjectIcon
+                  className="size-3.5"
+                  icon={selectedProject?.icon ?? DEFAULT_PROJECT_ICON}
+                  plain
+                  size="small"
+                />
                 <span className="min-w-0 truncate">{projectName}</span>
-                <ChevronDown data-icon="inline-end" strokeWidth={1} />
               </Button>
             </ShortcutTooltip>
           }
@@ -115,28 +120,30 @@ export function ConversationHeader({
           onOpenChange={onProjectSwitcherOpenChange}
           onSelectProject={onSelectProject}
         />
-      </header>
-      {sessions.length ? (
-        <SessionTabs
+      </div>
+      <SessionTabs
+        activeSessionId={activeSessionId}
+        pinnedSessionIds={pinnedSessionIds}
+        sessionActivity={sessionActivity}
+        sessions={sessions}
+        onCloseSession={onCloseSession}
+        onDeleteSession={onDeleteSession}
+        onRenameSession={onRenameSession}
+        onSelectSession={onSelectSession}
+        onTogglePinSession={onTogglePinSession}
+      />
+      <div className="session-tab-actions app-region-no-drag relative flex shrink-0 items-center px-1 text-foreground-subtlest">
+        <SessionHistory
           activeSessionId={activeSessionId}
-          historyError={historyError}
-          historySessions={historySessions}
-          historyOpen={historyOpen}
-          isContentScrolled={isContentScrolled}
-          isHistoryLoading={isHistoryLoading}
-          pinnedSessionIds={pinnedSessionIds}
-          sessionActivity={sessionActivity}
-          sessions={sessions}
-          onCloseSession={onCloseSession}
-          onDeleteSession={onDeleteSession}
-          onHistoryOpenChange={onHistoryOpenChange}
-          onRenameSession={onRenameSession}
-          onRetryHistory={onRetryHistory}
+          error={historyError}
+          isLoading={isHistoryLoading}
+          open={historyOpen}
+          sessions={historySessions}
+          onOpenChange={onHistoryOpenChange}
+          onRetry={onRetryHistory}
           onSelectSession={onSelectSession}
-          onStartNewSession={onStartNewSession}
-          onTogglePinSession={onTogglePinSession}
         />
-      ) : null}
-    </>
+      </div>
+    </header>
   )
 }

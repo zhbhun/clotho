@@ -3,49 +3,34 @@ import { useTranslation } from 'react-i18next'
 import { cn } from '@/shadcn/utils'
 
 import { APP_CONTENT_CONTAINER_CLASS } from '../../../components/app-layout'
-import type { WorkbenchProject, WorkbenchSession } from '../stores/workbench-store'
+import type { WorkbenchProject } from '../stores/workbench-store'
 import { ClothoMark } from './clotho-mark'
 import { ProjectSwitcher } from './project-switcher'
 import { PromptComposer, type PromptComposerBaseProps } from './prompt'
-import { SessionHistory } from './session-history'
 
 export type SessionEmptyStateProps = {
   composerProps: PromptComposerBaseProps
   error: string | null
   hasTabSessions: boolean
-  historyOpen: boolean
-  isProjectSessionLoading: boolean
   projectMode: 'project' | 'home'
-  projectSessionError: string | null
   projects: WorkbenchProject[]
   selectedBranch?: string | null
   selectedProject?: WorkbenchProject
-  workspaceSessions: WorkbenchSession[]
   onAddProject: () => void
-  onHistoryOpenChange: (isOpen: boolean) => void
-  onRetryProjectSessions: () => void
   onSelectProject: (projectId: string | null) => void
-  onSelectSession: (session: WorkbenchSession) => void
 }
 
-/** Surface shown when there is no conversation yet: brand mark, project switcher, session history, and the composer. */
+/** Surface shown when there is no conversation yet: brand mark, project switcher, and the composer. */
 export function SessionEmptyState({
   composerProps,
   error,
   hasTabSessions,
-  historyOpen,
-  isProjectSessionLoading,
   projectMode,
-  projectSessionError,
   projects,
   selectedBranch,
   selectedProject,
-  workspaceSessions,
   onAddProject,
-  onHistoryOpenChange,
-  onRetryProjectSessions,
   onSelectProject,
-  onSelectSession,
 }: SessionEmptyStateProps) {
   const { t } = useTranslation()
 
@@ -54,7 +39,7 @@ export function SessionEmptyState({
       className={cn(
         'px-6',
         hasTabSessions
-          ? 'pointer-events-none absolute inset-x-0 top-11 bottom-0 flex items-center justify-center overflow-y-auto'
+          ? 'pointer-events-none absolute inset-x-0 top-10 bottom-0 flex items-center justify-center overflow-y-auto'
           : 'flex flex-1 items-center justify-center',
       )}
     >
@@ -84,19 +69,6 @@ export function SessionEmptyState({
                 onSelectHome={() => onSelectProject(null)}
                 onSelectProject={onSelectProject}
               />
-              {!hasTabSessions ? (
-                <SessionHistory
-                  activeSessionId={null}
-                  appearance="empty-surface"
-                  error={projectSessionError}
-                  isLoading={isProjectSessionLoading}
-                  open={historyOpen}
-                  sessions={workspaceSessions}
-                  onOpenChange={onHistoryOpenChange}
-                  onRetry={onRetryProjectSessions}
-                  onSelectSession={onSelectSession}
-                />
-              ) : null}
             </div>
             <div className="relative z-10 -mt-4">
               <PromptComposer

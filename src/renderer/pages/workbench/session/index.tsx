@@ -173,7 +173,6 @@ export function SessionArea(props: SessionAreaProps) {
         onRetryHistory={props.onRetryProjectSessions}
         onSelectProject={props.setSelectedProjectId}
         onSelectSession={props.onSelectSession}
-        onStartNewSession={props.onStartNewSession}
         onTogglePinSession={props.onTogglePinSession}
       />
 
@@ -211,11 +210,9 @@ export function SessionArea(props: SessionAreaProps) {
             <SessionControllerProvider key={sessionId} {...sessionControllerProps(props)}>
               <SessionAreaContent
                 {...props}
-                historyOpen={isSessionHistoryOpen}
                 selectedSession={selectedSession}
                 sessionId={sessionId}
                 onContentScrolledChange={handleContentScrolledChange}
-                onHistoryOpenChange={handleSessionHistoryOpenChange}
               />
             </SessionControllerProvider>
           </ModelOnboardingGate>
@@ -238,11 +235,8 @@ function ModelOnboardingGate({
 
 function SessionAreaContent({
   forkSession,
-  historyOpen,
-  isProjectSessionLoading,
   isMockProject,
   projectMode,
-  projectSessionError,
   projects,
   sessionId,
   selectedBranch,
@@ -251,19 +245,13 @@ function SessionAreaContent({
   selectPromptFiles,
   setSelectedProjectId,
   tabSessions,
-  workspaceSessions,
   onAddProject,
   onContentScrolledChange,
-  onHistoryOpenChange,
-  onRetryProjectSessions,
   onOpenSettings,
   onRenameSession,
-  onSelectSession,
 }: SessionAreaProps & {
-  historyOpen: boolean
   sessionId: string
   onContentScrolledChange: (sessionId: string, isScrolled: boolean) => void
-  onHistoryOpenChange: (isOpen: boolean) => void
 }) {
   const { t } = useTranslation()
   const controller = useSessionController()
@@ -727,19 +715,12 @@ function SessionAreaContent({
           composerProps={promptComposerProps}
           error={error}
           hasTabSessions={tabSessions.length > 0}
-          historyOpen={historyOpen}
-          isProjectSessionLoading={isProjectSessionLoading}
           projectMode={projectMode}
-          projectSessionError={projectSessionError}
           projects={projects}
           selectedBranch={selectedBranch}
           selectedProject={selectedProject}
-          workspaceSessions={workspaceSessions}
           onAddProject={onAddProject}
-          onHistoryOpenChange={onHistoryOpenChange}
-          onRetryProjectSessions={onRetryProjectSessions}
           onSelectProject={setSelectedProjectId}
-          onSelectSession={onSelectSession}
         />
       )}
     </>

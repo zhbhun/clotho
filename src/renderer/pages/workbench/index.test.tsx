@@ -229,7 +229,6 @@ function renderHeader({
               onRenameSession={vi.fn()}
               onSelectProject={vi.fn()}
               onSelectSession={vi.fn()}
-              onStartNewSession={vi.fn()}
               onTogglePinSession={vi.fn()}
             />
           </SidebarProvider>
@@ -365,19 +364,19 @@ describe('ConversationHeader', () => {
     expect(screen.queryByRole('button', { name: /切换主题/i })).not.toBeInTheDocument()
   })
 
-  it('omits the session tab row when the current workspace has no open tabs', () => {
+  it('keeps the project group and history clock mounted without open tabs', () => {
     renderHeader()
 
-    expect(document.querySelector('.session-tabs')).not.toBeInTheDocument()
+    expect(document.querySelector('.session-tabs')).toBeInTheDocument()
+    expect(document.querySelector('[data-window-project-title]')).toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: appI18n.t('workbench.session.new') }),
-    ).not.toBeInTheDocument()
-    expect(
-      screen.queryByRole('button', { name: appI18n.t('workbench.history.title') }),
-    ).not.toBeInTheDocument()
+      screen.getByRole('button', { name: appI18n.t('workbench.history.title') }),
+    ).toBeInTheDocument()
+    expect(document.querySelector('.session-tab-actions')).toBeInTheDocument()
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument()
   })
 
-  it('skips session tabs and close buttons while keeping tab actions focusable', () => {
+  it('skips session tabs and close buttons while keeping the history clock focusable', () => {
     const sessions: WorkbenchSession[] = [
       {
         id: 'session-1',
@@ -407,16 +406,12 @@ describe('ConversationHeader', () => {
     expect(closeButtons).toHaveLength(2)
     for (const tab of tabs) expect(tab).toHaveAttribute('tabindex', '-1')
     for (const button of closeButtons) expect(button).toHaveAttribute('tabindex', '-1')
-    expect(screen.getByRole('button', { name: appI18n.t('workbench.session.new') })).toHaveProperty(
-      'tabIndex',
-      0,
-    )
     expect(
       screen.getByRole('button', { name: appI18n.t('workbench.history.title') }),
     ).toHaveProperty('tabIndex', 0)
   })
 
-  it('tabs through the collapsed-sidebar toggle, project switcher, and tab actions', async () => {
+  it('tabs through the collapsed-sidebar toggle, project switcher, and history clock', async () => {
     const user = userEvent.setup()
     const session: WorkbenchSession = {
       id: 'session-1',
@@ -430,9 +425,6 @@ describe('ConversationHeader', () => {
 
     const sidebarToggle = screen.getByRole('button', { name: 'Toggle Sidebar' })
     const projectSwitcher = document.querySelector('[data-window-project-title]')
-    const newSession = screen.getByRole('button', {
-      name: appI18n.t('workbench.session.new'),
-    })
     const history = screen.getByRole('button', {
       name: appI18n.t('workbench.history.title'),
     })
@@ -441,8 +433,6 @@ describe('ConversationHeader', () => {
     expect(sidebarToggle).toHaveFocus()
     await user.tab()
     expect(projectSwitcher).toHaveFocus()
-    await user.tab()
-    expect(newSession).toHaveFocus()
     await user.tab()
     expect(history).toHaveFocus()
   })
