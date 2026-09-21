@@ -401,13 +401,13 @@ export const settingsCatalog = {
     '自动接受文件编辑，但其他高风险操作仍可能询问。',
     '自動接受檔案編輯，但其他高風險操作仍可能詢問。',
   ),
-  'permission.mode.acceptEdits.title': setting('Auto-edit', '自动编辑', '自動編輯'),
+  'permission.mode.acceptEdits.title': setting('Allow edits', '允许编辑', '允許編輯'),
   'permission.mode.auto.description': setting(
     'Let the model decide whether approval is needed.',
     '由模型决定是否需要批准。',
     '由模型決定是否需要批准。',
   ),
-  'permission.mode.auto.title': setting('Auto-approve', '自动批准', '自動核准'),
+  'permission.mode.auto.title': setting('Approve for me', '帮我批准', '幫我批准'),
   'permission.mode.bypassPermissions.description': setting(
     'Bypass permission checks and run every tool automatically.',
     '绕过权限检查，自动执行所有工具。',
@@ -419,7 +419,7 @@ export const settingsCatalog = {
     '每次需要权限的操作都要询问用户。',
     '每次需要權限的操作都要詢問使用者。',
   ),
-  'permission.mode.default.title': setting('Request approval', '请求批准', '請求批准'),
+  'permission.mode.default.title': setting('Ask for approval', '请求批准', '請求批准'),
   'permission.mode.menuLabel': setting('Permission mode', '权限模式', '權限模式'),
   'permission.mode.plan.description': setting(
     'Read-only exploration and planning.',

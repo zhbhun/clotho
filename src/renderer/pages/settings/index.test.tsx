@@ -65,7 +65,7 @@ describe('SettingsPage', () => {
     const user = userEvent.setup()
     render(<TestSettingsPage open onOpenChange={vi.fn()} />)
 
-    await user.click(screen.getByRole('radio', { name: /^自动编辑/ }))
+    await user.click(screen.getByRole('radio', { name: /^允许编辑/ }))
 
     await flushAppSettings()
     expect(savedPreferences.at(-1)).toMatchObject({ defaultPermissionMode: 'acceptEdits' })
@@ -81,7 +81,7 @@ describe('SettingsPage', () => {
     const user = userEvent.setup()
     render(<TestSettingsPage open onOpenChange={vi.fn()} />)
 
-    await user.click(screen.getByRole('radio', { name: /^自动编辑/ }))
+    await user.click(screen.getByRole('radio', { name: /^允许编辑/ }))
 
     await waitFor(() => expect(screen.getAllByRole('radio')[0]).toBeChecked())
     expect(screen.getAllByRole('radio')[1]).not.toBeChecked()
