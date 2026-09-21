@@ -36,6 +36,25 @@ export async function materializeUnsavedDraft(sessionId: string, composer: Sessi
   await workbenchSessionPersistence.create(saved, composer)
 }
 
+/**
+ * Persist an ephemeral blank draft that gained content without showing it:
+ * the input lands on disk right away so quitting the app cannot lose it,
+ * while the session keeps isUnsavedDraft — and stays out of tabs and
+ * history — until the usual materialization points (navigate away, tab
+ * close, or first send).
+ */
+export async function persistHiddenDraft(sessionId: string, composer: SessionComposer) {
+  const session = useWorkbenchStore.getState().sessions[sessionId]
+  if (!session?.isDraft || !session.isUnsavedDraft) return
+  const title = draftTitleFromPrompt(composer.prompt) || session.title
+  await claude.updateLocalDraft(sessionId, { ...draftMetadata(session), title })
+}
+
+/** A hidden draft whose content was cleared again leaves no traces behind. */
+export function discardHiddenDraft(sessionId: string, persistence = sessionPersistence) {
+  return persistence.remove(sessionId)
+}
+
 /** Catalog changes only update the index; existing input files are loaded on demand. */
 export const workbenchSessionPersistence = {
   start() {

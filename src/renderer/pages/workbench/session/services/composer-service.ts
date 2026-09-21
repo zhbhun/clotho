@@ -1,5 +1,6 @@
 import type { ClaudePermissionMode } from '../../../../services/claude/claude'
 import { getLogger } from '../../../../services/logging'
+import { discardHiddenDraft, persistHiddenDraft } from '../../services/session-records'
 import { useWorkbenchStore } from '../../stores/workbench-store'
 import type { SessionController } from '../session-controller'
 import {
@@ -17,6 +18,10 @@ export class ComposerService {
     this.controller = controller
   }
 
+  private guard(write: Promise<void>, event: string, message: string) {
+    void write.catch((error: unknown) => this.logger.error(event, message, { error }))
+  }
+
   private persist(
     patch: Omit<Partial<SessionPreferences>, 'recalledFromMessage'> & {
       recalledFromMessage?: string | null
@@ -24,11 +29,13 @@ export class ComposerService {
   ) {
     const current = this.controller.composerStore.getState()
     const context = this.controller.contextStore.getState()
-    // An ephemeral blank draft writes nothing to disk until it materializes
-    // (content + navigate away, tab close, or first send).
-    if (useWorkbenchStore.getState().sessions[context.sessionId]?.isUnsavedDraft) {
-      return Promise.resolve()
-    }
+    // An ephemeral blank draft stays out of tabs and history until it
+    // materializes (navigate away, tab close, or first send). Once it gains
+    // content it persists right away — still hidden — so quitting the app
+    // cannot lose the input; cleared content removes the traces again.
+    const isHiddenDraft = Boolean(
+      useWorkbenchStore.getState().sessions[context.sessionId]?.isUnsavedDraft,
+    )
     const preferences: SessionPreferences = {
       prompt: patch.prompt ?? current.prompt,
       selectedProviderId:
@@ -50,6 +57,21 @@ export class ComposerService {
     }
     const attachments = patch.attachments ?? current.attachments
     if (attachments.length) preferences.attachments = attachments
+    if (isHiddenDraft) {
+      if (!preferences.prompt.trim() && !preferences.attachments?.length) {
+        this.guard(
+          discardHiddenDraft(context.sessionId, this.controller.persistenceService),
+          'composer.hidden_draft_discard_failed',
+          'Failed to discard the hidden draft',
+        )
+        return Promise.resolve()
+      }
+      this.guard(
+        persistHiddenDraft(context.sessionId, preferences),
+        'composer.hidden_draft_persist_failed',
+        'Failed to persist the hidden draft',
+      )
+    }
     const write = saveSessionPreferences(
       context.sessionId,
       preferences,
@@ -58,11 +80,7 @@ export class ComposerService {
     )
     // Most callers fire and forget (one write per keystroke), so a failed
     // session-file write must never surface as an unhandled rejection.
-    void write.catch((error: unknown) =>
-      this.logger.error('composer.persist_failed', 'Failed to persist composer preferences', {
-        error,
-      }),
-    )
+    this.guard(write, 'composer.persist_failed', 'Failed to persist composer preferences')
     return write
   }
 
