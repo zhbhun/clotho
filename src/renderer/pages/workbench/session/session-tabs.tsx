@@ -99,7 +99,7 @@ export function SessionTabs({
   return (
     <Tabs
       ref={scrollerRef}
-      className="no-scrollbar min-w-0 flex-1 gap-0 overflow-x-auto overflow-y-hidden pt-1 data-[orientation=horizontal]:flex-row"
+      className="no-scrollbar min-w-0 flex-1 gap-0 overflow-x-auto overflow-y-hidden pt-1 pl-3 data-[orientation=horizontal]:flex-row"
       value={activeSessionId ?? ''}
       onValueChange={handleTabChange}
     >
