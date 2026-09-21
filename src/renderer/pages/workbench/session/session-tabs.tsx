@@ -1,6 +1,6 @@
 import { MessageCircle, Plus, X } from 'lucide-react'
-import { animate, motion, useMotionValue } from 'motion/react'
-import { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
+import { motion, useMotionValue } from 'motion/react'
+import { useCallback, useLayoutEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
@@ -56,7 +56,6 @@ export function SessionTabs({
   const { t } = useTranslation()
   const activeSurfaceX = useMotionValue(0)
   const activeSurfaceWidth = useMotionValue(0)
-  const hasPositionedActiveSurfaceRef = useRef(false)
   const scrollerRef = useRef<HTMLDivElement>(null)
   const tabListRef = useRef<HTMLDivElement>(null)
   const tabRefs = useRef(new Map<string, HTMLDivElement>())
@@ -76,42 +75,21 @@ export function SessionTabs({
   useLayoutEffect(() => {
     const activeTab = activeSessionId ? tabRefs.current.get(activeSessionId) : undefined
 
-    if (!activeTab) {
-      hasPositionedActiveSurfaceRef.current = false
-      activeSurfaceX.stop()
-      activeSurfaceWidth.stop()
-      return
-    }
+    if (!activeTab) return
 
-    const updatePosition = (shouldAnimate = true) => {
-      const offset = activeTab.offsetLeft
-      const width = activeTab.offsetWidth
-      const isInitialPosition = !hasPositionedActiveSurfaceRef.current
-
-      hasPositionedActiveSurfaceRef.current = true
-
-      if (isInitialPosition || isReducedMotion || !shouldAnimate) {
-        activeSurfaceX.stop()
-        activeSurfaceWidth.stop()
-        activeSurfaceX.set(offset)
-        activeSurfaceWidth.set(width)
-        return
-      }
-
-      animate(activeSurfaceX, offset, ACTIVE_SURFACE_SPRING)
-      animate(activeSurfaceWidth, width, ACTIVE_SURFACE_SPRING)
+    const updatePosition = () => {
+      activeSurfaceX.set(activeTab.offsetLeft)
+      activeSurfaceWidth.set(activeTab.offsetWidth)
     }
 
     const isInitialReveal = !hasRevealedInitialTabRef.current
     hasRevealedInitialTabRef.current = true
     const scroller = scrollerRef.current
-    const didReveal = scroller
-      ? revealActiveTab(scroller, activeTab, isInitialReveal || isReducedMotion ? 'auto' : 'smooth')
-      : false
+    if (scroller) {
+      revealActiveTab(scroller, activeTab, isInitialReveal || isReducedMotion ? 'auto' : 'smooth')
+    }
 
-    // When the tab is outside the viewport, the scroll itself carries the active surface
-    // into view. A second position animation would create competing motion.
-    updatePosition(!didReveal)
+    updatePosition()
 
     const observer =
       typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(() => updatePosition())
@@ -125,14 +103,6 @@ export function SessionTabs({
       observer?.disconnect()
     }
   }, [activeSessionId, activeSurfaceWidth, activeSurfaceX, sessionOrder, isReducedMotion])
-
-  useEffect(
-    () => () => {
-      activeSurfaceX.stop()
-      activeSurfaceWidth.stop()
-    },
-    [activeSurfaceWidth, activeSurfaceX],
-  )
 
   const handleTabChange = (sessionId: string) => {
     const session = sessions.find((candidate) => candidate.id === sessionId)
@@ -265,14 +235,6 @@ export function SessionTabs({
 }
 
 const REVEAL_OVERSHOOT = 100
-const ACTIVE_SURFACE_SPRING = {
-  type: 'spring' as const,
-  stiffness: 500,
-  damping: 42,
-  mass: 0.85,
-  restDelta: 0.5,
-  restSpeed: 10,
-}
 
 function revealActiveTab(scroller: HTMLElement, tab: HTMLElement, behavior: ScrollBehavior) {
   const scrollerRect = scroller.getBoundingClientRect()
