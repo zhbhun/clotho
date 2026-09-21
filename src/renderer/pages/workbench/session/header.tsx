@@ -101,7 +101,7 @@ export function ConversationHeader({
               side="bottom"
             >
               <Button
-                className="app-region-no-drag absolute top-1/2 left-1/2 max-w-[40vw] -translate-x-1/2 -translate-y-1/2"
+                className="app-region-no-drag ml-1 max-w-[60vw]"
                 data-window-project-title
                 type="button"
                 variant="ghost"
