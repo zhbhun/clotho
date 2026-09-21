@@ -12,7 +12,7 @@ export type SessionEmptyStateProps = {
   hasTabSessions: boolean
 }
 
-/** Surface shown when there is no conversation yet: brand mark and the composer. */
+/** Surface shown when there is no conversation yet: brand mark centered above the bottom-docked composer. */
 export function SessionEmptyState({
   composerProps,
   error,
@@ -23,32 +23,26 @@ export function SessionEmptyState({
   return (
     <div
       className={cn(
-        'px-6',
-        hasTabSessions
-          ? 'pointer-events-none absolute inset-x-0 top-10 bottom-0 flex items-center justify-center overflow-y-auto'
-          : 'flex flex-1 items-center justify-center',
+        'flex min-h-0 flex-col',
+        hasTabSessions ? 'pointer-events-none absolute inset-x-0 top-10 bottom-0' : 'flex-1',
       )}
     >
-      <div
-        className={cn(
-          APP_CONTENT_CONTAINER_CLASS,
-          'flex flex-col gap-32',
-          hasTabSessions && 'pointer-events-auto',
-        )}
-      >
-        <div className="flex flex-col items-center gap-6 text-center">
-          <ClothoMark className="size-16 text-foreground" />
+      <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto px-6">
+        <div
+          className={cn(
+            APP_CONTENT_CONTAINER_CLASS,
+            'flex flex-col items-center gap-6 text-center',
+          )}
+        >
+          <ClothoMark className="size-14 text-foreground-subtle" />
           <h1 className="text-3xl/9 font-normal tracking-tight text-foreground">
             {t('workbench.empty.slogan')}
           </h1>
         </div>
-        <div className="flex flex-col gap-3">
-          <PromptComposer
-            {...composerProps}
-            className="rounded-3xl"
-            shadowDirection="downward"
-            slashMenuPlacement="below"
-          />
+      </div>
+      <div className={cn('shrink-0 px-6 pb-4', hasTabSessions && 'pointer-events-auto')}>
+        <div className={cn(APP_CONTENT_CONTAINER_CLASS, 'flex flex-col gap-3')}>
+          <PromptComposer {...composerProps} slashMenuPlacement="above" />
           {error ? (
             <p className="truncate text-xs text-destructive" title={error}>
               {error}
