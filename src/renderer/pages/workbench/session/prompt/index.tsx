@@ -273,7 +273,7 @@ export function PromptComposer({
   return (
     <Card
       className={cn(
-        'group/composer w-full overflow-hidden rounded-2xl text-sm [--card-spacing:--spacing(3)]',
+        'group/composer @container w-full overflow-hidden rounded-2xl text-sm [--card-spacing:--spacing(3)]',
         appearance === 'default' && 'prompt-composer-surface ring-0',
         appearance === 'message-edit' &&
           'max-h-[450px] min-h-0 rounded-lg rounded-br-none border-border/60 bg-muted shadow-none',
@@ -363,8 +363,8 @@ export function PromptComposer({
               data-icon="inline-start"
               className={selectedPermissionOption.accentClassName}
             />
-            {t(selectedPermissionOption.labelKey)}
-            <ChevronDown data-icon="inline-end" strokeWidth={1} />
+            <span className="@max-[449px]:hidden">{t(selectedPermissionOption.labelKey)}</span>
+            <ChevronDown className="@max-[449px]:hidden" data-icon="inline-end" strokeWidth={1} />
           </MenuTrigger>
           <MenuContent
             aria-label={t('permission.mode.menuLabel')}
@@ -458,8 +458,12 @@ export function PromptComposer({
                       : undefined
                   }
                 />
-                {selectedModelDisplayName}
-                <ChevronDown data-icon="inline-end" strokeWidth={1} />
+                <span className="@max-[449px]:hidden">{selectedModelDisplayName}</span>
+                <ChevronDown
+                  className="@max-[449px]:hidden"
+                  data-icon="inline-end"
+                  strokeWidth={1}
+                />
               </MenuTrigger>
               <MenuContent
                 aria-label={t('workbench.prompt.modelSelection')}
