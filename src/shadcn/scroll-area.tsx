@@ -29,10 +29,7 @@ function ScrollArea({
       <ScrollAreaPrimitive.Viewport
         {...resolvedViewportProps}
         data-slot="scroll-area-viewport"
-        className={cn(
-          'size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1',
-          viewportClassName,
-        )}
+        className={cn('size-full rounded-[inherit] outline-none', viewportClassName)}
         ref={viewportRef}
       >
         {children}
