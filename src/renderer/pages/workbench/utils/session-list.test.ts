@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
 import type { WorkbenchProject, WorkbenchSession } from '../stores/workbench-store'
-import { type WorkbenchTranslator, buildSessionTimeline, sessionDateLabel } from './session-list'
+import {
+  type WorkbenchTranslator,
+  buildSessionTimeline,
+  pickOpenOrPinnedSessions,
+  sessionDateLabel,
+} from './session-list'
 
 const en = (key: string) =>
   ({
@@ -174,5 +179,49 @@ describe('session timeline', () => {
     expect(result.flatMap((group) => group.sessions.map((entry) => entry.session.id))).toEqual([
       'visible',
     ])
+  })
+})
+
+describe('pickOpenOrPinnedSessions', () => {
+  it('keeps sessions that are open in any workspace tab or pinned, and drops the rest', () => {
+    const result = pickOpenOrPinnedSessions({
+      openSessionIds: ['open-in-other-project', 'open-here'],
+      pinnedSessionIds: new Set(['pinned-closed']),
+      sessions: {
+        'open-here': session({ id: 'open-here' }),
+        'open-in-other-project': session({ id: 'open-in-other-project' }),
+        'pinned-closed': session({ id: 'pinned-closed' }),
+        background: session({ id: 'background' }),
+      },
+    })
+
+    expect(Object.keys(result).toSorted()).toEqual([
+      'open-here',
+      'open-in-other-project',
+      'pinned-closed',
+    ])
+  })
+
+  it('feeds a timeline where pinned sessions still lead the current tab', () => {
+    const workSessions = pickOpenOrPinnedSessions({
+      openSessionIds: ['opened'],
+      pinnedSessionIds: new Set(['pinned']),
+      sessions: {
+        opened: session({ id: 'opened', created_at: at(2026, 8, 7, 16) }),
+        pinned: session({ id: 'pinned', created_at: at(2026, 8, 7, 15) }),
+      },
+    })
+    const result = buildSessionTimeline({
+      now: new Date(2026, 7, 7, 18),
+      pinnedSessionIds: new Set(['pinned']),
+      projects: {},
+      sessionActivity: {},
+      sessions: workSessions,
+      t: zhCN as WorkbenchTranslator,
+    })
+
+    expect(result.map((group) => group.id)).toEqual(['pinned', '2026-08-07'])
+    expect(result[0]?.sessions.map((entry) => entry.session.id)).toEqual(['pinned'])
+    expect(result[1]?.sessions.map((entry) => entry.session.id)).toEqual(['opened'])
   })
 })

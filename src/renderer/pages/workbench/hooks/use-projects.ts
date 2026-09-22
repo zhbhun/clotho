@@ -13,8 +13,10 @@ import {
   useWorkbenchStore,
   workspaceKeyForProject,
 } from '../stores/workbench-store'
-import { buildSessionTimeline } from '../utils/session-list'
+import { buildSessionTimeline, pickOpenOrPinnedSessions } from '../utils/session-list'
 import { useSessionActions } from './use-session-actions'
+
+export type SessionSidebarTab = 'current' | 'history'
 
 const DEV_MOCK_PROJECT_ID = import.meta.env.DEV ? MOCK_PROJECT_ID : undefined
 const HIDDEN_SIDEBAR_PROJECT_IDS = new Set(
@@ -67,6 +69,7 @@ export function useProjects(
   const setProjectDefaultModelState = useWorkbenchStore((state) => state.setProjectDefaultModel)
 
   const [focusSessionId, setFocusSessionId] = useState<string | null>(currentSessionId)
+  const [activeTab, setActiveTab] = useState<SessionSidebarTab>('current')
   const [focusNavigationRevision, setFocusNavigationRevision] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [hasLoadedCatalog, setHasLoadedCatalog] = useState(false)
@@ -101,9 +104,42 @@ export function useProjects(
       t,
     ],
   )
+  // The "current" tab shows sessions open in any workspace tab plus the pinned ones,
+  // grouped by the same date timeline as the "history" tab.
+  const workSessions = useMemo(
+    () =>
+      pickOpenOrPinnedSessions({
+        openSessionIds: Object.values(tabsByWorkspace).flat(),
+        pinnedSessionIds: pinnedSessionIdSet,
+        sessions: sessionMap,
+      }),
+    [pinnedSessionIdSet, sessionMap, tabsByWorkspace],
+  )
+  const workTimeline = useMemo(
+    () =>
+      buildSessionTimeline({
+        hiddenProjectIds: HIDDEN_SIDEBAR_PROJECT_IDS,
+        locale: i18n.resolvedLanguage ?? i18n.language,
+        pinnedSessionIds: pinnedSessionIdSet,
+        projects: projectMap,
+        sessionActivity,
+        sessions: workSessions,
+        t,
+      }),
+    [
+      i18n.language,
+      i18n.resolvedLanguage,
+      pinnedSessionIdSet,
+      projectMap,
+      sessionActivity,
+      workSessions,
+      t,
+    ],
+  )
+  const activeTimeline = activeTab === 'current' ? workTimeline : sessionTimeline
   const sessionList = useMemo(
-    () => sessionTimeline.flatMap((group) => group.sessions),
-    [sessionTimeline],
+    () => activeTimeline.flatMap((group) => group.sessions),
+    [activeTimeline],
   )
   const requestedFocusIndex = focusSessionId
     ? sessionList.findIndex((item) => item.session.id === focusSessionId)
@@ -351,6 +387,9 @@ export function useProjects(
   }, [currentSessionId])
 
   return {
+    activeTab,
+    setActiveTab,
+    activeTimeline,
     bindClaudeSession,
     closeSession,
     deleteSession,

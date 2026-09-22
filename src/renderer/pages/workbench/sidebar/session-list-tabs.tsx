@@ -4,31 +4,67 @@ import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip'
+import { cn } from '@/shadcn/utils'
+
+import type { SessionSidebarTab } from '../hooks/use-projects'
+
+const TABS: {
+  labelKey: 'workbench.nav.tabCurrent' | 'workbench.nav.tabHistory'
+  value: SessionSidebarTab
+}[] = [
+  { labelKey: 'workbench.nav.tabCurrent', value: 'current' },
+  { labelKey: 'workbench.nav.tabHistory', value: 'history' },
+]
 
 /*
- * Sticky overlay pinned over the scroll viewport's top-right, on the same 32px row as the
- * pinned group headers. Sized to its content (w-max) so the group label it floats beside
- * stays visible; the opaque bg-sidebar keeps session rows readable while they pass under.
- * Z-index lives in session-sidebar.css with the other sticky layering rules.
+ * Fixed bar between the new-chat button and the session list: the current/history
+ * switch on the left, locate and back-to-top on the right. It never scrolls with
+ * the list — the group labels inside the list are plain rows since this replaced
+ * the sticky overlay. A plain segmented button rather than the Tabs component: it
+ * swaps list views, so keeping it out of the page's tab semantics matters more
+ * than the widget role.
  */
-export function SessionListActions({
+export function SessionListTabs({
+  activeTab,
   canLocateCurrent,
   onLocateCurrent,
   onScrollToTop,
+  onTabChange,
   onTabIntoSessions,
 }: {
+  activeTab: SessionSidebarTab
   canLocateCurrent: boolean
   onLocateCurrent: () => void
   onScrollToTop: () => void
+  onTabChange: (tab: SessionSidebarTab) => void
   onTabIntoSessions: (event: KeyboardEvent<HTMLButtonElement>) => void
 }) {
   const { t } = useTranslation()
 
   return (
-    <div
-      className="sticky top-0 ml-auto flex h-8 w-max items-center gap-0.5 bg-sidebar pr-3 pl-1"
-      data-session-list-actions
-    >
+    <div className="flex h-8 items-center gap-0.5 px-2" data-session-list-tabs>
+      {/* The tray stays a whisper above the sidebar surface (zcode-style): a faint
+          tint, with the selected pill just one step lighter — a filled tray or a
+          high-contrast pill both read as a heavy chip. Dark mode needs a faint
+          outline or the background pill vanishes against the sidebar. */}
+      <div className="me-auto flex items-center gap-0 rounded-full bg-sidebar-foreground/5 p-0.5">
+        {TABS.map((tab) => (
+          <button
+            className={cn(
+              'h-6 rounded-full px-2 text-xs whitespace-nowrap transition-colors outline-none',
+              tab.value === activeTab
+                ? 'bg-background/50 text-foreground dark:border dark:border-input dark:bg-input/30'
+                : 'text-foreground-subtlest hover:text-foreground',
+            )}
+            data-session-tab={tab.value}
+            key={tab.value}
+            type="button"
+            onClick={() => onTabChange(tab.value)}
+          >
+            {t(tab.labelKey)}
+          </button>
+        ))}
+      </div>
       <ActionButton
         dataSidebar="locate-current-session"
         disabled={!canLocateCurrent}

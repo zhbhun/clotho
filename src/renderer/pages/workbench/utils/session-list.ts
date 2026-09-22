@@ -101,6 +101,25 @@ function sessionDateId(seconds: number) {
   return `${date.getFullYear()}-${month}-${day}`
 }
 
+/**
+ * Session subset shown by the sidebar's "current" tab: every session open in a
+ * workspace tab plus the pinned ones (which stay reachable even when closed).
+ */
+export function pickOpenOrPinnedSessions({
+  openSessionIds,
+  pinnedSessionIds,
+  sessions,
+}: {
+  openSessionIds: Iterable<string>
+  pinnedSessionIds: ReadonlySet<string>
+  sessions: Record<string, WorkbenchSession>
+}): Record<string, WorkbenchSession> {
+  const openIds = openSessionIds instanceof Set ? openSessionIds : new Set(openSessionIds)
+  return Object.fromEntries(
+    Object.entries(sessions).filter(([id]) => openIds.has(id) || pinnedSessionIds.has(id)),
+  )
+}
+
 export function buildSessionTimeline({
   hiddenProjectIds,
   now = new Date(),

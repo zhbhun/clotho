@@ -1,20 +1,11 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
-import {
-  type KeyboardEvent,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 import { SidebarGroup, SidebarGroupLabel, SidebarMenu } from '@/shadcn/sidebar'
 
 import type { WorkbenchSession } from '../stores/workbench-store'
 import type { SessionTimelineGroup } from '../utils/session-list'
 import { SessionItem } from './session-item'
-import { SessionListActions } from './session-list-actions'
 import {
   GROUP_GAP,
   GROUP_HEIGHT,
@@ -45,34 +36,33 @@ function GroupLabel({ label }: { label: string }) {
 }
 
 /*
- * Each header spans its whole group and sticks within that span: the browser pins it to
- * the viewport top while its group is in view and slides it up and out as the group's
- * end (and with it the next header) arrives — frame-accurate without React re-renders.
- * Headers stay mounted outside the virtual window (one small node per date group) so a
- * pinned header never disappears mid-scroll. Positioned with `top`, not `translateY`:
- * WebKit computes sticky offsets ignoring ancestor transforms, which would pin every
- * header at the viewport top.
+ * Group labels are plain virtualized rows: they scroll away with their group (no
+ * sticky pinning — the fixed tabs bar above the list owns the top edge). Positioned
+ * with `transform`, like the session rows.
  */
-function renderGroupHeader(row: VirtualGroupRow) {
+function renderGroupRow(row: VirtualGroupRow, virtualRow: { size: number; start: number }) {
   return (
     <div
-      className="absolute left-0 w-full"
+      className="absolute left-0 top-0 w-full"
       key={row.key}
-      style={{ height: row.end - row.start, top: row.start }}
+      style={{
+        height: virtualRow.size,
+        transform: `translateY(${virtualRow.start}px)`,
+      }}
     >
       {row.hasTopGap ? <div style={{ height: GROUP_GAP }} /> : null}
-      <div className="sticky top-0 z-10" data-sticky-group>
-        <SidebarGroup className="bg-sidebar px-2 py-0">
-          <GroupLabel label={row.label} />
-        </SidebarGroup>
-      </div>
+      <SidebarGroup className="px-2 py-0">
+        <GroupLabel label={row.label} />
+      </SidebarGroup>
     </div>
   )
 }
 
 export function VirtualSessionList({
+  enterListRevision,
   focusNavigationRevision,
   focusedSessionId,
+  locateRequestRevision,
   selectedSessionId,
   sessionTimeline,
   viewport,
@@ -81,8 +71,10 @@ export function VirtualSessionList({
   onSelectSession,
   onTogglePinSession,
 }: {
+  enterListRevision: number
   focusNavigationRevision: number
   focusedSessionId: string | null
+  locateRequestRevision: number
   selectedSessionId: string | null
   sessionTimeline: SessionTimelineGroup[]
   viewport: HTMLDivElement | null
@@ -91,12 +83,11 @@ export function VirtualSessionList({
   onSelectSession: (session: WorkbenchSession) => void
   onTogglePinSession: (session: WorkbenchSession) => void
 }) {
-  const [enterListRevision, setEnterListRevision] = useState(0)
-  // Arrow-key navigation (parent revision) and Tabbing into the list from the actions bar
+  // Arrow-key navigation (parent revision) and Tabbing into the list from the tabs bar
   // (local revision) share one scroll-and-focus effect.
   const listFocusRevision = focusNavigationRevision + enterListRevision
   const lastFocusNavigationRevisionRef = useRef(listFocusRevision)
-  const { groupRows, rows, sessionIndexes } = useMemo(
+  const { rows, sessionIndexes } = useMemo(
     () => createVirtualRows(sessionTimeline),
     [sessionTimeline],
   )
@@ -158,20 +149,14 @@ export function VirtualSessionList({
     }
   }, [viewport])
 
-  const handleTabIntoSessions = (event: KeyboardEvent<HTMLButtonElement>) => {
-    if (event.key !== 'Tab' || event.shiftKey || focusedIndex === undefined) return
-    event.preventDefault()
-    setEnterListRevision((revision) => revision + 1)
-  }
-
-  const locateCurrentSession = () => {
+  // Locate lives in the fixed tabs bar; its click reaches the virtualizer as a revision.
+  const lastLocateRequestRevisionRef = useRef(locateRequestRevision)
+  useLayoutEffect(() => {
+    if (lastLocateRequestRevisionRef.current === locateRequestRevision) return
+    lastLocateRequestRevisionRef.current = locateRequestRevision
     if (selectedRowIndex === undefined) return
     virtualizer.scrollToIndex(selectedRowIndex, { align: 'center', behavior: 'smooth' })
-  }
-
-  const scrollToTop = () => {
-    viewport?.scrollTo({ top: 0, behavior: 'smooth' })
-  }
+  }, [locateRequestRevision, selectedRowIndex, virtualizer])
 
   useLayoutEffect(() => {
     if (!viewport) return
@@ -188,16 +173,10 @@ export function VirtualSessionList({
       data-session-list-scrolling={scrollHover.isScrolling ? 'true' : undefined}
       style={{ height: virtualizer.getTotalSize() }}
     >
-      <SessionListActions
-        canLocateCurrent={selectedRowIndex !== undefined}
-        onLocateCurrent={locateCurrentSession}
-        onScrollToTop={scrollToTop}
-        onTabIntoSessions={handleTabIntoSessions}
-      />
-      {groupRows.map(renderGroupHeader)}
       {virtualizer.getVirtualItems().map((virtualRow) => {
         const row = rows[virtualRow.index]
-        if (!row || row.type === 'group') return null
+        if (!row) return null
+        if (row.type === 'group') return renderGroupRow(row, virtualRow)
 
         return (
           <div

@@ -195,10 +195,12 @@ function WorkbenchContent() {
             onSelectSession={handleSelectSession}
           />
           <SessionSidebar
+            activeTab={workbench.activeTab}
             focusNavigationRevision={workbench.focusNavigationRevision}
             focusedSessionId={workbench.focusedSessionId}
+            onTabChange={workbench.setActiveTab}
             selectedSession={workbench.selectedSession}
-            sessionTimeline={workbench.sessionTimeline}
+            sessionTimeline={workbench.activeTimeline}
             onDeleteSession={handleDeleteSession}
             onListKeyDown={workbench.handleListKeyDown}
             onOpenSettings={handleOpenSettings}

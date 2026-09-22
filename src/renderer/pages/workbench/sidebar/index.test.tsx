@@ -64,11 +64,13 @@ afterEach(() => {
 })
 
 function renderSidebar({
+  activeTab = 'current',
   defaultOpen = true,
   focusedSessionId = session.id,
   selectedSession = null,
   sessions = [session],
 }: {
+  activeTab?: 'current' | 'history'
   defaultOpen?: boolean
   focusedSessionId?: string | null
   selectedSession?: WorkbenchSession | null
@@ -94,6 +96,7 @@ function renderSidebar({
   const onRenameSession = vi.fn()
   const onSelectSession = vi.fn()
   const onStartNewSession = vi.fn()
+  const onTabChange = vi.fn()
   const onTogglePinSession = vi.fn()
   const sessionTimeline = buildSessionTimeline({
     locale: appI18n.resolvedLanguage ?? appI18n.language,
@@ -110,8 +113,10 @@ function renderSidebar({
       <TooltipProvider delay={0}>
         <SidebarProvider defaultOpen={defaultOpen}>
           <SessionSidebar
+            activeTab={activeTab}
             focusNavigationRevision={0}
             focusedSessionId={focusedSessionId}
+            onTabChange={onTabChange}
             selectedSession={selectedSession}
             sessionTimeline={sessionTimeline}
             onDeleteSession={onDeleteSession}
@@ -127,7 +132,7 @@ function renderSidebar({
     </ShortcutRuntimeProvider>,
   )
 
-  return { onSelectSession, onTogglePinSession }
+  return { onTabChange, onSelectSession, onTogglePinSession }
 }
 
 describe('SessionSidebar', () => {
@@ -143,11 +148,27 @@ describe('SessionSidebar', () => {
     expect(tooltip).toHaveTextContent('⌘B')
   })
 
-  it('shows the empty conversation state when there are no sessions', async () => {
-    await appI18n.changeLanguage('zh-CN')
-    renderSidebar({ sessions: [] })
+  it('shows the empty conversation state on the history tab when there are no sessions', () => {
+    renderSidebar({ activeTab: 'history', sessions: [] })
 
     expect(screen.getByText('暂无对话')).toBeInTheDocument()
+  })
+
+  it('shows the no-open-sessions state on the current tab when nothing is open', () => {
+    renderSidebar({ sessions: [] })
+
+    expect(screen.getByText('暂无打开的对话')).toBeInTheDocument()
+  })
+
+  it('reports tab switches from the tabs bar', async () => {
+    const user = userEvent.setup()
+    const { onTabChange } = renderSidebar()
+    const historyTab = document.querySelector<HTMLButtonElement>('[data-session-tab="history"]')
+    if (!historyTab) throw new Error('history tab not found')
+
+    await user.click(historyTab)
+
+    expect(onTabChange).toHaveBeenCalledWith('history')
   })
 
   it('tabs between the sidebar controls in both directions', async () => {
@@ -157,6 +178,8 @@ describe('SessionSidebar', () => {
       '.sidebar-session-scroll [data-slot="scroll-area-viewport"]',
     )
     const newConversation = screen.getByText(appI18n.t('workbench.session.new')).closest('button')
+    const currentTab = document.querySelector<HTMLButtonElement>('[data-session-tab="current"]')
+    const historyTab = document.querySelector<HTMLButtonElement>('[data-session-tab="history"]')
     const locateAction = document.querySelector<HTMLButtonElement>(
       '[data-sidebar="locate-current-session"]',
     )
@@ -169,7 +192,7 @@ describe('SessionSidebar', () => {
     const settings = screen.getByText(appI18n.t('workbench.nav.settings')).closest('button')
     const resizeHandle = screen.getByRole('separator')
     const expandedSidebarToggle = screen.getByRole('button', { name: 'Toggle Sidebar' })
-    if (!newConversation || !locateAction || !scrollTopAction) {
+    if (!newConversation || !currentTab || !historyTab || !locateAction || !scrollTopAction) {
       throw new Error('sidebar controls not found')
     }
 
@@ -183,6 +206,10 @@ describe('SessionSidebar', () => {
     expect(expandedSidebarToggle).toHaveFocus()
     await user.tab()
     expect(newConversation).toHaveFocus()
+    await user.tab()
+    expect(currentTab).toHaveFocus()
+    await user.tab()
+    expect(historyTab).toHaveFocus()
     await user.tab()
     expect(locateAction).toHaveFocus()
     await user.tab()
@@ -203,15 +230,21 @@ describe('SessionSidebar', () => {
     await user.tab({ shift: true })
     expect(locateAction).toHaveFocus()
     await user.tab({ shift: true })
+    expect(historyTab).toHaveFocus()
+    await user.tab({ shift: true })
+    expect(currentTab).toHaveFocus()
+    await user.tab({ shift: true })
     expect(newConversation).toHaveFocus()
     await user.tab({ shift: true })
     expect(expandedSidebarToggle).toHaveFocus()
   })
 
-  it('moves focus from a session back through the list actions on Shift+Tab', async () => {
+  it('moves focus from a session back through the tabs bar on Shift+Tab', async () => {
     const user = userEvent.setup()
     renderSidebar({ selectedSession: session })
     const newConversation = screen.getByText(appI18n.t('workbench.session.new')).closest('button')
+    const currentTab = document.querySelector<HTMLButtonElement>('[data-session-tab="current"]')
+    const historyTab = document.querySelector<HTMLButtonElement>('[data-session-tab="history"]')
     const locateAction = document.querySelector<HTMLButtonElement>(
       '[data-sidebar="locate-current-session"]',
     )
@@ -221,15 +254,20 @@ describe('SessionSidebar', () => {
     const sessionButton = document.querySelector<HTMLButtonElement>(
       `[data-session-item="${session.id}"] [data-sidebar="menu-button"]`,
     )
-    if (!newConversation || !locateAction || !scrollTopAction || !sessionButton) {
+    if (!newConversation || !currentTab || !historyTab || !locateAction || !scrollTopAction) {
       throw new Error('sidebar controls not found')
     }
+    if (!sessionButton) throw new Error('session button not found')
 
     sessionButton.focus()
     await user.tab({ shift: true })
     expect(scrollTopAction).toHaveFocus()
     await user.tab({ shift: true })
     expect(locateAction).toHaveFocus()
+    await user.tab({ shift: true })
+    expect(historyTab).toHaveFocus()
+    await user.tab({ shift: true })
+    expect(currentTab).toHaveFocus()
     await user.tab({ shift: true })
     expect(newConversation).toHaveFocus()
   })
@@ -265,8 +303,10 @@ describe('SessionSidebar', () => {
     expect(screen.queryByText(currentSession.title)).not.toBeInTheDocument()
     vi.mocked(viewport.scrollTo).mockClear()
     newConversation.focus()
-    // New Conversation → locate → scroll-to-top; the last Tab is intercepted to scroll
-    // the list and focus the roving session outside the virtual window.
+    // New Conversation → both tab pills → locate → scroll-to-top; the last Tab is
+    // intercepted to scroll the list and focus the roving session outside the window.
+    await user.keyboard('{Tab}')
+    await user.keyboard('{Tab}')
     await user.keyboard('{Tab}')
     await user.keyboard('{Tab}')
     await user.keyboard('{Tab}')
@@ -356,7 +396,7 @@ describe('SessionSidebar', () => {
     expect(viewport.scrollTop).toBe(0)
   })
 
-  it('keeps group headers mounted beyond the virtual window while scrolling', async () => {
+  it('scrolls group headers away with their groups instead of pinning them', async () => {
     const sessions = Array.from({ length: 30 }, (_, index) => ({
       ...session,
       id: `session-${index}`,
@@ -371,19 +411,17 @@ describe('SessionSidebar', () => {
     if (!viewport) throw new Error('scroll viewport not found')
 
     expect(screen.getByText('今天')).toBeInTheDocument()
-    expect(screen.getByText('8月2日')).toBeInTheDocument()
 
-    // Past today's 15 sessions (32 + 15 * 50 = 782) deep into the August 2 group;
-    // both headers must stay rendered for the CSS sticky pinning to survive.
+    // Past today's 15 sessions (32 + 15 * 50 = 782); without sticky pinning the
+    // Today header unmounts once it leaves the virtual window.
     viewport.scrollTop = 900
     viewport.dispatchEvent(new Event('scroll'))
 
     await waitFor(() => {
       expect(screen.queryByText('Session 3')).not.toBeInTheDocument()
     })
-    expect(screen.getByText('今天')).toBeInTheDocument()
+    expect(screen.queryByText('今天')).not.toBeInTheDocument()
     expect(screen.getByText('8月2日')).toBeInTheDocument()
-    expect(screen.queryAllByText('8月2日')).toHaveLength(1)
   })
 
   it('freezes hover tracking while the list scrolls and resumes after it settles', () => {

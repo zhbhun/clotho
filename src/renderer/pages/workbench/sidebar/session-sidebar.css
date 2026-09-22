@@ -51,15 +51,9 @@
   --transient-scrollbar-thumb: color-mix(in oklab, var(--sidebar-foreground) 27%, transparent);
 }
 
-/* Sticky group headers (z-index 10) must not cover the transient scrollbar. */
+/* Absolutely-positioned virtual rows must not cover the transient scrollbar. */
 .sidebar-session-scroll [data-slot='scroll-area-scrollbar'] {
   z-index: 20;
-}
-
-/* Sticky list actions float above the pinned group headers (z-index 10) but under the
-   transient scrollbar (20). */
-.sidebar-session-scroll [data-session-list-actions] {
-  z-index: 15;
 }
 
 /* Rows slide under a stationary pointer while the list scrolls, so :hover would

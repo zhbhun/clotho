@@ -171,6 +171,19 @@ async function openNewChat() {
   await waitFor(() => expect(useWorkbenchStore.getState().currentSessionId).not.toBeNull())
 }
 
+/**
+ * The sidebar opens on the Current tab (sessions open in a workspace tab plus pinned
+ * ones); tests that browse the full dated timeline switch to the History tab first.
+ */
+async function showSidebarHistory() {
+  const historyTab = await waitFor(() => {
+    const tab = document.querySelector<HTMLButtonElement>('[data-session-tab="history"]')
+    if (!tab) throw new Error('sidebar history tab not mounted yet')
+    return tab
+  })
+  fireEvent.click(historyTab)
+}
+
 async function startAnotherChat() {
   const actions = await screen.findAllByRole('button', {
     name: new RegExp(`^${appI18n.t('workbench.session.new')}$`, 'i'),
@@ -847,7 +860,16 @@ describe('workbench catalog loading states', () => {
     const user = userEvent.setup()
     renderWorkbenchPage()
 
-    await user.click(await screen.findByRole('button', { name: 'History' }))
+    // The header's history-clock button lives in .session-tab-actions; the sidebar's
+    // History tab pill shares the accessible name.
+    const historyButton = await waitFor(() => {
+      const button = document.querySelector<HTMLButtonElement>(
+        '.session-tab-actions [aria-label="History"]',
+      )
+      if (!button) throw new Error('history button not mounted yet')
+      return button
+    })
+    await user.click(historyButton)
     expect(
       await screen.findByText("Unable to load this project's chat history. Try again."),
     ).toBeInTheDocument()
@@ -2049,6 +2071,7 @@ describe('prompt composer surface', () => {
     })
 
     renderWorkbenchPage()
+    showSidebarHistory()
 
     fireEvent.click(await screen.findByText('Existing work'))
     await screen.findByText('Already talking')
@@ -2238,6 +2261,7 @@ describe('prompt composer surface', () => {
     })
 
     renderWorkbenchPage()
+    showSidebarHistory()
 
     fireEvent.click(await screen.findByText('Context visibility'))
     await screen.findByText('Conversation is running')
@@ -2289,6 +2313,7 @@ describe('prompt composer surface', () => {
     })
 
     renderWorkbenchPage()
+    showSidebarHistory()
 
     fireEvent.click(await screen.findByText('Scrollable conversation'))
     const message = await screen.findByText('Conversation scroll content')
@@ -2349,6 +2374,7 @@ describe('session list item', () => {
     })
 
     renderWorkbenchPage()
+    showSidebarHistory()
 
     const newerSession = (await screen.findAllByText('Newer session'))
       .find((element) => element.closest('[data-session-item]'))
@@ -2436,6 +2462,8 @@ describe('session list item', () => {
         <TooltipProvider>
           <SidebarProvider>
             <SessionSidebar
+              activeTab="current"
+              onTabChange={vi.fn()}
               focusedSessionId={session.id}
               selectedSession={null}
               sessionTimeline={buildSessionTimeline({
@@ -2480,6 +2508,8 @@ describe('session list item', () => {
         <TooltipProvider>
           <SidebarProvider>
             <SessionSidebar
+              activeTab="current"
+              onTabChange={vi.fn()}
               focusedSessionId={session.id}
               selectedSession={session}
               sessionTimeline={buildSessionTimeline({
@@ -2514,6 +2544,8 @@ describe('session list item', () => {
         <TooltipProvider>
           <SidebarProvider>
             <SessionSidebar
+              activeTab="current"
+              onTabChange={vi.fn()}
               focusedSessionId={null}
               selectedSession={null}
               sessionTimeline={buildSessionTimeline({
@@ -2584,6 +2616,7 @@ describe('session list item', () => {
     })
 
     renderWorkbenchPage()
+    showSidebarHistory()
 
     await screen.findByText('Pinned layout work')
 
@@ -2764,10 +2797,12 @@ describe('sidebar initial reveal', () => {
     const workbench = useProjects()
     return (
       <SessionSidebar
+        activeTab={workbench.activeTab}
         focusNavigationRevision={workbench.focusNavigationRevision}
         focusedSessionId={workbench.focusedSessionId}
+        onTabChange={workbench.setActiveTab}
         selectedSession={workbench.selectedSession}
-        sessionTimeline={workbench.sessionTimeline}
+        sessionTimeline={workbench.activeTimeline}
         onDeleteSession={() => {}}
         onListKeyDown={workbench.handleListKeyDown}
         onOpenSettings={() => {}}
@@ -2867,6 +2902,7 @@ describe('sidebar initial reveal', () => {
     mockCatalogRpc()
 
     renderSidebarHarness()
+    showSidebarHistory()
 
     await screen.findAllByText('Selected session')
     const viewport = document.querySelector<HTMLElement>(
@@ -3287,6 +3323,7 @@ describe('Claude runtime claudeStartup', () => {
     })
 
     renderWorkbenchPage()
+    showSidebarHistory()
 
     fireEvent.click(await screen.findByText('Second session'))
 
