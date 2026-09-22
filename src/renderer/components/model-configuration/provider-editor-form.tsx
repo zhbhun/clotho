@@ -1,18 +1,17 @@
-import { Library, Plus, Trash2 } from 'lucide-react'
+import { Eye, EyeOff, Library, Plus, Trash2 } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSet,
-} from '@/shadcn/field'
+import { Field, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/shadcn/field'
 import { Input } from '@/shadcn/input'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from '@/shadcn/input-group'
 import {
   Select,
   SelectContent,
@@ -35,12 +34,10 @@ import { type ProviderPreset, providerPresets } from './provider-presets'
 function ProviderField({
   id,
   label,
-  hint,
   children,
 }: {
   id: string
   label: string
-  hint?: string
   children: ReactNode
 }) {
   return (
@@ -49,8 +46,46 @@ function ProviderField({
         {label}
       </FieldLabel>
       {children}
-      {hint ? <FieldDescription className="text-foreground-subtle">{hint}</FieldDescription> : null}
     </Field>
+  )
+}
+
+/** Secret input with an eye toggle to reveal the plain text. */
+function SecretInput({
+  id,
+  value,
+  onChange,
+}: {
+  id: string
+  value: string
+  onChange: (value: string) => void
+}) {
+  const { t } = useTranslation()
+  const [isVisible, setIsVisible] = useState(false)
+  const EyeIcon = isVisible ? EyeOff : Eye
+
+  return (
+    <InputGroup>
+      <InputGroupInput
+        id={id}
+        type={isVisible ? 'text' : 'password'}
+        value={value}
+        placeholder="sk-***"
+        onChange={(event) => onChange(event.target.value)}
+      />
+      <InputGroupAddon align="inline-end">
+        <InputGroupButton
+          aria-label={
+            isVisible
+              ? t('settings.provider.credentialHide')
+              : t('settings.provider.credentialShow')
+          }
+          onClick={() => setIsVisible((next) => !next)}
+        >
+          <EyeIcon />
+        </InputGroupButton>
+      </InputGroupAddon>
+    </InputGroup>
   )
 }
 
@@ -186,21 +221,15 @@ export function ProviderEditorForm({
             onChange={(event) => onChange({ name: event.target.value })}
           />
         </ProviderField>
-        <div className="md:col-span-2">
-          <ProviderField id={`provider-${suffix}-base`} label={t('settings.provider.baseUrl')}>
-            <Input
-              id={`provider-${suffix}-base`}
-              value={provider.baseURL}
-              placeholder="https://api.deepseek.com/anthropic"
-              onChange={(event) => onChange({ baseURL: event.target.value })}
-            />
-          </ProviderField>
-        </div>
-        <ProviderField
-          id={`provider-${suffix}-api-type`}
-          hint={apiType === 'chat-completions' ? t('settings.provider.apiTypeHint') : undefined}
-          label={t('settings.provider.apiType')}
-        >
+        <ProviderField id={`provider-${suffix}-base`} label={t('settings.provider.baseUrl')}>
+          <Input
+            id={`provider-${suffix}-base`}
+            value={provider.baseURL}
+            placeholder="https://api.deepseek.com/anthropic"
+            onChange={(event) => onChange({ baseURL: event.target.value })}
+          />
+        </ProviderField>
+        <ProviderField id={`provider-${suffix}-api-type`} label={t('settings.provider.apiType')}>
           <Select
             items={API_TYPE_ITEMS.map((item) => ({ ...item, label: t(item.labelKey) }))}
             value={apiType}
@@ -220,15 +249,15 @@ export function ProviderEditorForm({
             </SelectContent>
           </Select>
         </ProviderField>
-        <ProviderField id={`provider-${suffix}-token`} label={t('settings.provider.credential')}>
-          <Input
-            id={`provider-${suffix}-token`}
-            type="password"
-            value={provider.authToken}
-            placeholder="sk-***"
-            onChange={(event) => onChange({ authToken: event.target.value })}
-          />
-        </ProviderField>
+        <div className="md:col-span-2">
+          <ProviderField id={`provider-${suffix}-token`} label={t('settings.provider.credential')}>
+            <SecretInput
+              id={`provider-${suffix}-token`}
+              value={provider.authToken}
+              onChange={(authToken) => onChange({ authToken })}
+            />
+          </ProviderField>
+        </div>
       </FieldGroup>
 
       <Separator />

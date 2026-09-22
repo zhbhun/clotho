@@ -141,13 +141,10 @@ export const settingsCatalog = {
     'Chat Completions (/chat/completions)',
     'Chat Completions (/chat/completions)',
   ),
-  'settings.provider.apiTypeHint': setting(
-    'The base URL follows the OpenAI convention and includes /v1, e.g. https://api.example.com/v1',
-    'Base URL 按 OpenAI 惯例包含 /v1,例如 https://api.example.com/v1',
-    'Base URL 按 OpenAI 慣例包含 /v1,例如 https://api.example.com/v1',
-  ),
   'settings.provider.baseUrl': setting('Base URL', 'Base URL', 'Base URL'),
   'settings.provider.credential': setting('API Key', 'API Key', 'API Key'),
+  'settings.provider.credentialHide': setting('Hide API Key', '隐藏 API Key', '隱藏 API Key'),
+  'settings.provider.credentialShow': setting('Show API Key', '显示 API Key', '顯示 API Key'),
   'settings.provider.deleteModel': setting(
     'Delete model {{number}}',
     '删除模型 {{number}}',
