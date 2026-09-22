@@ -34,7 +34,7 @@ export function SessionEmptyState({
             'flex flex-col items-center gap-6 text-center',
           )}
         >
-          <ClothoMark className="size-14 text-foreground-subtle" />
+          <ClothoMark className="size-20 text-foreground/30" />
           <h1 className="text-3xl/9 font-normal tracking-tight text-foreground">
             {t('workbench.empty.slogan')}
           </h1>
