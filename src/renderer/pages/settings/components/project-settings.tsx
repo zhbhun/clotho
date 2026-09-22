@@ -49,11 +49,11 @@ function ProjectRows({
             <CardHeader className="flex min-h-16 flex-row items-center gap-3 px-3 py-2">
               <ProjectIcon plain icon={project.icon} />
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <CardTitle className="shrink-0 truncate text-sm leading-normal font-medium">
+                <CardTitle className="shrink-0 truncate leading-normal font-normal">
                   {name}
                 </CardTitle>
                 <CardDescription className="min-w-0">
-                  <ProjectPath className="text-xs text-foreground-subtlest" path={project.path} />
+                  <ProjectPath path={project.path} />
                 </CardDescription>
               </div>
               <div className="flex shrink-0 items-center gap-1">
@@ -231,9 +231,7 @@ export function ProjectSettings({
             </AlertDialogDescription>
           </AlertDialogHeader>
           {removeTarget ? (
-            <p className="break-all font-mono text-xs text-foreground-subtlest">
-              {removeTarget.path}
-            </p>
+            <p className="break-all font-mono text-xs text-muted-foreground">{removeTarget.path}</p>
           ) : null}
           <p className="text-xs text-foreground-subtle">{t('settings.project.confirmNote')}</p>
           <AlertDialogFooter>

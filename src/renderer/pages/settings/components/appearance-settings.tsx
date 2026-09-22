@@ -45,11 +45,11 @@ function PreferenceRow({
     <Field className="min-h-20 px-5 py-4" orientation="horizontal">
       <FieldContent>
         {controlId ? (
-          <FieldLabel className="text-sm" htmlFor={controlId}>
+          <FieldLabel className="font-normal" htmlFor={controlId}>
             {title}
           </FieldLabel>
         ) : (
-          <FieldTitle className="text-sm">{title}</FieldTitle>
+          <FieldTitle className="font-normal">{title}</FieldTitle>
         )}
         <FieldDescription>{description}</FieldDescription>
       </FieldContent>

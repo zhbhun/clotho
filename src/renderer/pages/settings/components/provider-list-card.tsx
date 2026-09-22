@@ -38,7 +38,7 @@ export function ProviderListCard({
     >
       <CardHeader className="py-4">
         <div className="flex min-w-0 items-center gap-2">
-          <CardTitle className="truncate font-medium text-foreground">{name}</CardTitle>
+          <CardTitle className="truncate font-normal">{name}</CardTitle>
           <Badge className="shrink-0 font-normal text-foreground-subtle" variant="secondary">
             {provider.models.length} {t('settings.provider.models')}
           </Badge>
@@ -48,9 +48,7 @@ export function ProviderListCard({
             onRefresh={onRefreshUsage}
           />
         </div>
-        <CardDescription className="truncate text-foreground-subtlest">
-          {provider.baseURL || '—'}
-        </CardDescription>
+        <CardDescription className="truncate">{provider.baseURL || '—'}</CardDescription>
         <CardAction
           className="pointer-events-none flex self-center items-center gap-1 opacity-0 transition-opacity group-hover/provider-card:pointer-events-auto group-hover/provider-card:opacity-100 group-focus-within/provider-card:pointer-events-auto group-focus-within/provider-card:opacity-100"
           style={{ transition: 'none' }}

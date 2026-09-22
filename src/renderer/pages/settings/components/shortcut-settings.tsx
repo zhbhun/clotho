@@ -261,7 +261,7 @@ export function ShortcutSettings({ isActive = true }: { isActive?: boolean } = {
                   <TableRow key={commandId}>
                     <TableCell className="w-1/2 whitespace-normal">
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-sm">{definition.title}</span>
+                        <span>{definition.title}</span>
                         {definition.description ? (
                           <span className="text-xs text-muted-foreground">
                             {definition.description}

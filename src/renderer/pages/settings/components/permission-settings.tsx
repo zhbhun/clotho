@@ -62,7 +62,7 @@ function PermissionOption({
         <Icon className="size-4" strokeWidth={1.8} />
       </span>
       <FieldContent className="min-w-0 gap-0.5">
-        <FieldTitle className="text-sm">{label}</FieldTitle>
+        <FieldTitle className="font-normal">{label}</FieldTitle>
         {description ? (
           <FieldDescription className="line-clamp-2">{description}</FieldDescription>
         ) : null}

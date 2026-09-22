@@ -155,7 +155,9 @@ function ColorControl({
 
   return (
     <Field className="min-h-16 px-5 py-3.5" orientation="horizontal">
-      <FieldLabel htmlFor={inputId}>{label}</FieldLabel>
+      <FieldLabel className="font-normal" htmlFor={inputId}>
+        {label}
+      </FieldLabel>
       <InputGroup className="w-40 shrink-0">
         <InputGroupInput
           aria-label={ariaLabel}

@@ -55,7 +55,9 @@ export function LanguageSettings() {
         <CardContent className="px-0">
           <Field className="min-h-20 px-5 py-4" orientation="horizontal">
             <FieldContent>
-              <FieldLabel htmlFor="settings-language">{t('settings.language.title')}</FieldLabel>
+              <FieldLabel className="font-normal" htmlFor="settings-language">
+                {t('settings.language.title')}
+              </FieldLabel>
               <FieldDescription>{t('settings.language.description')}</FieldDescription>
             </FieldContent>
             <Select

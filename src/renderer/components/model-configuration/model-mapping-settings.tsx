@@ -293,7 +293,7 @@ export function ModelMappingSettings({
                   key={role}
                 >
                   <FieldContent className="min-w-0">
-                    <FieldLabel className="text-sm" htmlFor={pickerId}>
+                    <FieldLabel className="font-normal" htmlFor={pickerId}>
                       {t(labelKey as never)}
                     </FieldLabel>
                     <FieldDescription className="truncate">
@@ -314,7 +314,7 @@ export function ModelMappingSettings({
             })}
           </FieldGroup>
           {choices.length === 0 ? (
-            <p className="border-t px-6 py-4 text-xs text-foreground-subtlest">
+            <p className="border-t px-6 py-4 text-xs text-muted-foreground">
               {t('settings.modelMapping.noModels')}
             </p>
           ) : null}
