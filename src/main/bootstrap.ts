@@ -187,6 +187,10 @@ export async function bootstrap() {
       },
       modelProxy,
       settingsStore,
+      {
+        sessionOwnership: () => sessionStorage.sessionOwnership(),
+        sessionRebindProject: (ids) => sessionStorage.sessionRebindProject(ids),
+      },
     )
 
     const followManager = createSessionFollowManager({
@@ -244,6 +248,7 @@ export async function bootstrap() {
         sessionWrite: (params) => sessionStorage.sessionWrite(params),
         sessionUpdateDraft: (params) => sessionStorage.sessionUpdateDraft(params),
         sessionCompleteDraft: (params) => sessionStorage.sessionCompleteDraft(params),
+        sessionBindOwner: (params) => sessionStorage.sessionBindOwner(params),
         sessionDelete: (params) => sessionStorage.sessionDelete(params),
         sessionDeleteProject: (params) => sessionStorage.sessionDeleteProject(params),
         claudeGetSessionMessages: (params) => service.getSessionMessages(params),

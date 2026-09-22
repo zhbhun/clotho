@@ -743,6 +743,14 @@ export const claude = {
     if (!isTauriRuntime()) return
     return requestFromDesktop('sessionCompleteDraft', { sessionId })
   },
+  async bindSessionOwner(params: {
+    sessionId: string
+    projectId: string | null
+    claudeSessionId: string
+  }): Promise<void> {
+    if (!isTauriRuntime()) return
+    return requestFromDesktop('sessionBindOwner', params)
+  },
   async deleteLocalSession(sessionId: string): Promise<void> {
     if (!isTauriRuntime()) return
     return requestFromDesktop('sessionDelete', { sessionId })

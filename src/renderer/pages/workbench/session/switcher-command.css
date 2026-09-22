@@ -222,6 +222,19 @@
   font-weight: 400;
 }
 
+.spotlight-command-badge {
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--primary) 12%, transparent);
+  color: var(--primary);
+  flex: 0 0 auto;
+  align-self: center;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1;
+  padding: 3px 7px;
+  white-space: nowrap;
+}
+
 [data-reduced-motion='reduce'] .spotlight-command-dialog[data-slot='dialog-content'] {
   animation: none;
 }

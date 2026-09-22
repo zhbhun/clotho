@@ -4,6 +4,8 @@ import { createJSONStorage, persist } from 'zustand/middleware'
 import type { ClaudeProject, ClaudeSession } from '@/shared/rpc'
 import type { DraftSessionIndex } from '@/shared/session'
 
+import { claude } from '../../../services/claude/claude'
+import { getLogger } from '../../../services/logging'
 import { UI_STORAGE_KEY } from '../../../services/ui-storage'
 import { createWorkbenchUiStorage } from '../services/workbench-ui-storage'
 import { DEFAULT_SESSION_TITLE } from '../utils/session-list'
@@ -649,7 +651,8 @@ export const useWorkbenchStore = create<WorkbenchState>()(
 
           return { sessionActivity: { ...state.sessionActivity, [sessionId]: next } }
         }),
-      bindClaudeSession: (sessionId, claudeSessionId) =>
+      bindClaudeSession: (sessionId, claudeSessionId) => {
+        const bound = get().sessions[sessionId]
         set((state) => {
           const session = state.sessions[sessionId]
           if (!session || session.claudeSessionId === claudeSessionId) return state
@@ -692,7 +695,23 @@ export const useWorkbenchStore = create<WorkbenchState>()(
               ]),
             ),
           }
-        }),
+        })
+        // Pin the conversation to its project entry so folder / workspace
+        // entries of one directory keep separate histories.
+        void claude
+          .bindSessionOwner({
+            sessionId,
+            claudeSessionId,
+            projectId: bound?.project_id || null,
+          })
+          .catch((error) =>
+            getLogger('persistence').error(
+              'session.ownership_write_failed',
+              'Failed to record the session owner',
+              { error },
+            ),
+          )
+      },
       removeSession: (sessionId) =>
         set((state) => {
           const removedSession = state.sessions[sessionId]

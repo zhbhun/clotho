@@ -11,6 +11,7 @@ const APP_ERROR_KEYS: Readonly<Record<string, MessageKey>> = {
   项目路径必须是文件夹: 'project.error.pathNotFolder',
   'Project path does not exist': 'project.error.pathMissing',
   'Project path must be a directory': 'project.error.pathNotFolder',
+  该文件夹已存在相同类型的项目: 'project.error.duplicateType',
   找不到要编辑的项目: 'project.error.notFound',
   项目管理仅在桌面应用中可用: 'project.error.desktopOnly',
   会话名称不能为空: 'workbench.error.sessionNameRequired',

@@ -77,6 +77,22 @@ function isSameProjectPath(left: string, right: string) {
   return path.resolve(left) === path.resolve(right)
 }
 
+/**
+ * A path holds at most two entries: the plain project and the workspace
+ * (extra-directories) variant. The type is derived, never stored.
+ */
+export function isWorkspaceEntry(project: Pick<RegisteredProject, 'additional_directories'>) {
+  return (project.additional_directories?.length ?? 0) > 0
+}
+
+/** Entries predating the digest scheme get the plain digest; existing digest ids survive. */
+function trustedProjectId(storedId: string, normalizedPath: string) {
+  return storedId === projectIdFromPath(normalizedPath) ||
+    storedId === projectIdFromPath(normalizedPath, true)
+    ? storedId
+    : projectIdFromPath(normalizedPath)
+}
+
 function projectSortName(project: Pick<ClaudeProject, 'name' | 'path'>) {
   const name = project.name?.trim()
   if (name) return name
@@ -180,7 +196,7 @@ async function readRegisteredProjectsStrict(filePath: string): Promise<Registere
   const projects = parsed.filter(isRegisteredProject).map((project) => ({
     ...project,
     // Entries written before the digest id scheme keep their legacy id on disk.
-    id: projectIdFromPath(project.path),
+    id: trustedProjectId(project.id, path.resolve(project.path)),
   }))
   if (projects.length !== parsed.length) throw new Error('Unable to read the project data file')
   return projects
@@ -200,9 +216,10 @@ export async function readRegisteredProjects(
       return []
     }
 
-    return parsed
-      .filter(isRegisteredProject)
-      .map((project) => ({ ...project, id: projectIdFromPath(project.path) }))
+    return parsed.filter(isRegisteredProject).map((project) => ({
+      ...project,
+      id: trustedProjectId(project.id, path.resolve(project.path)),
+    }))
   } catch (caught) {
     if ((caught as NodeJS.ErrnoException).code !== 'ENOENT') {
       logger.warning('projects.read_failed', 'Failed to read the Clotho projects file', {
@@ -315,7 +332,7 @@ function projectFromRegistered(
   return {
     ...sessionProject,
     id: registered.id,
-    workspace_id: projectWorkspaceId(normalizedPath),
+    workspace_id: projectWorkspaceId(normalizedPath, isWorkspaceEntry(registered)),
     path: normalizedPath,
     sessions: sessionProject?.sessions ?? [],
     created_at: registered.created_at,
@@ -343,27 +360,28 @@ export function mergeProjects(
   registeredProjects: RegisteredProject[],
   sessionProjects: ClaudeProject[],
 ): ClaudeProject[] {
-  const byPath = new Map<string, ClaudeProject>()
+  const byKey = new Map<string, ClaudeProject>()
+  // Sessions only ever describe the plain folder, so discovery lands in the
+  // normal bucket and a workspace entry of the same path stays separate.
+  const mergeKey = (projectPath: string, isWorkspace: boolean) =>
+    `${path.resolve(projectPath)}\n${isWorkspace ? 'workspace' : 'normal'}`
 
   for (const project of sessionProjects) {
     const normalizedPath = path.resolve(project.path)
-    byPath.set(normalizedPath, { ...project, path: normalizedPath })
+    byKey.set(mergeKey(normalizedPath, false), { ...project, path: normalizedPath })
   }
 
   for (const registered of registeredProjects) {
     const normalizedPath = path.resolve(registered.path)
-    const existing = byPath.get(normalizedPath)
+    const key = mergeKey(normalizedPath, isWorkspaceEntry(registered))
     if (registered.deleted) {
-      byPath.delete(normalizedPath)
+      byKey.delete(key)
       continue
     }
-    byPath.set(
-      normalizedPath,
-      projectFromRegistered({ ...registered, path: normalizedPath }, existing),
-    )
+    byKey.set(key, projectFromRegistered({ ...registered, path: normalizedPath }, byKey.get(key)))
   }
 
-  return Array.from(byPath.values()).sort(compareProjectsByName)
+  return Array.from(byKey.values()).sort(compareProjectsByName)
 }
 
 async function shouldListProject(project: ClaudeProject) {
@@ -416,7 +434,12 @@ export async function registerProjectPath(projectPath: string, filePath = projec
   const projectId = projectIdFromPath(normalizedPath)
   const now = secondsNow()
   const project = await updateRegisteredProjects(filePath, (projects) => {
-    const existing = projects.find((candidate) => isSameProjectPath(candidate.path, normalizedPath))
+    // Opening a folder registers the plain entry; the workspace variant of the
+    // same path stays untouched.
+    const existing = projects.find(
+      (candidate) =>
+        isSameProjectPath(candidate.path, normalizedPath) && !isWorkspaceEntry(candidate),
+    )
     if (existing) {
       existing.path = normalizedPath
       existing.last_opened_at = now
@@ -447,15 +470,31 @@ export async function createProject(
     params.additionalDirectories,
     normalizedPath,
   )
+  // The extra-directories presence decides the entry type and therefore its id.
+  const isWorkspace = (additionalDirectories?.length ?? 0) > 0
+  const projectId = projectIdFromPath(normalizedPath, isWorkspace)
   const now = secondsNow()
 
   const project = await updateRegisteredProjects(filePath, (projects) => {
-    const existing = projects.find((candidate) => isSameProjectPath(candidate.path, normalizedPath))
-    const registered: RegisteredProject = existing ?? {
-      id: projectIdFromPath(normalizedPath),
+    const liveConflict = projects.find(
+      (candidate) =>
+        !candidate.deleted &&
+        isSameProjectPath(candidate.path, normalizedPath) &&
+        isWorkspaceEntry(candidate) === isWorkspace,
+    )
+    if (liveConflict) throw new Error('该文件夹已存在相同类型的项目')
+    const reusable = projects.find(
+      (candidate) =>
+        candidate.deleted === true &&
+        isSameProjectPath(candidate.path, normalizedPath) &&
+        isWorkspaceEntry(candidate) === isWorkspace,
+    )
+    const registered: RegisteredProject = reusable ?? {
+      id: projectId,
       path: normalizedPath,
       created_at: now,
     }
+    registered.id = projectId
     registered.path = normalizedPath
     registered.name = name
     registered.last_opened_at = now
@@ -464,7 +503,7 @@ export async function createProject(
     else delete registered.icon
     if (additionalDirectories) registered.additional_directories = additionalDirectories
     else delete registered.additional_directories
-    if (!existing) projects.push(registered)
+    if (!reusable) projects.push(registered)
     return projectFromRegistered(registered)
   })
   projectPaths.set(project.id, project.path)
@@ -475,11 +514,15 @@ export async function updateProject(
   params: ClaudeUpdateProjectParams,
   filePath = projectsJsonPath(),
   sessionProjects?: ClaudeProject[],
+  rebindProject?: (ids: { fromProjectId: string; toProjectId: string }) => Promise<void>,
 ) {
   const name = validateProjectName(params.name)
   validateProjectIcon(params.icon)
+  // Set while the registry update runs, applied after the write succeeded so
+  // the id references are only migrated once the new id is durable.
+  let pendingRebind: { fromProjectId: string; toProjectId: string } | undefined
 
-  return updateRegisteredProjects(filePath, async (projects) => {
+  const project = await updateRegisteredProjects(filePath, async (projects) => {
     let registered = projects.find((project) => project.id === params.projectId)
     let sessionProject = sessionProjects?.find((project) => project.id === params.projectId)
     if (!registered && sessionProject) {
@@ -509,13 +552,32 @@ export async function updateProject(
       params.additionalDirectories,
       registered.path,
     )
+    const previousIsWorkspace = isWorkspaceEntry(registered)
+    const nextIsWorkspace = (additionalDirectories?.length ?? 0) > 0
     registered.name = name
     if (params.icon) registered.icon = params.icon
     else delete registered.icon
     if (additionalDirectories) registered.additional_directories = additionalDirectories
     else delete registered.additional_directories
+    if (nextIsWorkspace !== previousIsWorkspace) {
+      const conflict = projects.find(
+        (candidate) =>
+          candidate.id !== registered!.id &&
+          !candidate.deleted &&
+          isSameProjectPath(candidate.path, registered!.path) &&
+          isWorkspaceEntry(candidate) === nextIsWorkspace,
+      )
+      if (conflict) throw new Error('该文件夹已存在相同类型的项目')
+      const nextId = projectIdFromPath(registered.path, nextIsWorkspace)
+      if (nextId !== registered.id) {
+        pendingRebind = { fromProjectId: registered.id, toProjectId: nextId }
+        registered.id = nextId
+      }
+    }
     return projectFromRegistered(registered, sessionProject)
   })
+  if (pendingRebind) await rebindProject?.(pendingRebind)
+  return project
 }
 
 export async function removeProject(

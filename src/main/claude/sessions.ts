@@ -9,12 +9,16 @@ import { getProjectRepositoryRoot, isWorktreePath } from './git'
 
 const sessionPathsByProjectPath = new Map<string, string[]>()
 
-export function projectIdFromPath(projectPath: string) {
-  return createHash('md5').update(path.resolve(projectPath)).digest('hex')
+/** Suffix distinguishing the workspace entry of a path from the plain one. */
+const WORKSPACE_ID_SUFFIX = '#workspace'
+
+export function projectIdFromPath(projectPath: string, isWorkspace = false) {
+  const source = path.resolve(projectPath) + (isWorkspace ? WORKSPACE_ID_SUFFIX : '')
+  return createHash('md5').update(source).digest('hex')
 }
 
-export function projectWorkspaceId(projectPath: string) {
-  return projectIdFromPath(projectPath)
+export function projectWorkspaceId(projectPath: string, isWorkspace = false) {
+  return projectIdFromPath(projectPath, isWorkspace)
 }
 
 /** Claude Code stores session transcripts under this munged rendering of the project path. */
@@ -123,9 +127,22 @@ export async function listProjectsFromSessions(): Promise<ClaudeProject[]> {
 export async function listProjectSessions({
   projectId,
   projectPath,
+  ownership,
+  isFallbackOwner = true,
 }: {
   projectId: string
   projectPath: string
+  /**
+   * claudeSessionId → owning project-entry id. `null` marks a home-mode
+   * conversation, which belongs to no project.
+   */
+  ownership?: Record<string, string | null>
+  /**
+   * Unmapped sessions (started outside Clotho, or recorded before the index)
+   * belong to the plain entry of the path — or to the only entry when no
+   * plain one exists.
+   */
+  isFallbackOwner?: boolean
 }): Promise<ClaudeSession[]> {
   const projectPaths = [projectPath, ...(sessionPathsByProjectPath.get(projectPath) ?? [])].filter(
     (candidate, index, paths) => paths.indexOf(candidate) === index,
@@ -143,6 +160,8 @@ export async function listProjectSessions({
       sessions.flatMap((info) => {
         if (seenSessionIds.has(info.sessionId)) return []
         seenSessionIds.add(info.sessionId)
+        const owner = ownership?.[info.sessionId]
+        if (owner !== projectId && !(owner === undefined && isFallbackOwner)) return []
         return [
           sessionInfoToClaudeSession({
             info,

@@ -1,7 +1,13 @@
 import { mkdir, readFile, readdir, rename, unlink, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
-import type { DraftSession, DraftSessionIndex, LocalSession } from '@/shared/session'
+import type {
+  DraftSession,
+  DraftSessionIndex,
+  LocalSession,
+  SessionIndex,
+  SessionIndexEntry,
+} from '@/shared/session'
 
 import { projectIdFromPath } from './claude/sessions'
 import { getLogger } from './logging/runtime'
@@ -9,14 +15,25 @@ import { getLogger } from './logging/runtime'
 const logger = getLogger('persistence')
 
 const ID_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/
+const INDEX_FILE = 'index.json'
+const LEGACY_INDEX_FILE = 'drafts.json'
 
 function assertId(id: string) {
-  if (id === 'drafts' || !ID_RE.test(id)) throw new Error('Invalid session id')
+  // The index names double as on-disk file names, so the reserved file names
+  // of the sessions directory must never be used as a session id.
+  if (id === 'index' || id === 'drafts' || !ID_RE.test(id)) throw new Error('Invalid session id')
 }
 
-/** Stored records may predate the digest id scheme; the path is the source of truth. */
+/**
+ * Stored ids may predate the digest scheme; the path is then the source of
+ * truth. Digest ids for either entry type of the path are trusted as-is so a
+ * workspace conversation is not rewritten onto the plain entry.
+ */
 function migratedProjectId(projectId: string | null, projectPath: string | null) {
-  return projectId && projectPath ? projectIdFromPath(projectPath) : projectId
+  if (!projectId || !projectPath) return projectId
+  if (projectId === projectIdFromPath(projectPath)) return projectId
+  if (projectId === projectIdFromPath(projectPath, true)) return projectId
+  return projectIdFromPath(projectPath)
 }
 function validDraft(v: unknown): v is DraftSession {
   if (!v || typeof v !== 'object' || Array.isArray(v)) return false
@@ -27,6 +44,21 @@ function validDraft(v: unknown): v is DraftSession {
     typeof x.updatedAt === 'number' &&
     (x.projectId === null || typeof x.projectId === 'string') &&
     (x.projectPath === null || typeof x.projectPath === 'string')
+  )
+}
+function validEntry(v: unknown): v is SessionIndexEntry {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return false
+  const x = v as Record<string, unknown>
+  return (
+    (x.projectId === null || typeof x.projectId === 'string') &&
+    (x.projectPath === undefined || x.projectPath === null || typeof x.projectPath === 'string') &&
+    (x.claudeSessionId === undefined ||
+      x.claudeSessionId === null ||
+      typeof x.claudeSessionId === 'string') &&
+    (x.isDraft === undefined || typeof x.isDraft === 'boolean') &&
+    (x.title === undefined || typeof x.title === 'string') &&
+    (x.createdAt === undefined || typeof x.createdAt === 'number') &&
+    (x.updatedAt === undefined || typeof x.updatedAt === 'number')
   )
 }
 function validSession(v: unknown): v is LocalSession {
@@ -57,13 +89,23 @@ export interface SessionStorage {
   }): Promise<void>
   sessionUpdateDraft(params: { sessionId: string; draft: DraftSession }): Promise<void>
   sessionCompleteDraft(params: { sessionId: string }): Promise<void>
+  /** Record (or update) which project entry a conversation and its claude session belong to. */
+  sessionBindOwner(params: {
+    sessionId: string
+    projectId: string | null
+    claudeSessionId: string
+  }): Promise<void>
+  /** claudeSessionId → owning project-entry id (null marks home-mode conversations). */
+  sessionOwnership(): Promise<Record<string, string | null>>
+  /** Move a project entry's session references (index and stored input files) to a new id. */
+  sessionRebindProject(params: { fromProjectId: string; toProjectId: string }): Promise<void>
   sessionDelete(params: { sessionId: string }): Promise<void>
   sessionDeleteProject(params: { projectId: string }): Promise<void>
 }
 
 export function createSessionStorage(rootDir: string): SessionStorage {
   const dir = rootDir,
-    indexPath = path.join(dir, 'drafts.json')
+    indexPath = path.join(dir, INDEX_FILE)
   let queue = Promise.resolve()
   const run = <T>(fn: () => Promise<T>) => {
     const next = queue.then(fn)
@@ -73,15 +115,38 @@ export function createSessionStorage(rootDir: string): SessionStorage {
     )
     return next
   }
-  const readIndex = async (): Promise<DraftSessionIndex> => {
+  const readIndex = async (): Promise<SessionIndex> => {
     let value: unknown
     try {
       value = JSON.parse(await readFile(indexPath, 'utf8'))
     } catch (e: any) {
       if (e?.code !== 'ENOENT') {
         logger.warning('session.drafts_index_unreadable', 'Ignored an unreadable drafts index')
+        return {}
       }
-      return {}
+      // One-time migration: drafts.json entries were all drafts.
+      let legacy: unknown
+      try {
+        legacy = JSON.parse(await readFile(path.join(dir, LEGACY_INDEX_FILE), 'utf8'))
+      } catch {
+        return {}
+      }
+      if (!legacy || Array.isArray(legacy) || typeof legacy !== 'object') return {}
+      const migrated: SessionIndex = {}
+      for (const [id, draft] of Object.entries(legacy)) {
+        if (!validDraft(draft)) continue
+        try {
+          assertId(id)
+        } catch {
+          continue
+        }
+        migrated[id] = {
+          ...draft,
+          projectId: migratedProjectId(draft.projectId, draft.projectPath),
+          isDraft: true,
+        }
+      }
+      return migrated
     }
     if (!value || Array.isArray(value) || typeof value !== 'object') {
       logger.warning('session.drafts_index_unreadable', 'Ignored an unreadable drafts index')
@@ -89,22 +154,22 @@ export function createSessionStorage(rootDir: string): SessionStorage {
     }
     // Skip malformed entries individually: one bad row must not hide every
     // draft, and the next write rewrites the index without them.
-    const index: DraftSessionIndex = {}
+    const index: SessionIndex = {}
     let skipped = 0
-    for (const [id, draft] of Object.entries(value)) {
+    for (const [id, entry] of Object.entries(value)) {
       try {
         assertId(id)
       } catch {
         skipped += 1
         continue
       }
-      if (!validDraft(draft)) {
+      if (!validEntry(entry) || (entry.isDraft && !validDraft(entry))) {
         skipped += 1
         continue
       }
       index[id] = {
-        ...draft,
-        projectId: migratedProjectId(draft.projectId, draft.projectPath),
+        ...entry,
+        projectId: migratedProjectId(entry.projectId, entry.projectPath ?? null),
       }
     }
     if (skipped) {
@@ -114,6 +179,16 @@ export function createSessionStorage(rootDir: string): SessionStorage {
     }
     return index
   }
+  const putEntry = async (sessionId: string, entry: SessionIndexEntry) => {
+    const index = await readIndex()
+    index[sessionId] = entry
+    await atomic(indexPath, JSON.stringify(index))
+  }
+  /** A started conversation keeps its ownership and drops the draft bookkeeping. */
+  const startedEntry = (entry: SessionIndexEntry | undefined): SessionIndexEntry => ({
+    projectId: entry?.projectId ?? null,
+    ...(entry?.claudeSessionId ? { claudeSessionId: entry.claudeSessionId } : {}),
+  })
   const atomic = async (file: string, content: string) => {
     await mkdir(dir, { recursive: true })
     const tmp = `${file}.${process.pid}.${Math.random().toString(36).slice(2)}.tmp`
@@ -121,7 +196,22 @@ export function createSessionStorage(rootDir: string): SessionStorage {
     await rename(tmp, file)
   }
   return {
-    sessionListDrafts: () => run(readIndex),
+    sessionListDrafts: () =>
+      run(async () => {
+        const index = await readIndex()
+        const drafts: DraftSessionIndex = {}
+        for (const [id, entry] of Object.entries(index)) {
+          if (!entry.isDraft) continue
+          drafts[id] = {
+            title: entry.title ?? '',
+            createdAt: entry.createdAt ?? 0,
+            updatedAt: entry.updatedAt ?? 0,
+            projectId: entry.projectId,
+            projectPath: entry.projectPath ?? null,
+          }
+        }
+        return drafts
+      }),
     sessionRead: ({ sessionId }) =>
       run(async () => {
         assertId(sessionId)
@@ -157,7 +247,12 @@ export function createSessionStorage(rootDir: string): SessionStorage {
         await atomic(path.join(dir, `${sessionId}.json`), JSON.stringify(data))
         if (draft) {
           const index = await readIndex()
-          index[sessionId] = draft
+          const previous = index[sessionId]
+          index[sessionId] = {
+            ...draft,
+            isDraft: true,
+            ...(previous?.claudeSessionId ? { claudeSessionId: previous.claudeSessionId } : {}),
+          }
           await atomic(indexPath, JSON.stringify(index))
         }
       }),
@@ -165,17 +260,55 @@ export function createSessionStorage(rootDir: string): SessionStorage {
       run(async () => {
         assertId(sessionId)
         if (!validDraft(draft)) throw new Error('Malformed draft')
-        const index = await readIndex()
-        index[sessionId] = draft
-        await atomic(indexPath, JSON.stringify(index))
+        await putEntry(sessionId, { ...draft, isDraft: true })
       }),
     sessionCompleteDraft: ({ sessionId }) =>
       run(async () => {
         assertId(sessionId)
         const index = await readIndex()
-        if (sessionId in index) {
-          delete index[sessionId]
-          await atomic(indexPath, JSON.stringify(index))
+        if (sessionId in index) await putEntry(sessionId, startedEntry(index[sessionId]))
+      }),
+    sessionBindOwner: ({ sessionId, projectId, claudeSessionId }) =>
+      run(async () => {
+        assertId(sessionId)
+        const index = await readIndex()
+        await putEntry(sessionId, {
+          ...startedEntry(index[sessionId]),
+          projectId,
+          claudeSessionId,
+        })
+      }),
+    sessionOwnership: () =>
+      run(async () => {
+        const index = await readIndex()
+        const ownership: Record<string, string | null> = {}
+        for (const entry of Object.values(index)) {
+          if (entry.claudeSessionId) ownership[entry.claudeSessionId] = entry.projectId
+        }
+        return ownership
+      }),
+    sessionRebindProject: ({ fromProjectId, toProjectId }) =>
+      run(async () => {
+        const index = await readIndex()
+        let indexChanged = false
+        for (const [id, entry] of Object.entries(index)) {
+          if (entry.projectId !== fromProjectId) continue
+          index[id] = { ...entry, projectId: toProjectId }
+          indexChanged = true
+        }
+        if (indexChanged) await atomic(indexPath, JSON.stringify(index))
+        const files = await readdir(dir).catch(() => [] as string[])
+        for (const file of files) {
+          if (!file.endsWith('.json') || file === INDEX_FILE || file === LEGACY_INDEX_FILE) continue
+          const filePath = path.join(dir, file)
+          let value: unknown
+          try {
+            value = JSON.parse(await readFile(filePath, 'utf8'))
+          } catch {
+            continue
+          }
+          if (!validSession(value) || value.projectId !== fromProjectId) continue
+          await atomic(filePath, JSON.stringify({ ...value, projectId: toProjectId }))
         }
       }),
     sessionDelete: ({ sessionId }) =>
@@ -199,7 +332,7 @@ export function createSessionStorage(rootDir: string): SessionStorage {
         // file must not strand the remaining sessions and the draft index.
         let skipped = 0
         for (const file of files) {
-          if (!file.endsWith('.json') || file === 'drafts.json') continue
+          if (!file.endsWith('.json') || file === INDEX_FILE || file === LEGACY_INDEX_FILE) continue
           try {
             const value = JSON.parse(await readFile(path.join(dir, file), 'utf8'))
             const fileProjectId = migratedProjectId(value.projectId, value.projectPath)
@@ -217,8 +350,8 @@ export function createSessionStorage(rootDir: string): SessionStorage {
         }
         const index = await readIndex()
         let changed = false
-        for (const [id, draft] of Object.entries(index))
-          if (draft.projectId === projectId) {
+        for (const [id, entry] of Object.entries(index))
+          if (entry.projectId === projectId) {
             delete index[id]
             changed = true
           }

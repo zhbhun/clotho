@@ -6,6 +6,7 @@ import type {
   ClaudeRewindSessionFilesParams,
   ClaudeSampleContextUsageParams,
   ClaudeStartupParams,
+  ClaudeUpdateProjectParams,
   FetchProviderModelsParams,
   GetProviderUsageParams,
   ModelProvider,
@@ -108,6 +109,10 @@ export function createClaudeDesktopService(
   events: ClaudeEventSink,
   proxy: ModelProxy,
   settingsStore: SettingsStore,
+  sessionStore?: {
+    sessionOwnership: () => Promise<Record<string, string | null>>
+    sessionRebindProject: (ids: { fromProjectId: string; toProjectId: string }) => Promise<void>
+  },
 ) {
   async function persistProvider(provider: ModelProvider, operation: 'create' | 'update') {
     const normalizedProvider = normalizeProvider(provider)
@@ -147,7 +152,8 @@ export function createClaudeDesktopService(
     addProjectFromFolder,
     selectProjectFolder,
     createProject,
-    updateProject,
+    updateProject: (params: ClaudeUpdateProjectParams) =>
+      updateProject(params, undefined, undefined, sessionStore?.sessionRebindProject),
     removeProject,
     selectFiles,
     getAttachmentPreview,
@@ -159,7 +165,12 @@ export function createClaudeDesktopService(
     searchProjectFiles: projectFileSearch.search,
     getProjectFileOutline: projectFileSearch.getOutline,
     setProjectLastOpened,
-    listSessions: getProjectSessions,
+    listSessions: (params: { projectId: string }) =>
+      sessionStore
+        ? sessionStore
+            .sessionOwnership()
+            .then((ownership) => getProjectSessions({ ...params, ownership }))
+        : getProjectSessions(params),
     getSessionMessages: loadSessionHistory,
     getWorkflowRuns: loadWorkflowRuns,
     listSubagents: listSessionSubagents,

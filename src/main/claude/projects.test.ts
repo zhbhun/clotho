@@ -439,6 +439,169 @@ describe('project registry', () => {
     expect(stored).not.toHaveProperty('additional_directories')
   })
 
+  it('keeps a plain project and a workspace project of the same folder separate', async () => {
+    const filePath = await tempProjectsFile()
+    const projectPath = path.join(tempDir!, 'alpha')
+    const docsDir = path.join(tempDir!, 'docs')
+    await mkdir(projectPath)
+    await mkdir(docsDir)
+
+    const plain = await createProject({ path: projectPath, name: 'Alpha' }, filePath)
+    const workspace = await createProject(
+      { path: projectPath, name: 'Alpha workspace', additionalDirectories: [docsDir] },
+      filePath,
+    )
+
+    expect(plain.id).toBe(projectIdFromPath(projectPath))
+    expect(workspace.id).toBe(projectIdFromPath(projectPath, true))
+    await expect(readRegisteredProjects(filePath)).resolves.toEqual([
+      expect.objectContaining({ id: plain.id, name: 'Alpha' }),
+      expect.objectContaining({
+        id: workspace.id,
+        name: 'Alpha workspace',
+        additional_directories: [docsDir],
+      }),
+    ])
+  })
+
+  it('rejects creating a second project of the same type for one folder', async () => {
+    const filePath = await tempProjectsFile()
+    const projectPath = path.join(tempDir!, 'alpha')
+    const docsDir = path.join(tempDir!, 'docs')
+    await mkdir(projectPath)
+    await mkdir(docsDir)
+
+    await createProject({ path: projectPath, name: 'Alpha' }, filePath)
+    await expect(
+      createProject({ path: projectPath, name: 'Alpha again' }, filePath),
+    ).rejects.toThrow('该文件夹已存在相同类型的项目')
+
+    await createProject(
+      { path: projectPath, name: 'Alpha ws', additionalDirectories: [docsDir] },
+      filePath,
+    )
+    await expect(
+      createProject(
+        { path: projectPath, name: 'Alpha ws 2', additionalDirectories: [docsDir] },
+        filePath,
+      ),
+    ).rejects.toThrow('该文件夹已存在相同类型的项目')
+  })
+
+  it('lists a registered workspace project next to the discovered folder project', async () => {
+    const filePath = await tempProjectsFile()
+    const projectPath = path.join(tempDir!, 'alpha')
+    const docsDir = path.join(tempDir!, 'docs')
+    await mkdir(projectPath)
+    await mkdir(docsDir)
+    await writeRegisteredProjects(
+      [
+        {
+          id: projectIdFromPath(projectPath, true),
+          path: projectPath,
+          name: 'Alpha ws',
+          created_at: 10,
+          additional_directories: [docsDir],
+        },
+      ],
+      filePath,
+    )
+    sessionMocks.listProjects.mockResolvedValue([
+      {
+        id: projectIdFromPath(projectPath),
+        workspace_id: projectWorkspaceId(projectPath),
+        path: projectPath,
+        sessions: ['session-1'],
+        created_at: 5,
+      },
+    ])
+
+    const projects = await listClaudeProjects(filePath, undefined, [], tempDir!)
+    expect(projects.map((project) => project.id)).toEqual([
+      projectIdFromPath(projectPath),
+      projectIdFromPath(projectPath, true),
+    ])
+    expect(projects[1].additional_directories).toEqual([docsDir])
+  })
+
+  it('recomputes the id and rebinds references when an edit changes the entry type', async () => {
+    const filePath = await tempProjectsFile()
+    const projectPath = path.join(tempDir!, 'alpha')
+    const docsDir = path.join(tempDir!, 'docs')
+    await mkdir(projectPath)
+    await mkdir(docsDir)
+    await writeRegisteredProjects(
+      [{ id: projectIdFromPath(projectPath), path: projectPath, name: 'Alpha', created_at: 10 }],
+      filePath,
+    )
+    const rebind = vi.fn()
+
+    const updated = await updateProject(
+      {
+        projectId: projectIdFromPath(projectPath),
+        name: 'Alpha',
+        additionalDirectories: [docsDir],
+      },
+      filePath,
+      undefined,
+      rebind,
+    )
+
+    const workspaceId = projectIdFromPath(projectPath, true)
+    expect(updated.id).toBe(workspaceId)
+    expect(updated.additional_directories).toEqual([docsDir])
+    expect(rebind).toHaveBeenCalledWith({
+      fromProjectId: projectIdFromPath(projectPath),
+      toProjectId: workspaceId,
+    })
+    await expect(readRegisteredProjects(filePath)).resolves.toEqual([
+      expect.objectContaining({ id: workspaceId, additional_directories: [docsDir] }),
+    ])
+  })
+
+  it('rejects an edit that would duplicate the other entry type of the folder', async () => {
+    const filePath = await tempProjectsFile()
+    const projectPath = path.join(tempDir!, 'alpha')
+    const docsDir = path.join(tempDir!, 'docs')
+    await mkdir(projectPath)
+    await mkdir(docsDir)
+    await writeRegisteredProjects(
+      [
+        { id: projectIdFromPath(projectPath), path: projectPath, name: 'Alpha', created_at: 10 },
+        {
+          id: projectIdFromPath(projectPath, true),
+          path: projectPath,
+          name: 'Alpha ws',
+          created_at: 11,
+          additional_directories: [docsDir],
+        },
+      ],
+      filePath,
+    )
+
+    await expect(
+      updateProject(
+        {
+          projectId: projectIdFromPath(projectPath),
+          name: 'Alpha',
+          additionalDirectories: [docsDir],
+        },
+        filePath,
+      ),
+    ).rejects.toThrow('该文件夹已存在相同类型的项目')
+    // Clearing the workspace entry's directories would collide with the plain entry too.
+    await expect(
+      updateProject(
+        {
+          projectId: projectIdFromPath(projectPath, true),
+          name: 'Alpha ws',
+          additionalDirectories: [],
+        },
+        filePath,
+      ),
+    ).rejects.toThrow('该文件夹已存在相同类型的项目')
+  })
+
   it('rejects registry entries with non-string additional directories', async () => {
     const filePath = await tempProjectsFile()
     await writeFile(

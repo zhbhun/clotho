@@ -19,8 +19,10 @@ vi.mock('@anthropic-ai/claude-agent-sdk', () => sdkMocks)
 vi.mock('node:fs', () => ({ promises: fsMocks }))
 vi.mock('./projects', () => ({
   addProjectFromFolder: vi.fn(),
+  isWorkspaceEntry: vi.fn(),
   listClaudeProjects: vi.fn(),
   projectPathForId: projectMocks.projectPathForId,
+  readRegisteredProjects: vi.fn(),
   selectFiles: vi.fn(),
   setProjectLastOpened: vi.fn(),
 }))

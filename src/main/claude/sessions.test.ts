@@ -199,4 +199,75 @@ describe('Claude session reading', () => {
       'Unknown project',
     )
   })
+
+  it('splits one folder history between the plain and workspace entries by ownership', async () => {
+    tempDir = await mkdtemp(path.join(os.tmpdir(), 'clotho-sessions-'))
+    const projectPath = path.join(tempDir, 'my-app')
+    await mkdir(projectPath)
+    const plainId = projectIdFromPath(projectPath)
+    const workspaceId = projectIdFromPath(projectPath, true)
+    const session = (sessionId: string) => ({
+      sessionId,
+      summary: `Session ${sessionId}`,
+      lastModified: 1_000,
+      cwd: projectPath,
+    })
+    vi.mocked(listSessions).mockImplementation(async (params?: { dir?: string }) =>
+      params
+        ? [session('plain-session'), session('workspace-session'), session('home-session')]
+        : [],
+    )
+    const ownership = {
+      'plain-session': plainId,
+      'workspace-session': workspaceId,
+      // A home-mode conversation belongs to no project entry.
+      'home-session': null,
+    }
+
+    await expect(
+      listProjectSessions({ projectId: plainId, projectPath, ownership, isFallbackOwner: true }),
+    ).resolves.toEqual([expect.objectContaining({ id: 'plain-session' })])
+    await expect(
+      listProjectSessions({
+        projectId: workspaceId,
+        projectPath,
+        ownership,
+        isFallbackOwner: false,
+      }),
+    ).resolves.toEqual([expect.objectContaining({ id: 'workspace-session' })])
+  })
+
+  it('keeps unmapped sessions only for the fallback owner of a path', async () => {
+    tempDir = await mkdtemp(path.join(os.tmpdir(), 'clotho-sessions-'))
+    const projectPath = path.join(tempDir, 'my-app')
+    await mkdir(projectPath)
+    const plainId = projectIdFromPath(projectPath)
+    const workspaceId = projectIdFromPath(projectPath, true)
+    const unmapped = {
+      sessionId: 'cli-session',
+      summary: 'CLI session',
+      lastModified: 1_000,
+      cwd: projectPath,
+    }
+    vi.mocked(listSessions).mockImplementation(async (params?: { dir?: string }) =>
+      params ? [unmapped] : [],
+    )
+
+    await expect(
+      listProjectSessions({
+        projectId: plainId,
+        projectPath,
+        ownership: {},
+        isFallbackOwner: true,
+      }),
+    ).resolves.toEqual([expect.objectContaining({ id: 'cli-session' })])
+    await expect(
+      listProjectSessions({
+        projectId: workspaceId,
+        projectPath,
+        ownership: {},
+        isFallbackOwner: false,
+      }),
+    ).resolves.toEqual([])
+  })
 })

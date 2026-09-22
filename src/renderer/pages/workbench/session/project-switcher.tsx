@@ -238,6 +238,11 @@ export function ProjectSwitchDialog({
                   keywords={[name, project.path]}
                   label={name}
                   value={project.id}
+                  trailing={
+                    project.additional_directories?.length ? (
+                      <span className="spotlight-command-badge">{t('project.workspaceBadge')}</span>
+                    ) : undefined
+                  }
                   onSelect={() => {
                     onSelectProject(project.id)
                     onOpenChange(false)

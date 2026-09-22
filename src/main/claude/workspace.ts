@@ -8,7 +8,7 @@ import {
   renameSession as sdkRenameSession,
 } from '@anthropic-ai/claude-agent-sdk'
 
-import { projectPathForId } from './projects'
+import { isWorkspaceEntry, projectPathForId, readRegisteredProjects } from './projects'
 import { type HeadTail, type SessionEntry } from './session-meta'
 import { listProjectSessions, projectDirNameFromPath } from './sessions'
 
@@ -95,7 +95,14 @@ export async function findProjectPathFromSessions(projectDir: string) {
   return undefined
 }
 
-export async function getProjectSessions({ projectId }: { projectId: string }) {
+export async function getProjectSessions({
+  projectId,
+  ownership,
+}: {
+  projectId: string
+  /** claudeSessionId → owning project-entry id, from sessions/index.json. */
+  ownership?: Record<string, string | null>
+}) {
   const projectPath = await projectPathForId(projectId)
   try {
     const stats = await fs.stat(projectPath)
@@ -105,9 +112,22 @@ export async function getProjectSessions({ projectId }: { projectId: string }) {
     throw new Error('Project directory is unavailable', { cause: caught })
   }
 
+  // Sessions recorded before the index (or started outside Clotho) belong to
+  // the plain entry of the path, or to the only entry when no plain one exists.
+  let isFallbackOwner = true
+  if (ownership) {
+    const siblings = (await readRegisteredProjects()).filter(
+      (project) => !project.deleted && path.resolve(project.path) === path.resolve(projectPath),
+    )
+    const fallback = siblings.find((project) => !isWorkspaceEntry(project)) ?? siblings[0]
+    isFallbackOwner = !fallback || fallback.id === projectId
+  }
+
   return listProjectSessions({
     projectId,
     projectPath,
+    ...(ownership ? { ownership } : {}),
+    isFallbackOwner,
   })
 }
 

@@ -854,6 +854,10 @@ export type DesktopRPC = {
       }
       sessionUpdateDraft: { params: { sessionId: string; draft: DraftSession }; response: void }
       sessionCompleteDraft: { params: { sessionId: string }; response: void }
+      sessionBindOwner: {
+        params: { sessionId: string; projectId: string | null; claudeSessionId: string }
+        response: void
+      }
       sessionDelete: { params: { sessionId: string }; response: void }
       sessionDeleteProject: { params: { projectId: string }; response: void }
       claudeGetSessionMessages: {
