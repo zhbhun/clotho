@@ -56,9 +56,10 @@ export function createMainWindowOptions(
   if (frame.y !== undefined) options.y = frame.y
   if (process.platform === 'darwin') {
     options.titleBarStyle = 'hiddenInset'
-    // x matches the native macOS traffic light inset; y vertically centers
-    // the 12px buttons in the renderer's 44px (h-11) title bar: (44 - 12) / 2.
-    options.trafficLightPosition = { x: 13, y: 16 }
+    // x matches the native macOS traffic light inset. y empirically centers the
+    // buttons (≈15px tall on macOS 26, not the classic 12px) in the renderer's
+    // 40px (h-10) title bar; the position anchors the group's top-left corner.
+    options.trafficLightPosition = { x: 13, y: 12 }
   }
 
   return options

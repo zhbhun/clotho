@@ -16,7 +16,7 @@ export function MacWindowChrome() {
   const { t } = useTranslation()
 
   return (
-    <div className="app-region-drag flex h-11 items-center gap-1 px-3 pl-[84px] text-foreground-subtlest">
+    <div className="app-region-drag flex h-10 items-center gap-1 px-3 pl-[84px] text-foreground-subtlest">
       <ShortcutTooltip
         commandId="workbench.sidebar.toggle"
         label={t('workbench.nav.toggleSidebar')}
