@@ -130,7 +130,7 @@ function ThinkingLevelSelect({
       >
         <SelectValue />
       </SelectTrigger>
-      <SelectContent glass alignItemWithTrigger={false} align="end">
+      <SelectContent>
         <SelectGroup>
           {items.map((item) => (
             <SelectItem key={item.value} value={item.value}>
