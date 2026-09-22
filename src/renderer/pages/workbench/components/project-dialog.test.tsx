@@ -201,7 +201,7 @@ describe('ProjectDialog', () => {
 
     renderWithShortcuts(<ProjectDialog open onOpenChange={vi.fn()} onSaved={vi.fn()} />)
 
-    await user.click(screen.getByRole('button', { name: '选择项目文件夹' }))
+    await user.click(screen.getByRole('button', { name: '选择文件夹' }))
 
     expect(screen.getByText('/workspace/alpha')).toBeInTheDocument()
   })
@@ -215,13 +215,13 @@ describe('ProjectDialog', () => {
 
     renderWithShortcuts(<ProjectDialog open onOpenChange={vi.fn()} onSaved={onSaved} />)
 
-    await user.click(screen.getByRole('button', { name: '选择项目文件夹' }))
-    const nameInput = screen.getByRole('textbox', { name: '项目名称' })
+    await user.click(screen.getByRole('button', { name: '选择文件夹' }))
+    const nameInput = screen.getByRole('textbox', { name: '名称' })
     expect(nameInput).toHaveValue('alpha')
 
     await user.clear(nameInput)
     await user.type(nameInput, 'My workspace')
-    await user.click(screen.getByRole('button', { name: '选择项目文件夹' }))
+    await user.click(screen.getByRole('button', { name: '选择文件夹' }))
     expect(nameInput).toHaveValue('My workspace')
 
     await user.click(screen.getByRole('button', { name: '添加项目' }))
@@ -254,7 +254,7 @@ describe('ProjectDialog', () => {
       </Toaster>,
     )
 
-    await user.click(screen.getByRole('button', { name: '选择项目文件夹' }))
+    await user.click(screen.getByRole('button', { name: '选择文件夹' }))
     await user.click(screen.getByRole('button', { name: '添加项目' }))
 
     expect(await screen.findByText('无法创建项目')).toBeInTheDocument()
@@ -274,7 +274,7 @@ describe('ProjectDialog', () => {
       </Toaster>,
     )
 
-    await user.click(screen.getByRole('button', { name: '选择项目文件夹' }))
+    await user.click(screen.getByRole('button', { name: '选择文件夹' }))
     await user.click(screen.getByRole('button', { name: '添加项目' }))
 
     expect(await screen.findByText('无法创建项目')).toBeInTheDocument()
@@ -282,8 +282,8 @@ describe('ProjectDialog', () => {
   })
 
   it.each([
-    ['Project path does not exist', '项目路径不存在'],
-    ['Project path must be a directory', '项目路径必须是文件夹'],
+    ['Project path does not exist', '文件夹不存在'],
+    ['Project path must be a directory', '所选路径必须是文件夹'],
   ])(
     'shows the backend path validation failure "%s" below the folder field',
     async (error, copy) => {
@@ -293,7 +293,7 @@ describe('ProjectDialog', () => {
 
       renderWithShortcuts(<ProjectDialog open onOpenChange={vi.fn()} onSaved={vi.fn()} />)
 
-      await user.click(screen.getByRole('button', { name: '选择项目文件夹' }))
+      await user.click(screen.getByRole('button', { name: '选择文件夹' }))
       await user.click(screen.getByRole('button', { name: '添加项目' }))
 
       const message = await screen.findByText(copy)
@@ -320,7 +320,7 @@ describe('ProjectDialog', () => {
     expect(projectPath.parentElement).toHaveClass('border', 'border-input', 'rounded-md')
     expect(screen.queryByRole('button', { name: '更换项目文件夹' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '保存' })).toBeInTheDocument()
-    const nameInput = screen.getByRole('textbox', { name: '项目名称' })
+    const nameInput = screen.getByRole('textbox', { name: '名称' })
     await user.clear(nameInput)
     await user.type(nameInput, 'Alpha edited')
     await user.click(screen.getByRole('button', { name: '保存' }))
@@ -349,22 +349,22 @@ describe('ProjectDialog', () => {
 
     renderWithShortcuts(<ProjectDialog open onOpenChange={vi.fn()} onSaved={vi.fn()} />)
 
-    await user.click(screen.getByRole('button', { name: '添加附加文件夹' }))
+    await user.click(screen.getByRole('button', { name: '添加文件夹' }))
     expect(screen.getByText('/workspace/docs')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: '添加附加文件夹' }))
+    await user.click(screen.getByRole('button', { name: '添加文件夹' }))
     expect(screen.getByText('/workspace/assets')).toBeInTheDocument()
 
     // Duplicate picks are dropped silently.
-    await user.click(screen.getByRole('button', { name: '添加附加文件夹' }))
+    await user.click(screen.getByRole('button', { name: '添加文件夹' }))
     expect(screen.getAllByText('/workspace/docs')).toHaveLength(1)
 
     await user.click(screen.getByRole('button', { name: '移除文件夹 docs' }))
     expect(screen.queryByText('/workspace/docs')).not.toBeInTheDocument()
 
     // The project path itself is never added as an additional folder.
-    await user.click(screen.getByRole('button', { name: '选择项目文件夹' }))
-    await user.click(screen.getByRole('button', { name: '添加附加文件夹' }))
+    await user.click(screen.getByRole('button', { name: '选择文件夹' }))
+    await user.click(screen.getByRole('button', { name: '添加文件夹' }))
     expect(screen.getAllByRole('button', { name: /^移除文件夹/ })).toHaveLength(1)
 
     await user.click(screen.getByRole('button', { name: '添加项目' }))

@@ -181,7 +181,7 @@ export function ProjectDialog({
                   disabled={isSaving}
                   id="project-name"
                   maxLength={80}
-                  placeholder={t('project.name')}
+                  placeholder={t('project.name.placeholder')}
                   value={name}
                   onChange={(event) => {
                     nameEditedRef.current = true
