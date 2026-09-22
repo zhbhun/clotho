@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -29,28 +30,44 @@ type SidebarResizeContextValue = {
 
 const SidebarResizeContext = createContext<SidebarResizeContextValue | null>(null)
 
-function clampSidebarWidth(width: number) {
-  return Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, width))
+function clampSidebarWidth(width: number, maxWidth: number) {
+  return Math.min(maxWidth, Math.max(MIN_SIDEBAR_WIDTH, width))
 }
 
 function loadSidebarWidth() {
   const width = readUiState().sidebarWidth
-  return typeof width === 'number' ? clampSidebarWidth(width) : APP_SIDEBAR_DEFAULT_WIDTH
+  return typeof width === 'number'
+    ? clampSidebarWidth(width, MAX_SIDEBAR_WIDTH)
+    : APP_SIDEBAR_DEFAULT_WIDTH
 }
 
 export function ResizableSidebarProvider({
   style,
   ...props
 }: ComponentProps<typeof SidebarProvider>) {
-  const [width, setWidth] = useState(loadSidebarWidth)
+  // The user's preferred width persists untouched by window resizes; the
+  // rendered width is the preference clamped to the current window, so a
+  // narrow window compresses the sidebar and a wider one restores it.
+  const [preferredWidth, setPreferredWidth] = useState(loadSidebarWidth)
   const [isResizing, setIsResizing] = useState(false)
-  const widthRef = useRef(width)
-  const resize = useCallback((pointerX: number) => {
-    const nextWidth = clampSidebarWidth(pointerX)
-    widthRef.current = nextWidth
-    setWidth(nextWidth)
-    return pointerX >= SIDEBAR_COLLAPSE_THRESHOLD
+  const [windowWidth, setWindowWidth] = useState(() => window.innerWidth)
+  const widthRef = useRef(preferredWidth)
+  useEffect(() => {
+    const handleWindowResize = () => setWindowWidth(window.innerWidth)
+    window.addEventListener('resize', handleWindowResize)
+    return () => window.removeEventListener('resize', handleWindowResize)
   }, [])
+  const maxWidth = Math.min(MAX_SIDEBAR_WIDTH, Math.floor(windowWidth / 2))
+  const width = clampSidebarWidth(preferredWidth, maxWidth)
+  const resize = useCallback(
+    (pointerX: number) => {
+      const nextWidth = clampSidebarWidth(pointerX, maxWidth)
+      widthRef.current = nextWidth
+      setPreferredWidth(nextWidth)
+      return pointerX >= SIDEBAR_COLLAPSE_THRESHOLD
+    },
+    [maxWidth],
+  )
   const startResize = useCallback(() => setIsResizing(true), [])
   const finishResize = useCallback(() => {
     setIsResizing(false)
@@ -59,13 +76,13 @@ export function ResizableSidebarProvider({
   const contextValue = useMemo(
     () => ({
       finishResize,
-      maxWidth: MAX_SIDEBAR_WIDTH,
+      maxWidth,
       minWidth: MIN_SIDEBAR_WIDTH,
       resize,
       startResize,
       width,
     }),
-    [finishResize, resize, startResize, width],
+    [finishResize, maxWidth, resize, startResize, width],
   )
 
   return (

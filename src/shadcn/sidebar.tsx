@@ -10,7 +10,6 @@ import { Button } from '@/shadcn/button'
 import { useIsMobile } from '@/shadcn/hooks/use-mobile'
 import { Input } from '@/shadcn/input'
 import { Separator } from '@/shadcn/separator'
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/shadcn/sheet'
 import { Skeleton } from '@/shadcn/skeleton'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip'
 import { cn } from '@/shadcn/utils'
@@ -18,7 +17,6 @@ import { cn } from '@/shadcn/utils'
 const SIDEBAR_COOKIE_NAME = 'sidebar_state'
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = '16rem'
-const SIDEBAR_WIDTH_MOBILE = '18rem'
 const SIDEBAR_WIDTH_ICON = '3rem'
 type SidebarContextProps = {
   state: 'expanded' | 'collapsed'
@@ -127,14 +125,13 @@ function Sidebar({
   collapsible = 'offcanvas',
   className,
   children,
-  dir,
   ...props
 }: React.ComponentProps<'div'> & {
   side?: 'left' | 'right'
   variant?: 'sidebar' | 'floating' | 'inset'
   collapsible?: 'offcanvas' | 'icon' | 'none'
 }) {
-  const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+  const { isMobile, state, openMobile } = useSidebar()
 
   if (collapsible === 'none') {
     return (
@@ -151,37 +148,18 @@ function Sidebar({
     )
   }
 
-  if (isMobile) {
-    return (
-      <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
-        <SheetContent
-          dir={dir}
-          data-sidebar="sidebar"
-          data-slot="sidebar"
-          data-mobile="true"
-          className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
-          style={
-            {
-              '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
-            } as React.CSSProperties
-          }
-          side={side}
-        >
-          <SheetHeader className="sr-only">
-            <SheetTitle>Sidebar</SheetTitle>
-            <SheetDescription>Displays the mobile sidebar.</SheetDescription>
-          </SheetHeader>
-          <div className="flex h-full w-full flex-col">{children}</div>
-        </SheetContent>
-      </Sheet>
-    )
-  }
+  // The docked tree renders at every width: below the breakpoint the gap
+  // collapses to zero so the fixed container becomes an overlay drawer.
+  // Crossing the breakpoint only flips data attributes, so the same width/left
+  // transitions the collapse toggle uses carry the motion — identical feel.
+  const renderedState = isMobile ? (openMobile ? 'expanded' : 'collapsed') : state
+  const isRenderedCollapsed = renderedState === 'collapsed'
 
   return (
     <div
-      className="group peer hidden text-sidebar-foreground md:block"
-      data-state={state}
-      data-collapsible={state === 'collapsed' ? collapsible : ''}
+      className="group peer text-sidebar-foreground"
+      data-state={renderedState}
+      data-collapsible={isRenderedCollapsed ? collapsible : ''}
       data-variant={variant}
       data-side={side}
       data-slot="sidebar"
@@ -192,6 +170,7 @@ function Sidebar({
         className={cn(
           'relative w-(--sidebar-width) bg-transparent transition-[width] duration-200 ease-linear',
           'group-data-[collapsible=offcanvas]:w-0',
+          isMobile && 'w-0',
           'group-data-[side=right]:rotate-180',
           variant === 'floating' || variant === 'inset'
             ? 'group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]'
@@ -202,7 +181,7 @@ function Sidebar({
         data-slot="sidebar-container"
         data-side={side}
         className={cn(
-          'fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear data-[side=left]:left-0 data-[side=left]:group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)] data-[side=right]:right-0 data-[side=right]:group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)] md:flex',
+          'fixed inset-y-0 z-10 flex h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear data-[side=left]:left-0 data-[side=left]:group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)] data-[side=right]:right-0 data-[side=right]:group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]',
           // Adjust the padding for floating and inset variants.
           variant === 'floating' || variant === 'inset'
             ? 'p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]'
@@ -210,7 +189,7 @@ function Sidebar({
           className,
         )}
         {...props}
-        inert={state === 'collapsed' ? true : undefined}
+        inert={isRenderedCollapsed ? true : undefined}
       >
         <div
           data-sidebar="sidebar"

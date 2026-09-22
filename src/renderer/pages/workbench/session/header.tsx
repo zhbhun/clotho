@@ -66,10 +66,12 @@ export function ConversationHeader({
   onSelectSession: (session: WorkbenchSession) => void
   onTogglePinSession: (session: WorkbenchSession) => void
 }) {
-  const { state } = useSidebar()
+  const { isMobile, openMobile, state } = useSidebar()
   const { t } = useTranslation()
   const [isExitHovered, setExitHovered] = useState(false)
-  const showSidebarTrigger = state === 'collapsed'
+  // The sidebar owns the top-left corner while it covers it; below the
+  // breakpoint the drawer stays closed until toggled, freeing the inset.
+  const showSidebarTrigger = isMobile ? !openMobile : state === 'collapsed'
   const canExitProject = projectMode === 'project' && Boolean(selectedProject)
 
   return (

@@ -1,6 +1,8 @@
 import * as React from 'react'
 
-const MOBILE_BREAKPOINT = 768
+// Below this width the sidebar collapses into an overlay sheet; at or above it
+// the sidebar stays docked and compresses the content area instead.
+const MOBILE_BREAKPOINT = 640
 
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)

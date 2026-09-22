@@ -37,17 +37,38 @@ beforeEach(() => {
 afterEach(() => {
   vi.restoreAllMocks()
   vi.unstubAllGlobals()
+  Object.defineProperty(window, 'innerWidth', { value: 1200, configurable: true })
 })
 
-function renderHeader({
-  projectMode = 'home',
-  selectedProject,
-}: {
-  projectMode?: 'project' | 'home'
-  selectedProject?: WorkbenchProject
-} = {}) {
+function renderHeader(
+  {
+    projectMode = 'home',
+    selectedProject,
+  }: {
+    projectMode?: 'project' | 'home'
+    selectedProject?: WorkbenchProject
+  } = {},
+  { isMobile = false }: { isMobile?: boolean } = {},
+) {
   const onSelectProject = vi.fn()
   const onProjectSwitcherOpenChange = vi.fn()
+  Object.defineProperty(window, 'innerWidth', {
+    value: isMobile ? 500 : 1200,
+    configurable: true,
+  })
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn((query: string) => ({
+      matches: isMobile && query.includes('max-width'),
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  )
   const runtime = createShortcutRuntime({
     catalog: commandCatalog,
     client: {
@@ -118,5 +139,14 @@ describe('ConversationHeader', () => {
     renderHeader()
 
     expect(screen.queryByRole('button', { name: appI18n.t('workbench.project.exit') })).toBeNull()
+  })
+
+  it('reserves the macOS traffic-light inset when the narrow-window sheet replaces the sidebar', () => {
+    renderHeader({}, { isMobile: true })
+
+    const header = document.querySelector('header')
+    expect(header).not.toBeNull()
+    expect(header).toHaveClass('pl-[84px]')
+    expect(document.querySelector('[data-sidebar="trigger"]')).not.toBeNull()
   })
 })
