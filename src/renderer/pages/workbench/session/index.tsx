@@ -157,7 +157,7 @@ export function SessionArea(props: SessionAreaProps) {
         isContentScrolled={isContentScrolled}
         projectSwitcherOpen={isProjectSwitcherOpen}
         projectMode={props.projectMode}
-        projectName={selectedProject ? projectDisplayName(selectedProject) : 'Clotho'}
+        projectName={selectedProject ? projectDisplayName(selectedProject) : ''}
         projects={props.projects}
         pinnedSessionIds={props.pinnedSessionIds}
         selectedProject={selectedProject}

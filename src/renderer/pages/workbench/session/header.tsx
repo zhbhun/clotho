@@ -1,10 +1,13 @@
+import { FolderKanban, X } from 'lucide-react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
 import { SidebarTrigger, useSidebar } from '@/shadcn/sidebar'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip'
 import { cn } from '@/shadcn/utils'
 
-import { DEFAULT_PROJECT_ICON, ProjectIcon } from '../../../components/project-icon'
+import { ProjectIcon } from '../../../components/project-icon'
 import { SidebarToggleIcon } from '../../../components/sidebar-toggle-icon'
 import { ShortcutTooltip } from '../components/shortcut-tooltip'
 import type { SessionActivity, WorkbenchProject, WorkbenchSession } from '../stores/workbench-store'
@@ -59,13 +62,15 @@ export function ConversationHeader({
   onProjectSwitcherOpenChange: (isOpen: boolean) => void
   onRenameSession: (session: WorkbenchSession) => void
   onRetryHistory?: () => void
-  onSelectProject: (projectId: string) => void
+  onSelectProject: (projectId: string | null) => void
   onSelectSession: (session: WorkbenchSession) => void
   onTogglePinSession: (session: WorkbenchSession) => void
 }) {
   const { state } = useSidebar()
   const { t } = useTranslation()
+  const [isExitHovered, setExitHovered] = useState(false)
   const showSidebarTrigger = state === 'collapsed'
+  const canExitProject = projectMode === 'project' && Boolean(selectedProject)
 
   return (
     <header
@@ -89,38 +94,84 @@ export function ConversationHeader({
           />
         </ShortcutTooltip>
       ) : null}
-      <div className="app-region-no-drag mr-3 flex min-w-0 items-center self-center">
-        <ProjectSwitchDialog
-          open={projectSwitcherOpen}
-          projectMode={projectMode}
-          projects={projects}
-          selectedProject={selectedProject}
-          trigger={
-            <ShortcutTooltip
-              commandId="workbench.picker.project.open"
-              label={t('workbench.project.switch')}
-              side="bottom"
-            >
-              <Button
-                className="min-w-0 max-w-[50vw]"
-                data-window-project-title
-                type="button"
-                variant="ghost"
+      <div className="app-region-no-drag flex h-8 min-w-0 items-center self-center">
+        <div
+          className="group/project-header relative flex min-w-0 items-center"
+          onMouseLeave={() => setExitHovered(false)}
+        >
+          <ProjectSwitchDialog
+            open={projectSwitcherOpen}
+            projectMode={projectMode}
+            projects={projects}
+            selectedProject={selectedProject}
+            trigger={
+              <ShortcutTooltip
+                commandId="workbench.picker.project.open"
+                label={t('workbench.project.switch')}
+                side="bottom"
               >
-                <ProjectIcon
-                  className="size-3.5"
-                  icon={selectedProject?.icon ?? DEFAULT_PROJECT_ICON}
-                  plain
-                  size="small"
-                />
-                <span className="min-w-0 truncate">{projectName}</span>
-              </Button>
-            </ShortcutTooltip>
-          }
-          onAddProject={onAddProject}
-          onOpenChange={onProjectSwitcherOpenChange}
-          onSelectProject={onSelectProject}
-        />
+                <Button
+                  className={cn(
+                    'min-w-0 max-w-[50vw]',
+                    canExitProject &&
+                      isExitHovered &&
+                      'bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_5%)] text-foreground',
+                  )}
+                  data-window-project-title
+                  type="button"
+                  variant="secondary"
+                >
+                  {selectedProject ? (
+                    <ProjectIcon
+                      className={cn(
+                        'size-3.5',
+                        canExitProject &&
+                          'transition-opacity group-hover/project-header:opacity-0 group-focus-within/project-header:opacity-0',
+                      )}
+                      icon={selectedProject.icon}
+                      plain
+                      size="small"
+                    />
+                  ) : (
+                    <FolderKanban className="size-3.5" />
+                  )}
+                  {selectedProject ? <span className="min-w-0 truncate">{projectName}</span> : null}
+                </Button>
+              </ShortcutTooltip>
+            }
+            onAddProject={onAddProject}
+            onOpenChange={onProjectSwitcherOpenChange}
+            onSelectProject={onSelectProject}
+          />
+          {canExitProject ? (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    aria-label={t('workbench.project.exit')}
+                    className="pointer-events-none absolute inset-y-0 left-0.75 my-auto opacity-0 transition-opacity group-hover/project-header:pointer-events-auto group-hover/project-header:opacity-100 group-focus-within/project-header:pointer-events-auto group-focus-within/project-header:opacity-100"
+                    size="icon-sm"
+                    type="button"
+                    variant="ghost"
+                    onClick={(event) => {
+                      event.preventDefault()
+                      event.stopPropagation()
+                      setExitHovered(false)
+                      onProjectSwitcherOpenChange(false)
+                      onSelectProject(null)
+                    }}
+                    onMouseEnter={() => setExitHovered(true)}
+                    onMouseLeave={() => setExitHovered(false)}
+                    onPointerDown={(event) => event.stopPropagation()}
+                  >
+                    <X className="size-3.5" />
+                  </Button>
+                }
+              />
+              <TooltipContent side="bottom">{t('workbench.project.exit')}</TooltipContent>
+            </Tooltip>
+          ) : null}
+        </div>
       </div>
       <SessionTabs
         activeSessionId={activeSessionId}

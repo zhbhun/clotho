@@ -99,12 +99,12 @@ export function SessionTabs({
   return (
     <Tabs
       ref={scrollerRef}
-      className="no-scrollbar min-w-0 flex-1 gap-0 overflow-x-auto overflow-y-hidden pt-1 pl-3 data-[orientation=horizontal]:flex-row"
+      className="no-scrollbar min-w-0 flex-1 items-center gap-0 overflow-x-auto overflow-y-hidden pl-3 data-[orientation=horizontal]:flex-row"
       value={activeSessionId ?? ''}
       onValueChange={handleTabChange}
     >
       <TabsList
-        className="app-region-no-drag relative isolate min-w-max justify-start gap-0 rounded-none bg-transparent p-0 group-data-[orientation=horizontal]/tabs:h-9"
+        className="app-region-no-drag relative isolate min-w-max justify-start gap-0 rounded-none bg-transparent p-0 group-data-[orientation=horizontal]/tabs:h-8"
         ref={tabListRef}
       >
         <motion.div
@@ -131,7 +131,7 @@ export function SessionTabs({
               onTogglePinSession={onTogglePinSession}
             >
               <div
-                className="session-tab group/tab relative h-9 min-w-16 max-w-60 shrink-0"
+                className="session-tab group/tab relative h-8 min-w-16 max-w-60 shrink-0"
                 data-active={isActive ? 'true' : undefined}
                 ref={(element) => handleTabRef(session.id, element)}
               >

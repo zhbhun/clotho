@@ -43,6 +43,8 @@
   top: 0;
   left: 0;
   width: 0;
+  /* Tab row is vertically centered (h-8); the surface runs past it down to
+     the header's bottom edge, Chrome-style. */
   height: 36px;
   border-radius: 12px 12px 0 0;
   background: var(--session-tab-surface);
@@ -63,7 +65,8 @@
 .session-tab:not([data-active='true'])::before {
   position: absolute;
   z-index: -1;
-  inset: 4px 6px;
+  /* 28px tall: matches the header project button (h-7) centered in the tab row. */
+  inset: 2px 6px;
   display: block;
   border-radius: 10px;
   background: var(--session-tab-surface);
