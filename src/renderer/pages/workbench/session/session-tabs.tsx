@@ -62,7 +62,7 @@ export function SessionTabs({
 
     const updatePosition = () => {
       // Inset the surface by SURFACE_INSET_X so its horizontal extents match the
-      // hover highlight (.session-tab::before, inset 2px 6px): selecting a tab
+      // hover highlight (.session-tab::before, inset 2px 3px): selecting a tab
       // then only morphs the shape vertically instead of jumping sideways.
       activeSurfaceX.set(activeTab.offsetLeft + ACTIVE_SURFACE_INSET_X)
       activeSurfaceWidth.set(activeTab.offsetWidth - ACTIVE_SURFACE_INSET_X * 2)
@@ -139,7 +139,7 @@ export function SessionTabs({
                 ref={(element) => handleTabRef(session.id, element)}
               >
                 <TabsTrigger
-                  className="h-full w-full justify-start rounded-none border-0 bg-transparent px-3 text-sm font-normal hover:text-foreground has-data-[icon=inline-start]:pl-3 data-active:bg-transparent data-active:text-foreground data-active:hover:text-foreground dark:data-active:bg-transparent"
+                  className="h-full w-full justify-start rounded-none border-0 bg-transparent px-2 text-sm font-normal hover:text-foreground has-data-[icon=inline-start]:pl-2 data-active:bg-transparent data-active:text-foreground data-active:hover:text-foreground dark:data-active:bg-transparent"
                   data-session-tab={session.id}
                   // Click must not focus the tab, or dialog close returns focus to it.
                   onMouseDown={(event) => event.preventDefault()}
@@ -170,7 +170,7 @@ export function SessionTabs({
                 >
                   <Button
                     aria-label={t('workbench.session.close', { title: displayTitle })}
-                    className="pointer-events-none absolute top-1/2 left-2.5 size-5 -translate-y-1/2 rounded-full bg-transparent text-foreground-subtlest opacity-0 group-hover/tab:pointer-events-auto group-hover/tab:opacity-100 group-focus-within/tab:pointer-events-auto group-focus-within/tab:opacity-100 hover:bg-accent hover:text-foreground dark:hover:bg-accent"
+                    className="pointer-events-none absolute top-1/2 left-1.5 size-5 -translate-y-1/2 rounded-full bg-transparent text-foreground-subtlest opacity-0 group-hover/tab:pointer-events-auto group-hover/tab:opacity-100 group-focus-within/tab:pointer-events-auto group-focus-within/tab:opacity-100 hover:bg-accent hover:text-foreground dark:hover:bg-accent"
                     size="icon-sm"
                     tabIndex={-1}
                     variant="ghost"
@@ -190,7 +190,7 @@ export function SessionTabs({
 
 const REVEAL_OVERSHOOT = 100
 // Keep in sync with the hover highlight's horizontal inset in session-tabs.css.
-const ACTIVE_SURFACE_INSET_X = 6
+const ACTIVE_SURFACE_INSET_X = 3
 
 function revealActiveTab(scroller: HTMLElement, tab: HTMLElement, behavior: ScrollBehavior) {
   const scrollerRect = scroller.getBoundingClientRect()

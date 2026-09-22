@@ -46,7 +46,7 @@
   /* Tab row is vertically centered (h-8); the surface runs past it down to
      the header's bottom edge, Chrome-style. Its x/width are set from JS with
      ACTIVE_SURFACE_INSET_X applied, so the horizontal extents match the hover
-     highlight (::before, inset 2px 6px) and selecting a tab does not shift. */
+     highlight (::before, inset 2px 3px) and selecting a tab does not shift. */
   height: 36px;
   border-radius: 12px 12px 0 0;
   background: var(--session-tab-surface);
@@ -67,8 +67,10 @@
 .session-tab:not([data-active='true'])::before {
   position: absolute;
   z-index: -1;
-  /* 28px tall: matches the header project button (h-7) centered in the tab row. */
-  inset: 2px 6px;
+  /* 28px tall: matches the header project button (h-7) centered in the tab row.
+     The 3px horizontal inset must equal ACTIVE_SURFACE_INSET_X in
+     session-tabs.tsx so hover and selected backgrounds share their extents. */
+  inset: 2px 3px;
   display: block;
   border-radius: 10px;
   background: var(--session-tab-surface);
@@ -94,27 +96,30 @@
   position: absolute;
   bottom: 0;
   display: block;
-  width: 12px;
-  height: 12px;
+  /* 6px square: the fillet pokes 6 - ACTIVE_SURFACE_INSET_X = 3px into the
+     neighboring tab, exactly where the hover highlight's own 3px inset ends,
+     so the two never overlap. */
+  width: 6px;
+  height: 6px;
   background: transparent;
   content: '';
   pointer-events: none;
 }
 
 .session-tab-active-surface::before {
-  left: -12px;
+  left: -6px;
   border-right: 1px solid var(--session-tab-divider);
   border-bottom: 1px solid var(--session-tab-divider);
-  border-bottom-right-radius: 12px;
-  box-shadow: 6px 6px 0 6px var(--session-tab-surface);
+  border-bottom-right-radius: 6px;
+  box-shadow: 3px 3px 0 3px var(--session-tab-surface);
 }
 
 .session-tab-active-surface::after {
-  right: -12px;
+  right: -6px;
   border-bottom: 1px solid var(--session-tab-divider);
   border-left: 1px solid var(--session-tab-divider);
-  border-bottom-left-radius: 12px;
-  box-shadow: -6px 6px 0 6px var(--session-tab-surface);
+  border-bottom-left-radius: 6px;
+  box-shadow: -3px 3px 0 3px var(--session-tab-surface);
 }
 
 [data-reduced-motion='reduce'] .session-tabs,
