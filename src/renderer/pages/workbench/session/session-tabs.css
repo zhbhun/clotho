@@ -44,7 +44,9 @@
   left: 0;
   width: 0;
   /* Tab row is vertically centered (h-8); the surface runs past it down to
-     the header's bottom edge, Chrome-style. */
+     the header's bottom edge, Chrome-style. Its x/width are set from JS with
+     ACTIVE_SURFACE_INSET_X applied, so the horizontal extents match the hover
+     highlight (::before, inset 2px 6px) and selecting a tab does not shift. */
   height: 36px;
   border-radius: 12px 12px 0 0;
   background: var(--session-tab-surface);
@@ -81,18 +83,6 @@
 .session-tab:not([data-active='true']):hover::before,
 .session-tab:not([data-active='true']):focus-within::before {
   opacity: 1;
-}
-
-.session-tab[data-active='true'] + .session-tab:not([data-active='true']):hover::before,
-.session-tab[data-active='true'] + .session-tab:not([data-active='true']):focus-within::before {
-  left: 4px;
-}
-
-.session-tab:not([data-active='true']):has(+ .session-tab[data-active='true']):hover::before,
-.session-tab:not([data-active='true']):has(
-    + .session-tab[data-active='true']
-  ):focus-within::before {
-  right: 6px;
 }
 
 .session-tab[data-active='true'] {
