@@ -18,9 +18,12 @@ const THEME_OPTIONS = [
 const PREVIEW_ROWS = [0, 1, 2] as const
 
 const CANVAS_TINT = 7
-// The light split half sits flush against the selection outline; fade its
-// canvas from a deep tint so the near-white outline stays readable against it.
-const SPLIT_LIGHT_CANVAS_TINT = 45
+// A canvas headed the same way as the page blends into it; a hairline in the
+// preview's own foreground keeps its outline readable.
+const EDGE_TINT = 'transparent 85%'
+// The light split half fades from a canvas tint: 18% under the dark outline on
+// light pages, 45% under the light outline on dark pages. Keep the values in
+// sync with the `--split-tint` utility classes on the preview root.
 
 function isDarkBackground(hex: string): boolean {
   const value = Number.parseInt(hex.slice(1), 16)
@@ -59,14 +62,16 @@ function ThemeMiniature({
   isSplit?: boolean
   palette: ThemePalettes[keyof ThemePalettes]
 }) {
+  const isDarkCanvas = isDarkBackground(palette.background)
   const style = {
     // oklab, not oklch: preview swatches share the divider-hue Chromium bug.
     '--preview-canvas': `color-mix(in oklab, ${palette.background}, ${palette.foreground} ${CANVAS_TINT}%)`,
+    '--preview-edge': `color-mix(in oklab, ${palette.foreground}, ${EDGE_TINT})`,
     '--preview-line': `color-mix(in oklab, ${palette.foreground}, transparent 58%)`,
     '--preview-surface': palette.background,
-    ...(isSplit && !isDarkBackground(palette.background)
+    ...(isSplit && !isDarkCanvas
       ? {
-          backgroundImage: `linear-gradient(120deg, color-mix(in oklab, ${palette.background}, ${palette.foreground} ${SPLIT_LIGHT_CANVAS_TINT}%), color-mix(in oklab, ${palette.background}, ${palette.foreground} ${CANVAS_TINT}%))`,
+          backgroundImage: `linear-gradient(120deg, color-mix(in oklab, ${palette.background}, ${palette.foreground} var(--split-tint, 45%)), color-mix(in oklab, ${palette.background}, ${palette.foreground} ${CANVAS_TINT}%))`,
         }
       : null),
   } as CSSProperties
@@ -75,9 +80,17 @@ function ThemeMiniature({
     <div
       aria-hidden="true"
       className={cn(
-        'relative overflow-hidden bg-(--preview-canvas)',
+        'relative overflow-hidden rounded-xl border bg-(--preview-canvas)',
+        isDarkCanvas
+          ? 'border-transparent dark:border-(--preview-edge)'
+          : 'border-(--preview-edge) dark:border-transparent',
+        isSplit &&
+          !isDarkCanvas &&
+          // Keep in sync with the `--split-tint` fallback and the constants above.
+          '[--split-tint:18%] dark:[--split-tint:45%]',
         isFill ? 'h-full' : 'h-32 sm:aspect-[10/7] sm:h-auto',
       )}
+      data-theme-edge=""
       style={style}
     >
       <div className="absolute top-5 left-1/2 h-1.5 w-16 -translate-x-1/2 rounded-full bg-(--preview-line)" />
@@ -140,7 +153,9 @@ function ThemeOption({
           data-theme-preview
           className={cn(
             'w-full overflow-hidden rounded-xl outline-2 outline-offset-0 transition-[outline-color,box-shadow]',
-            selected ? 'outline-foreground' : 'outline-transparent',
+            selected
+              ? 'outline-foreground **:data-theme-edge:border-transparent'
+              : 'outline-transparent',
           )}
         >
           <ThemePreview palettes={palettes} theme={value} />
