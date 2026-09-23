@@ -29,9 +29,9 @@ function useAttachmentImage(attachment: ClaudeAttachment) {
 }
 
 // Surface tokens (bg-card / bg-muted) assume the card sits on the page background; embedded in a
-// bg-muted message bubble that order inverts, so embedded cards go tone-on-tone with the bubble
-// instead — the same mix the command chip uses.
-const EMBEDDED_SURFACE = 'bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_8%)]'
+// bg-muted message bubble that order inverts. Embedded cards keep the composer's outline-plus-tile
+// form, with the fills recomputed one step away from the bubble (the command chip's mix).
+const EMBEDDED_FILL = 'bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_8%)]'
 
 function AttachmentCard({
   attachment,
@@ -56,9 +56,8 @@ function AttachmentCard({
         'h-16 flex-nowrap rounded-xl',
         isImage ? 'w-16 min-w-16 overflow-hidden p-0!' : 'min-w-32 max-w-64',
         isEmbedded && [
-          'rounded-lg border-transparent',
-          'has-[>a,>button]:hover:bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_12%)]',
-          EMBEDDED_SURFACE,
+          'border-[color-mix(in_oklab,var(--secondary),var(--foreground)_14%)] bg-transparent',
+          'has-[>a,>button]:hover:bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_8%)]',
         ],
       )}
       tabIndex={onRemove && !disabled ? 0 : undefined}
@@ -67,7 +66,7 @@ function AttachmentCard({
       <AttachmentMedia
         className={cn(
           isImage ? 'size-full rounded-none' : undefined,
-          isEmbedded && !isImage && 'w-7 bg-transparent',
+          isEmbedded && !isImage && EMBEDDED_FILL,
         )}
         variant={isImage ? 'image' : 'icon'}
       >
