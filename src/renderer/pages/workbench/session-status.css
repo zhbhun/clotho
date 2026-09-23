@@ -1,19 +1,9 @@
-.session-status-processing {
-  animation: session-status-breathe 1.8s ease-in-out infinite;
-}
-
-[data-reduced-motion='reduce'] .session-status-processing {
+/* Chrome-style loading: the icon shrinks inside a spinning 3/4 arc
+   (.session-status-spinner renders the arc, .session-status-icon animates it). */
+[data-reduced-motion='reduce'] .session-status-spinner {
   animation: none;
 }
 
-@keyframes session-status-breathe {
-  0%,
-  100% {
-    opacity: 0.4;
-    box-shadow: 0 0 0 0 color-mix(in oklab, var(--foreground-subtle), transparent 100%);
-  }
-  50% {
-    opacity: 1;
-    box-shadow: 0 0 0 3px color-mix(in oklab, var(--foreground-subtle), transparent 80%);
-  }
+[data-reduced-motion='reduce'] .session-status-icon {
+  transition: none;
 }

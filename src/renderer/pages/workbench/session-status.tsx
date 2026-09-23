@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { cn } from '@/shadcn/utils'
@@ -13,28 +14,67 @@ const ACTIVITY_LABEL_KEYS: Partial<Record<SessionActivity, MessageKey>> = {
   'unread-error': 'workbench.session.status.unreadError',
 }
 
-export function SessionStatus({ activity }: { activity: SessionActivity }) {
+const ACTIVITY_DOT_CLASSES: Partial<Record<SessionActivity, string>> = {
+  'awaiting-user': 'bg-status-confirm',
+  'unread-success': 'bg-status-unread',
+  'unread-error': 'bg-destructive',
+}
+
+// The icon wrapper stays mounted across activities so the shrink/grow between
+// idle and processing animates through a transition instead of a remount.
+export function SessionStatus({ activity, icon }: { activity: SessionActivity; icon?: ReactNode }) {
   const { t } = useTranslation()
   const labelKey = ACTIVITY_LABEL_KEYS[activity]
-  if (!labelKey) return null
+  const dotClassName = ACTIVITY_DOT_CLASSES[activity]
+  const isProcessing = activity === 'processing'
 
   return (
     <span
-      className="flex size-4 shrink-0 items-center justify-center"
-      data-session-status={activity}
+      className="relative flex size-4 shrink-0 items-center justify-center"
+      data-session-status={labelKey ? activity : undefined}
       data-session-status-slot
     >
-      <span
-        aria-hidden="true"
-        className={cn(
-          'size-1.5 rounded-full',
-          activity === 'processing' && 'session-status-processing bg-foreground-subtle',
-          activity === 'awaiting-user' && 'bg-status-confirm',
-          activity === 'unread-success' && 'bg-status-unread',
-          activity === 'unread-error' && 'bg-destructive',
-        )}
-      />
-      <span className="sr-only">{t(labelKey)}</span>
+      {icon ? (
+        <span
+          aria-hidden="true"
+          className={cn(
+            'session-status-icon flex size-4 items-center justify-center transition-[transform,opacity] duration-200 ease-out',
+            isProcessing ? 'scale-[0.5]' : 'scale-100',
+            dotClassName && 'opacity-0',
+          )}
+        >
+          {icon}
+        </span>
+      ) : null}
+      {isProcessing ? <SessionSpinner className="absolute inset-0" /> : null}
+      {dotClassName ? (
+        <span
+          className={cn('size-1.5 rounded-full transition-opacity duration-200', dotClassName)}
+        />
+      ) : null}
+      {labelKey ? <span className="sr-only">{t(labelKey)}</span> : null}
     </span>
+  )
+}
+
+function SessionSpinner({ className }: { className?: string }) {
+  // 3/4 arc: circumference 2π×6.5 ≈ 40.84 → dash 30.63.
+  return (
+    <svg
+      aria-hidden="true"
+      className={cn('session-status-spinner size-4 animate-spin text-foreground-subtle', className)}
+      viewBox="0 0 16 16"
+    >
+      <circle
+        cx="8"
+        cy="8"
+        fill="none"
+        r="6.5"
+        stroke="currentColor"
+        strokeDasharray="30.63 10.21"
+        strokeLinecap="round"
+        strokeWidth="1.5"
+      />
+    </svg>
   )
 }
