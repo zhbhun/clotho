@@ -38,19 +38,27 @@ export function SessionStatus({ activity, icon }: { activity: SessionActivity; i
         <span
           aria-hidden="true"
           className={cn(
-            'session-status-icon flex size-4 items-center justify-center transition-[transform,opacity] duration-200 ease-out',
+            'session-status-icon flex size-4 items-center justify-center transition-transform duration-200 ease-out',
             isProcessing ? 'scale-[0.5]' : 'scale-100',
-            dotClassName && 'opacity-0',
           )}
         >
           {icon}
         </span>
       ) : null}
       {isProcessing ? <SessionSpinner className="absolute inset-0" /> : null}
-      {dotClassName ? (
+      {icon ? (
+        // Badge dot pinned to the icon's top-right corner. It stays mounted so
+        // it fades in and out instead of popping, and the icon never hides.
         <span
-          className={cn('size-1.5 rounded-full transition-opacity duration-200', dotClassName)}
+          aria-hidden="true"
+          className={cn(
+            'absolute -right-0.5 -top-0.5 size-1.5 rounded-full transition-opacity duration-200',
+            dotClassName ? cn('shadow-[0_0_0_1.5px_var(--background)]', dotClassName) : 'opacity-0',
+          )}
         />
+      ) : dotClassName ? (
+        // Sidebar rows have no session icon: keep the plain centered dot.
+        <span className={cn('size-1.5 rounded-full', dotClassName)} />
       ) : null}
       {labelKey ? <span className="sr-only">{t(labelKey)}</span> : null}
     </span>
