@@ -103,9 +103,13 @@ export interface SessionStorage {
   sessionDeleteProject(params: { projectId: string }): Promise<void>
 }
 
-export function createSessionStorage(rootDir: string): SessionStorage {
+export function createSessionStorage(rootDir: string, homeProjectId?: string): SessionStorage {
   const dir = rootDir,
     indexPath = path.join(dir, INDEX_FILE)
+  // Legacy home conversations stored a null projectId; they belong to the
+  // built-in work project, so reads resolve the null onto its id.
+  const resolveProjectId = (projectId: string | null) =>
+    projectId === null && homeProjectId ? homeProjectId : projectId
   let queue = Promise.resolve()
   const run = <T>(fn: () => Promise<T>) => {
     const next = queue.then(fn)
@@ -206,7 +210,7 @@ export function createSessionStorage(rootDir: string): SessionStorage {
             title: entry.title ?? '',
             createdAt: entry.createdAt ?? 0,
             updatedAt: entry.updatedAt ?? 0,
-            projectId: entry.projectId,
+            projectId: resolveProjectId(entry.projectId),
             projectPath: entry.projectPath ?? null,
           }
         }
@@ -228,7 +232,7 @@ export function createSessionStorage(rootDir: string): SessionStorage {
           if (validSession(value)) {
             return {
               ...value,
-              projectId: migratedProjectId(value.projectId, value.projectPath),
+              projectId: resolveProjectId(migratedProjectId(value.projectId, value.projectPath)),
             }
           }
         } catch {
@@ -283,7 +287,9 @@ export function createSessionStorage(rootDir: string): SessionStorage {
         const index = await readIndex()
         const ownership: Record<string, string | null> = {}
         for (const entry of Object.values(index)) {
-          if (entry.claudeSessionId) ownership[entry.claudeSessionId] = entry.projectId
+          if (entry.claudeSessionId) {
+            ownership[entry.claudeSessionId] = resolveProjectId(entry.projectId)
+          }
         }
         return ownership
       }),

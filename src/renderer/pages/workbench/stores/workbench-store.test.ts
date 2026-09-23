@@ -445,6 +445,42 @@ describe('useWorkbenchStore', () => {
     })
   })
 
+  it('keeps a home conversation that session ownership excludes from every project catalog', () => {
+    loadCatalog()
+    // A home conversation whose local id was rebuilt from the Claude session
+    // id: ownership (projectId null) keeps it out of every project catalog,
+    // so the catalog alone can never restore it.
+    const homeSession = {
+      ...REMOTE_SESSION,
+      id: 'claude-home-session',
+      claudeSessionId: 'claude-home-session',
+      project_id: '',
+      project_path: '',
+      title: 'hello333?',
+    }
+    useWorkbenchStore.setState((state) => ({
+      sessions: { ...state.sessions, [homeSession.id]: homeSession },
+      currentProjectId: null,
+      currentSessionId: homeSession.id,
+      currentWorkspaceKey: 'claude',
+      projectMode: 'home',
+      tabsByWorkspace: {
+        'project:project-workspace': [REMOTE_SESSION.id],
+        claude: [homeSession.id],
+      },
+      activeSessionByWorkspace: {
+        'project:project-workspace': REMOTE_SESSION.id,
+        claude: homeSession.id,
+      },
+    }))
+
+    loadCatalog()
+
+    expect(useWorkbenchStore.getState().sessions[homeSession.id]).toBeDefined()
+    expect(useWorkbenchStore.getState().currentSessionId).toBe(homeSession.id)
+    expect(useWorkbenchStore.getState().tabsByWorkspace.claude).toContain(homeSession.id)
+  })
+
   it('removes missing tabs during catalog refresh and selects a remaining neighbor', () => {
     loadCatalog()
     const missingSession = {

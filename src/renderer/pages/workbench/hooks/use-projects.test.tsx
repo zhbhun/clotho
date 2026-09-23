@@ -35,13 +35,25 @@ const SECOND_PROJECT = {
   created_at: 0,
 }
 
+const WORK_PROJECT = {
+  id: 'work-project',
+  path: '/Users/me',
+  name: 'work',
+  is_home: true,
+  sessions: [],
+  created_at: 0,
+}
+
 beforeEach(async () => {
   localStorage.clear()
   await sessionPersistence.initialize()
   useWorkbenchStore.getState().reset()
-  vi.mocked(requestFromDesktop).mockImplementation(async (command) => {
-    if (command === 'claudeListProjects') return [PROJECT]
-    if (command === 'claudeListSessions') return [REMOTE_SESSION]
+  vi.mocked(requestFromDesktop).mockImplementation(async (command, params) => {
+    if (command === 'claudeListProjects') return [PROJECT, WORK_PROJECT]
+    if (command === 'claudeListSessions') {
+      const { projectId } = params as { projectId: string }
+      return projectId === PROJECT.id ? [REMOTE_SESSION] : []
+    }
     if (command === 'claudeGetProjectGitBranch') return null
     return undefined
   })
@@ -53,6 +65,17 @@ afterEach(() => {
 })
 
 describe('useProjects session actions', () => {
+  it('resolves the initial unselected draft onto the work default project', async () => {
+    const { result } = renderHook(() => useProjects())
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    const state = useWorkbenchStore.getState()
+    expect(state.currentProjectId).toBe(WORK_PROJECT.id)
+    const session = state.currentSessionId ? state.sessions[state.currentSessionId] : undefined
+    expect(session).toMatchObject({ project_id: WORK_PROJECT.id, project_path: WORK_PROJECT.path })
+    expect(result.current.projects.find((project) => project.is_home)?.id).toBe(WORK_PROJECT.id)
+  })
+
   it('keeps a single project session failure out of the global startup error', async () => {
     vi.mocked(requestFromDesktop).mockImplementation(async (command, params) => {
       if (command === 'claudeListProjects') return [PROJECT, SECOND_PROJECT]

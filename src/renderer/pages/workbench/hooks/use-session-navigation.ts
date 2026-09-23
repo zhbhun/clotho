@@ -11,6 +11,7 @@ import {
   useWorkbenchStore,
   workspaceKeyForProjectId,
 } from '../stores/workbench-store'
+import { findHomeProjectId } from '../utils/home-project'
 import { DEFAULT_SESSION_TITLE } from '../utils/session-list'
 import type { useWorkbench } from './use-workbench'
 
@@ -41,7 +42,9 @@ export function useSessionNavigation(workbench: ReturnType<typeof useWorkbench>)
         typeof draft?.prompt === 'string' || Array.isArray(draft?.attachments) ? draft : undefined
       saveTitle()
       const state = useWorkbenchStore.getState()
-      const projectId = state.projectMode === 'project' ? state.currentProjectId : null
+      // Unselected resolves to the built-in work project that owns home conversations.
+      const projectId =
+        state.projectMode === 'project' ? state.currentProjectId : findHomeProjectId(state.projects)
 
       if (!initialDraft) {
         // A blank new chat is the session a second "new chat" asks for: keep
@@ -99,12 +102,20 @@ export function useSessionNavigation(workbench: ReturnType<typeof useWorkbench>)
   const handleSwitchWorkspace = useCallback(
     (projectId: string | null) => {
       saveTitle()
-      workbench.selectProject(projectId)
-
+      // Exiting to unselected lands on the built-in work default project.
       const state = useWorkbenchStore.getState()
-      if (state.currentSessionId || (projectId && workbench.projectSessionErrors[projectId])) return
+      const targetProjectId = projectId ?? findHomeProjectId(state.projects)
+      workbench.selectProject(targetProjectId)
 
-      const sessionId = state.createDraftSession(projectId)
+      const nextState = useWorkbenchStore.getState()
+      if (
+        nextState.currentSessionId ||
+        (targetProjectId && workbench.projectSessionErrors[targetProjectId])
+      ) {
+        return
+      }
+
+      const sessionId = nextState.createDraftSession(targetProjectId)
       const session = useWorkbenchStore.getState().sessions[sessionId]
       if (!session) return
       // A blank session on workspace switch is ephemeral: it is only

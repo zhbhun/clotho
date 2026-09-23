@@ -2408,11 +2408,20 @@ describe('session list item', () => {
     })
   })
 
-  it('shows a home-mode session without a no-project metadata label', async () => {
+  it('labels a home-mode session with the work default project', async () => {
     vi.mocked(requestFromDesktop).mockImplementation(async (command) => {
       switch (command) {
         case 'claudeListProjects':
-          return []
+          return [
+            {
+              id: 'work-project',
+              path: '/Users/test',
+              name: 'work',
+              is_home: true,
+              sessions: [],
+              created_at: 0,
+            },
+          ]
         case 'claudeStartup':
           return { cwd: '/Users/test', commands: [], agents: [], models: [] }
         default:
@@ -2420,20 +2429,29 @@ describe('session list item', () => {
       }
     })
     useWorkbenchStore.setState({
-      currentProjectId: null,
+      currentProjectId: 'work-project',
       currentSessionId: 'local:home',
-      tabsByWorkspace: { claude: ['local:home'] },
-      activeSessionByWorkspace: { claude: 'local:home' },
-      projectMode: 'home',
-      projects: {},
+      tabsByWorkspace: { 'project:work-project': ['local:home'] },
+      activeSessionByWorkspace: { 'project:work-project': 'local:home' },
+      projectMode: 'project',
+      projects: {
+        'work-project': {
+          id: 'work-project',
+          path: '/Users/test',
+          name: 'work',
+          is_home: true,
+          sessions: ['local:home'],
+          created_at: 0,
+        },
+      },
       sessionActivity: {},
       sessions: {
         'local:home': {
           id: 'local:home',
           claudeSessionId: null,
           isDraft: false,
-          project_id: '',
-          project_path: '',
+          project_id: 'work-project',
+          project_path: '/Users/test',
           created_at: Math.floor(Date.now() / 1000),
           title: 'Home mode session',
         },
@@ -2446,7 +2464,8 @@ describe('session list item', () => {
     const sidebar = document.querySelector<HTMLElement>('[data-slot="sidebar"]')
     expect(sidebar).not.toBeNull()
     expect(await within(sidebar!).findByText('Home mode session')).toBeInTheDocument()
-    expect(within(sidebar!).getAllByText('Clotho')).not.toHaveLength(0)
+    expect(within(sidebar!).getAllByText('work')).not.toHaveLength(0)
+    expect(within(sidebar!).queryAllByText('Clotho')).toHaveLength(0)
   })
 
   it('keeps existing sessions visible while the sidebar refreshes in the background', () => {

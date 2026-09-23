@@ -13,6 +13,7 @@ import {
   useWorkbenchStore,
   workspaceKeyForProject,
 } from '../stores/workbench-store'
+import { findHomeProjectId } from '../utils/home-project'
 import { buildSessionTimeline, pickOpenOrPinnedSessions } from '../utils/session-list'
 import { useSessionActions } from './use-session-actions'
 
@@ -165,7 +166,10 @@ export function useProjects(
         .filter((session) =>
           currentProjectId
             ? session.project_id === currentProjectId && !session.isUnsavedDraft
-            : !session.project_id && !session.isUnsavedDraft,
+            : // Home conversations run with the homedir as cwd, so Claude
+              // stores them under a session-discovered project and their
+              // project_id is never empty; list everything instead.
+              !session.isUnsavedDraft,
         )
         .toSorted(
           (left, right) =>
@@ -208,15 +212,15 @@ export function useProjects(
       if (state.currentSessionId) return
       const workspaceKey = state.currentWorkspaceKey
       if (initializedWorkspaceDraftsRef.current.has(workspaceKey)) return
-      if (state.currentProjectId && sessionErrors[state.currentProjectId]) return
+      // Unselected resolves to the built-in work project that owns home
+      // conversations, so the initial draft and its candidate history share
+      // the work project id instead of the empty-project sentinel.
+      const targetProjectId = state.currentProjectId ?? findHomeProjectId(state.projects)
+      if (targetProjectId && sessionErrors[targetProjectId]) return
       initializedWorkspaceDraftsRef.current.add(workspaceKey)
 
       const candidates = Object.values(state.sessions)
-        .filter((session) =>
-          state.currentProjectId
-            ? session.project_id === state.currentProjectId
-            : !session.project_id,
-        )
+        .filter((session) => session.project_id === targetProjectId)
         .toSorted(
           (left, right) =>
             (right.updated_at ?? right.created_at) - (left.updated_at ?? left.created_at) ||
@@ -228,7 +232,7 @@ export function useProjects(
         return
       }
 
-      const sessionId = createDraftSession(state.currentProjectId)
+      const sessionId = createDraftSession(targetProjectId)
       const draft = useWorkbenchStore.getState().sessions[sessionId]
       if (!draft) return
       // The initial blank session stays in memory until it gains content.

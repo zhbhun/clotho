@@ -100,7 +100,9 @@ describe('session timeline', () => {
       'older-yesterday',
     ])
     expect(result[0]?.sessions[0]).toMatchObject({ projectLabel: 'alpha' })
-    expect(result[1]?.sessions[0]).toMatchObject({ projectLabel: 'Clotho' })
+    // A session without a project resolves its label from the path; the
+    // built-in work project normally supplies both.
+    expect(result[1]?.sessions[0]).toMatchObject({ projectLabel: '' })
   })
 
   it('moves pinned sessions into a leading pinned group without duplicating them', () => {

@@ -358,3 +358,57 @@ test('a workspace digest id survives reads instead of being rewritten to the pla
   })
   await expect(store.sessionOwnership()).resolves.toEqual({ 'claude-1': workspaceId })
 })
+
+test('legacy null home ownership reads as the work project id when one is provided', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'clotho-session-'))
+  const workId = projectIdFromPath('/Users/me')
+  const store = createSessionStorage(dir, workId)
+  await store.sessionWrite({
+    sessionId: 's1',
+    data: {
+      projectId: null,
+      projectPath: null,
+      claudeSessionId: 'claude-1',
+      input: {
+        prompt: 'hi',
+        attachments: [],
+        model: null,
+        permissionMode: 'default' as const,
+        agent: null,
+      },
+    },
+  })
+  await store.sessionBindOwner({
+    sessionId: 's1',
+    projectId: null,
+    claudeSessionId: 'claude-1',
+  })
+  await store.sessionUpdateDraft({
+    sessionId: 's2',
+    draft: { title: 'Home chat', createdAt: 1, updatedAt: 2, projectId: null, projectPath: null },
+  })
+
+  await expect(store.sessionOwnership()).resolves.toEqual({ 'claude-1': workId })
+  await expect(store.sessionListDrafts()).resolves.toEqual({
+    s2: expect.objectContaining({ projectId: workId }),
+  })
+  await expect(store.sessionRead({ sessionId: 's1' })).resolves.toEqual(
+    expect.objectContaining({ projectId: workId, claudeSessionId: 'claude-1' }),
+  )
+  // The stored file keeps its legacy null until the next write.
+  expect(
+    JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'))['s1'].projectId,
+  ).toBeNull()
+})
+
+test('without a home project id, null ownership stays null', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'clotho-session-'))
+  const store = createSessionStorage(dir)
+  await store.sessionBindOwner({
+    sessionId: 's1',
+    projectId: null,
+    claudeSessionId: 'claude-1',
+  })
+
+  await expect(store.sessionOwnership()).resolves.toEqual({ 'claude-1': null })
+})

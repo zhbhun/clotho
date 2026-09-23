@@ -95,6 +95,8 @@ export interface ClaudeProject {
   icon?: ProjectIcon
   /** Extra absolute directories Claude may access beyond the project path. */
   additional_directories?: string[]
+  /** The homedir-backed default project that owns home-mode conversations. */
+  is_home?: boolean
   sessions: string[]
   created_at: number
   most_recent_session?: number

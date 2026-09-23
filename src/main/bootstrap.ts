@@ -13,7 +13,9 @@ import { applicationMenuItems } from './application-menu'
 import { createClaudeDesktopService } from './claude-service'
 import { loadAttachmentFiles } from './claude/attachments'
 import { createModelProxy } from './claude/model-proxy'
+import { ensureWorkProject } from './claude/projects'
 import { createSessionFollowManager } from './claude/session-follow-manager'
+import { projectIdFromPath } from './claude/sessions'
 import { createSettingsStore, defaultSettings, readSettings } from './claude/settings'
 import { setDialogOwnerWindow } from './dialogs'
 import { createFatalErrorHandler, installGlobalErrorHandlers } from './logging/global-errors'
@@ -115,7 +117,13 @@ export async function bootstrap() {
       })
     }
     const stateStore = createStateStore(loadedState)
-    const sessionStorage = createSessionStorage(path.join(clothoDir(), 'sessions'))
+    // The homedir-backed work project owns home-mode conversations; make sure
+    // it is registered before anything reads projects or session ownership.
+    await ensureWorkProject()
+    const sessionStorage = createSessionStorage(
+      path.join(clothoDir(), 'sessions'),
+      projectIdFromPath(os.homedir()),
+    )
 
     const target = await getMainViewTarget({
       channel,

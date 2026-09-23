@@ -162,11 +162,9 @@ export function buildSessionTimeline({
       activity: sessionActivity[session.id] ?? 'idle',
       isPinned: Boolean(pinnedSessionIds?.has(session.id)),
       project,
-      projectLabel: session.project_id
-        ? project
-          ? projectDisplayName(project)
-          : projectNameFromPath(session.project_path) || session.project_id
-        : 'Clotho',
+      projectLabel: project
+        ? projectDisplayName(project)
+        : projectNameFromPath(session.project_path) || session.project_id,
       session,
     })
   }

@@ -327,7 +327,11 @@ function catalogState(
   for (const session of Object.values(current.sessions)) {
     const isLocallyIdentified =
       session.claudeSessionId === null || session.id !== session.claudeSessionId
-    if (!isLocallyIdentified || sessions[session.id]) continue
+    // Home conversations are excluded from every project catalog by session
+    // ownership, so the catalog can never restore them; keep them even when
+    // their local id already is the Claude session id.
+    const isCatalogRecoverable = Boolean(session.project_id)
+    if ((!isLocallyIdentified && isCatalogRecoverable) || sessions[session.id]) continue
 
     sessions[session.id] = session
   }

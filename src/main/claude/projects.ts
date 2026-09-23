@@ -63,6 +63,7 @@ const PROJECT_ICON_COLORS = new Set<ProjectIconColor>([
 ])
 const MAX_CUSTOM_ICON_DATA_URL_LENGTH = 100_000
 const CUSTOM_ICON_PATTERN = /^data:image\/(?:png|webp);base64,[A-Za-z0-9+/]+={0,2}$/
+const WORK_PROJECT_NAME = 'work'
 const logger = getLogger('projects')
 
 export function projectsJsonPath() {
@@ -426,11 +427,48 @@ export async function listClaudeProjects(
     mergeProjects(registeredProjects, visibleProjects),
   )
   rememberProjectPaths(projects)
-  return projects
+  return projects.map((project) =>
+    !project.additional_directories?.length && isSameProjectPath(project.path, homedir)
+      ? { ...project, is_home: true }
+      : project,
+  )
+}
+
+/**
+ * The homedir-backed default project owns home-mode conversations. Ensure it
+ * exists and stays named `work`, reviving a tombstone and keeping any other
+ * fields (icon, model defaults) the entry already carries.
+ */
+export async function ensureWorkProject(filePath = projectsJsonPath()) {
+  const homePath = path.resolve(os.homedir())
+  await updateRegisteredProjects(filePath, (projects) => {
+    const existing = projects.find(
+      (project) => isSameProjectPath(project.path, homePath) && !isWorkspaceEntry(project),
+    )
+    if (!existing) {
+      projects.push({
+        id: projectIdFromPath(homePath),
+        path: homePath,
+        name: WORK_PROJECT_NAME,
+        created_at: secondsNow(),
+      })
+      return
+    }
+    existing.deleted = false
+    if (!existing.name) existing.name = WORK_PROJECT_NAME
+  })
+}
+
+/** The homedir is reserved for the built-in work default project. */
+function assertNotHomeProjectPath(projectPath: string) {
+  if (isSameProjectPath(projectPath, os.homedir())) {
+    throw new Error('用户主目录已保留为默认项目 work')
+  }
 }
 
 export async function registerProjectPath(projectPath: string, filePath = projectsJsonPath()) {
   const normalizedPath = await canonicalProjectPath(projectPath)
+  assertNotHomeProjectPath(normalizedPath)
   const projectId = projectIdFromPath(normalizedPath)
   const now = secondsNow()
   const project = await updateRegisteredProjects(filePath, (projects) => {
@@ -466,6 +504,7 @@ export async function createProject(
   const name = validateProjectName(params.name)
   validateProjectIcon(params.icon)
   const normalizedPath = await canonicalProjectPath(await normalizeExistingDirectory(params.path))
+  assertNotHomeProjectPath(normalizedPath)
   const additionalDirectories = await normalizeAdditionalDirectories(
     params.additionalDirectories,
     normalizedPath,

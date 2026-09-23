@@ -9,8 +9,10 @@ import type { ClaudeProject } from '@/shared/rpc'
 
 import {
   createProject,
+  ensureWorkProject,
   listClaudeProjects,
   readRegisteredProjects,
+  registerProjectPath,
   removeProject,
   setProjectDefaultModel,
   updateProject,
@@ -656,5 +658,108 @@ describe('project registry', () => {
         filePath,
       ),
     ).rejects.toThrow('Project icon data is too large')
+  })
+})
+
+describe('work default project', () => {
+  it('registers the homedir as the work project when no entry exists', async () => {
+    const filePath = await tempProjectsFile()
+    const homePath = path.resolve(os.homedir())
+
+    await ensureWorkProject(filePath)
+
+    await expect(readRegisteredProjects(filePath)).resolves.toEqual([
+      {
+        id: projectIdFromPath(homePath),
+        path: homePath,
+        name: 'work',
+        created_at: expect.any(Number),
+      },
+    ])
+  })
+
+  it('fills in the work name on an existing homedir entry without touching other fields', async () => {
+    const filePath = await tempProjectsFile()
+    const homePath = path.resolve(os.homedir())
+    await writeRegisteredProjects(
+      [
+        {
+          id: projectIdFromPath(homePath),
+          path: homePath,
+          created_at: 10,
+          last_opened_at: 20,
+        },
+      ],
+      filePath,
+    )
+
+    await ensureWorkProject(filePath)
+
+    await expect(readRegisteredProjects(filePath)).resolves.toEqual([
+      {
+        id: projectIdFromPath(homePath),
+        path: homePath,
+        name: 'work',
+        created_at: 10,
+        last_opened_at: 20,
+        deleted: false,
+      },
+    ])
+  })
+
+  it('revives a deleted homedir entry', async () => {
+    const filePath = await tempProjectsFile()
+    const homePath = path.resolve(os.homedir())
+    await writeRegisteredProjects(
+      [
+        {
+          id: projectIdFromPath(homePath),
+          path: homePath,
+          name: 'work',
+          created_at: 10,
+          deleted: true,
+        },
+      ],
+      filePath,
+    )
+
+    await ensureWorkProject(filePath)
+
+    await expect(readRegisteredProjects(filePath)).resolves.toEqual([
+      expect.objectContaining({ id: projectIdFromPath(homePath), deleted: false, name: 'work' }),
+    ])
+  })
+
+  it('rejects creating or registering the homedir as a regular project', async () => {
+    const filePath = await tempProjectsFile()
+
+    await expect(createProject({ path: os.homedir(), name: 'Home' }, filePath)).rejects.toThrow(
+      '用户主目录已保留为默认项目 work',
+    )
+    await expect(registerProjectPath(os.homedir(), filePath)).rejects.toThrow(
+      '用户主目录已保留为默认项目 work',
+    )
+  })
+
+  it('marks the plain homedir entry as the home project in listings', async () => {
+    const filePath = await tempProjectsFile()
+    const otherPath = path.join(tempDir!, 'other')
+    await mkdir(otherPath)
+    await writeRegisteredProjects(
+      [
+        { id: projectIdFromPath(os.homedir()), path: path.resolve(os.homedir()), created_at: 10 },
+        { id: projectIdFromPath(otherPath), path: otherPath, created_at: 11 },
+      ],
+      filePath,
+    )
+
+    const projects = await listClaudeProjects(filePath)
+    expect(projects.find((project) => project.id === projectIdFromPath(otherPath))?.is_home).toBe(
+      undefined,
+    )
+    expect(
+      projects.find((project) => project.id === projectIdFromPath(path.resolve(os.homedir())))
+        ?.is_home,
+    ).toBe(true)
   })
 })
