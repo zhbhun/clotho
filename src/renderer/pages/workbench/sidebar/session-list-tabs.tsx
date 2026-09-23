@@ -45,15 +45,14 @@ export function SessionListTabs({
     <div className="flex h-8 items-center gap-0.5 px-2" data-session-list-tabs>
       {/* The tray stays a whisper above the sidebar surface (zcode-style): a faint
           tint, with the selected pill just one step lighter — a filled tray or a
-          high-contrast pill both read as a heavy chip. Dark mode needs a faint
-          outline or the background pill vanishes against the sidebar. */}
+          high-contrast pill both read as a heavy chip. */}
       <div className="me-auto flex items-center gap-0 rounded-full bg-sidebar-foreground/5 p-0.5">
         {TABS.map((tab) => (
           <button
             className={cn(
               'h-6 rounded-full px-2 text-xs whitespace-nowrap transition-colors outline-none',
               tab.value === activeTab
-                ? 'bg-background/50 text-foreground dark:border dark:border-input dark:bg-input/30'
+                ? 'bg-background/50 text-foreground dark:bg-input/30'
                 : 'text-foreground-subtlest hover:text-foreground',
             )}
             data-session-tab={tab.value}
