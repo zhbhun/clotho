@@ -761,5 +761,9 @@ describe('work default project', () => {
       projects.find((project) => project.id === projectIdFromPath(path.resolve(os.homedir())))
         ?.is_home,
     ).toBe(true)
+    expect(
+      projects.find((project) => project.id === projectIdFromPath(path.resolve(os.homedir())))
+        ?.icon,
+    ).toEqual({ type: 'preset', name: 'folder-kanban', color: 'neutral' })
   })
 })

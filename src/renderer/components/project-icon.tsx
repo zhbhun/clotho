@@ -5,6 +5,8 @@ import {
   CodeXml,
   FlaskConical,
   Folder,
+  FolderCode,
+  FolderKanban,
   Globe,
   GraduationCap,
   Heart,
@@ -61,9 +63,11 @@ export const PROJECT_ICON_COLORS: Array<{ color: ProjectIconColor; labelKey: Mes
   { color: 'pink', labelKey: 'project.icon.color.pink' },
 ]
 
-const ICONS = Object.fromEntries(
-  PROJECT_ICON_OPTIONS.map((option) => [option.name, option.icon]),
-) as Record<ProjectIconName, LucideIcon>
+const ICONS = {
+  'folder-code': FolderCode,
+  'folder-kanban': FolderKanban,
+  ...Object.fromEntries(PROJECT_ICON_OPTIONS.map((option) => [option.name, option.icon])),
+} as Record<ProjectIconName, LucideIcon>
 
 const COLOR_CLASSES: Record<ProjectIconColor, string> = {
   neutral: 'bg-muted text-foreground-subtle',
@@ -91,7 +95,7 @@ type PresetProjectIcon = Extract<ProjectIconValue, { type: 'preset' }>
 
 export const DEFAULT_PROJECT_ICON: PresetProjectIcon = {
   type: 'preset',
-  name: 'folder',
+  name: 'folder-code',
   color: 'neutral',
 }
 

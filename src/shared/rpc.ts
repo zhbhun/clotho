@@ -69,6 +69,8 @@ export type ProjectIconName =
   | 'code-xml'
   | 'flask-conical'
   | 'folder'
+  | 'folder-code'
+  | 'folder-kanban'
   | 'globe'
   | 'graduation-cap'
   | 'heart'

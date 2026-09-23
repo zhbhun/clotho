@@ -40,6 +40,8 @@ const PROJECT_ICON_NAMES = new Set<ProjectIconName>([
   'code-xml',
   'flask-conical',
   'folder',
+  'folder-code',
+  'folder-kanban',
   'globe',
   'graduation-cap',
   'heart',
@@ -64,6 +66,12 @@ const PROJECT_ICON_COLORS = new Set<ProjectIconColor>([
 const MAX_CUSTOM_ICON_DATA_URL_LENGTH = 100_000
 const CUSTOM_ICON_PATTERN = /^data:image\/(?:png|webp);base64,[A-Za-z0-9+/]+={0,2}$/
 const WORK_PROJECT_NAME = 'work'
+/** The built-in home project defaults to a kanban folder icon unless customized. */
+const HOME_PROJECT_ICON: ProjectIcon = {
+  type: 'preset',
+  name: 'folder-kanban',
+  color: 'neutral',
+}
 const logger = getLogger('projects')
 
 export function projectsJsonPath() {
@@ -429,7 +437,7 @@ export async function listClaudeProjects(
   rememberProjectPaths(projects)
   return projects.map((project) =>
     !project.additional_directories?.length && isSameProjectPath(project.path, homedir)
-      ? { ...project, is_home: true }
+      ? { ...project, icon: project.icon ?? HOME_PROJECT_ICON, is_home: true }
       : project,
   )
 }

@@ -15,6 +15,7 @@ import type {
 } from '@/shared/rpc'
 
 import {
+  DEFAULT_PROJECT_ICON,
   PROJECT_ICON_COLORS,
   PROJECT_ICON_OPTIONS,
   PROJECT_ICON_SWATCH_CLASSES,
@@ -58,7 +59,7 @@ export function IconPicker({
   function handleColor(color: ProjectIconColor) {
     onChange({
       type: 'preset',
-      name: value?.type === 'preset' ? value.name : 'folder',
+      name: value?.type === 'preset' ? value.name : DEFAULT_PROJECT_ICON.name,
       color,
     })
   }
@@ -150,7 +151,7 @@ export function IconPicker({
               const isSelected =
                 value?.type === 'preset'
                   ? value.name === option.name
-                  : !value && option.name === 'folder'
+                  : !value && option.name === DEFAULT_PROJECT_ICON.name
               return (
                 <Button
                   key={option.name}
