@@ -102,7 +102,8 @@ export function SessionTabs({
   return (
     <Tabs
       ref={scrollerRef}
-      className="no-scrollbar min-w-0 flex-1 items-center gap-0 overflow-x-auto overflow-y-hidden pl-3 data-[orientation=horizontal]:flex-row"
+      /* 9px + the tab surfaces' 3px inset = the 12px visual gap to the project button. */
+      className="no-scrollbar min-w-0 flex-1 items-center gap-0 overflow-x-auto overflow-y-hidden pl-2.25 data-[orientation=horizontal]:flex-row"
       value={activeSessionId ?? ''}
       onValueChange={handleTabChange}
     >
