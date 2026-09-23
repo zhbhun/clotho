@@ -54,7 +54,7 @@ function AttachmentCard({
       aria-label={attachment.name}
       className={cn(
         'h-16 flex-nowrap rounded-xl',
-        isImage ? 'w-16 min-w-16 overflow-hidden p-0!' : 'min-w-32 max-w-64',
+        isImage ? 'w-16 min-w-16 p-0!' : 'min-w-32 max-w-48',
         isEmbedded && [
           'border-[color-mix(in_oklab,var(--secondary),var(--foreground)_14%)] bg-transparent',
           'has-[>a,>button]:hover:bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_8%)]',
@@ -65,7 +65,7 @@ function AttachmentCard({
     >
       <AttachmentMedia
         className={cn(
-          isImage ? 'size-full rounded-none' : undefined,
+          isImage ? 'size-full rounded-[inherit]' : undefined,
           isEmbedded && !isImage && EMBEDDED_FILL,
         )}
         variant={isImage ? 'image' : 'icon'}
@@ -84,16 +84,16 @@ function AttachmentCard({
         )}
       </AttachmentMedia>
       {!isImage ? (
-        <AttachmentContent className={onRemove ? 'pr-5' : undefined}>
+        <AttachmentContent>
           <AttachmentTitle>{attachment.name}</AttachmentTitle>
           <AttachmentDescription>{extension?.toUpperCase() ?? 'FILE'}</AttachmentDescription>
         </AttachmentContent>
       ) : null}
       {onRemove ? (
-        <AttachmentActions className="absolute top-1 right-1 opacity-0 transition-opacity group-focus-within/attachment:opacity-100 group-hover/attachment:opacity-100">
+        <AttachmentActions className="absolute -top-1.5 -right-1.5 opacity-0 transition-opacity group-focus-within/attachment:opacity-100 group-hover/attachment:opacity-100">
           <AttachmentAction
             aria-label={t('workbench.prompt.removeFile', { name: attachment.name })}
-            className="rounded-full"
+            className="rounded-full bg-popover ring-1 ring-foreground/10"
             disabled={disabled}
             variant="secondary"
             onClick={onRemove}
@@ -147,7 +147,8 @@ export function AttachmentList({
       viewportProps={onRemove ? { tabIndex: -1 } : undefined}
       viewportRef={viewportRef}
     >
-      <div className="flex w-max min-w-0 gap-2 pb-2" data-slot="attachment-list">
+      {/* pt keeps the straddling remove badge inside the scroll viewport; gap clears its overhang. */}
+      <div className="flex w-max min-w-0 gap-2.5 pt-1.5 pb-2" data-slot="attachment-list">
         {attachments.map((attachment, index) => (
           <AttachmentCard
             key={attachment.content?.source.path ?? `${attachment.name}:${index}`}
