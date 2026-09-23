@@ -150,7 +150,9 @@ export function ProjectSettings({
   }
 
   let content
-  if (isLoading) {
+  // A catalog refresh (e.g. after saving a project) must not blank out the
+  // list that is already on screen; only the first load has nothing to show.
+  if (isLoading && sortedProjects.length === 0) {
     content = null
   } else if (error) {
     content = (

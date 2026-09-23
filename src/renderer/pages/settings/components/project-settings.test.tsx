@@ -60,6 +60,23 @@ describe('ProjectSettings', () => {
     await waitFor(() => expect(onRemoveProject).toHaveBeenCalledWith(alpha))
   })
 
+  it('keeps the project list visible while a refresh reloads the catalog', () => {
+    renderWithShortcuts(
+      <TooltipProvider>
+        <ProjectSettings
+          isLoading
+          projects={[alpha]}
+          onCreateProject={vi.fn()}
+          onEditProject={vi.fn()}
+          onRemoveProject={vi.fn()}
+        />
+      </TooltipProvider>,
+    )
+
+    expect(screen.getByText('Alpha')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '添加项目' })).toBeInTheDocument()
+  })
+
   it('keeps the confirmation open when removal fails', async () => {
     const user = userEvent.setup()
 
