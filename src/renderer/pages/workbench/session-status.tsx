@@ -45,7 +45,14 @@ export function SessionStatus({ activity, icon }: { activity: SessionActivity; i
           {icon}
         </span>
       ) : null}
-      {isProcessing ? <SessionSpinner className="absolute inset-0" /> : null}
+      {isProcessing ? (
+        <SessionSpinner
+          // !: SidebarMenuButton forces [&_svg]:size-4, which would win over
+          // a plain size-* class and pin the spinner back to 16px.
+          className={icon ? 'absolute inset-0' : 'absolute inset-0 m-auto size-3!'}
+          withTrack={!icon}
+        />
+      ) : null}
       {icon ? (
         // Badge dot pinned to the icon's top-right corner. It stays mounted so
         // it fades in and out instead of popping, and the icon never hides.
@@ -57,22 +64,44 @@ export function SessionStatus({ activity, icon }: { activity: SessionActivity; i
           )}
         />
       ) : dotClassName ? (
-        // Sidebar rows have no session icon: keep the plain centered dot.
-        <span className={cn('size-1.5 rounded-full', dotClassName)} />
+        // Sidebar rows have no session icon: keep the plain centered dot,
+        // one step larger than the tab's corner badge.
+        <span className={cn('size-2 rounded-full', dotClassName)} />
       ) : null}
       {labelKey ? <span className="sr-only">{t(labelKey)}</span> : null}
     </span>
   )
 }
 
-function SessionSpinner({ className }: { className?: string }) {
+function SessionSpinner({
+  className,
+  withTrack = false,
+}: {
+  className?: string
+  withTrack?: boolean
+}) {
   // 3/4 arc: circumference 2π×6.5 ≈ 40.84 → dash 30.63.
   return (
     <svg
       aria-hidden="true"
-      className={cn('session-status-spinner size-4 animate-spin text-foreground-subtle', className)}
+      className={cn(
+        'session-status-spinner size-4 animate-spin text-foreground-subtlest',
+        className,
+      )}
       viewBox="0 0 16 16"
     >
+      {withTrack ? (
+        // Faint full ring under the arc, so the spinner reads as a circle.
+        <circle
+          cx="8"
+          cy="8"
+          fill="none"
+          opacity="0.25"
+          r="6.5"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        />
+      ) : null}
       <circle
         cx="8"
         cy="8"

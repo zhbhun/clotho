@@ -1,5 +1,9 @@
 /* Chrome-style loading: the icon shrinks inside a spinning 3/4 arc
    (.session-status-spinner renders the arc, .session-status-icon animates it). */
+.session-status-spinner {
+  animation-duration: 1.5s;
+}
+
 [data-reduced-motion='reduce'] .session-status-spinner {
   animation: none;
 }
