@@ -104,7 +104,7 @@ export function IconPicker({
               />
             }
           >
-            <ProjectIcon icon={value} size="large" />
+            <ProjectIcon icon={value} plain size="large" />
           </TooltipTrigger>
           <TooltipContent>{t('project.icon.choose')}</TooltipContent>
         </Tooltip>
