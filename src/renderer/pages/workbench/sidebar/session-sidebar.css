@@ -22,6 +22,14 @@
   transition: none;
 }
 
+/* While the window edge is being dragged, width must track the pointer
+   immediately; click- and breakpoint-triggered collapse/expand happen after
+   the flag settles and keep their transitions. */
+.session-sidebar-layout[data-window-resizing='true'] [data-slot='sidebar-gap'],
+.session-sidebar-layout[data-window-resizing='true'] [data-slot='sidebar-container'] {
+  transition: none;
+}
+
 .session-sidebar-layout {
   --sidebar-divider-hover: color-mix(in oklab, var(--border) 89%, var(--foreground) 11%);
 }

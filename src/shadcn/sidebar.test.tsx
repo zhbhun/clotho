@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { MOBILE_BREAKPOINT } from './hooks/use-mobile'
 import { Sidebar, SidebarProvider, SidebarTrigger } from './sidebar'
 
 function stubViewport(width: number) {
@@ -8,7 +9,7 @@ function stubViewport(width: number) {
   vi.stubGlobal(
     'matchMedia',
     vi.fn((query: string) => ({
-      matches: query.includes('max-width') ? window.innerWidth < 640 : false,
+      matches: query.includes('max-width') ? window.innerWidth < MOBILE_BREAKPOINT : false,
       media: query,
       onchange: null,
       addEventListener: vi.fn(),
@@ -41,7 +42,7 @@ function renderSidebar() {
 }
 
 describe('Sidebar', () => {
-  it('keeps the docked tree mounted below 640px so crossing the breakpoint animates like the toggle', () => {
+  it('keeps the docked tree mounted below the breakpoint so crossing it animates like the toggle', () => {
     stubViewport(500)
     renderSidebar()
 

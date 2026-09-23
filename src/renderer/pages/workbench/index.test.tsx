@@ -454,6 +454,14 @@ describe('ConversationHeader', () => {
 })
 
 describe('resizable sidebar', () => {
+  beforeEach(() => {
+    // Keep the absolute 400px cap reachable: a third of this viewport exceeds it.
+    Object.defineProperty(window, 'innerWidth', { value: 1300, configurable: true })
+  })
+  afterEach(() => {
+    Object.defineProperty(window, 'innerWidth', { value: 1024, configurable: true })
+  })
+
   it('uses the configured shortcut instead of the shadcn sidebar default', async () => {
     await initializeAppI18n('en', ['en-US'])
     vi.mocked(requestFromDesktop).mockImplementation(async (command) => {

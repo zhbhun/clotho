@@ -10,14 +10,19 @@ import {
   useState,
 } from 'react'
 
+import { MIN_DOCKED_SIDEBAR_WIDTH } from '@/shadcn/hooks/use-mobile'
 import { SidebarProvider } from '@/shadcn/sidebar'
 
 import { readUiState, updateUiState } from '../services/ui-storage'
 import { APP_SIDEBAR_DEFAULT_WIDTH } from './app-layout'
 
-const MIN_SIDEBAR_WIDTH = 256
 const MAX_SIDEBAR_WIDTH = 400
+const MIN_SIDEBAR_WIDTH = MIN_DOCKED_SIDEBAR_WIDTH
 const SIDEBAR_COLLAPSE_THRESHOLD = MIN_SIDEBAR_WIDTH / 2
+// Continuous window drags fire resize every frame; the flag stays up this long
+// after the last event so width follows the pointer immediately (no transition)
+// while click-triggered collapse/expand after settling still animates.
+const WINDOW_RESIZE_SETTLE_MS = 150
 
 type SidebarResizeContextValue = {
   finishResize: () => void
@@ -51,13 +56,23 @@ export function ResizableSidebarProvider({
   const [preferredWidth, setPreferredWidth] = useState(loadSidebarWidth)
   const [isResizing, setIsResizing] = useState(false)
   const [windowWidth, setWindowWidth] = useState(() => window.innerWidth)
+  const [isWindowResizing, setIsWindowResizing] = useState(false)
   const widthRef = useRef(preferredWidth)
   useEffect(() => {
-    const handleWindowResize = () => setWindowWidth(window.innerWidth)
+    let settleTimer: ReturnType<typeof setTimeout> | undefined
+    const handleWindowResize = () => {
+      setWindowWidth(window.innerWidth)
+      setIsWindowResizing(true)
+      clearTimeout(settleTimer)
+      settleTimer = setTimeout(() => setIsWindowResizing(false), WINDOW_RESIZE_SETTLE_MS)
+    }
     window.addEventListener('resize', handleWindowResize)
-    return () => window.removeEventListener('resize', handleWindowResize)
+    return () => {
+      window.removeEventListener('resize', handleWindowResize)
+      clearTimeout(settleTimer)
+    }
   }, [])
-  const maxWidth = Math.min(MAX_SIDEBAR_WIDTH, Math.floor(windowWidth / 2))
+  const maxWidth = Math.min(MAX_SIDEBAR_WIDTH, Math.floor(windowWidth / 3))
   const width = clampSidebarWidth(preferredWidth, maxWidth)
   const resize = useCallback(
     (pointerX: number) => {
@@ -90,6 +105,7 @@ export function ResizableSidebarProvider({
       <SidebarProvider
         {...props}
         data-sidebar-resizing={isResizing ? 'true' : undefined}
+        data-window-resizing={isWindowResizing ? 'true' : undefined}
         style={
           {
             ...style,
