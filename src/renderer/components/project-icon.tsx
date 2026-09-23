@@ -27,47 +27,26 @@ import type {
   ProjectIcon as ProjectIconValue,
 } from '@/shared/rpc'
 
-import type { MessageKey } from '../i18n/resources'
-
-export const PROJECT_ICON_OPTIONS: Array<{
-  name: ProjectIconName
-  labelKey: MessageKey
-  icon: LucideIcon
-}> = [
-  { name: 'folder', labelKey: 'project.icon.name.folder', icon: Folder },
-  { name: 'code-xml', labelKey: 'project.icon.name.code', icon: CodeXml },
-  { name: 'terminal', labelKey: 'project.icon.name.terminal', icon: Terminal },
-  { name: 'book-open', labelKey: 'project.icon.name.book', icon: BookOpen },
-  { name: 'graduation-cap', labelKey: 'project.icon.name.study', icon: GraduationCap },
-  { name: 'pencil', labelKey: 'project.icon.name.pencil', icon: Pencil },
-  { name: 'pen-tool', labelKey: 'project.icon.name.design', icon: PenTool },
-  { name: 'music', labelKey: 'project.icon.name.music', icon: Music },
-  { name: 'palette', labelKey: 'project.icon.name.creative', icon: Palette },
-  { name: 'briefcase', labelKey: 'project.icon.name.briefcase', icon: BriefcaseBusiness },
-  { name: 'chart', labelKey: 'project.icon.name.chart', icon: ChartNoAxesColumnIncreasing },
-  { name: 'globe', labelKey: 'project.icon.name.web', icon: Globe },
-  { name: 'wrench', labelKey: 'project.icon.name.tools', icon: Wrench },
-  { name: 'heart', labelKey: 'project.icon.name.favorite', icon: Heart },
-  { name: 'flask-conical', labelKey: 'project.icon.name.experiment', icon: FlaskConical },
-  { name: 'paw-print', labelKey: 'project.icon.name.pet', icon: PawPrint },
-]
-
-export const PROJECT_ICON_COLORS: Array<{ color: ProjectIconColor; labelKey: MessageKey }> = [
-  { color: 'neutral', labelKey: 'project.icon.color.neutral' },
-  { color: 'red', labelKey: 'project.icon.color.red' },
-  { color: 'orange', labelKey: 'project.icon.color.orange' },
-  { color: 'amber', labelKey: 'project.icon.color.amber' },
-  { color: 'green', labelKey: 'project.icon.color.green' },
-  { color: 'blue', labelKey: 'project.icon.color.blue' },
-  { color: 'violet', labelKey: 'project.icon.color.violet' },
-  { color: 'pink', labelKey: 'project.icon.color.pink' },
-]
-
-const ICONS = {
+const ICONS: Record<ProjectIconName, LucideIcon> = {
+  'book-open': BookOpen,
+  briefcase: BriefcaseBusiness,
+  chart: ChartNoAxesColumnIncreasing,
+  'code-xml': CodeXml,
+  'flask-conical': FlaskConical,
+  folder: Folder,
   'folder-code': FolderCode,
   'folder-kanban': FolderKanban,
-  ...Object.fromEntries(PROJECT_ICON_OPTIONS.map((option) => [option.name, option.icon])),
-} as Record<ProjectIconName, LucideIcon>
+  globe: Globe,
+  'graduation-cap': GraduationCap,
+  heart: Heart,
+  music: Music,
+  palette: Palette,
+  'paw-print': PawPrint,
+  'pen-tool': PenTool,
+  pencil: Pencil,
+  terminal: Terminal,
+  wrench: Wrench,
+}
 
 const COLOR_CLASSES: Record<ProjectIconColor, string> = {
   neutral: 'bg-muted text-foreground-subtle',
@@ -80,17 +59,6 @@ const COLOR_CLASSES: Record<ProjectIconColor, string> = {
   pink: 'bg-project-icon-pink/10 text-project-icon-pink',
 }
 
-export const PROJECT_ICON_SWATCH_CLASSES: Record<ProjectIconColor, string> = {
-  neutral: 'bg-foreground',
-  red: 'bg-project-icon-red',
-  orange: 'bg-project-icon-orange',
-  amber: 'bg-project-icon-amber',
-  green: 'bg-project-icon-green',
-  blue: 'bg-project-icon-blue',
-  violet: 'bg-project-icon-violet',
-  pink: 'bg-project-icon-pink',
-}
-
 type PresetProjectIcon = Extract<ProjectIconValue, { type: 'preset' }>
 
 export const DEFAULT_PROJECT_ICON: PresetProjectIcon = {
@@ -98,6 +66,13 @@ export const DEFAULT_PROJECT_ICON: PresetProjectIcon = {
   name: 'folder-code',
   color: 'neutral',
 }
+
+const EMOJI_CHAR_CLASSES = {
+  compact: 'text-[10px]',
+  small: 'text-base',
+  default: 'text-xl',
+  large: 'text-2xl',
+} as const
 
 export function ProjectIcon({
   className,
@@ -144,6 +119,25 @@ export function ProjectIcon({
     )
   }
 
+  if (icon?.type === 'emoji') {
+    return (
+      <span
+        data-slot="project-icon"
+        className={cn(
+          'flex shrink-0 select-none items-center justify-center',
+          containerSizeClass,
+          className,
+        )}
+      >
+        <span aria-hidden className={EMOJI_CHAR_CLASSES[size]}>
+          {icon.char}
+        </span>
+      </span>
+    )
+  }
+
+  // Preset icons can no longer be picked but projects saved by older builds
+  // still carry them; anything unknown falls back to the default preset.
   const preset = icon?.type === 'preset' ? icon : DEFAULT_PROJECT_ICON
   const Icon = ICONS[preset.name]
   return (

@@ -85,8 +85,13 @@ export type ProjectIconName =
 export type ProjectIconColor =
   'neutral' | 'red' | 'orange' | 'amber' | 'green' | 'blue' | 'violet' | 'pink'
 
+/**
+ * `preset` icons can no longer be picked but stay valid: projects saved by
+ * older builds keep rendering their original lucide icon.
+ */
 export type ProjectIcon =
   | { type: 'preset'; name: ProjectIconName; color: ProjectIconColor }
+  | { type: 'emoji'; char: string }
   | { type: 'custom'; dataUrl: string }
 
 export interface ClaudeProject {

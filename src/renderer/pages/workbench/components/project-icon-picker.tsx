@@ -1,32 +1,20 @@
-import { ImagePlus } from 'lucide-react'
 import { type ChangeEvent, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shadcn/popover'
-import { Separator } from '@/shadcn/separator'
 import { toast } from '@/shadcn/toast'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip'
-import { cn } from '@/shadcn/utils'
-import type {
-  ProjectIconColor,
-  ProjectIconName,
-  ProjectIcon as ProjectIconValue,
-} from '@/shared/rpc'
+import type { ProjectIcon as ProjectIconValue } from '@/shared/rpc'
 
-import {
-  DEFAULT_PROJECT_ICON,
-  PROJECT_ICON_COLORS,
-  PROJECT_ICON_OPTIONS,
-  PROJECT_ICON_SWATCH_CLASSES,
-  ProjectIcon,
-} from '../../../components/project-icon'
+import { ProjectIcon } from '../../../components/project-icon'
 import type { MessageKey } from '../../../i18n/resources'
 import {
   ProjectImageError,
   type ProjectImageErrorCode,
   projectIconDataUrlFromFile,
 } from '../../../utils/project-image'
+import { EmojiPicker } from './emoji-picker/emoji-picker'
 
 const PROJECT_IMAGE_ERROR_KEYS = {
   'png-unavailable': 'project.error.image.pngUnavailable',
@@ -49,19 +37,12 @@ export function IconPicker({
 }) {
   const { t } = useTranslation()
   const inputRef = useRef<HTMLInputElement>(null)
+  const suppressOutsidePressRef = useRef(false)
   const [isOpen, setOpen] = useState(false)
-  const presetColor = value?.type === 'preset' ? value.color : 'neutral'
 
-  function handlePreset(name: ProjectIconName) {
-    onChange({ type: 'preset', name, color: presetColor })
-  }
-
-  function handleColor(color: ProjectIconColor) {
-    onChange({
-      type: 'preset',
-      name: value?.type === 'preset' ? value.name : DEFAULT_PROJECT_ICON.name,
-      color,
-    })
+  function handleEmoji(char: string) {
+    onChange({ type: 'emoji', char })
+    setOpen(false)
   }
 
   async function handleImage(event: ChangeEvent<HTMLInputElement>) {
@@ -72,7 +53,6 @@ export function IconPicker({
     onProcessingChange(true)
     try {
       onChange({ type: 'custom', dataUrl: await projectIconDataUrlFromFile(file) })
-      setOpen(false)
     } catch (caught) {
       const message =
         caught instanceof ProjectImageError
@@ -95,7 +75,19 @@ export function IconPicker({
         type="file"
         onChange={handleImage}
       />
-      <Popover open={isOpen} onOpenChange={setOpen}>
+      <Popover
+        open={isOpen}
+        onOpenChange={(nextOpen, details) => {
+          // The hidden file input lives outside the popup DOM, so its
+          // programmatic click reads as an outside press; keep the panel
+          // open while that synthetic click picks a file.
+          if (!nextOpen && suppressOutsidePressRef.current && details.reason === 'outside-press') {
+            details.cancel()
+            return
+          }
+          setOpen(nextOpen)
+        }}
+      >
         <Tooltip>
           <TooltipTrigger
             render={
@@ -116,73 +108,16 @@ export function IconPicker({
           </TooltipTrigger>
           <TooltipContent>{t('project.icon.choose')}</TooltipContent>
         </Tooltip>
-        <PopoverContent align="start" className="w-80" glass>
-          <div className="flex flex-wrap gap-2">
-            {PROJECT_ICON_COLORS.map((option) => {
-              const isSelected =
-                value?.type === 'preset'
-                  ? value.color === option.color
-                  : !value && option.color === 'neutral'
-              return (
-                <Button
-                  key={option.color}
-                  aria-label={t('project.icon.color', { color: t(option.labelKey) })}
-                  aria-pressed={isSelected}
-                  disabled={disabled}
-                  size="icon-sm"
-                  type="button"
-                  variant={isSelected ? 'outline' : 'ghost'}
-                  onClick={() => handleColor(option.color)}
-                >
-                  <span
-                    className={cn(
-                      'size-3.5 rounded-full',
-                      PROJECT_ICON_SWATCH_CLASSES[option.color],
-                    )}
-                  />
-                </Button>
-              )
-            })}
-          </div>
-          <Separator />
-          <div className="grid grid-cols-8 gap-1">
-            {PROJECT_ICON_OPTIONS.map((option) => {
-              const Icon = option.icon
-              const isSelected =
-                value?.type === 'preset'
-                  ? value.name === option.name
-                  : !value && option.name === DEFAULT_PROJECT_ICON.name
-              return (
-                <Button
-                  key={option.name}
-                  aria-label={t('project.icon.option', { icon: t(option.labelKey) })}
-                  aria-pressed={isSelected}
-                  disabled={disabled}
-                  size="icon-lg"
-                  type="button"
-                  variant={isSelected ? 'outline' : 'ghost'}
-                  onClick={() => handlePreset(option.name)}
-                >
-                  <Icon />
-                </Button>
-              )
-            })}
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between gap-2">
-            <Button
-              disabled={disabled}
-              type="button"
-              variant="outline"
-              onClick={() => inputRef.current?.click()}
-            >
-              <ImagePlus data-icon="inline-start" />
-              {t('project.image.choose')}
-            </Button>
-            <Button disabled={disabled} type="button" onClick={() => setOpen(false)}>
-              {t('common.done')}
-            </Button>
-          </div>
+        <PopoverContent align="center" className="w-96" glass>
+          <EmojiPicker
+            disabled={disabled}
+            onChoose={handleEmoji}
+            onChooseImage={() => {
+              suppressOutsidePressRef.current = true
+              inputRef.current?.click()
+              suppressOutsidePressRef.current = false
+            }}
+          />
         </PopoverContent>
       </Popover>
     </>

@@ -176,16 +176,19 @@ describe('ProjectDialog', () => {
 
     renderWithShortcuts(<ProjectDialog open onOpenChange={vi.fn()} onSaved={vi.fn()} />)
 
-    await user.click(screen.getByRole('button', { name: '选择项目图标' }))
-    const imageInput = screen.getByLabelText('选择自定义图标')
-    await user.click(screen.getByRole('button', { name: '完成' }))
+    const trigger = screen.getByRole('button', { name: '选择项目图标' })
+    await user.click(trigger)
+    // The image button inside the picker shares the input's label; select by type instead.
+    const imageInput = document.querySelector('input[type="file"]')
+    expect(imageInput).not.toBeNull()
+    await user.click(trigger)
     expect(imageInput).toBeInTheDocument()
 
-    fireEvent.change(imageInput, {
+    fireEvent.change(imageInput!, {
       target: { files: [new File(['image'], 'icon.png', { type: 'image/png' })] },
     })
 
-    expect(screen.getByRole('button', { name: '选择项目图标' })).toBeDisabled()
+    expect(trigger).toBeDisabled()
     resolveImage('data:image/png;base64,cG5n')
     await waitFor(() =>
       expect(document.querySelector('[data-slot="project-icon"] img')).toHaveAttribute(
@@ -193,6 +196,21 @@ describe('ProjectDialog', () => {
         'data:image/png;base64,cG5n',
       ),
     )
+  })
+
+  it('keeps the picker open after the custom-image button opens the file dialog', async () => {
+    const user = userEvent.setup()
+
+    renderWithShortcuts(<ProjectDialog open onOpenChange={vi.fn()} onSaved={vi.fn()} />)
+
+    await user.click(screen.getByRole('button', { name: '选择项目图标' }))
+    expect(screen.getByPlaceholderText('搜索表情')).toBeInTheDocument()
+
+    // The hidden file input sits outside the popup DOM, so its programmatic
+    // click reads as an outside press; the picker must suppress that close.
+    await user.click(screen.getByRole('button', { name: '选择自定义图标' }))
+
+    expect(screen.getByPlaceholderText('搜索表情')).toBeInTheDocument()
   })
 
   it('shows the selected folder path after the picker returns', async () => {

@@ -12,6 +12,7 @@ import {
   ensureWorkProject,
   listClaudeProjects,
   readRegisteredProjects,
+  readRegisteredProjectsStrict,
   registerProjectPath,
   removeProject,
   setProjectDefaultModel,
@@ -262,14 +263,14 @@ describe('project registry', () => {
       {
         path: projectPath,
         name: 'Alpha restored',
-        icon: { type: 'preset', name: 'folder', color: 'blue' },
+        icon: { type: 'emoji', char: '📁' },
       },
       filePath,
     )
 
     expect(project).toMatchObject({
       name: 'Alpha restored',
-      icon: { type: 'preset', name: 'folder', color: 'blue' },
+      icon: { type: 'emoji', char: '📁' },
       default_provider_id: 'glm',
       default_model_id: 'glm-5.2[1M]',
     })
@@ -338,7 +339,7 @@ describe('project registry', () => {
         {
           projectId: alphaId,
           name: 'Alpha edited',
-          icon: { type: 'preset', name: 'terminal', color: 'green' },
+          icon: { type: 'emoji', char: '🚀' },
         },
         filePath,
       ),
@@ -351,7 +352,7 @@ describe('project registry', () => {
     await expect(readRegisteredProjects(filePath)).resolves.toEqual([
       expect.objectContaining({
         name: 'Alpha edited',
-        icon: { type: 'preset', name: 'terminal', color: 'green' },
+        icon: { type: 'emoji', char: '🚀' },
         default_provider_id: 'glm',
         default_model_id: 'glm-5.2[1M]',
       }),
@@ -658,6 +659,44 @@ describe('project registry', () => {
         filePath,
       ),
     ).rejects.toThrow('Project icon data is too large')
+    await expect(
+      createProject(
+        { path: projectPath, name: 'Alpha', icon: { type: 'emoji', char: 'not emoji' } },
+        filePath,
+      ),
+    ).rejects.toThrow('Invalid project icon')
+  })
+
+  it('keeps preset icons and drops unrecognized icon shapes when loading', async () => {
+    const filePath = await tempProjectsFile()
+    await writeFile(
+      filePath,
+      `${JSON.stringify([
+        {
+          id: projectIdFromPath('/tmp/alpha'),
+          path: '/tmp/alpha',
+          created_at: 10,
+          icon: { type: 'preset', name: 'folder', color: 'blue' },
+        },
+        {
+          id: projectIdFromPath('/tmp/beta'),
+          path: '/tmp/beta',
+          created_at: 11,
+          icon: { type: 'glyph', name: 'mystery' },
+        },
+      ])}\n`,
+      'utf8',
+    )
+
+    const expected = [
+      expect.objectContaining({
+        path: '/tmp/alpha',
+        icon: { type: 'preset', name: 'folder', color: 'blue' },
+      }),
+      expect.objectContaining({ path: '/tmp/beta', icon: undefined }),
+    ]
+    await expect(readRegisteredProjects(filePath)).resolves.toEqual(expected)
+    await expect(readRegisteredProjectsStrict(filePath)).resolves.toEqual(expected)
   })
 })
 

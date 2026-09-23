@@ -33,6 +33,14 @@ export type RegisteredProject = {
 
 const projectPaths = new Map<string, string>()
 const registryQueues = new Map<string, Promise<void>>()
+const MAX_CUSTOM_ICON_DATA_URL_LENGTH = 100_000
+const CUSTOM_ICON_PATTERN = /^data:image\/(?:png|webp);base64,[A-Za-z0-9+/]+={0,2}$/
+/** One emoji cluster: pictographics joined by ZWJ, plus flags, keycaps and skin-tone modifiers. */
+const EMOJI_ICON_PATTERN =
+  /^(?:\p{Extended_Pictographic}|\p{Regional_Indicator}|\p{Emoji_Modifier}|[#*0-9]\uFE0F?\u20E3|\u200D|\uFE0F)+$/u
+const MAX_EMOJI_ICON_LENGTH = 32
+const WORK_PROJECT_NAME = 'work'
+/** Preset icons can no longer be picked but stay valid for projects saved by older builds. */
 const PROJECT_ICON_NAMES = new Set<ProjectIconName>([
   'book-open',
   'briefcase',
@@ -63,9 +71,6 @@ const PROJECT_ICON_COLORS = new Set<ProjectIconColor>([
   'violet',
   'pink',
 ])
-const MAX_CUSTOM_ICON_DATA_URL_LENGTH = 100_000
-const CUSTOM_ICON_PATTERN = /^data:image\/(?:png|webp);base64,[A-Za-z0-9+/]+={0,2}$/
-const WORK_PROJECT_NAME = 'work'
 /** The built-in home project defaults to a kanban folder icon unless customized. */
 const HOME_PROJECT_ICON: ProjectIcon = {
   type: 'preset',
@@ -100,6 +105,14 @@ function trustedProjectId(storedId: string, normalizedPath: string) {
     storedId === projectIdFromPath(normalizedPath, true)
     ? storedId
     : projectIdFromPath(normalizedPath)
+}
+
+/** Unrecognizable icon shapes are dropped rather than rejecting the whole entry. */
+function withLoadedIcon(project: RegisteredProject): RegisteredProject {
+  return {
+    ...project,
+    icon: project.icon && isProjectIcon(project.icon) ? project.icon : undefined,
+  }
 }
 
 function projectSortName(project: Pick<ClaudeProject, 'name' | 'path'>) {
@@ -154,6 +167,14 @@ function isProjectIcon(value: unknown): value is ProjectIcon {
       PROJECT_ICON_COLORS.has(candidate.color as ProjectIconColor)
     )
   }
+  if (candidate.type === 'emoji') {
+    const char = candidate.char
+    return (
+      typeof char === 'string' &&
+      char.length <= MAX_EMOJI_ICON_LENGTH &&
+      EMOJI_ICON_PATTERN.test(char)
+    )
+  }
   return (
     candidate.type === 'custom' &&
     typeof candidate.dataUrl === 'string' &&
@@ -173,7 +194,10 @@ function isRegisteredProject(value: unknown): value is RegisteredProject {
     typeof candidate.path === 'string' &&
     typeof candidate.created_at === 'number' &&
     (candidate.name === undefined || typeof candidate.name === 'string') &&
-    (candidate.icon === undefined || isProjectIcon(candidate.icon)) &&
+    // Any object-shaped icon passes here; withLoadedIcon drops unrecognized
+    // shapes on read so entries saved by older builds survive.
+    (candidate.icon === undefined ||
+      (typeof candidate.icon === 'object' && candidate.icon !== null)) &&
     (candidate.additional_directories === undefined ||
       (Array.isArray(candidate.additional_directories) &&
         candidate.additional_directories.every((directory) => typeof directory === 'string'))) &&
@@ -185,7 +209,7 @@ function isRegisteredProject(value: unknown): value is RegisteredProject {
   )
 }
 
-async function readRegisteredProjectsStrict(filePath: string): Promise<RegisteredProject[]> {
+export async function readRegisteredProjectsStrict(filePath: string): Promise<RegisteredProject[]> {
   let content: string
   try {
     content = await fs.readFile(filePath, 'utf8')
@@ -203,7 +227,7 @@ async function readRegisteredProjectsStrict(filePath: string): Promise<Registere
   if (!Array.isArray(parsed)) throw new Error('Unable to read the project data file')
 
   const projects = parsed.filter(isRegisteredProject).map((project) => ({
-    ...project,
+    ...withLoadedIcon(project),
     // Entries written before the digest id scheme keep their legacy id on disk.
     id: trustedProjectId(project.id, path.resolve(project.path)),
   }))
@@ -226,7 +250,7 @@ export async function readRegisteredProjects(
     }
 
     return parsed.filter(isRegisteredProject).map((project) => ({
-      ...project,
+      ...withLoadedIcon(project),
       id: trustedProjectId(project.id, path.resolve(project.path)),
     }))
   } catch (caught) {
