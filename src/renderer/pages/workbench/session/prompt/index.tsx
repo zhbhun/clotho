@@ -302,6 +302,7 @@ export function PromptComposer({
           <AttachmentList
             attachments={attachments}
             disabled={!canSelectFiles}
+            isEmbedded={appearance === 'message-edit'}
             onRemove={(index) => {
               setAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index))
             }}

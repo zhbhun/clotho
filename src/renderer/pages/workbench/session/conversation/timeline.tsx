@@ -107,6 +107,7 @@ export function UserCard({
                     <AttachmentList
                       attachments={message.attachments}
                       className={cleaned ? 'mb-1.5' : undefined}
+                      isEmbedded
                     />
                   ) : null}
                   {chips.length > 0 ? (
@@ -114,7 +115,7 @@ export function UserCard({
                       {chips.map((chip, i) => (
                         <span
                           key={i}
-                          className="inline-flex max-w-[80%] items-center gap-1.5 rounded-md border border-border/60 bg-muted px-1.5 py-0.5 leading-5 text-foreground"
+                          className="inline-flex max-w-[80%] items-center gap-1.5 rounded-md bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_8%)] px-1.5 py-0.5 leading-5 text-foreground"
                         >
                           {chip.kind === 'selection' ? (
                             <FileSearch className="size-3" />

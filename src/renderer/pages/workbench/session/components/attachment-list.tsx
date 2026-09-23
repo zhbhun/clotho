@@ -28,13 +28,20 @@ function useAttachmentImage(attachment: ClaudeAttachment) {
   return { isImage, source }
 }
 
+// Surface tokens (bg-card / bg-muted) assume the card sits on the page background; embedded in a
+// bg-muted message bubble that order inverts, so embedded cards go tone-on-tone with the bubble
+// instead — the same mix the command chip uses.
+const EMBEDDED_SURFACE = 'bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_8%)]'
+
 function AttachmentCard({
   attachment,
   disabled,
+  isEmbedded,
   onRemove,
 }: {
   attachment: ClaudeAttachment
   disabled?: boolean
+  isEmbedded?: boolean
   onRemove?: () => void
 }) {
   const { t } = useTranslation()
@@ -48,12 +55,20 @@ function AttachmentCard({
       className={cn(
         'h-16 flex-nowrap rounded-xl',
         isImage ? 'w-16 min-w-16 overflow-hidden p-0!' : 'min-w-32 max-w-64',
+        isEmbedded && [
+          'rounded-lg border-transparent',
+          'has-[>a,>button]:hover:bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_12%)]',
+          EMBEDDED_SURFACE,
+        ],
       )}
       tabIndex={onRemove && !disabled ? 0 : undefined}
       title={attachment.name}
     >
       <AttachmentMedia
-        className={isImage ? 'size-full rounded-none' : undefined}
+        className={cn(
+          isImage ? 'size-full rounded-none' : undefined,
+          isEmbedded && !isImage && 'w-7 bg-transparent',
+        )}
         variant={isImage ? 'image' : 'icon'}
       >
         {source && source !== failedSource ? (
@@ -100,11 +115,13 @@ export function AttachmentList({
   attachments,
   className,
   disabled,
+  isEmbedded,
   onRemove,
 }: {
   attachments: ClaudeAttachment[]
   className?: string
   disabled?: boolean
+  isEmbedded?: boolean
   onRemove?: (index: number) => void
 }) {
   const viewportRef = useRef<HTMLDivElement>(null)
@@ -137,6 +154,7 @@ export function AttachmentList({
             key={attachment.content?.source.path ?? `${attachment.name}:${index}`}
             attachment={attachment}
             disabled={disabled}
+            isEmbedded={isEmbedded}
             onRemove={onRemove ? () => onRemove(index) : undefined}
           />
         ))}
