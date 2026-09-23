@@ -53,8 +53,9 @@ function AttachmentCard({
     <Attachment
       aria-label={attachment.name}
       className={cn(
-        'h-16 flex-nowrap rounded-xl',
-        isImage ? 'w-16 min-w-16 p-0!' : 'min-w-32 max-w-48',
+        // 54 = 40px tile + 2×6px padding + 2×1px border: the tile sits flush on every side.
+        'h-[54px] flex-nowrap rounded-xl',
+        isImage ? 'w-[54px] min-w-[54px] p-0!' : 'min-w-32 max-w-48',
         isEmbedded && [
           'border-[color-mix(in_oklab,var(--secondary),var(--foreground)_14%)] bg-transparent',
           'has-[>a,>button]:hover:bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_8%)]',
@@ -142,13 +143,17 @@ export function AttachmentList({
 
   return (
     <TransientScrollArea
-      className={cn('min-w-0 shrink-0', className)}
+      className={cn('min-w-0 shrink-0', onRemove && '-mt-1.5', className)}
       orientation="horizontal"
       viewportProps={onRemove ? { tabIndex: -1 } : undefined}
       viewportRef={viewportRef}
     >
-      {/* pt keeps the straddling remove badge inside the scroll viewport; gap clears its overhang. */}
-      <div className="flex w-max min-w-0 gap-2.5 pt-1.5 pb-2" data-slot="attachment-list">
+      {/* The pt reserves room for the straddling badge inside the scroll viewport; the -mt on the
+          root cancels it visually so the gap above the cards matches the sides. */}
+      <div
+        className={cn('flex w-max min-w-0 gap-2.5 pb-2', onRemove && 'pt-1.5')}
+        data-slot="attachment-list"
+      >
         {attachments.map((attachment, index) => (
           <AttachmentCard
             key={attachment.content?.source.path ?? `${attachment.name}:${index}`}
