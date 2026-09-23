@@ -207,13 +207,13 @@ export function SessionTabs({
                 >
                   <Button
                     aria-label={t('workbench.session.close', { title: displayTitle })}
-                    className="pointer-events-none absolute top-1/2 left-2.5 size-5 -translate-y-1/2 rounded-full bg-transparent text-foreground-subtlest opacity-0 group-hover/tab:pointer-events-auto group-hover/tab:opacity-100 group-focus-within/tab:pointer-events-auto group-focus-within/tab:opacity-100 hover:bg-accent hover:text-foreground dark:hover:bg-accent"
+                    className="pointer-events-none absolute top-1/2 left-2 size-5 -translate-y-1/2 rounded-full bg-transparent text-foreground-subtlest opacity-0 group-hover/tab:pointer-events-auto group-hover/tab:opacity-100 group-focus-within/tab:pointer-events-auto group-focus-within/tab:opacity-100 hover:bg-accent hover:text-foreground dark:hover:bg-accent"
                     size="icon-sm"
                     tabIndex={-1}
                     variant="ghost"
                     onClick={() => onCloseSession(session)}
                   >
-                    <X data-icon="inline-start" />
+                    <X className="size-3.5" data-icon="inline-start" />
                   </Button>
                 </ShortcutTooltip>
               </div>
