@@ -11,6 +11,11 @@ export interface SessionInput {
 }
 
 export interface LocalSession {
+  /**
+   * Stable conversation id; mirrors the stored file name. Files written before
+   * the field existed omit it, and readers fall back to the file name.
+   */
+  id?: string
   projectId: string | null
   projectPath: string | null
   claudeSessionId: string | null

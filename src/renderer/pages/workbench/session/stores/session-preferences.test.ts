@@ -64,6 +64,7 @@ describe('saveSessionPreferences', () => {
   it('keeps the on-disk session binding when the caller context is stale', async () => {
     const files = new Map<string, LocalSession>()
     files.set('local-1', {
+      id: 'local-1',
       projectId: 'project-1',
       projectPath: '/Users/me/project',
       claudeSessionId: 'claude-bound',

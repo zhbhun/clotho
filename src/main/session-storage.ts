@@ -66,6 +66,7 @@ function validSession(v: unknown): v is LocalSession {
   const x = v as Record<string, any>
   const i = x.input
   return (
+    (x.id === undefined || typeof x.id === 'string') &&
     (x.projectId === null || typeof x.projectId === 'string') &&
     (x.projectPath === null || typeof x.projectPath === 'string') &&
     (x.claudeSessionId === null || typeof x.claudeSessionId === 'string') &&

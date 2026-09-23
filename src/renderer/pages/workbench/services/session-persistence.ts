@@ -28,7 +28,7 @@ type Storage = Pick<typeof claude, 'readLocalSession' | 'writeLocalSession' | 'd
 function fromFile(id: string, data: LocalSession): SessionRecord {
   const separator = data.input.model?.indexOf('/') ?? -1
   return {
-    id,
+    id: data.id ?? id,
     projectId: data.projectId,
     projectPath: data.projectPath,
     claudeSessionId: data.claudeSessionId,
@@ -50,6 +50,7 @@ function fromFile(id: string, data: LocalSession): SessionRecord {
 function toFile(record: SessionRecord): LocalSession {
   const input = record.composer
   return {
+    id: record.id,
     projectId: record.projectId ?? null,
     projectPath: record.projectPath ?? null,
     claudeSessionId: record.claudeSessionId ?? null,

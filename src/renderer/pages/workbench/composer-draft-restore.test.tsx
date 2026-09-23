@@ -42,6 +42,7 @@ const HIST_SESSION = {
 }
 
 const HIST_FILE: LocalSession = {
+  id: 'hist-1',
   projectId: 'proj-1',
   projectPath: PROJECT.path,
   claudeSessionId: 'hist-1',

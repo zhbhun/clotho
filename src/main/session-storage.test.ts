@@ -11,6 +11,7 @@ test('writes and reads drafts and completion preserves input', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'clotho-session-'))
   const store = createSessionStorage(dir)
   const data = {
+    id: 's1',
     projectId: 'p',
     projectPath: '/p',
     claudeSessionId: null,
@@ -48,12 +49,13 @@ test('writes and reads drafts and completion preserves input', async () => {
 test('concurrent writes do not lose updates and a corrupt index reads as empty', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'clotho-session-'))
   const store = createSessionStorage(dir)
-  const base = (prompt: string) => ({
+  const base = (id: string) => ({
+    id,
     projectId: null,
     projectPath: null,
     claudeSessionId: null,
     input: {
-      prompt,
+      prompt: id,
       attachments: [],
       model: null,
       permissionMode: 'default' as const,
@@ -91,6 +93,29 @@ test('malformed index entries are skipped individually', async () => {
   })
 })
 
+test('a legacy session file without an id still reads', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'clotho-session-'))
+  const store = createSessionStorage(dir)
+  const data = {
+    projectId: 'p',
+    projectPath: '/p',
+    claudeSessionId: null,
+    input: {
+      prompt: 'hi',
+      attachments: [],
+      model: null,
+      permissionMode: 'default' as const,
+      agent: null,
+    },
+  }
+  await writeFile(path.join(dir, 's1.json'), JSON.stringify(data))
+
+  await expect(store.sessionRead({ sessionId: 's1' })).resolves.toEqual({
+    ...data,
+    projectId: projectIdFromPath('/p'),
+  })
+})
+
 test('a malformed session file reads as missing and can be overwritten', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'clotho-session-'))
   const store = createSessionStorage(dir)
@@ -99,6 +124,7 @@ test('a malformed session file reads as missing and can be overwritten', async (
   await expect(store.sessionRead({ sessionId: 's1' })).resolves.toBeNull()
 
   const data = {
+    id: 's1',
     projectId: null,
     projectPath: null,
     claudeSessionId: null,
@@ -118,6 +144,7 @@ test('project deletion skips a corrupt file instead of aborting', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'clotho-session-'))
   const store = createSessionStorage(dir)
   const data = {
+    id: 'session-a',
     projectId: 'project-a',
     projectPath: '/project-a',
     claudeSessionId: null,
@@ -141,7 +168,8 @@ test('project deletion skips a corrupt file instead of aborting', async () => {
 test('project deletion removes only that project sessions and draft entries', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'clotho-session-'))
   const store = createSessionStorage(dir)
-  const session = (projectId: string, prompt: string) => ({
+  const session = (sessionId: string, projectId: string, prompt: string) => ({
+    id: sessionId,
     projectId,
     projectPath: `/${projectId}`,
     claudeSessionId: null,
@@ -163,16 +191,16 @@ test('project deletion removes only that project sessions and draft entries', as
 
   await store.sessionWrite({
     sessionId: 'project-a-draft',
-    data: session('project-a', 'draft A'),
+    data: session('project-a-draft', 'project-a', 'draft A'),
     draft: draft('project-a', 'Draft A'),
   })
   await store.sessionWrite({
     sessionId: 'project-a-session',
-    data: session('project-a', 'session A'),
+    data: session('project-a-session', 'project-a', 'session A'),
   })
   await store.sessionWrite({
     sessionId: 'project-b-draft',
-    data: session('project-b', 'draft B'),
+    data: session('project-b-draft', 'project-b', 'draft B'),
     draft: draft('project-b', 'Draft B'),
   })
 
@@ -181,7 +209,7 @@ test('project deletion removes only that project sessions and draft entries', as
   expect(await store.sessionRead({ sessionId: 'project-a-draft' })).toBeNull()
   expect(await store.sessionRead({ sessionId: 'project-a-session' })).toBeNull()
   expect(await store.sessionRead({ sessionId: 'project-b-draft' })).toEqual({
-    ...session('project-b', 'draft B'),
+    ...session('project-b-draft', 'project-b', 'draft B'),
     projectId: projectIdFromPath('/project-b'),
   })
   expect(await store.sessionListDrafts()).toEqual({
@@ -237,6 +265,7 @@ test('completing a draft keeps a stripped ownership entry', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'clotho-session-'))
   const store = createSessionStorage(dir)
   const data = {
+    id: 's1',
     projectId: projectIdFromPath('/p'),
     projectPath: '/p',
     claudeSessionId: null,
@@ -293,7 +322,8 @@ test('rebinding moves index entries and stored session files to the new project 
   const store = createSessionStorage(dir)
   const plainId = projectIdFromPath('/p')
   const workspaceId = projectIdFromPath('/p', true)
-  const data = (projectId: string) => ({
+  const data = (sessionId: string, projectId: string) => ({
+    id: sessionId,
     projectId,
     projectPath: '/p',
     claudeSessionId: null,
@@ -307,10 +337,10 @@ test('rebinding moves index entries and stored session files to the new project 
   })
   await store.sessionWrite({
     sessionId: 's1',
-    data: data(plainId),
+    data: data('s1', plainId),
     draft: { title: 'T', createdAt: 1, updatedAt: 2, projectId: plainId, projectPath: '/p' },
   })
-  await store.sessionWrite({ sessionId: 's2', data: data(workspaceId) })
+  await store.sessionWrite({ sessionId: 's2', data: data('s2', workspaceId) })
 
   await store.sessionRebindProject({ fromProjectId: plainId, toProjectId: workspaceId })
 
@@ -337,6 +367,7 @@ test('a workspace digest id survives reads instead of being rewritten to the pla
   const store = createSessionStorage(dir)
   const workspaceId = projectIdFromPath('/p', true)
   const data = {
+    id: 's1',
     projectId: workspaceId,
     projectPath: '/p',
     claudeSessionId: 'claude-1',
@@ -366,6 +397,7 @@ test('legacy null home ownership reads as the work project id when one is provid
   await store.sessionWrite({
     sessionId: 's1',
     data: {
+      id: 's1',
       projectId: null,
       projectPath: null,
       claudeSessionId: 'claude-1',

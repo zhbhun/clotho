@@ -17,7 +17,8 @@ function storage() {
     }),
   }
 }
-const data: LocalSession = {
+const fileData = (id: string): LocalSession => ({
+  id,
   projectId: 'project',
   projectPath: '/project',
   claudeSessionId: null,
@@ -28,13 +29,14 @@ const data: LocalSession = {
     permissionMode: 'auto',
     agent: null,
   },
-}
+})
+const data = fileData('one')
 
 describe('file session persistence', () => {
   it('loads only the opened session and round trips input with a qualified model', async () => {
     const disk = storage()
     disk.files.set('one', data)
-    disk.files.set('two', data)
+    disk.files.set('two', fileData('two'))
     const persistence = createSessionPersistence(disk)
     await persistence.initialize()
     expect(disk.readLocalSession).not.toHaveBeenCalled()
@@ -121,6 +123,19 @@ describe('file session persistence', () => {
 
     expect(disk.files.has('one')).toBe(false)
     expect(disk.writeLocalSession).not.toHaveBeenCalled()
+  })
+
+  it('falls back to the file name when stored data carries no id', async () => {
+    const disk = storage()
+    const legacy = fileData('legacy')
+    delete legacy.id
+    disk.files.set('legacy', legacy)
+    const persistence = createSessionPersistence(disk)
+
+    expect(await persistence.load('legacy')).toMatchObject({
+      id: 'legacy',
+      composer: { prompt: legacy.input.prompt },
+    })
   })
 
   it('loads a record created after an earlier missing read', async () => {
