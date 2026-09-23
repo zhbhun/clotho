@@ -1,4 +1,4 @@
-import { MessageCircle, X } from 'lucide-react'
+import { MessageCircleCode, X } from 'lucide-react'
 import { motion, useMotionValue } from 'motion/react'
 import { useCallback, useLayoutEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -193,7 +193,7 @@ export function SessionTabs({
                         {shortcutNumber}
                       </span>
                     ) : (
-                      <SessionStatus activity={activity} icon={<MessageCircle />} />
+                      <SessionStatus activity={activity} icon={<MessageCircleCode />} />
                     )}
                   </span>
                   <span className="min-w-0 flex-1 truncate text-left">{displayTitle}</span>
