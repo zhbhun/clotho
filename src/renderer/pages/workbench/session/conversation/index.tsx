@@ -273,7 +273,7 @@ function ConversationRowContent({
   const { t } = useTranslation()
   if (row.kind === 'user') {
     return (
-      <div data-conversation-turn-id={row.turnId}>
+      <div className="px-3" data-conversation-turn-id={row.turnId}>
         <UserCard
           editor={
             isMessageEditing && messageEdit ? (
