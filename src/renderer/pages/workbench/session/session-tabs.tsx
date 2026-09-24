@@ -1,4 +1,4 @@
-import { MessageCircleCode, X } from 'lucide-react'
+import { CircleX, MessageCircleCode } from 'lucide-react'
 import { motion, useMotionValue } from 'motion/react'
 import { useCallback, useLayoutEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -193,7 +193,7 @@ export function SessionTabs({
                         {shortcutNumber}
                       </span>
                     ) : (
-                      <SessionStatus activity={activity} icon={<MessageCircleCode />} />
+                      <SessionStatus activity={activity} icon={<MessageCircleCode strokeWidth={1.5} />} />
                     )}
                   </span>
                   <span className="min-w-0 flex-1 truncate text-left">{displayTitle}</span>
@@ -205,13 +205,15 @@ export function SessionTabs({
                 >
                   <Button
                     aria-label={t('workbench.session.close', { title: displayTitle })}
-                    className="pointer-events-none absolute top-1/2 left-2.5 size-5 -translate-y-1/2 rounded-full bg-transparent text-foreground-subtlest opacity-0 group-hover/tab:pointer-events-auto group-hover/tab:opacity-100 group-focus-within/tab:pointer-events-auto group-focus-within/tab:opacity-100 hover:bg-accent hover:text-foreground dark:hover:bg-accent"
+                    className="pointer-events-none absolute top-1/2 left-2.5 size-5 -translate-y-1/2 rounded-full bg-transparent text-foreground opacity-0 group-hover/tab:pointer-events-auto group-hover/tab:opacity-100 group-focus-within/tab:pointer-events-auto group-focus-within/tab:opacity-100 hover:bg-transparent dark:hover:bg-transparent"
                     size="icon-sm"
                     tabIndex={-1}
                     variant="ghost"
                     onClick={() => onCloseSession(session)}
                   >
-                    <X className="size-3.5" data-icon="inline-start" />
+                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-foreground/6">
+                      <CircleX className="size-3.5" data-icon="inline-start" strokeWidth={1.5} />
+                    </span>
                   </Button>
                 </ShortcutTooltip>
               </div>
