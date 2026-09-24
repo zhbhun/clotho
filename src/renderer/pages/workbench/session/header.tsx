@@ -1,4 +1,4 @@
-import { FolderKanban, X } from 'lucide-react'
+import { CircleX, FolderKanban } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -151,7 +151,7 @@ export function ConversationHeader({
                 render={
                   <Button
                     aria-label={t('workbench.project.exit')}
-                    className="pointer-events-none absolute inset-y-0 left-0.75 my-auto opacity-0 transition-opacity group-hover/project-header:pointer-events-auto group-hover/project-header:opacity-100 group-focus-within/project-header:pointer-events-auto group-focus-within/project-header:opacity-100"
+                    className="pointer-events-none absolute inset-y-0 left-1 my-auto bg-transparent opacity-0 transition-opacity group-hover/project-header:pointer-events-auto group-hover/project-header:opacity-100 group-focus-within/project-header:pointer-events-auto group-focus-within/project-header:opacity-100 hover:bg-transparent dark:hover:bg-transparent"
                     size="icon-sm"
                     type="button"
                     variant="ghost"
@@ -166,7 +166,9 @@ export function ConversationHeader({
                     onMouseLeave={() => setExitHovered(false)}
                     onPointerDown={(event) => event.stopPropagation()}
                   >
-                    <X className="size-3.5" />
+                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-foreground/6">
+                      <CircleX className="size-3.5" strokeWidth={1.5} />
+                    </span>
                   </Button>
                 }
               />
