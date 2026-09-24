@@ -68,8 +68,8 @@ describe('groupWorkRuns', () => {
 })
 
 describe('summarizeWorkRun', () => {
-  it('counts each tool category', () => {
-    const { counts } = summarizeWorkRun([
+  it('counts each tool category in first-appearance order', () => {
+    const { parts } = summarizeWorkRun([
       toolItem('t1', 'Bash'),
       toolItem('t2', 'PowerShell'),
       toolItem('t3', 'Read'),
@@ -83,33 +83,48 @@ describe('summarizeWorkRun', () => {
       { id: 'todo-1', kind: 'todo', todos: [] },
     ])
 
-    expect(counts).toEqual({
-      agents: 1,
-      commands: 2,
-      filesEdited: 2,
-      filesRead: 1,
-      other: 1,
-      searches: 1,
-      tasks: 1,
-      web: 2,
-    })
+    expect(parts).toEqual([
+      { countKey: 'commands', count: 2 },
+      { countKey: 'filesRead', count: 1 },
+      { countKey: 'filesEdited', count: 2 },
+      { countKey: 'searches', count: 1 },
+      { countKey: 'web', count: 2 },
+      { countKey: 'agents', count: 1 },
+      { countKey: 'other', count: 1 },
+      { countKey: 'tasks', count: 1 },
+    ])
+  })
+
+  it('orders parts by first appearance instead of category rank', () => {
+    const { parts } = summarizeWorkRun([
+      thinkingItem('t1'),
+      toolItem('t2', 'Read'),
+      thinkingItem('t3'),
+      toolItem('t4', 'Read'),
+      toolItem('t5', 'Bash'),
+    ])
+
+    expect(parts).toEqual([
+      { countKey: 'thought', count: 2 },
+      { countKey: 'filesRead', count: 2 },
+      { countKey: 'commands', count: 1 },
+    ])
   })
 
   it('counts coalesced reads by file count', () => {
-    const { counts } = summarizeWorkRun([
+    const { parts } = summarizeWorkRun([
       toolItem('t1', 'Read', {
         coalescedReads: [{ file_path: 'a.ts' }, { file_path: 'b.ts' }, { file_path: 'c.ts' }],
       }),
     ])
 
-    expect(counts.filesRead).toBe(3)
+    expect(parts).toEqual([{ countKey: 'filesRead', count: 3 }])
   })
 
   it('collects thinking items as the thought count', () => {
-    const { counts, thoughtCount } = summarizeWorkRun([thinkingItem('t1'), thinkingItem('t2')])
+    const { parts } = summarizeWorkRun([thinkingItem('t1'), thinkingItem('t2')])
 
-    expect(thoughtCount).toBe(2)
-    expect(Object.values(counts).every((value) => value === 0)).toBe(true)
+    expect(parts).toEqual([{ countKey: 'thought', count: 2 }])
   })
 })
 

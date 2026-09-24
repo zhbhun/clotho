@@ -14,6 +14,15 @@ export interface WorkRunCounts {
   web: number
 }
 
+/** Summary count segment; `thought` covers thinking items alongside tool categories. */
+export type WorkRunCountKey = keyof WorkRunCounts | 'thought'
+
+/** One `countKey`-labeled count of the summary line, ordered by first appearance. */
+export interface WorkRunPart {
+  count: number
+  countKey: WorkRunCountKey
+}
+
 /** A timeline slice: either a collapsible run of consecutive work items or a standalone item. */
 export type WorkRunSlice =
   | { items: ConversationTimelineItem[]; kind: 'run'; runId: string }
@@ -78,52 +87,43 @@ export function groupWorkRuns(
   return slices
 }
 
-export function summarizeWorkRun(items: ConversationTimelineItem[]): {
-  counts: WorkRunCounts
-  thoughtCount: number
-} {
-  const counts: WorkRunCounts = {
-    agents: 0,
-    commands: 0,
-    filesEdited: 0,
-    filesRead: 0,
-    other: 0,
-    searches: 0,
-    tasks: 0,
-    web: 0,
+export function summarizeWorkRun(items: ConversationTimelineItem[]): { parts: WorkRunPart[] } {
+  // Map keeps insertion order, which is each category's first appearance in the run.
+  const counts = new Map<WorkRunCountKey, number>()
+  const add = (countKey: WorkRunCountKey, count: number) => {
+    counts.set(countKey, (counts.get(countKey) ?? 0) + count)
   }
-  let thoughtCount = 0
 
   for (const item of items) {
     if (item.kind === 'thinking') {
-      thoughtCount += 1
+      add('thought', 1)
       continue
     }
     if (item.kind === 'todo' || item.kind === 'task') {
-      counts.tasks += 1
+      add('tasks', 1)
       continue
     }
     if (item.kind !== 'tool') continue
 
     const name = item.use?.name ?? ''
     if (READ_TOOL_NAMES.has(name)) {
-      counts.filesRead += item.coalescedReads?.length || 1
+      add('filesRead', item.coalescedReads?.length || 1)
     } else if (EDIT_TOOL_NAMES.has(name)) {
-      counts.filesEdited += 1
+      add('filesEdited', 1)
     } else if (COMMAND_TOOL_NAMES.has(name)) {
-      counts.commands += 1
+      add('commands', 1)
     } else if (SEARCH_TOOL_NAMES.has(name)) {
-      counts.searches += 1
+      add('searches', 1)
     } else if (WEB_TOOL_NAMES.has(name)) {
-      counts.web += 1
+      add('web', 1)
     } else if (AGENT_TOOL_NAMES.has(name)) {
-      counts.agents += 1
+      add('agents', 1)
     } else {
-      counts.other += 1
+      add('other', 1)
     }
   }
 
-  return { counts, thoughtCount }
+  return { parts: [...counts].map(([countKey, count]) => ({ countKey, count })) }
 }
 
 export function workRunHeader(

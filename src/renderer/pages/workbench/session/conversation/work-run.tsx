@@ -10,18 +10,19 @@ import { ToolIcon } from '../tools/shared/content'
 import { TimelineEntry, TimelineRow } from './timeline'
 import type { TurnTerminalStatus } from './tool-state'
 import type { ConversationTimelineItem } from './types'
-import { type WorkRunCounts, summarizeWorkRun, workRunHeader } from './work-runs'
+import { type WorkRunCountKey, summarizeWorkRun, workRunHeader } from './work-runs'
 
-const COUNT_PARTS: { countKey: keyof WorkRunCounts; labelKey: string }[] = [
-  { countKey: 'commands', labelKey: 'workbench.workRun.ranCommands' },
-  { countKey: 'filesRead', labelKey: 'workbench.workRun.readFiles' },
-  { countKey: 'filesEdited', labelKey: 'workbench.workRun.editedFiles' },
-  { countKey: 'searches', labelKey: 'workbench.workRun.searchedFiles' },
-  { countKey: 'web', labelKey: 'workbench.workRun.visitedPages' },
-  { countKey: 'agents', labelKey: 'workbench.workRun.dispatchedAgents' },
-  { countKey: 'tasks', labelKey: 'workbench.workRun.updatedTasks' },
-  { countKey: 'other', labelKey: 'workbench.workRun.usedOtherTools' },
-]
+const COUNT_LABELS: Record<WorkRunCountKey, string> = {
+  agents: 'workbench.workRun.dispatchedAgents',
+  commands: 'workbench.workRun.ranCommands',
+  filesEdited: 'workbench.workRun.editedFiles',
+  filesRead: 'workbench.workRun.readFiles',
+  other: 'workbench.workRun.usedOtherTools',
+  searches: 'workbench.workRun.searchedFiles',
+  tasks: 'workbench.workRun.updatedTasks',
+  thought: 'workbench.workRun.thoughtTimes',
+  web: 'workbench.workRun.visitedPages',
+}
 
 /** Sentence-style summary line: uppercase the leading letter for scripts that have case. */
 function capitalizeSummary(text: string) {
@@ -64,11 +65,9 @@ export function WorkRunRow({
     pendingRequests,
     turnTerminalStatus,
   })
-  const { counts, thoughtCount } = summarizeWorkRun(items)
-  const parts = COUNT_PARTS.filter(({ countKey }) => counts[countKey] > 0).map(
-    ({ countKey, labelKey }) => translate(labelKey, { count: counts[countKey] }),
+  const parts = summarizeWorkRun(items).parts.map(({ countKey, count }) =>
+    translate(COUNT_LABELS[countKey], { count }),
   )
-  if (thoughtCount > 0) parts.push(t('workbench.workRun.thoughtTimes', { count: thoughtCount }))
   const separator = /^zh|ja/.test(i18n.language) ? '，' : ', '
 
   const runningTool = header.kind === 'running' ? header.tool : undefined
