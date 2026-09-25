@@ -151,7 +151,9 @@ export function ProjectIcon({
         className,
       )}
     >
-      <Icon className={graphicSizeClass} />
+      {/* Match the 1.5 stroke used by the surrounding chrome icons (close
+          buttons, tab icons); lucide's 2 default reads too heavy at 14px. */}
+      <Icon className={graphicSizeClass} strokeWidth={1.5} />
     </span>
   )
 }
