@@ -78,7 +78,7 @@ export function ConversationHeader({
     <header
       className={cn(
         'session-tabs app-region-drag relative flex h-10 shrink-0 items-stretch bg-background pr-2 text-foreground-subtle',
-        showSidebarTrigger ? 'pl-[84px]' : 'pl-3',
+        showSidebarTrigger ? 'pl-[84px]' : 'pl-1.5',
       )}
       data-content-scrolled={isContentScrolled ? 'true' : undefined}
       data-has-tabs={sessions.length > 0 ? 'true' : undefined}

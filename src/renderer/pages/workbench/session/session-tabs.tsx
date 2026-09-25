@@ -102,8 +102,9 @@ export function SessionTabs({
   return (
     <Tabs
       ref={scrollerRef}
-      /* 9px + the tab surfaces' 3px inset = the 12px visual gap to the project button. */
-      className="no-scrollbar min-w-0 flex-1 items-center gap-0 overflow-x-auto overflow-y-hidden pl-2.25 data-[orientation=horizontal]:flex-row"
+      /* 3px + the tab surfaces' 3px inset = the 6px visual gap to the project
+         button, matching the gap between tab surfaces. */
+      className="no-scrollbar min-w-0 flex-1 items-center gap-0 overflow-x-auto overflow-y-hidden pl-0.75 data-[orientation=horizontal]:flex-row"
       value={activeSessionId ?? ''}
       onValueChange={handleTabChange}
     >
@@ -193,7 +194,10 @@ export function SessionTabs({
                         {shortcutNumber}
                       </span>
                     ) : (
-                      <SessionStatus activity={activity} icon={<MessageCircleCode strokeWidth={1.5} />} />
+                      <SessionStatus
+                        activity={activity}
+                        icon={<MessageCircleCode strokeWidth={1.5} />}
+                      />
                     )}
                   </span>
                   <span className="min-w-0 flex-1 truncate text-left">{displayTitle}</span>
