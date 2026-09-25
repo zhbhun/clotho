@@ -1,23 +1,13 @@
-import { WandSparkles } from 'lucide-react'
+import { ChevronDown, WandSparkles, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
 import { Card, CardContent } from '@/shadcn/card'
-import {
-  Combobox,
-  ComboboxCollection,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxGroup,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxLabel,
-  ComboboxList,
-} from '@/shadcn/combobox'
 import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from '@/shadcn/field'
 import { Spinner } from '@/shadcn/spinner'
 import { toast } from '@/shadcn/toast'
+import { cn } from '@/shadcn/utils'
 
 import type { ClaudeModelMappings, ModelProvider } from '../../services/claude/claude'
 import {
@@ -98,7 +88,6 @@ function ModelTargetPicker({
   onChange,
 }: {
   id: string
-  label: string
   value?: string
   providers: ModelProvider[]
   choices: ModelChoice[]
@@ -107,53 +96,71 @@ function ModelTargetPicker({
 }) {
   const { t } = useTranslation()
   const selectedChoice = choices.find((item) => item.value === value) ?? null
-  // Combobox groups require an array of group objects so filtering and keyboard navigation reach nested items.
-  const groupedChoices = useMemo(
-    () =>
-      providers
-        .filter((provider) => provider.models.length > 0)
-        .map((provider) => ({
-          key: provider.id,
-          value: provider.name || provider.id,
-          items: choices.filter((item) => item.value.startsWith(`${provider.id}/`)),
-        }))
-        .filter((group) => group.items.length > 0),
-    [providers, choices],
-  )
 
   return (
     <div className="w-full max-w-62.5 min-w-0 justify-self-end">
-      <Combobox
-        itemToStringLabel={(choice) => `${choice.providerName} · ${choice.modelName}`}
-        items={groupedChoices}
-        modal
-        value={selectedChoice}
-        onValueChange={(choice) => onChange(choice ? choice.value : undefined)}
-      >
-        <ComboboxInput
-          disabled={disabled || choices.length === 0}
-          id={id}
-          placeholder={t('settings.modelMapping.notConfigured')}
-          showClear
-        />
-        <ComboboxContent glass>
-          <ComboboxEmpty>{t('settings.modelMapping.empty')}</ComboboxEmpty>
-          <ComboboxList>
-            {(group: (typeof groupedChoices)[number]) => (
-              <ComboboxGroup key={group.key} items={group.items}>
-                <ComboboxLabel>{group.value}</ComboboxLabel>
-                <ComboboxCollection>
-                  {(item: ModelChoice) => (
-                    <ComboboxItem key={item.value} value={item}>
-                      <span className="truncate">{item.modelName}</span>
-                    </ComboboxItem>
-                  )}
-                </ComboboxCollection>
-              </ComboboxGroup>
+      <Menu modal>
+        <MenuTrigger
+          render={
+            <Button
+              disabled={disabled || choices.length === 0}
+              id={id}
+              variant="outline"
+              className="w-full justify-between font-normal"
+            />
+          }
+        >
+          <span className={cn('truncate', !selectedChoice && 'text-muted-foreground')}>
+            {selectedChoice
+              ? `${selectedChoice.providerName} · ${selectedChoice.modelName}`
+              : t('settings.modelMapping.notConfigured')}
+          </span>
+          {selectedChoice ? (
+            <span
+              className="hidden size-5 shrink-0 items-center justify-center rounded-full transition-colors group-hover/button:flex hover:bg-foreground/6"
+              data-icon="inline-end"
+              data-slot="mapping-clear"
+              onClick={(event) => {
+                event.stopPropagation()
+                onChange(undefined)
+              }}
+              onPointerDown={(event) => event.stopPropagation()}
+            >
+              <X className="size-3.5" strokeWidth={1} />
+            </span>
+          ) : null}
+          <ChevronDown
+            className={selectedChoice ? 'group-hover/button:hidden' : undefined}
+            data-icon="inline-end"
+            strokeWidth={1}
+          />
+        </MenuTrigger>
+        <MenuContent align="end" glass>
+          <MenuSearch placeholder={t('settings.modelMapping.search')} />
+          <MenuList className="max-h-80">
+            <MenuEmpty>{t('settings.modelMapping.empty')}</MenuEmpty>
+            {providers.map((provider) =>
+              provider.models.length > 0 ? (
+                <MenuGroup heading={provider.name || provider.id} key={provider.id}>
+                  {provider.models.map((model) => {
+                    const qualifiedModel = `${provider.id}/${model.id}`
+                    return (
+                      <MenuItem
+                        key={qualifiedModel}
+                        selected={value === qualifiedModel}
+                        value={`${provider.name} ${provider.id} ${model.displayName} ${model.id}`}
+                        onSelect={() => onChange(qualifiedModel)}
+                      >
+                        <span className="truncate">{model.displayName || model.id}</span>
+                      </MenuItem>
+                    )
+                  })}
+                </MenuGroup>
+              ) : null,
             )}
-          </ComboboxList>
-        </ComboboxContent>
-      </Combobox>
+          </MenuList>
+        </MenuContent>
+      </Menu>
     </div>
   )
 }
@@ -302,7 +309,6 @@ export function ModelMappingSettings({
                   </FieldContent>
                   <ModelTargetPicker
                     id={pickerId}
-                    label={t(labelKey as never)}
                     value={draft[role]}
                     providers={providers}
                     choices={choices}

@@ -28,15 +28,13 @@ const PROVIDERS: ModelProvider[] = [
   },
 ]
 
-function pickerInput(label: string) {
-  return screen.getByRole('combobox', { name: label })
+function pickerTrigger(label: string) {
+  return screen.getByRole('button', { name: label })
 }
 
 function pickerClear(label: string) {
-  const clear = pickerInput(label)
-    .closest("[data-slot='input-group']")
-    ?.querySelector("[data-slot='combobox-clear']")
-  if (!(clear instanceof HTMLElement)) throw new Error(`clear button not found for ${label}`)
+  const clear = pickerTrigger(label).querySelector("[data-slot='mapping-clear']")
+  if (!(clear instanceof Element)) throw new Error(`clear icon not found for ${label}`)
   return clear
 }
 
@@ -63,7 +61,7 @@ describe('ModelMappingSettings', () => {
       />,
     )
 
-    await user.click(pickerInput('Haiku'))
+    await user.click(pickerTrigger('Haiku'))
     await user.click(await screen.findByText('K3 Long'))
 
     await waitFor(() =>
@@ -75,7 +73,7 @@ describe('ModelMappingSettings', () => {
     expect(screen.queryByRole('button', { name: '保存映射' })).not.toBeInTheDocument()
   })
 
-  it('automatically saves when an existing mapping is cleared', async () => {
+  it('clears an existing mapping from the trigger hover icon without opening the menu', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn(
       async (models: ClaudeModelMappings): Promise<ClaudeModelMappings> => models,
@@ -92,6 +90,8 @@ describe('ModelMappingSettings', () => {
     await user.click(pickerClear('Sonnet'))
 
     await waitFor(() => expect(onSave).toHaveBeenCalledWith({}))
+    expect(pickerTrigger('Sonnet')).toHaveTextContent('未配置')
+    expect(document.querySelector("[data-slot='menu-content']")).toBeNull()
   })
 
   it('automatically saves after filling all six roles with one selected model', async () => {
@@ -140,8 +140,9 @@ describe('ModelMappingSettings', () => {
       </Toaster>,
     )
 
-    const sonnetPicker = pickerInput('Sonnet')
-    await user.click(pickerClear('Sonnet'))
+    const sonnetPicker = pickerTrigger('Sonnet')
+    await user.click(sonnetPicker)
+    await user.click(await screen.findByText('GLM-4.7'))
 
     expect(sonnetPicker).toBeDisabled()
     expect(screen.getByRole('button', { name: '一键设置所有模型' })).toBeDisabled()
@@ -151,13 +152,14 @@ describe('ModelMappingSettings', () => {
     })
 
     expect(await screen.findByText('模型映射保存失败，请重试')).toBeInTheDocument()
-    expect(sonnetPicker).toHaveValue('Zhipu · GLM-5.2')
+    expect(sonnetPicker).toHaveTextContent('Zhipu · GLM-5.2')
     expect(sonnetPicker).toBeEnabled()
     expect(screen.queryByRole('button', { name: '保存映射' })).not.toBeInTheDocument()
 
-    await user.click(pickerClear('Sonnet'))
+    await user.click(sonnetPicker)
+    await user.click(await screen.findByText('GLM-4.7'))
 
-    await waitFor(() => expect(onSave).toHaveBeenNthCalledWith(2, {}))
-    expect(sonnetPicker).toHaveValue('')
+    await waitFor(() => expect(onSave).toHaveBeenNthCalledWith(2, { sonnet: 'zhipu/glm-4.7' }))
+    expect(sonnetPicker).toHaveTextContent('Zhipu · GLM-4.7')
   })
 })

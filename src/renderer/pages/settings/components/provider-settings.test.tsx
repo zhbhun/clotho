@@ -71,7 +71,7 @@ describe('ProviderSettings', () => {
     expect(claudeMock.listProviders).toHaveBeenCalledOnce()
     expect(claudeMock.listModelMappings).toHaveBeenCalledOnce()
 
-    await user.click(screen.getByRole('combobox', { name: 'Haiku' }))
+    await user.click(screen.getByRole('button', { name: 'Haiku' }))
     await user.click(await screen.findByText('GLM-5.2'))
 
     await waitFor(() =>
