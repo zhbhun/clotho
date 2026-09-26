@@ -109,7 +109,7 @@ export function ProjectDialog({
     const normalizedName = name.trim()
     const nextNameError = !normalizedName
       ? t('project.error.nameRequired')
-      : normalizedName.length > 80
+      : normalizedName.length > 50
         ? t('project.error.nameTooLong')
         : null
     const nextPathError = projectPath ? null : t('project.error.selectFolderRequired')
@@ -180,7 +180,7 @@ export function ProjectDialog({
                   aria-invalid={Boolean(nameError)}
                   disabled={isSaving}
                   id="project-name"
-                  maxLength={80}
+                  maxLength={50}
                   placeholder={t('project.name.placeholder')}
                   value={name}
                   onChange={(event) => {

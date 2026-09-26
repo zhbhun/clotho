@@ -3,7 +3,7 @@ import type { MessageKey } from './resources'
 const APP_ERROR_KEYS: Readonly<Record<string, MessageKey>> = {
   项目数据文件无法读取: 'project.error.registryUnreadable',
   项目名称不能为空: 'project.error.nameRequired',
-  '项目名称不能超过 80 个字符': 'project.error.nameTooLong',
+  '项目名称不能超过 50 个字符': 'project.error.nameTooLong',
   项目图标数据过大: 'project.error.iconTooLarge',
   项目图标无效: 'project.error.iconInvalid',
   请选择项目文件夹: 'project.error.selectFolderRequired',

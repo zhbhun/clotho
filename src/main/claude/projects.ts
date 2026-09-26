@@ -305,7 +305,7 @@ function updateRegisteredProjects<T>(
 function validateProjectName(name: string) {
   const normalized = name.trim()
   if (!normalized) throw new Error('Project name cannot be empty')
-  if (normalized.length > 80) throw new Error('Project name cannot exceed 80 characters')
+  if (normalized.length > 50) throw new Error('Project name cannot exceed 50 characters')
   return normalized
 }
 
