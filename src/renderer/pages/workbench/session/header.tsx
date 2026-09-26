@@ -15,10 +15,6 @@ import { ProjectSwitchDialog } from './project-switcher'
 import { SessionHistory } from './session-history'
 import { SessionTabs } from './session-tabs'
 
-// The project the exit X falls back to; exiting other projects returns here,
-// so it never needs an exit affordance of its own.
-const HOME_BASE_PROJECT_NAME = 'work'
-
 export function ConversationHeader({
   activeSessionId,
   historyError = null,
@@ -78,11 +74,11 @@ export function ConversationHeader({
   const showSidebarTrigger = isMobile ? !openMobile : state === 'collapsed'
   const canExitProject =
     projectMode === 'project' &&
-    Boolean(selectedProject) &&
-    // Exiting a side project lands back on the home-base project, so while it
-    // is the active project the exit affordance would only offer to leave the
-    // very place the X exists to return to.
-    projectName !== HOME_BASE_PROJECT_NAME
+    selectedProject !== undefined &&
+    // Exiting a side project lands back on the home-base project (the built-in
+    // homedir project), so while it is the active project the exit affordance
+    // would only offer to leave the very place the X exists to return to.
+    !selectedProject.is_home
 
   return (
     <header

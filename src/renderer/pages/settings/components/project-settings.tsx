@@ -28,7 +28,7 @@ import { AppAlertDialog, AppAlertDialogContent } from '../../../components/app-d
 import { ProjectIcon } from '../../../components/project-icon'
 import { ProjectPath } from '../../../components/project-path'
 import type { ClaudeProject } from '../../../services/claude/claude'
-import { compareProjectsByName, projectDisplayName } from '../../../utils/project'
+import { compareProjectsByName, isUserProject, projectDisplayName } from '../../../utils/project'
 
 function ProjectRows({
   projects,
@@ -120,7 +120,10 @@ export function ProjectSettings({
   const { t } = useTranslation()
   const [removeTarget, setRemoveTarget] = useState<ClaudeProject | null>(null)
   const [isRemoving, setRemoving] = useState(false)
-  const sortedProjects = useMemo(() => projects.toSorted(compareProjectsByName), [projects])
+  const sortedProjects = useMemo(
+    () => projects.filter(isUserProject).toSorted(compareProjectsByName),
+    [projects],
+  )
 
   async function handleRemove() {
     if (!removeTarget) return

@@ -37,6 +37,15 @@ const project: ClaudeProject = {
   created_at: 10,
 }
 
+const homeProject: ClaudeProject = {
+  id: 'home-project',
+  path: '/Users/test',
+  name: 'work',
+  is_home: true,
+  sessions: [],
+  created_at: 10,
+}
+
 function renderWithShortcuts(element: ReactElement) {
   return render(
     <ShortcutRuntimeProvider runtime={shortcutRuntime}>{element}</ShortcutRuntimeProvider>,
@@ -96,6 +105,29 @@ describe('ProjectDialog', () => {
       name: params.name,
       icon: params.icon ?? undefined,
     }))
+  })
+
+  it('hides the built-in home project from the switcher list', async () => {
+    renderWithShortcuts(
+      <TooltipProvider>
+        <ProjectSwitchDialog
+          open
+          projectMode="home"
+          projects={[homeProject, project]}
+          trigger={
+            <Button data-testid="switcher-trigger" type="button">
+              切换项目
+            </Button>
+          }
+          onAddProject={vi.fn()}
+          onOpenChange={vi.fn()}
+          onSelectProject={vi.fn()}
+        />
+      </TooltipProvider>,
+    )
+
+    expect(await screen.findByText('Alpha custom')).toBeInTheDocument()
+    expect(screen.queryByText('work')).not.toBeInTheDocument()
   })
 
   it('returns to the focus origin from before the switcher opened once both dialogs close', async () => {

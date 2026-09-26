@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip'
 
 import { ProjectIcon } from '../../../components/project-icon'
 import type { ClaudeProject } from '../../../services/claude/claude'
-import { projectDisplayName } from '../../../utils/project'
+import { isUserProject, projectDisplayName } from '../../../utils/project'
 import {
   SwitcherCommand,
   SwitcherCommandDialog,
@@ -96,7 +96,7 @@ export function ProjectSwitchDialog({
         <SwitcherCommandList>
           <SwitcherCommandEmpty>{t('workbench.project.empty')}</SwitcherCommandEmpty>
           <SwitcherCommandGroup>
-            {projects.map((project) => {
+            {projects.filter(isUserProject).map((project) => {
               const name = projectDisplayName(project)
 
               return (
