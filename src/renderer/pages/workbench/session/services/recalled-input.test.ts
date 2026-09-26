@@ -38,7 +38,6 @@ function createController({
   const composerService = { clearRecalledMessage: vi.fn(async () => {}) }
   const controller = {
     contextStore: { getState: () => ({ claudeSessionId: 'claude-1', projectId: 'project-1' }) },
-    followService: { stop: vi.fn() },
     claudeService,
     historyService,
     composerService,

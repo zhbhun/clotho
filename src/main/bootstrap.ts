@@ -14,7 +14,6 @@ import { createClaudeDesktopService } from './claude-service'
 import { loadAttachmentFiles } from './claude/attachments'
 import { createModelProxy } from './claude/model-proxy'
 import { ensureWorkProject } from './claude/projects'
-import { createSessionFollowManager } from './claude/session-follow-manager'
 import { projectIdFromPath } from './claude/sessions'
 import { createSettingsStore, defaultSettings, readSettings } from './claude/settings'
 import { setDialogOwnerWindow } from './dialogs'
@@ -201,18 +200,6 @@ export async function bootstrap() {
       },
     )
 
-    const followManager = createSessionFollowManager({
-      onUpdate(sessionId, lines) {
-        sendToMainView(mainWindowWebview, 'claudeFollowUpdate', { sessionId, lines })
-      },
-      onState(sessionId, state) {
-        sendToMainView(mainWindowWebview, 'claudeFollowState', { sessionId, state })
-      },
-      onReset(sessionId) {
-        sendToMainView(mainWindowWebview, 'claudeFollowReset', { sessionId })
-      },
-    })
-
     const requestHandlers = wrapRequestHandlers(
       {
         applicationMenuSetLanguage: ({ language }) => {
@@ -266,13 +253,7 @@ export async function bootstrap() {
         claudeForkSession: (params) => service.forkSession(params),
         claudeGetSessionEditAnchor: (params) => service.getSessionEditAnchor(params),
         claudeRewindSessionFiles: (params) => service.rewindSessionFiles(params),
-        claudeDropTrailingTurn: async (params) => {
-          const result = await service.dropTrailingTurn(params)
-          if (params.sessionId && (result.dropped || result.removedSession)) {
-            followManager.reset(params.sessionId)
-          }
-          return result
-        },
+        claudeDropTrailingTurn: (params) => service.dropTrailingTurn(params),
         claudeSampleContextUsage: (params) => service.sampleContextUsage(params),
         claudeGetProjectGitBranch: (params) => service.getProjectGitBranch(params),
         claudeRenameSession: (params) => service.renameSession(params),
@@ -288,8 +269,6 @@ export async function bootstrap() {
         claudeSetProjectModel: (params) => service.setProjectModel(params),
         claudeFetchProviderModels: (params) => service.fetchProviderModels(params),
         claudeGetProviderUsage: (params) => service.getProviderUsage(params),
-        claudeFollowStart: (params) => followManager.start(params.projectId, params.sessionId),
-        claudeFollowStop: (params) => followManager.stop(params.sessionId),
         shortcutGetOverrides: () => shortcutStore.get(),
         shortcutSetOverride: (params) => shortcutStore.set(params.commandId, params.bindings),
         shortcutResetOverride: (params) => shortcutStore.reset(params.commandId),
@@ -358,7 +337,6 @@ export async function bootstrap() {
       isStopping = true
       event.preventDefault()
       appLogger.info('app.stopping', 'Clotho application is stopping')
-      followManager.stopAll()
       const stopModelProxy = modelProxy
         .stop()
         .then(() => {

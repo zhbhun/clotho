@@ -491,8 +491,6 @@ export interface ProjectFileSearchOutline {
 
 export type ClaudeStreamId = string
 
-export type ClaudeFollowState = 'processing' | 'idle' | 'interrupted'
-
 export type ClaudeQueryStartParams = ClaudeQueryParams & {
   streamId: ClaudeStreamId
 }
@@ -957,14 +955,6 @@ export type DesktopRPC = {
         params: GetProviderUsageParams
         response: ProviderUsageQuota
       }
-      claudeFollowStart: {
-        params: { projectId: string; sessionId: string }
-        response: void
-      }
-      claudeFollowStop: {
-        params: { sessionId: string }
-        response: void
-      }
       shortcutGetOverrides: {
         params: Record<string, never>
         response: ShortcutOverrides
@@ -993,9 +983,6 @@ export type DesktopRPC = {
       claudeError: { streamId: ClaudeStreamId; message: string; stack?: string }
       claudeComplete: { streamId: ClaudeStreamId; success: boolean }
       claudeToolRequest: { streamId: ClaudeStreamId; request: ClaudeToolRequest }
-      claudeFollowUpdate: { sessionId: string; lines: ClaudeJsonLine[] }
-      claudeFollowState: { sessionId: string; state: ClaudeFollowState }
-      claudeFollowReset: { sessionId: string }
     }
   }>
 }

@@ -235,7 +235,7 @@ function shouldSkipEntry(entry: ClaudeJsonLine): boolean {
   )
 }
 
-/** Match the backend session-follower rule: the body is exactly a known CLI interruption placeholder. */
+/** The body is exactly a known CLI interruption placeholder. */
 function isInterruptionMessage(role: ClaudeRole, blocks: ClaudeContentBlock[]): boolean {
   return (
     role === 'user' &&

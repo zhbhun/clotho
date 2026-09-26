@@ -1,4 +1,4 @@
-import { AtSign, Gauge, Paperclip, Plus, Shrink, SquareSlash } from 'lucide-react'
+import { AtSign, Gauge, Paperclip, Plus, RefreshCw, Shrink, SquareSlash } from 'lucide-react'
 import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -20,12 +20,14 @@ function findCommandByName(commands: ClaudeSlashCommand[], name: string) {
 }
 
 export type AddMenuProps = {
+  canRefreshSession?: boolean
   canSelectFiles: boolean
   commands: ClaudeSlashCommand[]
   editorHandle: React.RefObject<PromptEditorHandle | null>
   interactionScope?: string
   onSelectFiles: () => void
   onQueryContextStatus: () => void
+  onRefreshSession?: () => void
   onRunCommand?: (command: ClaudeSlashCommand) => void
 }
 
@@ -61,12 +63,14 @@ const ENTRY_ICON_CLASS = 'size-3.5'
  * move the item focus out of the box.
  */
 export function AddMenu({
+  canRefreshSession = false,
   canSelectFiles,
   commands,
   editorHandle,
   interactionScope,
   onSelectFiles,
   onQueryContextStatus,
+  onRefreshSession,
   onRunCommand,
 }: AddMenuProps) {
   const { t } = useTranslation()
@@ -83,7 +87,8 @@ export function AddMenu({
   const compactCommand = findCommandByName(commands, 'compact')
   const clearCommand = findCommandByName(commands, 'clear')
   const hasSessionCommands = Boolean(onRunCommand && (compactCommand || clearCommand))
-  const canOpenMenu = canSelectFiles || hasSessionCommands
+  const hasSessionSection = hasSessionCommands || Boolean(onRefreshSession)
+  const canOpenMenu = canSelectFiles || hasSessionSection
 
   return (
     <DropdownMenu
@@ -138,9 +143,18 @@ export function AddMenu({
             description={t('workbench.prompt.skillHint')}
           />
         </DropdownMenuItem>
-        {hasSessionCommands ? (
+        {hasSessionSection ? (
           <>
             <DropdownMenuSeparator />
+            {onRefreshSession ? (
+              <DropdownMenuItem disabled={!canRefreshSession} onClick={onRefreshSession}>
+                <MenuEntry
+                  icon={<RefreshCw className={ENTRY_ICON_CLASS} data-icon="inline-start" />}
+                  label={t('workbench.prompt.refresh')}
+                  description={t('workbench.prompt.refreshHint')}
+                />
+              </DropdownMenuItem>
+            ) : null}
             {compactCommand ? (
               <DropdownMenuItem
                 disabled={!onRunCommand || !canSelectFiles}

@@ -366,7 +366,6 @@ export class SendService {
 
       throw caught
     }
-    this.controller.followService.stop()
     // Reserve the ID before init so cancellation and catalog updates keep
     // referring to the same local card, including when its log is recreated.
     if (query.sessionId && (startFreshSession || !context.claudeSessionId)) {
@@ -604,7 +603,6 @@ export class SendService {
         resolveRecallApplied()
         this.controller.options.onActivityChange?.(context.sessionId, outcome)
         await this.controller.options.onRefreshCatalog?.()
-        this.controller.followService.sync()
       }
       resolveRecallApplied()
     }

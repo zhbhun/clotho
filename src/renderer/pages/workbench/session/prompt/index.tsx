@@ -84,6 +84,7 @@ export type PromptComposerProps = {
   availableCommands: ClaudeSlashCommand[]
   canSubmit: boolean
   canUsePrompt: boolean
+  canRefreshSession?: boolean
   /** The latest turn was interrupted after content streamed and can be resumed. */
   canResume?: boolean
   className?: string
@@ -101,6 +102,8 @@ export type PromptComposerProps = {
   modelOptions: ClaudeModelInfo[]
   /** Executes a slash command without sending it as a regular prompt. */
   onRunCommand?: (command: ClaudeSlashCommand) => void
+  /** Reloads the session transcript from disk on user request. */
+  onRefreshSession?: () => void
   permissionMode: ClaudePermissionMode
   prompt: string
   projectPath?: string
@@ -133,6 +136,7 @@ export function PromptComposer({
   availableCommands,
   canSubmit,
   canUsePrompt,
+  canRefreshSession,
   canResume,
   className,
   contextUsage,
@@ -162,6 +166,7 @@ export function PromptComposer({
   onStop,
   onSubmit,
   onResume,
+  onRefreshSession,
 }: PromptComposerProps) {
   const { t } = useTranslation()
   const [isPermissionMenuOpen, setIsPermissionMenuOpen] = useState(false)
@@ -331,6 +336,7 @@ export function PromptComposer({
       </CardContent>
       <CardFooter className="shrink-0 gap-1">
         <AddMenu
+          canRefreshSession={canRefreshSession}
           canSelectFiles={canSelectFiles}
           commands={availableCommands}
           editorHandle={promptEditorRef}
@@ -340,6 +346,7 @@ export function PromptComposer({
             contextUsageDetail?.onOpen()
             setIsContextPanelOpen(true)
           }}
+          onRefreshSession={onRefreshSession}
           onRunCommand={onRunCommand}
         />
 

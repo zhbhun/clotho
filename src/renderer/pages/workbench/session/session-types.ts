@@ -62,7 +62,6 @@ export type SessionClient = Pick<
   typeof claude,
   | 'deleteSession'
   | 'dropTrailingTurn'
-  | 'followSession'
   | 'getSessionEditAnchor'
   | 'listModelMappings'
   | 'listProviders'

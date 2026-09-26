@@ -11,7 +11,6 @@ import type {
   ClaudeCreateProjectParams as RpcClaudeCreateProjectParams,
   ClaudeDropTrailingTurnParams as RpcClaudeDropTrailingTurnParams,
   ClaudeDropTrailingTurnResult as RpcClaudeDropTrailingTurnResult,
-  ClaudeFollowState as RpcClaudeFollowState,
   ClaudeImageSource as RpcClaudeImageSource,
   ClaudeInitializationResult as RpcClaudeInitializationResult,
   ClaudeJsonLine as RpcClaudeJsonLine,
@@ -71,7 +70,6 @@ export type ClaudeAttachmentPreview = RpcClaudeAttachmentPreview
 export type ClaudeAttachmentPreviewParams = RpcClaudeAttachmentPreviewParams
 export type ClaudePrepareAttachmentsParams = RpcClaudePrepareAttachmentsParams
 export type ClaudePreparedAttachments = RpcClaudePreparedAttachments
-export type ClaudeFollowState = RpcClaudeFollowState
 export type ClaudeImageSource = RpcClaudeImageSource
 export type ClaudeInitializationResult = RpcClaudeInitializationResult
 export type ClaudeCreateProjectParams = RpcClaudeCreateProjectParams
@@ -465,45 +463,6 @@ export const claude = {
     }
 
     return createDesktopQuery(params)
-  },
-  followSession(
-    projectId: string,
-    sessionId: string,
-    handlers: {
-      onUpdate: (lines: ClaudeJsonLine[]) => void
-      onState: (state: ClaudeFollowState) => void
-      onReset: () => void
-    },
-  ): { stop: () => void } {
-    if (!isTauriRuntime()) {
-      return { stop: () => {} }
-    }
-    // Set stop synchronously to block callbacks already in flight before unlisten completes.
-    let stopped = false
-    const unlisteners: Promise<() => void>[] = [
-      listenDesktopEvent('claude-follow-update', (payload) => {
-        if (stopped || payload.sessionId !== sessionId) return
-        handlers.onUpdate(payload.lines)
-      }),
-      listenDesktopEvent('claude-follow-state', (payload) => {
-        if (stopped || payload.sessionId !== sessionId) return
-        handlers.onState(payload.state)
-      }),
-      listenDesktopEvent('claude-follow-reset', (payload) => {
-        if (stopped || payload.sessionId !== sessionId) return
-        handlers.onReset()
-      }),
-    ]
-    void Promise.resolve(requestFromDesktop('claudeFollowStart', { projectId, sessionId })).catch(
-      () => {},
-    )
-    return {
-      stop: () => {
-        stopped = true
-        for (const unlisten of unlisteners) void unlisten.then((fn) => fn())
-        void Promise.resolve(requestFromDesktop('claudeFollowStop', { sessionId })).catch(() => {})
-      },
-    }
   },
   async listProviders() {
     if (!isTauriRuntime()) {

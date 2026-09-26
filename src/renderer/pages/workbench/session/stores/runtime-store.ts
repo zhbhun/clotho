@@ -1,6 +1,6 @@
 import { createStore } from 'zustand/vanilla'
 
-import type { ClaudeFollowState, ClaudeToolRequest } from '../../../../services/claude/claude'
+import type { ClaudeToolRequest } from '../../../../services/claude/claude'
 import type { MessageEditDraft, SessionRuntimeStatus } from '../session-types'
 
 export type SessionErrorKind =
@@ -26,7 +26,6 @@ export type RuntimeState = {
   isHistoryLoading: boolean
   isSubmitting: boolean
   isStreaming: boolean
-  followState: ClaudeFollowState | null
   isMessageEditPending: boolean
   messageEditDraft: MessageEditDraft | null
   streamingElapsed: number
@@ -42,7 +41,6 @@ export function createRuntimeStore(claudeSessionId: string | null) {
     isHistoryLoading: false,
     isSubmitting: false,
     isStreaming: false,
-    followState: null,
     isMessageEditPending: false,
     messageEditDraft: null,
     streamingElapsed: 0,

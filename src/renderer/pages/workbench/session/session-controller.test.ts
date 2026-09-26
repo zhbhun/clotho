@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import type { ClaudeAttachment, ClaudeJsonLine } from '@/shared/rpc'
+import type { ClaudeAttachment } from '@/shared/rpc'
 
 import type {
   ClaudeContextUsageSnapshot,
@@ -15,7 +15,7 @@ import type {
 import { createModelConfigurationStore } from '../../../stores/model-configuration-store'
 import { createSessionPersistence } from '../services/session-persistence'
 import { createSessionController } from './session-controller'
-import type { SessionClient, SessionControllerOptions } from './session-types'
+import type { SessionControllerOptions } from './session-types'
 import { initialUsageState } from './stores/usage-store'
 
 function createMemoryPersistence() {
@@ -29,10 +29,6 @@ function createClient() {
       dropped: true,
       removedSession: false,
     })),
-    followSession: vi.fn((...args: Parameters<SessionClient['followSession']>) => {
-      void args
-      return { stop: () => {} }
-    }),
     getSessionEditAnchor: vi.fn(async (): Promise<ClaudeSessionEditAnchor> => ({
       strategy: 'resume',
       resumeSessionAt: 'parent-message-uuid',
@@ -238,8 +234,6 @@ function trackedStore(options: SessionControllerOptions) {
       cancelMessageEdit: controller.cancelMessageEdit,
       stopStreaming: controller.stopStreaming,
       respondToolRequest: controller.respondToolRequest,
-      activate: controller.activate,
-      deactivate: controller.deactivate,
       dispose: () => controller.dispose(),
     }),
     setState: controller.runtimeStore.setState,
@@ -249,108 +243,6 @@ function trackedStore(options: SessionControllerOptions) {
 afterEach(() => {
   for (const controller of controllers.splice(0)) controller.dispose()
   vi.useRealTimers()
-})
-
-function createFollowSetup(claudeSessionId: string | null = 'claude-A') {
-  const stops = vi.fn()
-  const followSession = vi.fn(() => ({ stop: stops }))
-  const client = { ...createClient(), followSession }
-  const store = trackedStore({ ...createOptions('local-1'), claudeSessionId, client })
-  return { store, followSession, stops }
-}
-
-const followContext = {
-  projectId: 'project-1',
-  projectPath: '/Users/me/project',
-  isHomeMode: false,
-  isMockProject: false,
-}
-
-describe('session follow lifecycle', () => {
-  it('starts following when activated with a claude session id', () => {
-    const { store, followSession } = createFollowSetup()
-    store.getState().activate()
-    expect(followSession).toHaveBeenCalledWith('project-1', 'claude-A', expect.anything())
-  })
-
-  it('does not start without a claude session id', () => {
-    const { store, followSession } = createFollowSetup(null)
-    store.getState().activate()
-    expect(followSession).not.toHaveBeenCalled()
-  })
-
-  it('stops following when deactivated', () => {
-    const { store, stops } = createFollowSetup()
-    store.getState().activate()
-    store.getState().deactivate()
-    expect(stops).toHaveBeenCalled()
-  })
-
-  it('restarts on the new session when syncContext rebinds claudeSessionId', () => {
-    const { store, followSession, stops } = createFollowSetup()
-    store.getState().activate()
-    followSession.mockClear()
-    stops.mockClear()
-    store.getState().syncContext({ claudeSessionId: 'claude-B', ...followContext })
-    expect(stops).toHaveBeenCalledTimes(1)
-    expect(followSession).toHaveBeenCalledWith('project-1', 'claude-B', expect.anything())
-  })
-
-  it('does not restart when syncContext keeps the same claudeSessionId', () => {
-    const { store, followSession, stops } = createFollowSetup()
-    store.getState().activate()
-    followSession.mockClear()
-    stops.mockClear()
-    store.getState().syncContext({ claudeSessionId: 'claude-A', ...followContext })
-    expect(followSession).not.toHaveBeenCalled()
-    expect(stops).not.toHaveBeenCalled()
-  })
-
-  it('waits for a follow-triggered history reload before sending', async () => {
-    vi.useFakeTimers()
-    let resolveReload!: (history: []) => void
-    const reload = new Promise<[]>((resolve) => {
-      resolveReload = resolve
-    })
-    const controlled = createControllableQuery()
-    const client = createClient()
-    client.loadSessionHistory.mockResolvedValueOnce([]).mockReturnValueOnce(reload)
-    client.startup.mockReturnValue(new Promise(() => {}))
-    client.query.mockReturnValue(controlled.query as never)
-    let resetFollow = () => {}
-    const followSession = vi.fn((...args: Parameters<SessionClient['followSession']>) => {
-      resetFollow = args[2].onReset
-      return { stop: () => {} }
-    })
-    const store = trackedStore({
-      ...createOptions('local:follow-reload'),
-      claudeSessionId: 'claude-A',
-      client: { ...client, followSession },
-    })
-
-    await store.getState().initialize()
-    store.getState().activate()
-    resetFollow()
-    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
-    store.getState().setPrompt('send after reload')
-    const sending = store.getState().sendPrompt()
-
-    expect(client.query).not.toHaveBeenCalled()
-    expect(store.getState()).toMatchObject({
-      isHistoryLoading: true,
-      isSubmitting: true,
-      isStreaming: false,
-    })
-
-    await vi.advanceTimersByTimeAsync(500)
-    vi.useRealTimers()
-    resolveReload([])
-    await vi.waitFor(() => expect(store.getState().isStreaming).toBe(true))
-
-    controlled.finish()
-    await sending
-    expect(client.query).toHaveBeenCalledOnce()
-  })
 })
 
 describe('SessionController', () => {
@@ -1701,55 +1593,6 @@ describe('SessionController', () => {
 
     controlled.finish()
     await sending
-  })
-
-  it('reconciles follower replay with the optimistic turn after the query finishes', async () => {
-    const client = createClient()
-    const controlled = createControllableQuery()
-    let onFollowUpdate: ((lines: ClaudeJsonLine[]) => void) | undefined
-    client.followSession.mockImplementation(
-      (...args: Parameters<SessionClient['followSession']>) => {
-        const handlers = args[2]
-        onFollowUpdate = handlers.onUpdate
-        return { stop: () => {} }
-      },
-    )
-    client.query.mockReturnValue(controlled.query as never)
-    const store = trackedStore({
-      ...createOptions('local:follower-replay'),
-      claudeSessionId: 'claude-session',
-      client,
-    })
-    store.getState().activate()
-    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
-    store.getState().setPrompt('hello222?')
-
-    const sending = store.getState().sendPrompt()
-    controlled.emit({
-      type: 'assistant',
-      uuid: 'assistant-uuid',
-      message: { role: 'assistant', content: [{ type: 'text', text: '你好！' }] },
-    })
-    controlled.finish()
-    await sending
-
-    expect(onFollowUpdate).toBeDefined()
-    onFollowUpdate?.([
-      userHistoryMessage('hello222?'),
-      {
-        type: 'assistant',
-        uuid: 'assistant-uuid',
-        message: { role: 'assistant', content: [{ type: 'text', text: '你好！' }] },
-      },
-    ])
-
-    expect(
-      Object.values(store.getState().messages).filter((message) => message.role === 'user'),
-    ).toHaveLength(1)
-    expect(
-      Object.values(store.getState().messages).filter((message) => message.content === '你好！'),
-    ).toHaveLength(1)
-    expect(store.getState().prompt).toBe('')
   })
 
   it('ignores cancelled-turn assistant cleanup before the next user history event', async () => {

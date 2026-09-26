@@ -524,6 +524,13 @@ function SessionAreaContent({
     availableCommands,
     canSubmit: canSendPrompt,
     canUsePrompt: projectMode === 'home' || Boolean(selectedProject),
+    canRefreshSession:
+      Boolean(selectedSession?.claudeSessionId) &&
+      !isHistoryLoading &&
+      !isStreaming &&
+      !isSubmitting &&
+      !isMessageEditPending &&
+      !isMockProject,
     contextUsage,
     isSamplingContext: isSamplingContextUsage,
     contextUsageDetail: selectedSession?.claudeSessionId
@@ -569,6 +576,9 @@ function SessionAreaContent({
     },
     onStop: stopStreaming,
     onSubmit: handleSubmit,
+    onRefreshSession: () => {
+      void controller.reloadHistory()
+    },
     canResume: canResumeInterrupted,
     onResume: handleResume,
   }

@@ -12,7 +12,6 @@ import { sessionPersistence } from '../services/session-persistence'
 import type { AttachmentUpdate } from './services/attachments'
 import { CatalogService } from './services/catalog-service'
 import { ComposerService } from './services/composer-service'
-import { FollowService } from './services/follow-service'
 import { HistoryService } from './services/history-service'
 import type { ClaudeMessage } from './services/message'
 import { MessageEditService } from './services/message-edit-service'
@@ -60,7 +59,6 @@ export class SessionController {
   readonly historyService
   readonly sendService
   readonly usageSampler
-  readonly followService
   readonly messageEditService
 
   readonly options: SessionControllerOptions
@@ -100,7 +98,6 @@ export class SessionController {
     this.historyService = new HistoryService(this)
     this.sendService = new SendService(this)
     this.usageSampler = new UsageSampler(this)
-    this.followService = new FollowService(this)
     this.messageEditService = new MessageEditService(this)
     // Persist every real snapshot change (sample, /clear reset) so reopening
     // the session can restore the usage ring without a live query.
@@ -122,7 +119,6 @@ export class SessionController {
 
   syncContext = (context: SessionContext) => {
     this.contextStore.getState().syncContext(context)
-    this.followService.sync()
   }
 
   private persistContextUsageSnapshot(snapshot: ClaudeContextUsageSnapshot | null) {
@@ -279,10 +275,6 @@ export class SessionController {
     return this.initialize()
   }
 
-  activate = () => this.followService.activate()
-
-  deactivate = () => this.followService.deactivate()
-
   private trackSend(promise: Promise<boolean | void>) {
     this.sendPromise = promise
     const release = () => {
@@ -364,7 +356,6 @@ export class SessionController {
     if (this.disposed) return Promise.resolve()
     this.disposed = true
     this.unsubscribeUsageSnapshot()
-    this.followService.dispose()
     this.messageEditService.dispose()
     return this.sendService.dispose()
   }

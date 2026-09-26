@@ -42,7 +42,6 @@ export class RecalledInputService {
     this.cleanup = null
     const context = this.controller.contextStore.getState()
     if (!context.claudeSessionId) return false
-    this.controller.followService.stop()
     const entries = await this.controller.claudeService.loadSessionHistory(
       context.claudeSessionId,
       context.projectId ?? '',

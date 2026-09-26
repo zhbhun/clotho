@@ -97,15 +97,7 @@ export function SessionControllerProvider({
   ])
 
   useEffect(() => {
-    // Initialization can take up to 60 seconds. Do not activate a follower after unmount.
-    let isCancelled = false
-    void controller.initialize().then(() => {
-      if (!isCancelled) controller.activate()
-    })
-    return () => {
-      isCancelled = true
-      controller.deactivate()
-    }
+    void controller.initialize()
   }, [controller])
 
   return (
