@@ -442,8 +442,8 @@ function SessionAreaContent({
     },
     [activeViewKey],
   )
-  const handleSelectTurn = useCallback((turnId: string, behavior: ScrollBehavior) => {
-    virtualConversationRef.current?.scrollToTurn(turnId, behavior)
+  const handleSelectTurn = useCallback((turnId: string) => {
+    virtualConversationRef.current?.scrollToTurn(turnId)
   }, [])
   const handleVisibleTurnIdsChange = useCallback((next: Set<string>) => {
     setVisibleTurnIds((current) => {

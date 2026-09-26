@@ -86,7 +86,7 @@ export function ConversationToc({
   viewport,
   visibleTurnIds,
 }: {
-  onSelectTurn?: (turnId: string, behavior: ScrollBehavior) => void
+  onSelectTurn?: (turnId: string) => void
   turns: ConversationTurn[]
   viewport: HTMLElement | null
   visibleTurnIds?: Set<string>
@@ -213,9 +213,8 @@ export function ConversationToc({
   }
 
   function handleSelect(id: string) {
-    const behavior = isReducedMotion ? 'auto' : 'smooth'
     if (onSelectTurn) {
-      onSelectTurn(id, behavior)
+      onSelectTurn(id)
       return
     }
     if (!viewport) return
@@ -225,7 +224,7 @@ export function ConversationToc({
     )
     if (!target) return
 
-    target.scrollIntoView({ behavior, block: 'start' })
+    target.scrollIntoView({ block: 'start' })
   }
 
   function handleTrackClick(event: MouseEvent<HTMLDivElement>) {

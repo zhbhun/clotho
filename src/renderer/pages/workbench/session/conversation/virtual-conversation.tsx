@@ -23,15 +23,10 @@ export interface ConversationScrollAnchor {
   rowKey: string
 }
 
-// Smooth scrolling across a long virtual list mounts and measures rows every frame
-// while estimate-driven retargeting stretches the trip, so only nearby turns may
-// scroll smoothly; longer jumps land instantly.
-const SMOOTH_SCROLL_MAX_VIEWPORTS = 2
-
 export interface VirtualConversationHandle {
   captureScrollAnchor: () => ConversationScrollAnchor | null
   restoreScrollAnchor: (anchor: ConversationScrollAnchor) => boolean
-  scrollToTurn: (turnId: string, behavior: ScrollBehavior) => void
+  scrollToTurn: (turnId: string) => void
 }
 
 type VirtualConversationListProps<Row extends VirtualConversationItem> = {
@@ -119,20 +114,10 @@ function VirtualConversationListInner<Row extends VirtualConversationItem>(
         virtualizer.scrollToOffset(offset + anchor.offset, { behavior: 'auto' })
         return true
       },
-      scrollToTurn(turnId, behavior) {
+      scrollToTurn(turnId) {
         const index = firstIndexByTurnId.get(turnId)
         if (index === undefined) return
-        const targetOffset = virtualizer.getOffsetForIndex(index, 'start')?.[0]
-        const viewportHeight = viewport?.clientHeight ?? virtualizer.scrollRect?.height ?? 0
-        const currentOffset = virtualizer.scrollOffset ?? viewport?.scrollTop ?? 0
-        const isLongJump =
-          behavior === 'smooth' &&
-          targetOffset !== undefined &&
-          Math.abs(targetOffset - currentOffset) > SMOOTH_SCROLL_MAX_VIEWPORTS * viewportHeight
-        virtualizer.scrollToIndex(index, {
-          align: 'start',
-          behavior: isLongJump ? 'auto' : behavior,
-        })
+        virtualizer.scrollToIndex(index, { align: 'start', behavior: 'auto' })
       },
     }),
     [firstIndexByTurnId, rowIndexes, rows, viewport, virtualizer],

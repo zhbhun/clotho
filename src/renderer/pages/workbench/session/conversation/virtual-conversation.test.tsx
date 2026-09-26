@@ -253,57 +253,9 @@ describe('VirtualConversationList', () => {
     const viewport = screen.getByTestId('viewport')
     const capturedHandle = handle as VirtualConversationHandle | null
 
-    capturedHandle?.scrollToTurn('turn-80', 'auto')
+    capturedHandle?.scrollToTurn('turn-80')
 
     expect(viewport.scrollTo).toHaveBeenCalledWith({ behavior: 'auto', top: 4_000 })
-  })
-
-  it('jumps instantly when a smooth request travels beyond two viewports', () => {
-    let handle: VirtualConversationHandle | null = null
-    const rows = Array.from({ length: 100 }, (_, index) => ({
-      key: `row-${index}`,
-      label: `Row ${index}`,
-      turnId: `turn-${index}`,
-    }))
-    render(
-      <VirtualListHarness
-        rows={rows}
-        onHandle={(nextHandle) => {
-          handle = nextHandle
-        }}
-      />,
-    )
-    const viewport = screen.getByTestId('viewport')
-    const capturedHandle = handle as VirtualConversationHandle | null
-
-    capturedHandle?.scrollToTurn('turn-80', 'smooth')
-
-    expect(viewport.scrollTo).toHaveBeenCalledWith({ behavior: 'auto', top: 4_000 })
-  })
-
-  it('keeps smooth scrolling for turns within two viewports', () => {
-    let handle: VirtualConversationHandle | null = null
-    const rows = Array.from({ length: 100 }, (_, index) => ({
-      key: `row-${index}`,
-      label: `Row ${index}`,
-      turnId: `turn-${index}`,
-    }))
-    render(
-      <VirtualListHarness
-        rows={rows}
-        onHandle={(nextHandle) => {
-          handle = nextHandle
-        }}
-      />,
-    )
-    const viewport = screen.getByTestId('viewport')
-    const capturedHandle = handle as VirtualConversationHandle | null
-    viewport.scrollTop = 3_800
-    fireEvent.scroll(viewport)
-
-    capturedHandle?.scrollToTurn('turn-80', 'smooth')
-
-    expect(viewport.scrollTo).toHaveBeenLastCalledWith({ behavior: 'smooth', top: 4_000 })
   })
 
   it('positions rows declaratively when a scroll lands on a fresh range', () => {
@@ -416,7 +368,7 @@ describe('VirtualConversationList', () => {
       .closest<HTMLElement>('[data-conversation-virtual-row]')
 
     expect(firstRow).toHaveStyle({ transform: 'translate3d(0, 0px, 0)' })
-    capturedHandle?.scrollToTurn('turn-80', 'auto')
+    capturedHandle?.scrollToTurn('turn-80')
     expect(screen.getByTestId('viewport').scrollTo).toHaveBeenLastCalledWith({
       behavior: 'auto',
       top: 4_044,

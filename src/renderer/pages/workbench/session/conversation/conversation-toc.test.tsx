@@ -3,8 +3,6 @@ import { useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ConversationView } from '.'
-import { ThemeProvider } from '../../../../components/theme-provider'
-import { DEFAULT_APP_PREFERENCES, initializeAppSettings } from '../../../../services/app-settings'
 import type { ClaudeMessage } from '../services/message'
 import {
   ConversationToc,
@@ -171,7 +169,7 @@ describe('ConversationToc', () => {
 
     expect(markers.map((marker) => marker.dataset.active)).toEqual(['false', 'true', 'false'])
     fireEvent.click(markers[1]!)
-    expect(onSelectTurn).toHaveBeenCalledWith('user-2', 'smooth')
+    expect(onSelectTurn).toHaveBeenCalledWith('user-2')
   })
 
   it('marks every conversation turn intersecting the viewport as active', () => {
@@ -273,43 +271,7 @@ describe('ConversationToc', () => {
     ).toHaveAttribute('data-glass', 'true')
 
     fireEvent.click(markers[1]!)
-    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' })
-  })
-
-  it('uses immediate scrolling when reduced motion is enabled in app preferences', async () => {
-    await initializeAppSettings({
-      load: async () => ({
-        ...DEFAULT_APP_PREFERENCES,
-        appearance: { ...DEFAULT_APP_PREFERENCES.appearance, reducedMotion: 'reduce' },
-      }),
-      save: async (preferences) => preferences,
-    })
-    vi.stubGlobal(
-      'matchMedia',
-      vi.fn((query: string) => ({
-        matches: false,
-        media: query,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-      })),
-    )
-    const { container } = render(
-      <ThemeProvider disableTransitionOnChange={false}>
-        <TocHarness messages={TOC_MESSAGES} />
-      </ThemeProvider>,
-    )
-    const markers = Array.from(
-      container.querySelectorAll<HTMLElement>('[data-conversation-toc-id]'),
-    )
-    const targetTurn = screen
-      .getByTestId('viewport')
-      .querySelector<HTMLElement>('[data-conversation-turn-id="user-2"]')!
-    const scrollIntoView = vi.fn()
-    targetTurn.scrollIntoView = scrollIntoView
-
-    fireEvent.click(markers[1]!)
-
-    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' })
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' })
   })
 
   it('scrolls to the previewed turn when clicking empty track space', async () => {
@@ -332,7 +294,7 @@ describe('ConversationToc', () => {
     expect(await screen.findByText('First prompt')).toBeInTheDocument()
     fireEvent.click(track)
 
-    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' })
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' })
   })
 
   it('finds a stable target for every turn rendered by the conversation', () => {
