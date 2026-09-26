@@ -23,6 +23,11 @@ export interface ConversationScrollAnchor {
   rowKey: string
 }
 
+// Smooth scrolling across a long virtual list mounts and measures rows every frame
+// while estimate-driven retargeting stretches the trip, so only nearby turns may
+// scroll smoothly; longer jumps land instantly.
+const SMOOTH_SCROLL_MAX_VIEWPORTS = 2
+
 export interface VirtualConversationHandle {
   captureScrollAnchor: () => ConversationScrollAnchor | null
   restoreScrollAnchor: (anchor: ConversationScrollAnchor) => boolean
@@ -117,7 +122,17 @@ function VirtualConversationListInner<Row extends VirtualConversationItem>(
       scrollToTurn(turnId, behavior) {
         const index = firstIndexByTurnId.get(turnId)
         if (index === undefined) return
-        virtualizer.scrollToIndex(index, { align: 'start', behavior })
+        const targetOffset = virtualizer.getOffsetForIndex(index, 'start')?.[0]
+        const viewportHeight = viewport?.clientHeight ?? virtualizer.scrollRect?.height ?? 0
+        const currentOffset = virtualizer.scrollOffset ?? viewport?.scrollTop ?? 0
+        const isLongJump =
+          behavior === 'smooth' &&
+          targetOffset !== undefined &&
+          Math.abs(targetOffset - currentOffset) > SMOOTH_SCROLL_MAX_VIEWPORTS * viewportHeight
+        virtualizer.scrollToIndex(index, {
+          align: 'start',
+          behavior: isLongJump ? 'auto' : behavior,
+        })
       },
     }),
     [firstIndexByTurnId, rowIndexes, rows, viewport, virtualizer],
@@ -189,6 +204,10 @@ function VirtualConversationListInner<Row extends VirtualConversationItem>(
             data-index={virtualRow.index}
             key={row.key}
             ref={virtualizer.measureElement}
+            // Declarative position: the direct DOM writer skips elements that just
+            // mounted and stays silent on size-neutral re-measurements, which would
+            // otherwise leave rows stacked at top-0 until the next scroll event.
+            style={{ transform: `translate3d(0, ${virtualRow.start - scrollMargin}px, 0)` }}
             onFocusCapture={() => retainRow(row.key)}
             onKeyDownCapture={() => retainRow(row.key)}
             onPointerDownCapture={() => retainRow(row.key)}

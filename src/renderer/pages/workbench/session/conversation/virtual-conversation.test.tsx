@@ -258,6 +258,92 @@ describe('VirtualConversationList', () => {
     expect(viewport.scrollTo).toHaveBeenCalledWith({ behavior: 'auto', top: 4_000 })
   })
 
+  it('jumps instantly when a smooth request travels beyond two viewports', () => {
+    let handle: VirtualConversationHandle | null = null
+    const rows = Array.from({ length: 100 }, (_, index) => ({
+      key: `row-${index}`,
+      label: `Row ${index}`,
+      turnId: `turn-${index}`,
+    }))
+    render(
+      <VirtualListHarness
+        rows={rows}
+        onHandle={(nextHandle) => {
+          handle = nextHandle
+        }}
+      />,
+    )
+    const viewport = screen.getByTestId('viewport')
+    const capturedHandle = handle as VirtualConversationHandle | null
+
+    capturedHandle?.scrollToTurn('turn-80', 'smooth')
+
+    expect(viewport.scrollTo).toHaveBeenCalledWith({ behavior: 'auto', top: 4_000 })
+  })
+
+  it('keeps smooth scrolling for turns within two viewports', () => {
+    let handle: VirtualConversationHandle | null = null
+    const rows = Array.from({ length: 100 }, (_, index) => ({
+      key: `row-${index}`,
+      label: `Row ${index}`,
+      turnId: `turn-${index}`,
+    }))
+    render(
+      <VirtualListHarness
+        rows={rows}
+        onHandle={(nextHandle) => {
+          handle = nextHandle
+        }}
+      />,
+    )
+    const viewport = screen.getByTestId('viewport')
+    const capturedHandle = handle as VirtualConversationHandle | null
+    viewport.scrollTop = 3_800
+    fireEvent.scroll(viewport)
+
+    capturedHandle?.scrollToTurn('turn-80', 'smooth')
+
+    expect(viewport.scrollTo).toHaveBeenLastCalledWith({ behavior: 'smooth', top: 4_000 })
+  })
+
+  it('positions rows declaratively when a scroll lands on a fresh range', () => {
+    const rows = Array.from({ length: 100 }, (_, index) => ({
+      key: `row-${index}`,
+      label: `Row ${index}`,
+      turnId: `turn-${index}`,
+    }))
+    render(<VirtualListHarness rows={rows} />)
+    const viewport = screen.getByTestId('viewport')
+
+    viewport.scrollTop = 4_000
+    fireEvent.scroll(viewport)
+
+    const targetRow = screen
+      .getByText('Row 80')
+      .closest<HTMLElement>('[data-conversation-virtual-row]')
+    expect(targetRow).toHaveStyle({ transform: 'translate3d(0, 4000px, 0)' })
+  })
+
+  it('keeps declarative positions when an active scroll mounts another fresh range', () => {
+    const rows = Array.from({ length: 100 }, (_, index) => ({
+      key: `row-${index}`,
+      label: `Row ${index}`,
+      turnId: `turn-${index}`,
+    }))
+    render(<VirtualListHarness rows={rows} />)
+    const viewport = screen.getByTestId('viewport')
+
+    viewport.scrollTop = 2_000
+    fireEvent.scroll(viewport)
+    viewport.scrollTop = 4_800
+    fireEvent.scroll(viewport)
+
+    const targetRow = screen
+      .getByText('Row 96')
+      .closest<HTMLElement>('[data-conversation-virtual-row]')
+    expect(targetRow).toHaveStyle({ transform: 'translate3d(0, 4800px, 0)' })
+  })
+
   it('round-trips the top visible row and its intra-row offset', () => {
     let handle: VirtualConversationHandle | null = null
     const rows = Array.from({ length: 100 }, (_, index) => ({
