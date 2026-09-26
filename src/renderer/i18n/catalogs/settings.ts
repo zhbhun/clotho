@@ -185,7 +185,12 @@ export const settingsCatalog = {
     '供應商建立失敗，請重試',
   ),
   'settings.provider.idDuplicate': setting('Provider ID already exists', 'Provider ID 已存在'),
-  'settings.provider.idLabel': setting('Provider', '供应商', '供應商'),
+  'settings.provider.idLabel': setting('ID', 'ID'),
+  'settings.provider.idPlaceholder': setting(
+    'Lowercase letters, numbers, ., _, or -',
+    '小写字母、数字、.、_、-',
+    '小寫字母、數字、.、_、-',
+  ),
   'settings.provider.idFormat': setting(
     'Use lowercase letters, numbers, ., _, or -; start with a letter or number',
     '仅允许小写字母、数字、.、_、-，且必须以字母或数字开头',
@@ -196,7 +201,7 @@ export const settingsCatalog = {
     '创建后不可修改',
     '建立後無法修改',
   ),
-  'settings.provider.idRequired': setting('Enter a provider', '请输入供应商', '請輸入供應商'),
+  'settings.provider.idRequired': setting('Enter an ID', '请输入 ID', '請輸入 ID'),
   'settings.provider.loadingDescription': setting(
     'Reading model configuration.',
     '正在读取模型配置。',
@@ -255,6 +260,11 @@ export const settingsCatalog = {
   'settings.provider.models': setting('Models', '模型'),
   'settings.provider.modelsEmpty': setting('No models yet', '暂无模型', '尚無模型'),
   'settings.provider.name': setting('Name', '名称', '名稱'),
+  'settings.provider.namePlaceholder': setting(
+    'Display name, up to 50 characters',
+    '显示名称，最多 50 个字符',
+    '顯示名稱，最多 50 個字元',
+  ),
   'settings.provider.none': setting('No providers yet', '尚未添加供应商', '尚未新增供應商'),
   'settings.provider.noneDescription': setting(
     'Add one from a preset or configure a compatible endpoint manually.',

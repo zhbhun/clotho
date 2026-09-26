@@ -192,7 +192,7 @@ export function ProviderEditorForm({
                 id={`provider-${suffix}-id`}
                 aria-invalid={Boolean(providerIdError)}
                 list={`provider-${suffix}-presets`}
-                placeholder="zhipu-glm"
+                placeholder={t('settings.provider.idPlaceholder')}
                 spellCheck={false}
                 value={provider.id}
                 onChange={(event) => {
@@ -217,7 +217,8 @@ export function ProviderEditorForm({
           <Input
             id={`provider-${suffix}-name`}
             value={provider.name}
-            placeholder="DeepSeek"
+            maxLength={50}
+            placeholder={t('settings.provider.namePlaceholder')}
             onChange={(event) => onChange({ name: event.target.value })}
           />
         </ProviderField>
