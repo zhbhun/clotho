@@ -29,9 +29,14 @@ export function markerWidthForDistance(distance: number): number {
   )
 }
 
-export function markerPositionPercent(index: number, count: number): number {
-  if (count <= 1) return 50
-  return (index / (count - 1)) * 100
+export function markerTopForIndex(index: number): number {
+  return index * MARKER_RESTING_STEP
+}
+
+// The trailing +2 keeps the 2px first/last markers fully inside the scrollable strip,
+// so their edges never generate phantom overflow.
+export function trackHeightForCount(count: number): number {
+  return (count - 1) * MARKER_RESTING_STEP + 2
 }
 
 export interface ConversationTocItem {
@@ -94,6 +99,7 @@ export function ConversationToc({
   const hoveredIdRef = useRef<string | undefined>(undefined)
   const [observedVisibleIds, setObservedVisibleIds] = useState<Set<string>>(() => new Set())
   const [hoveredId, setHoveredId] = useState<string>()
+  const stripRef = useRef<HTMLDivElement | null>(null)
   const itemIdsKey = JSON.stringify(items.map(({ id }) => id))
 
   useLayoutEffect(() => {
@@ -135,6 +141,26 @@ export function ConversationToc({
     },
     [],
   )
+
+  const activeVisibleIds = visibleTurnIds ?? observedVisibleIds
+
+  const alignActiveMarker = useCallback(() => {
+    if (pointerYRef.current !== null) return
+    const strip = stripRef.current
+    const activeId = items.find((item) => activeVisibleIds.has(item.id))?.id
+    const marker = activeId ? markerRefs.current.get(activeId) : undefined
+    if (!strip || !marker) return
+
+    const top = marker.offsetTop
+    const bottom = top + marker.offsetHeight
+    if (top < strip.scrollTop) {
+      strip.scrollTop = top
+    } else if (bottom > strip.scrollTop + strip.clientHeight) {
+      strip.scrollTop = bottom - strip.clientHeight
+    }
+  }, [activeVisibleIds, items])
+
+  useLayoutEffect(alignActiveMarker, [alignActiveMarker])
 
   const updateMarkerWidths = useCallback(() => {
     animationFrameRef.current = null
@@ -183,6 +209,7 @@ export function ConversationToc({
     }
     hoveredIdRef.current = undefined
     setHoveredId(undefined)
+    alignActiveMarker()
   }
 
   function handleSelect(id: string) {
@@ -208,7 +235,6 @@ export function ConversationToc({
   }
 
   if (items.length === 0) return null
-  const activeVisibleIds = visibleTurnIds ?? observedVisibleIds
 
   return (
     <div
@@ -223,62 +249,63 @@ export function ConversationToc({
         onPointerMove={handlePointerMove}
       >
         <div
-          className="relative w-12"
-          style={{
-            height: `min(${Math.max((items.length - 1) * MARKER_RESTING_STEP, 2)}px, calc(100vh - 12rem))`,
-          }}
+          ref={stripRef}
+          className="w-12 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          style={{ maxHeight: 'calc(100vh - 12rem)' }}
         >
-          {items.map((item, index) => {
-            const isHovered = hoveredId === item.id
-            const isActive = hoveredId === undefined ? activeVisibleIds.has(item.id) : isHovered
+          <div className="relative w-12" style={{ height: trackHeightForCount(items.length) }}>
+            {items.map((item, index) => {
+              const isHovered = hoveredId === item.id
+              const isActive = hoveredId === undefined ? activeVisibleIds.has(item.id) : isHovered
 
-            return (
-              <HoverCard key={item.id} open={isHovered}>
-                <HoverCardTrigger
-                  closeDelay={0}
-                  delay={0}
-                  render={
-                    <div
-                      className={cn(
-                        'absolute left-0 h-0.5 -translate-y-1/2 cursor-pointer rounded-full transition-[width,background-color] duration-150',
-                        isReducedMotion && 'transition-none',
-                        isActive ? 'bg-foreground-subtlest' : 'bg-foreground-subtlest/30',
-                      )}
-                      data-active={isActive}
-                      data-conversation-toc-id={item.id}
-                      ref={(element) => {
-                        if (element) {
-                          markerRefs.current.set(item.id, element)
-                        } else {
-                          markerRefs.current.delete(item.id)
-                        }
-                      }}
-                      style={{
-                        top: `${markerPositionPercent(index, items.length)}%`,
-                        width: MARKER_RESTING_WIDTH,
-                      }}
-                    />
-                  }
-                />
-                <HoverCardContent
-                  align="center"
-                  className="w-80"
-                  glass
-                  side="right"
-                  sideOffset={10}
-                >
-                  <div className="flex flex-col gap-1 text-xs/relaxed">
-                    <p className="line-clamp-3 whitespace-pre-wrap">{item.userPreview}</p>
-                    {item.assistantPreview ? (
-                      <p className="line-clamp-5 whitespace-pre-wrap text-foreground-subtlest">
-                        {item.assistantPreview}
-                      </p>
-                    ) : null}
-                  </div>
-                </HoverCardContent>
-              </HoverCard>
-            )
-          })}
+              return (
+                <HoverCard key={item.id} open={isHovered}>
+                  <HoverCardTrigger
+                    closeDelay={0}
+                    delay={0}
+                    render={
+                      <div
+                        className={cn(
+                          'absolute left-0 h-0.5 cursor-pointer rounded-full transition-[width,background-color] duration-150',
+                          isReducedMotion && 'transition-none',
+                          isActive ? 'bg-foreground-subtlest' : 'bg-foreground-subtlest/30',
+                        )}
+                        data-active={isActive}
+                        data-conversation-toc-id={item.id}
+                        ref={(element) => {
+                          if (element) {
+                            markerRefs.current.set(item.id, element)
+                          } else {
+                            markerRefs.current.delete(item.id)
+                          }
+                        }}
+                        style={{
+                          top: markerTopForIndex(index),
+                          width: MARKER_RESTING_WIDTH,
+                        }}
+                      />
+                    }
+                  />
+                  <HoverCardContent
+                    align="center"
+                    className="w-80"
+                    glass
+                    side="right"
+                    sideOffset={10}
+                  >
+                    <div className="flex flex-col gap-1 text-xs/relaxed">
+                      <p className="line-clamp-3 whitespace-pre-wrap">{item.userPreview}</p>
+                      {item.assistantPreview ? (
+                        <p className="line-clamp-5 whitespace-pre-wrap text-foreground-subtlest">
+                          {item.assistantPreview}
+                        </p>
+                      ) : null}
+                    </div>
+                  </HoverCardContent>
+                </HoverCard>
+              )
+            })}
+          </div>
         </div>
       </div>
     </div>

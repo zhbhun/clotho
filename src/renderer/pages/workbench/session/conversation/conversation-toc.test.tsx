@@ -9,8 +9,9 @@ import type { ClaudeMessage } from '../services/message'
 import {
   ConversationToc,
   buildConversationTocItems,
-  markerPositionPercent,
+  markerTopForIndex,
   markerWidthForDistance,
+  trackHeightForCount,
 } from './conversation-toc'
 import { computeTurns } from './turns'
 
@@ -100,12 +101,14 @@ describe('markerWidthForDistance', () => {
   })
 })
 
-describe('markerPositionPercent', () => {
-  it('keeps the first and last markers inside the track regardless of turn count', () => {
-    expect(markerPositionPercent(0, 1)).toBe(50)
-    expect(markerPositionPercent(0, 100)).toBe(0)
-    expect(markerPositionPercent(49, 100)).toBeCloseTo(49.49, 2)
-    expect(markerPositionPercent(99, 100)).toBe(100)
+describe('toc track geometry', () => {
+  it('keeps a fixed resting step instead of compressing markers as turns grow', () => {
+    expect(markerTopForIndex(0)).toBe(0)
+    expect(markerTopForIndex(49)).toBe(490)
+    expect(markerTopForIndex(99)).toBe(990)
+
+    expect(trackHeightForCount(1)).toBe(2)
+    expect(trackHeightForCount(100)).toBe(992)
   })
 })
 
