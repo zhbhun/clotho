@@ -80,14 +80,14 @@ export function ProjectSwitchDialog({
               <Button
                 aria-label={t('workbench.project.add')}
                 type="button"
-                size="icon-lg"
+                size="icon"
                 variant="ghost"
                 onClick={() => {
                   onAddProject()
                   onOpenChange(false)
                 }}
               >
-                <FolderPlus />
+                <FolderPlus strokeWidth={1.5} />
               </Button>
             </ProjectTooltip>
           }
@@ -103,7 +103,9 @@ export function ProjectSwitchDialog({
                 <SwitcherCommandItem
                   key={project.id}
                   description={project.path}
-                  iconElement={<ProjectIcon plain icon={project.icon} size="large" />}
+                  iconElement={
+                    <ProjectIcon className="size-auto" plain icon={project.icon} size="default" />
+                  }
                   keywords={[name, project.path]}
                   label={name}
                   value={project.id}

@@ -1,7 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import type { ComponentProps, ReactNode } from 'react'
 
-import { CommandDialog } from '../../../components/command-dialog'
 import {
   Command,
   CommandEmpty,
@@ -12,6 +11,7 @@ import {
 } from '@/shadcn/command'
 import { cn } from '@/shadcn/utils'
 
+import { CommandDialog } from '../../../components/command-dialog'
 import './switcher-command.css'
 
 export function SwitcherCommandDialog({
@@ -22,7 +22,7 @@ export function SwitcherCommandDialog({
     <CommandDialog
       {...props}
       className={cn(
-        'spotlight-command-dialog top-[16vh] translate-y-0! gap-0 rounded-[22px]! p-0 sm:max-w-[760px]',
+        'spotlight-command-dialog top-[16vh] translate-y-0! gap-0 p-0 sm:max-w-[800px]',
         className,
       )}
       glass
@@ -43,7 +43,7 @@ export function SwitcherCommandInput({
 }: ComponentProps<typeof CommandInput> & { actions?: ReactNode }) {
   return (
     <div className="spotlight-command-input" data-has-actions={actions ? 'true' : undefined}>
-      <CommandInput {...props} className={className} inputGroupClassName="h-[62px]!" />
+      <CommandInput {...props} className={className} inputGroupClassName="h-9!" />
       {actions ? (
         <div
           className="spotlight-command-actions"
@@ -59,7 +59,9 @@ export function SwitcherCommandInput({
 }
 
 export function SwitcherCommandList({ className, ...props }: ComponentProps<typeof CommandList>) {
-  return <CommandList {...props} className={cn('spotlight-command-list', className)} />
+  return (
+    <CommandList {...props} className={cn('spotlight-command-list max-h-[420px]', className)} />
+  )
 }
 
 export function SwitcherCommandGroup({ className, ...props }: ComponentProps<typeof CommandGroup>) {
@@ -86,7 +88,7 @@ export function SwitcherCommandItem({
   trailing?: ReactNode
 }) {
   return (
-    <CommandItem {...props} className={cn('spotlight-command-item', className)}>
+    <CommandItem {...props} className={cn('spotlight-command-item px-2', className)}>
       <span aria-hidden="true" className="spotlight-command-icon">
         {iconElement ?? (Icon ? <Icon /> : null)}
       </span>

@@ -139,7 +139,7 @@ export function SessionHistory({
                     <SwitcherCommandItem
                       key={session.id}
                       description={session.git_branch}
-                      icon={BotMessageSquare}
+                      iconElement={<BotMessageSquare className="size-4" strokeWidth={1.5} />}
                       label={sessionTitle(session)}
                       trailing={time}
                       value={session.id}
@@ -162,14 +162,13 @@ export function SessionHistory({
 
 function SessionHistorySkeleton() {
   return (
-    <div aria-hidden="true" className="space-y-1 p-1" data-session-history-skeleton>
+    <div aria-hidden="true" data-session-history-skeleton>
       {[72, 58, 81, 64].map((width) => (
-        <div className="flex min-h-[62px] items-center gap-3 rounded-[14px] px-3" key={width}>
-          <Skeleton className="size-10 shrink-0 rounded-xl" />
-          <div className="min-w-0 flex-1 space-y-2">
-            <Skeleton className="h-3.5" style={{ width: `${width}%` }} />
-            <Skeleton className="h-2.5 w-2/5" />
-          </div>
+        <div className="flex min-h-8 items-center gap-2 rounded-md px-2.5" key={width}>
+          <Skeleton className="size-4 shrink-0 rounded-sm" />
+          <Skeleton className="h-3.5" style={{ width: `${width}%` }} />
+          <Skeleton className="h-3 w-20 shrink-0" />
+          <Skeleton className="ml-auto h-3 w-12 shrink-0" />
         </div>
       ))}
     </div>

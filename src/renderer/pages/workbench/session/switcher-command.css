@@ -1,194 +1,29 @@
-.spotlight-command-dialog[data-slot='dialog-content'] {
-  --spotlight-border: oklch(0.2 0 0 / 16%);
-  --spotlight-highlight: oklch(1 0 0 / 28%);
-  --spotlight-selection: oklch(0.35 0 0 / 10%);
+/* The switcher sheets follow the app's compact menu language: the base Dialog,
+   Command, and InputGroup styles supply the surface, radius, and row metrics.
+   Only what those bases cannot express lives here: the single-line row layout
+   and the inline action slot inside the search field. */
 
-  width: min(760px, calc(100% - 2.5rem));
-  height: min(560px, calc(84vh - 2rem));
-  max-width: min(760px, calc(100% - 2.5rem));
-  overflow: hidden;
-  border: 1px solid var(--spotlight-border);
-  border-radius: 22px;
-  box-shadow: var(--dialog-shadow);
-  isolation: isolate;
-}
-
-.dark .spotlight-command-dialog[data-slot='dialog-content'] {
-  --spotlight-border: oklch(1 0 0 / 15%);
-  --spotlight-highlight: oklch(1 0 0 / 18%);
-  --spotlight-selection: oklch(0.86 0 0 / 12%);
-}
-
-.spotlight-command-dialog[data-slot='dialog-content']::before {
-  position: absolute;
-  z-index: 0;
-  inset: 0;
-  border-radius: inherit;
-  background:
-    linear-gradient(180deg, var(--spotlight-highlight), transparent 24%),
-    radial-gradient(circle at 50% -30%, var(--spotlight-highlight), transparent 54%);
-  content: '';
-  opacity: 0.24;
-  pointer-events: none;
-}
-
-.spotlight-command-dialog > [data-slot='command'] {
-  position: relative;
-  z-index: 1;
-}
-
-.spotlight-command[data-slot='command'] {
-  padding: 0;
-  border-radius: inherit;
-  background: transparent;
-}
-
-.spotlight-command-input {
-  position: relative;
-  padding: 0;
-}
-
-.spotlight-command-input::after {
-  position: absolute;
-  right: 16px;
-  bottom: 0;
-  left: 16px;
-  height: 1px;
-  background: var(--spotlight-border);
-  content: '';
-  pointer-events: none;
-}
-
-.spotlight-command-input [data-slot='command-input-wrapper'] {
-  padding: 0;
-}
-
-.spotlight-command-input [data-slot='input-group'] {
-  height: 62px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-.spotlight-command-input [data-align='inline-start'] {
-  padding-right: 16px;
-  padding-left: 32px;
-}
-
-.spotlight-command-input [data-align='inline-start'] svg {
-  width: 24px;
-  height: 24px;
-  opacity: 0.62;
-  stroke-width: 1.8;
-}
-
-.spotlight-command-input [data-slot='command-input'] {
-  height: 100%;
-  padding: 0;
-  color: var(--foreground);
-  font-size: 20px;
-  font-weight: 500;
-  line-height: 1.25;
-}
-
-.spotlight-command-input [data-slot='command-input']::placeholder {
-  color: var(--foreground-subtlest);
-  opacity: 0.9;
-}
-
-.spotlight-command-input[data-has-actions='true'] [data-slot='command-input'] {
-  padding-right: 108px;
-}
-
-.spotlight-command-actions {
-  position: absolute;
-  z-index: 2;
-  top: 50%;
-  right: 16px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  transform: translateY(-50%);
-}
-
-.spotlight-command-actions [data-slot='button'] {
-  border-radius: 9px;
-  color: var(--foreground-subtlest);
-}
-
-.spotlight-command-actions [data-slot='button'][aria-pressed='true'] {
-  background: var(--spotlight-selection);
-  color: var(--foreground);
-}
-
-.spotlight-command-list {
-  min-height: 0;
-  max-height: none;
-  flex: 1;
-  padding: 8px;
-}
-
-.spotlight-command-list > [cmdk-list-sizer] {
-  display: flex;
-  min-height: 100%;
-  flex-direction: column;
-}
-
-.spotlight-command-group {
-  padding: 4px;
-}
-
-.spotlight-command-empty {
-  display: grid;
-  min-height: 62px;
-  flex: 1;
-  place-items: center;
-  padding: 0;
-  color: var(--foreground-subtlest);
-  font-size: 14px;
-}
-
-.spotlight-command-item[data-slot='command-item'] {
-  min-height: 62px;
-  gap: 12px;
-  padding: 0 12px;
-  border-radius: 14px;
-}
-
-.spotlight-command-item + .spotlight-command-item {
-  margin-top: 3px;
-}
-
-.spotlight-command [data-slot='command-item'].spotlight-command-item[data-selected='true'] {
-  background: var(--spotlight-selection);
-}
-
-.spotlight-command-item > svg:last-child {
-  display: none;
+.spotlight-command-item {
+  min-height: 32px;
 }
 
 .spotlight-command-icon {
-  display: grid;
-  width: 40px;
-  height: 40px;
-  flex: 0 0 auto;
-  place-items: center;
-  color: var(--foreground-subtle);
+  color: var(--foreground-subtlest);
 }
 
-.spotlight-command-icon > svg {
-  width: 24px;
-  height: 24px;
-  stroke-width: 1.8;
+/* Emoji glyphs join the 16px icon row; their font's tall line metrics would
+   otherwise inflate the line box past the row's 32px height. */
+.spotlight-command-icon [data-slot='project-icon'] > span {
+  font-size: 16px;
+  line-height: 16px;
 }
 
 .spotlight-command-copy {
   display: flex;
   min-width: 0;
   flex: 1;
-  flex-direction: column;
-  justify-content: center;
+  align-items: center;
+  gap: 8px;
 }
 
 .spotlight-command-title,
@@ -200,41 +35,105 @@
 
 .spotlight-command-title {
   color: var(--foreground);
-  font-size: 16px;
-  font-weight: 500;
-  line-height: 1.25;
+  font-size: 14px;
+  line-height: 20px;
 }
 
 .spotlight-command-description {
-  margin-top: 4px;
+  /* The meta follows the title directly; only the trailing slot is pushed to the
+     right edge. 45% keeps a long path from squeezing the title out of the row. */
+  max-width: 45%;
   color: var(--foreground-subtlest);
   font-size: 12px;
-  font-weight: 400;
-  line-height: 1.2;
+  line-height: 16px;
 }
 
 .spotlight-command-trailing {
   flex: 0 0 auto;
   align-self: center;
+  /* Only the trailing slot is flush right, the way quick-open rows end with a
+     badge; the meta next to the title keeps its place. */
+  margin-left: auto;
   color: var(--foreground-subtlest);
-  font-size: 11px;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
-  font-weight: 400;
+}
+
+/* cmdk appends a check mark after the row content; the selected row already
+   reads through the accent background, so the mark stays hidden. */
+.spotlight-command-item > svg:last-child {
+  display: none;
+}
+
+.spotlight-command-input {
+  position: relative;
+}
+
+/* A rule below the search row instead of an input border keeps the sheet's top
+   edge quiet; the row itself stays flush with the panel's 16px inset. */
+.spotlight-command-input::after {
+  position: absolute;
+  right: 12px;
+  bottom: 0;
+  left: 12px;
+  height: 1px;
+  background: var(--border);
+  content: '';
+  pointer-events: none;
+}
+
+.spotlight-command-input [data-slot='command-input-wrapper'] {
+  padding: 0;
+}
+
+.spotlight-command-input [data-slot='input-group'] {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.spotlight-command-input [data-slot='input-group-addon'] {
+  padding-left: 8px;
+}
+
+.spotlight-command-input [data-slot='input-group-addon'] svg {
+  width: 16px;
+  height: 16px;
+  opacity: 0.55;
+  stroke-width: 1.5;
+}
+
+.spotlight-command-input [data-slot='command-input']::placeholder {
+  color: var(--foreground-subtlest);
+}
+
+.spotlight-command-input[data-has-actions='true'] [data-slot='command-input'] {
+  padding-right: 44px;
+}
+
+.spotlight-command-actions {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  transform: translateY(-50%);
+}
+
+.spotlight-command-actions [data-slot='button'] {
+  color: var(--foreground-subtlest);
 }
 
 .spotlight-command-badge {
-  border-radius: 999px;
-  background: color-mix(in oklab, var(--primary) 12%, transparent);
-  color: var(--primary);
   flex: 0 0 auto;
   align-self: center;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--secondary), var(--foreground) 8%);
+  color: var(--foreground-subtle);
   font-size: 10px;
   font-weight: 500;
   line-height: 1;
-  padding: 3px 7px;
   white-space: nowrap;
-}
-
-[data-reduced-motion='reduce'] .spotlight-command-dialog[data-slot='dialog-content'] {
-  animation: none;
 }
