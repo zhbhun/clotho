@@ -41,8 +41,9 @@
 
 .spotlight-command-description {
   /* The meta follows the title directly; only the trailing slot is pushed to the
-     right edge. 45% keeps a long path from squeezing the title out of the row. */
-  max-width: 45%;
+     right edge. The cap reserves about two icon buttons of trailing space and
+     lets the meta use the rest of the row. */
+  max-width: calc(100% - 72px);
   color: var(--foreground-subtlest);
   font-size: 12px;
   line-height: 16px;

@@ -8,6 +8,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip'
 import { ProjectIcon } from '../../../components/project-icon'
 import type { ClaudeProject } from '../../../services/claude/claude'
 import { isUserProject, projectDisplayName } from '../../../utils/project'
+import { shortMiddlePath, tildePath } from '../utils/path-display'
 import {
   SwitcherCommand,
   SwitcherCommandDialog,
@@ -25,6 +26,10 @@ export type ProjectSelectionProps = {
   onAddProject: () => void
   onSelectProject: (projectId: string) => void
 }
+
+/** The row leaves about two icon buttons of trailing space; paths beyond what
+    fits there elide their middle instead of their tail. */
+const PROJECT_PATH_MAX = 80
 
 function ProjectTooltip({
   align = 'center',
@@ -102,7 +107,7 @@ export function ProjectSwitchDialog({
               return (
                 <SwitcherCommandItem
                   key={project.id}
-                  description={project.path}
+                  description={shortMiddlePath(tildePath(project.path), PROJECT_PATH_MAX)}
                   iconElement={
                     <ProjectIcon className="size-auto" plain icon={project.icon} size="default" />
                   }

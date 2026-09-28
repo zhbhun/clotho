@@ -1861,7 +1861,7 @@ describe('prompt composer surface', () => {
       return element!
     })
     fireEvent.click(projectTitle)
-    const projectOption = await screen.findByText('/Users/test/project')
+    const projectOption = await screen.findByText('~/project')
     fireEvent.click(projectOption)
 
     await waitFor(() => {
@@ -1915,7 +1915,7 @@ describe('prompt composer surface', () => {
     const dialog = screen.getByRole('dialog', { name: '切换项目' })
     expect(within(dialog).getByRole('button', { name: '添加项目' })).toBeInTheDocument()
     expect(within(dialog).queryByRole('button', { name: '不使用项目' })).not.toBeInTheDocument()
-    expect(within(dialog).getByText('/Users/test/project')).toBeInTheDocument()
+    expect(within(dialog).getByText('~/project')).toBeInTheDocument()
   })
 
   it('opens the shared project form from the project switcher', async () => {

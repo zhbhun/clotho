@@ -5,6 +5,7 @@ import type {
   ClaudeJsonLine as RpcClaudeJsonLine,
 } from '@/shared/rpc'
 
+import { tildePath } from '../../utils/path-display'
 import { attachmentFromPart } from './attachments'
 
 export type ClaudeJsonLine = RpcClaudeJsonLine
@@ -86,10 +87,6 @@ export function isUserPromptMessage(message: ClaudeMessage): boolean {
     !message.isInterruption &&
     !message.blocks?.some((block) => block.type === 'tool_result')
   )
-}
-
-function compactPath(path: string) {
-  return path.replace(/^\/Users\/[^/]+/, '~')
 }
 
 export function parseClaudeLine(line: string, index = 0): ClaudeMessage | null {
@@ -263,7 +260,7 @@ function parseEntry(entry: ClaudeJsonLine): { role: ClaudeRole; blocks: ClaudeCo
 
   if (entry.type === 'system' && entry.subtype === 'init') {
     const model = entry.model ? ` · ${entry.model}` : ''
-    const cwd = entry.cwd ? ` · ${compactPath(entry.cwd)}` : ''
+    const cwd = entry.cwd ? ` · ${tildePath(entry.cwd)}` : ''
     return {
       role: 'system',
       blocks: [{ type: 'text', text: `Claude session initialized${model}${cwd}` }],
