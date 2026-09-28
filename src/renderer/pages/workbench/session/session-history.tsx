@@ -1,4 +1,4 @@
-import { BotMessageSquare, Clock } from 'lucide-react'
+import { Clock, MessageCircleCode } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -139,7 +139,7 @@ export function SessionHistory({
                     <SwitcherCommandItem
                       key={session.id}
                       description={session.git_branch}
-                      iconElement={<BotMessageSquare className="size-4" strokeWidth={1.5} />}
+                      iconElement={<MessageCircleCode className="size-4" strokeWidth={1.5} />}
                       label={sessionTitle(session)}
                       trailing={time}
                       value={session.id}
