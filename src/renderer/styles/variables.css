@@ -119,7 +119,9 @@
   --popover-shadow:
     0 4px 10px -4px color-mix(in oklab, var(--color-neutral-950) 18%, transparent),
     0 8px 28px -12px color-mix(in oklab, var(--color-neutral-950) 24%, transparent);
-  --dialog-shadow: 0 0 30px oklch(0 0 0 / 18%), 0 0 20px -12px oklch(0 0 0 / 18%);
+  --dialog-shadow:
+    0 0 10px -4px color-mix(in oklab, var(--color-neutral-950) 18%, transparent),
+    0 0 28px -12px color-mix(in oklab, var(--color-neutral-950) 24%, transparent);
   --status-confirm: oklch(0.68 0.17 65);
   --status-unread: oklch(0.58 0.19 255);
   --code-surface: color-mix(in oklab, var(--background), var(--foreground) 1.8868%);
@@ -188,7 +190,9 @@
   --popover-shadow:
     0 4px 12px -4px color-mix(in oklab, var(--color-neutral-950) 36%, transparent),
     0 8px 30px -12px color-mix(in oklab, var(--color-neutral-950) 52%, transparent);
-  --dialog-shadow: 0 0 36px oklch(0 0 0 / 50%), 0 0 24px -14px oklch(0 0 0 / 36%);
+  --dialog-shadow:
+    0 0 12px -4px color-mix(in oklab, var(--color-neutral-950) 36%, transparent),
+    0 0 30px -12px color-mix(in oklab, var(--color-neutral-950) 52%, transparent);
   --status-confirm: oklch(0.78 0.15 75);
   --status-unread: oklch(0.72 0.16 255);
   --code-surface: var(--card);
