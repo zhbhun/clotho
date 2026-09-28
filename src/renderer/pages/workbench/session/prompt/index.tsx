@@ -278,7 +278,7 @@ export function PromptComposer({
   return (
     <Card
       className={cn(
-        'group/composer @container w-full overflow-hidden rounded-2xl text-sm [--card-spacing:--spacing(3)]',
+        'group/composer @container w-full overflow-hidden rounded-[20px] text-sm [--card-spacing:--spacing(3)]',
         appearance === 'default' && 'prompt-composer-surface ring-0',
         appearance === 'message-edit' &&
           'max-h-[450px] min-h-0 rounded-lg rounded-br-none border-border/60 bg-muted shadow-none',
