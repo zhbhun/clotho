@@ -138,7 +138,6 @@ export function SessionHistory({
                   return (
                     <SwitcherCommandItem
                       key={session.id}
-                      description={session.git_branch}
                       iconElement={<MessageCircleCode className="size-4" strokeWidth={1.5} />}
                       label={sessionTitle(session)}
                       trailing={time}
