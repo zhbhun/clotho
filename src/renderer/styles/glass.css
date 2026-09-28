@@ -4,7 +4,7 @@
 }
 
 .dark {
-  --floating-glass-background: color-mix(in oklab, var(--popover) 72%, transparent);
+  --floating-glass-background: color-mix(in oklab, var(--popover) 80%, transparent);
 }
 
 /* Content bleeds through glass, so the default light accent (~4% darker than the
