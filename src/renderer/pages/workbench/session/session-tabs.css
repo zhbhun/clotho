@@ -7,7 +7,7 @@
 
 .session-tabs[data-content-scrolled='true'] {
   z-index: 10;
-  box-shadow: 0 8px 16px -12px color-mix(in oklab, var(--foreground) 18%, transparent);
+  box-shadow: 0 6px 12px -12px color-mix(in oklab, var(--foreground) 18%, transparent);
 }
 
 .session-tabs[data-has-tabs='true']::after {
