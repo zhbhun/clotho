@@ -138,9 +138,9 @@ export function SessionHistory({
                   return (
                     <SwitcherCommandItem
                       key={session.id}
+                      description={time}
                       iconElement={<MessageCircleCode className="size-4" strokeWidth={1.5} />}
                       label={sessionTitle(session)}
-                      trailing={time}
                       value={session.id}
                       onSelect={() => {
                         handleOpenChange(false)
@@ -166,8 +166,7 @@ function SessionHistorySkeleton() {
         <div className="flex min-h-8 items-center gap-2 rounded-md px-2.5" key={width}>
           <Skeleton className="size-4 shrink-0 rounded-sm" />
           <Skeleton className="h-3.5" style={{ width: `${width}%` }} />
-          <Skeleton className="h-3 w-20 shrink-0" />
-          <Skeleton className="ml-auto h-3 w-12 shrink-0" />
+          <Skeleton className="h-3 w-12 shrink-0" />
         </div>
       ))}
     </div>
