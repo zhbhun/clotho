@@ -21,7 +21,18 @@ describe('buildContextRows', () => {
     expect(rows.map((row) => row.name)).toEqual(['System prompt'])
   })
 
-  it('sorts rows in the canonical CLI /context order regardless of input order', () => {
+  it('merges MCP tool schemas and MCP server instructions into a single MCP row', () => {
+    const rows = buildContextRows(
+      [category('MCP tools', 9000), category('MCP server instructions', 666)],
+      identityLabel,
+    )
+
+    expect(rows).toHaveLength(1)
+    expect(rows[0].name).toBe('MCP tools')
+    expect(rows[0].tokens).toBe(9666)
+  })
+
+  it('sorts rows in the panel order regardless of input order', () => {
     const rows = buildContextRows(
       [
         category('Messages', 60000),
@@ -38,10 +49,10 @@ describe('buildContextRows', () => {
     expect(rows.map((row) => row.name)).toEqual([
       'System prompt',
       'System tools',
-      'MCP tools',
-      'Custom agents',
       'Memory files',
       'Skills',
+      'MCP tools',
+      'Custom agents',
       'Messages',
     ])
   })

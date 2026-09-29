@@ -19,7 +19,7 @@ type CategoryLabelKey =
 type CategoryStyle = {
   labelKey?: CategoryLabelKey
   segmentClass: string
-  /** Display position in the panel, mirroring the CLI /context category order. */
+  /** Display position in the panel: prompt, tools, rules, skills, MCP, agents, conversation. */
   order: number
 }
 
@@ -27,11 +27,14 @@ const FALLBACK_CATEGORY_ORDER = 99
 
 /**
  * Matchers against the SDK report's raw category names ("System prompt",
- * "System tools", "Memory files", …). Match priority follows array order:
- * "System prompt" must be classified before the generic tool matcher and
- * "MCP tools" before it, since both names contain "tool". `order` controls the
- * panel's display sequence, which differs from match priority. The autocompact
- * buffer and free space are intentionally unlisted — both are filtered out.
+ * "System tools", "MCP server instructions", …). Match priority follows array
+ * order: "System prompt" must be classified before the generic tool matcher and
+ * "MCP" before it, since both names contain "tool". Every entry yields at most
+ * one panel row — all raw categories it matches are merged with summed tokens,
+ * so "MCP tools" and "MCP server instructions" collapse into a single MCP row.
+ * `order` controls the panel's display sequence, which differs from match
+ * priority. The autocompact buffer and free space are intentionally unlisted —
+ * both are filtered out.
  */
 const CATEGORY_STYLES: Array<{ match: (name: string) => boolean; style: CategoryStyle }> = [
   {
@@ -47,7 +50,7 @@ const CATEGORY_STYLES: Array<{ match: (name: string) => boolean; style: Category
     style: {
       labelKey: 'workbench.prompt.contextCategoryMcpTools',
       segmentClass: 'bg-project-icon-pink',
-      order: 2,
+      order: 4,
     },
   },
   {
@@ -55,7 +58,7 @@ const CATEGORY_STYLES: Array<{ match: (name: string) => boolean; style: Category
     style: {
       labelKey: 'workbench.prompt.contextCategoryCustomAgents',
       segmentClass: 'bg-project-icon-purple',
-      order: 3,
+      order: 5,
     },
   },
   {
@@ -63,7 +66,7 @@ const CATEGORY_STYLES: Array<{ match: (name: string) => boolean; style: Category
     style: {
       labelKey: 'workbench.prompt.contextCategoryMemory',
       segmentClass: 'bg-project-icon-green',
-      order: 4,
+      order: 2,
     },
   },
   {
@@ -71,7 +74,7 @@ const CATEGORY_STYLES: Array<{ match: (name: string) => boolean; style: Category
     style: {
       labelKey: 'workbench.prompt.contextCategorySkills',
       segmentClass: 'bg-project-icon-cyan',
-      order: 5,
+      order: 3,
     },
   },
   {
@@ -112,15 +115,6 @@ function isAutocompactBuffer(name: string) {
   return name.toLowerCase().includes('buffer')
 }
 
-function resolveCategoryStyle(name: string, fallbackIndex: number): CategoryStyle {
-  const matched = CATEGORY_STYLES.find((entry) => entry.match(name))
-  if (matched) return matched.style
-  return {
-    segmentClass: FALLBACK_SEGMENT_CLASSES[fallbackIndex % FALLBACK_SEGMENT_CLASSES.length],
-    order: FALLBACK_CATEGORY_ORDER,
-  }
-}
-
 /** Token counts below 1K stay raw; everything larger renders as rounded K with one decimal. */
 export function formatTokenCount(value: number) {
   if (value < 1000) return String(value)
@@ -131,8 +125,9 @@ type ReportCategory = ClaudeContextUsageSnapshot['categories'][number]
 
 /**
  * Turns the raw `/context` categories into display rows: drops free space, the
- * autocompact buffer, and zero-token entries; localizes known labels; sorts by
- * the CLI's canonical category order.
+ * autocompact buffer, and zero-token entries; merges the raw categories of each
+ * known kind into a single localized row (MCP's two rows become one); keeps
+ * unknown categories as their own rows; sorts by the panel's canonical order.
  */
 export function buildContextRows(
   categories: ReadonlyArray<ReportCategory>,
@@ -142,22 +137,32 @@ export function buildContextRows(
     (category) =>
       !isFreeSpace(category.name) && !isAutocompactBuffer(category.name) && category.tokens > 0,
   )
-  const withOrder = filtered.map((category, index) => {
-    // Unknown categories share the fallback palette; index by how many unknown
-    // categories precede this one so each keeps a stable color across renders.
-    const fallbackIndex = filtered
-      .slice(0, index)
-      .filter((previous) => !resolveCategoryStyle(previous.name, 0).labelKey).length
-    const style = resolveCategoryStyle(category.name, fallbackIndex)
-    return {
-      name: category.name,
-      tokens: category.tokens,
-      label: style.labelKey ? translateLabel(style.labelKey) : category.name,
+  const unmatched = [...filtered]
+  const rows: Array<ContextUsageRow & { order: number }> = []
+  for (const { match, style } of CATEGORY_STYLES) {
+    const matched = unmatched.filter((category) => match(category.name))
+    if (!matched.length) continue
+    for (const category of matched) unmatched.splice(unmatched.indexOf(category), 1)
+    rows.push({
+      name: matched[0].name,
+      tokens: matched.reduce((sum, category) => sum + category.tokens, 0),
+      label: style.labelKey ? translateLabel(style.labelKey) : matched[0].name,
       segmentClass: style.segmentClass,
       order: style.order,
-    }
-  })
-  return withOrder
+    })
+  }
+  // Unknown categories share the fallback palette and keep their raw names;
+  // indexing by encounter order keeps each color stable across renders.
+  for (const [index, category] of unmatched.entries()) {
+    rows.push({
+      name: category.name,
+      tokens: category.tokens,
+      label: category.name,
+      segmentClass: FALLBACK_SEGMENT_CLASSES[index % FALLBACK_SEGMENT_CLASSES.length],
+      order: FALLBACK_CATEGORY_ORDER,
+    })
+  }
+  return rows
     .sort((a, b) => a.order - b.order)
     .map(({ name, tokens, label, segmentClass }) => ({ name, tokens, label, segmentClass }))
 }
