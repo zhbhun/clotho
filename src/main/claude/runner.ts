@@ -331,6 +331,9 @@ function normalizeOptions(
     cwd: options?.cwd ?? os.homedir(),
     enableFileCheckpointing: true,
   }
+  // SDK sessions otherwise run on a two-line stub system prompt; the Claude
+  // Code preset keeps sessions on the same prompt as the interactive CLI.
+  normalized.systemPrompt ??= { type: 'preset', preset: 'claude_code' }
   // When packaged, the SDK's own resolution would point inside the asar
   // archive, where the CLI binary cannot be spawned from.
   const claudeCodeBinary = resolveClaudeCodeBinary()
