@@ -1,10 +1,12 @@
 import { type ReactNode, createContext, useContext, useEffect, useState } from 'react'
 import { useStore } from 'zustand'
 
+import { listenDesktopEvent } from '../../../services/desktop/client'
 import {
   useModelConfigurationStore,
   useModelConfigurationStoreApi,
 } from '../../../stores/model-configuration-context'
+import { useWorkbenchStore } from '../stores/workbench-store'
 import type { SessionController } from './session-controller'
 import {
   type SessionControllerRegistry,
@@ -26,6 +28,30 @@ export function SessionControllerRegistryProvider({ children }: { children: Reac
   const [registry] = useState(() =>
     createSessionControllerRegistry(undefined, modelConfigurationStore),
   )
+
+  useEffect(() => {
+    let stopped = false
+    let unsubscribe: (() => void) | undefined
+    // A recycled query ends the background run of a closed tab: release its
+    // retained controller once no tab still shows the session. A session with
+    // an open tab keeps its controller — its next send just rebuilds.
+    void listenDesktopEvent('claude-session-recycled', ({ sessionId }) => {
+      const { tabsByWorkspace } = useWorkbenchStore.getState()
+      const openTabs = new Set(Object.values(tabsByWorkspace).flat())
+      if (openTabs.has(sessionId)) return
+      void registry.release(sessionId)
+    }).then(
+      (stop) => {
+        if (stopped) stop()
+        else unsubscribe = stop
+      },
+      () => {},
+    )
+    return () => {
+      stopped = true
+      unsubscribe?.()
+    }
+  }, [registry])
 
   useEffect(() => () => registry.dispose(), [registry])
 

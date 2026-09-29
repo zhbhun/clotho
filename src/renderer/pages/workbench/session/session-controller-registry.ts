@@ -1,3 +1,4 @@
+import { claude } from '../../../services/claude/claude'
 import {
   type ModelConfigurationStore,
   createModelConfigurationStore,
@@ -36,9 +37,20 @@ export function createSessionControllerRegistry(
       controllers.delete(sessionId)
       return controller.dispose()
     },
+    /**
+     * Drop the controllers of sessions that lost their tab. A controller with
+     * a resident query stays registered so the query keeps running in the
+     * background and its activity keeps flowing; closing its tab only asks the
+     * main process to recycle it if it is idle, and the claudeSessionRecycled
+     * push releases the controller once that happens.
+     */
     retain(sessionIds: ReadonlySet<string>) {
       for (const [sessionId, controller] of controllers) {
         if (sessionIds.has(sessionId)) continue
+        if (controller.sendService.hasResidentQuery()) {
+          void claude.recycleCheckSessionQuery(sessionId).catch(() => {})
+          continue
+        }
         void controller.dispose()
         controllers.delete(sessionId)
       }

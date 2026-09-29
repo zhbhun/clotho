@@ -1341,7 +1341,19 @@ describe('prompt composer surface', () => {
           return providersFromModels(TEST_MODELS)
         case 'claudeStartup':
           return { cwd: '/Users/test', commands: [], agents: [], models: TEST_MODELS }
-        case 'claudeQueryStart':
+        case 'claudeSessionQueryEnsure':
+          return {
+            streamId: 'stream-1',
+            state: {
+              claudeSessionId: null,
+              status: 'ready',
+              turnInFlight: false,
+              pendingToolRequests: [],
+              backgroundTaskIds: [],
+            },
+            replay: [],
+          }
+        case 'claudeSessionQueryPush':
           return undefined
         default:
           return null
@@ -1376,8 +1388,8 @@ describe('prompt composer surface', () => {
 
       await waitFor(() => {
         expect(requestFromDesktop).toHaveBeenCalledWith(
-          'claudeQueryStart',
-          expect.objectContaining({ prompt: 'hello world' }),
+          'claudeSessionQueryPush',
+          expect.objectContaining({ streamId: 'stream-1', text: 'hello world' }),
         )
       })
       await waitFor(() => {

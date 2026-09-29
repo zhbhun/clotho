@@ -431,6 +431,19 @@ describe('useWorkbenchStore', () => {
     expect(useWorkbenchStore.getState().sessionActivity[backgroundDraft]).toBe('unread-error')
   })
 
+  it('keeps a closed tab running with its live activity', () => {
+    loadCatalog()
+    const backgroundDraft = useWorkbenchStore.getState().createDraftSession(null)
+    useWorkbenchStore.getState().selectHome(backgroundDraft)
+    useWorkbenchStore.getState().selectSession(REMOTE_SESSION.id)
+    useWorkbenchStore.getState().setSessionActivity(backgroundDraft, 'processing')
+
+    useWorkbenchStore.getState().closeSession(backgroundDraft)
+
+    expect(useWorkbenchStore.getState().tabsByWorkspace.claude).not.toContain(backgroundDraft)
+    expect(useWorkbenchStore.getState().sessionActivity[backgroundDraft]).toBe('processing')
+  })
+
   it('persists only unread activity', () => {
     loadCatalog()
     useWorkbenchStore.getState().selectSession(REMOTE_SESSION.id)

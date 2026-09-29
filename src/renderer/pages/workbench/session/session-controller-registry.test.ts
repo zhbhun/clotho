@@ -13,6 +13,15 @@ function options(sessionId: string) {
   }
 }
 
+/** The slice of a controller the registry consults while retaining tabs. */
+function residentQuery(hasResidentQuery: boolean) {
+  return {
+    dispose: vi.fn(),
+    syncOptions: vi.fn(),
+    sendService: { hasResidentQuery: () => hasResidentQuery },
+  }
+}
+
 describe('SessionControllerRegistry', () => {
   it('gives every session controller the same application model configuration store', () => {
     const stores: unknown[] = []
@@ -31,10 +40,7 @@ describe('SessionControllerRegistry', () => {
   })
 
   it('manages session controllers directly', () => {
-    const controller = {
-      dispose: vi.fn(),
-      syncOptions: vi.fn(),
-    }
+    const controller = residentQuery(false)
     const factory = vi.fn(() => controller)
     const registry = createSessionControllerRegistry(factory as never)
 
@@ -57,7 +63,11 @@ describe('SessionControllerRegistry', () => {
     const factory = vi.fn((config: ReturnType<typeof options>) => {
       const disposeSession = vi.fn()
       dispose.set(config.sessionId, disposeSession)
-      return { dispose: disposeSession, syncOptions: vi.fn() }
+      return {
+        dispose: disposeSession,
+        syncOptions: vi.fn(),
+        sendService: { hasResidentQuery: () => false },
+      }
     })
     const registry = createSessionControllerRegistry(factory as never)
 
@@ -73,6 +83,27 @@ describe('SessionControllerRegistry', () => {
     registry.retain(new Set(['second']))
     expect(dispose.get('first')).toHaveBeenCalledOnce()
     expect(dispose.get('second')).not.toHaveBeenCalled()
+  })
+
+  it('keeps a closed tab controller alive while its resident query runs', () => {
+    const running = residentQuery(true)
+    const registry = createSessionControllerRegistry((() => running) as never)
+    registry.get(options('background'))
+
+    registry.retain(new Set())
+
+    // The query keeps running in the main process; the retained controller
+    // stays findable so reopening the tab reattaches to it instead of
+    // rebuilding, and its activity callbacks keep firing in the background.
+    expect(running.dispose).not.toHaveBeenCalled()
+    expect(registry.find('background')).toBe(running)
+
+    registry.retain(new Set(['background']))
+    expect(running.dispose).not.toHaveBeenCalled()
+
+    registry.release('background')
+    expect(running.dispose).toHaveBeenCalledOnce()
+    expect(registry.find('background')).toBeUndefined()
   })
 
   it('disposes every retained controller when the registry shuts down', () => {

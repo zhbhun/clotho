@@ -716,6 +716,11 @@ export class SendService {
     )
   }
 
+  /** True while the resident query is attached (including a pending attach). */
+  hasResidentQuery() {
+    return this.stream !== null
+  }
+
   async respondToolRequest(toolUseId: string, result: ClaudeToolResult) {
     const runtimeStore = this.controller.runtimeStore
     const hasPendingRequest = Boolean(runtimeStore.getState().pendingToolRequests[toolUseId])

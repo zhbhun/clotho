@@ -30,6 +30,7 @@ type DesktopEventMap = {
   'claude-error': DesktopMessageMap['claudeError']
   'claude-complete': DesktopMessageMap['claudeComplete']
   'claude-tool-request': DesktopMessageMap['claudeToolRequest']
+  'claude-session-recycled': DesktopMessageMap['claudeSessionRecycled']
 }
 
 type DesktopEventName = keyof DesktopEventMap
@@ -41,6 +42,7 @@ const PUSH_EVENT_BINDINGS: Array<[keyof DesktopMessageMap & string, DesktopEvent
   ['claudeError', 'claude-error'],
   ['claudeComplete', 'claude-complete'],
   ['claudeToolRequest', 'claude-tool-request'],
+  ['claudeSessionRecycled', 'claude-session-recycled'],
 ]
 
 const eventListeners: {
@@ -50,6 +52,7 @@ const eventListeners: {
   'claude-error': new Set(),
   'claude-complete': new Set(),
   'claude-tool-request': new Set(),
+  'claude-session-recycled': new Set(),
 }
 
 function desktopBridge() {

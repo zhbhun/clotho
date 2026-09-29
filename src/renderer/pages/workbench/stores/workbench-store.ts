@@ -566,11 +566,8 @@ export const useWorkbenchStore = create<WorkbenchState>()(
             state.tabsByWorkspace[workspaceKey],
             sessionId,
           )
-          const sessionActivity =
-            state.sessionActivity[sessionId] === 'processing' ||
-            state.sessionActivity[sessionId] === 'awaiting-user'
-              ? { ...state.sessionActivity, [sessionId]: 'idle' as const }
-              : state.sessionActivity
+          // The session keeps running in the background with its tab closed,
+          // so its activity stays as-is instead of snapping back to idle.
           const tabsByWorkspace = {
             ...state.tabsByWorkspace,
             [workspaceKey]: workspaceTabs,
@@ -581,7 +578,6 @@ export const useWorkbenchStore = create<WorkbenchState>()(
             : state.activeSessionByWorkspace
           const base = {
             activeSessionByWorkspace,
-            sessionActivity,
             tabsByWorkspace,
           }
           if (state.currentSessionId !== sessionId) return base

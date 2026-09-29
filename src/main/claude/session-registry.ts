@@ -235,6 +235,9 @@ export function createSessionQueryRegistry(
           entry.state.status = 'dead'
           entry.abort.abort()
           entry.queue.finish()
+          // Same signal as an explicit recycle: a renderer holding a closed
+          // tab's controller in the background releases it on this push.
+          hooks.onRecycled?.(entry.sessionId)
         }
         events.onComplete(streamId, success)
       },
