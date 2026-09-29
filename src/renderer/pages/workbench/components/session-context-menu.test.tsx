@@ -37,7 +37,7 @@ beforeEach(async () => {
   await appI18n.changeLanguage('en')
 })
 
-function renderMenu(session = SESSIONS[1], sessions = SESSIONS) {
+function renderMenu(session = SESSIONS[1], sessions = SESSIONS, variant: 'tab' | 'list' = 'tab') {
   const onCloseSession = vi.fn()
 
   render(
@@ -45,6 +45,7 @@ function renderMenu(session = SESSIONS[1], sessions = SESSIONS) {
       close={{ onCloseSession, sessions }}
       isPinned={false}
       session={session}
+      variant={variant}
       onDeleteSession={vi.fn()}
       onRenameSession={vi.fn()}
       onTogglePinSession={vi.fn()}
@@ -58,6 +59,15 @@ function renderMenu(session = SESSIONS[1], sessions = SESSIONS) {
 }
 
 describe('SessionContextMenu tab actions', () => {
+  it('orders close actions between rename and delete', async () => {
+    renderMenu()
+    await screen.findByRole('menuitem', { name: 'Close' })
+
+    const names = screen.getAllByRole('menuitem').map((item) => item.textContent)
+    expect(names.indexOf('Rename')).toBeLessThan(names.indexOf('Close Others'))
+    expect(names.indexOf('Close All')).toBeLessThan(names.indexOf('Delete'))
+  })
+
   it('closes the clicked tab', async () => {
     const user = userEvent.setup()
     const { onCloseSession } = renderMenu()
@@ -116,6 +126,39 @@ describe('SessionContextMenu tab actions', () => {
     const user = userEvent.setup()
     const { onCloseSession } = renderMenu(SESSIONS[2])
     const item = await screen.findByRole('menuitem', { name: 'Close to the Right' })
+
+    expect(item).toHaveAttribute('data-disabled')
+    await user.click(item)
+    expect(onCloseSession).not.toHaveBeenCalled()
+  })
+})
+
+describe('SessionContextMenu list actions', () => {
+  it('closes the clicked session', async () => {
+    const user = userEvent.setup()
+    const { onCloseSession } = renderMenu(SESSIONS[1], SESSIONS, 'list')
+
+    await user.click(await screen.findByRole('menuitem', { name: 'Close' }))
+
+    expect(onCloseSession).toHaveBeenCalledOnce()
+    expect(onCloseSession).toHaveBeenCalledWith(SESSIONS[1])
+  })
+
+  it('closes only the sessions below the clicked session', async () => {
+    const user = userEvent.setup()
+    const { onCloseSession } = renderMenu(SESSIONS[0], SESSIONS, 'list')
+
+    await user.click(await screen.findByRole('menuitem', { name: 'Close to the Down' }))
+
+    expect(onCloseSession).toHaveBeenCalledTimes(2)
+    expect(onCloseSession).toHaveBeenNthCalledWith(1, SESSIONS[1])
+    expect(onCloseSession).toHaveBeenNthCalledWith(2, SESSIONS[2])
+  })
+
+  it('disables Close to the Down for the last session', async () => {
+    const user = userEvent.setup()
+    const { onCloseSession } = renderMenu(SESSIONS[2], SESSIONS, 'list')
+    const item = await screen.findByRole('menuitem', { name: 'Close to the Down' })
 
     expect(item).toHaveAttribute('data-disabled')
     await user.click(item)

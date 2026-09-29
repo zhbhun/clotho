@@ -2595,6 +2595,7 @@ describe('session list item', () => {
                 sessions: { [session.id]: session },
               })}
               onDeleteSession={vi.fn()}
+              onCloseSession={vi.fn()}
               onListKeyDown={vi.fn()}
               onOpenSettings={vi.fn()}
               onRenameSession={vi.fn()}
@@ -2641,6 +2642,7 @@ describe('session list item', () => {
                 sessions: { [session.id]: session },
               })}
               onDeleteSession={vi.fn()}
+              onCloseSession={vi.fn()}
               onListKeyDown={vi.fn()}
               onOpenSettings={vi.fn()}
               onRenameSession={vi.fn()}
@@ -2677,6 +2679,7 @@ describe('session list item', () => {
                 sessions: {},
               })}
               onDeleteSession={vi.fn()}
+              onCloseSession={vi.fn()}
               onListKeyDown={vi.fn()}
               onOpenSettings={vi.fn()}
               onRenameSession={vi.fn()}
@@ -2927,6 +2930,7 @@ describe('sidebar initial reveal', () => {
         selectedSession={workbench.selectedSession}
         sessionTimeline={workbench.activeTimeline}
         onDeleteSession={() => {}}
+        onCloseSession={() => {}}
         onListKeyDown={workbench.handleListKeyDown}
         onOpenSettings={() => {}}
         onRenameSession={() => {}}

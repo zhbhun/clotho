@@ -5,13 +5,14 @@ import { SidebarMenuButton, SidebarMenuItem } from '@/shadcn/sidebar'
 import { cn } from '@/shadcn/utils'
 
 import { ProjectIcon } from '../../../components/project-icon'
-import { SessionContextMenu } from '../components/session-context-menu'
+import { SessionContextMenu, type SessionMenuClose } from '../components/session-context-menu'
 import { SessionStatus } from '../session-status'
 import type { SessionActivity, WorkbenchProject, WorkbenchSession } from '../stores/workbench-store'
 import { sessionDisplayTitle } from '../utils/session-list'
 
 export function SessionItem({
   activity = 'idle',
+  close,
   focusRequestRevision,
   isActive,
   isFocused,
@@ -26,6 +27,7 @@ export function SessionItem({
   onTogglePinSession,
 }: {
   activity?: SessionActivity
+  close?: SessionMenuClose
   focusRequestRevision?: number
   isActive: boolean
   isFocused: boolean
@@ -96,8 +98,10 @@ export function SessionItem({
 
   return (
     <SessionContextMenu
+      close={close}
       isPinned={isPinned}
       session={session}
+      variant="list"
       onDeleteSession={onDeleteSession}
       onRenameSession={onRenameSession}
       onTogglePinSession={onTogglePinSession}

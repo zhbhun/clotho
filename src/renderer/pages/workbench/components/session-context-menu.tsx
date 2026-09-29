@@ -1,4 +1,14 @@
-import { CopyX, ListX, PanelRightClose, Pencil, Pin, PinOff, Trash2, X } from 'lucide-react'
+import {
+  CopyX,
+  ListX,
+  PanelBottomClose,
+  PanelRightClose,
+  Pencil,
+  Pin,
+  PinOff,
+  Trash2,
+  X,
+} from 'lucide-react'
 import type { ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -13,22 +23,27 @@ import {
 
 import type { WorkbenchSession } from '../stores/workbench-store'
 
+export type SessionMenuClose = {
+  sessions: WorkbenchSession[]
+  onCloseSession: (session: WorkbenchSession) => void
+}
+
 export function SessionContextMenu({
   children,
   close,
   isPinned,
   session,
+  variant = 'tab',
   onDeleteSession,
   onRenameSession,
   onTogglePinSession,
 }: {
   children: ReactElement
-  close?: {
-    sessions: WorkbenchSession[]
-    onCloseSession: (session: WorkbenchSession) => void
-  }
+  close?: SessionMenuClose
   isPinned: boolean
   session: WorkbenchSession
+  /** 'tab' phrases the direction item for a horizontal tab strip, 'list' for a vertical list. */
+  variant?: 'tab' | 'list'
   onDeleteSession: (session: WorkbenchSession) => void
   onRenameSession: (session: WorkbenchSession) => void
   onTogglePinSession: (session: WorkbenchSession) => void
@@ -38,8 +53,19 @@ export function SessionContextMenu({
     <ContextMenu>
       <ContextMenuTrigger render={children} />
       <ContextMenuContent glass>
+        <ContextMenuGroup>
+          <ContextMenuItem onClick={() => onTogglePinSession(session)}>
+            {isPinned ? <PinOff /> : <Pin />}
+            {isPinned ? t('workbench.action.unpin') : t('workbench.action.pin')}
+          </ContextMenuItem>
+          <ContextMenuItem onClick={() => onRenameSession(session)}>
+            <Pencil />
+            {t('workbench.action.rename')}
+          </ContextMenuItem>
+        </ContextMenuGroup>
         {close ? (
           <>
+            <ContextMenuSeparator />
             <ContextMenuGroup>
               <ContextMenuItem onClick={() => close.onCloseSession(session)}>
                 <X />
@@ -68,8 +94,12 @@ export function SessionContextMenu({
                   }
                 }}
               >
-                <PanelRightClose />
-                {t('workbench.session.closeTabsToRight')}
+                {variant === 'list' ? <PanelBottomClose /> : <PanelRightClose />}
+                {t(
+                  variant === 'list'
+                    ? 'workbench.session.closeTabsToDown'
+                    : 'workbench.session.closeTabsToRight',
+                )}
               </ContextMenuItem>
               <ContextMenuItem
                 onClick={() => {
@@ -80,19 +110,8 @@ export function SessionContextMenu({
                 {t('workbench.session.closeAllTabs')}
               </ContextMenuItem>
             </ContextMenuGroup>
-            <ContextMenuSeparator />
           </>
         ) : null}
-        <ContextMenuGroup>
-          <ContextMenuItem onClick={() => onTogglePinSession(session)}>
-            {isPinned ? <PinOff /> : <Pin />}
-            {isPinned ? t('workbench.action.unpin') : t('workbench.action.pin')}
-          </ContextMenuItem>
-          <ContextMenuItem onClick={() => onRenameSession(session)}>
-            <Pencil />
-            {t('workbench.action.rename')}
-          </ContextMenuItem>
-        </ContextMenuGroup>
         <ContextMenuSeparator />
         <ContextMenuGroup>
           <ContextMenuItem variant="destructive" onClick={() => onDeleteSession(session)}>

@@ -202,6 +202,7 @@ function WorkbenchContent() {
             selectedSession={workbench.selectedSession}
             sessionTimeline={workbench.activeTimeline}
             onDeleteSession={handleDeleteSession}
+            onCloseSession={workbench.closeSession}
             onListKeyDown={workbench.handleListKeyDown}
             onOpenSettings={handleOpenSettings}
             onRenameSession={handleRenameSession}

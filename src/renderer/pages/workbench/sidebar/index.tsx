@@ -1,5 +1,5 @@
 import { Settings, SquarePen } from 'lucide-react'
-import { type KeyboardEvent, useState } from 'react'
+import { type KeyboardEvent, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -30,6 +30,7 @@ export function SessionSidebar({
   selectedSession,
   sessionTimeline,
   onDeleteSession,
+  onCloseSession,
   onListKeyDown,
   onOpenSettings,
   onRenameSession,
@@ -44,6 +45,7 @@ export function SessionSidebar({
   selectedSession: WorkbenchSession | null
   sessionTimeline: SessionTimelineGroup[]
   onDeleteSession: (session: WorkbenchSession) => void
+  onCloseSession: (session: WorkbenchSession) => void
   onListKeyDown: (event: KeyboardEvent) => void
   onOpenSettings: () => void
   onRenameSession: (session: WorkbenchSession) => void
@@ -57,6 +59,21 @@ export function SessionSidebar({
   const [enterListRevision, setEnterListRevision] = useState(0)
   const sessionCount = sessionTimeline.reduce((total, group) => total + group.sessions.length, 0)
   const selectedSessionId = selectedSession?.id ?? null
+  // Closing a session means closing its open tab, so the actions belong to the
+  // "current" list only; history entries are not open tabs. The close scope is
+  // the displayed list itself, in display order.
+  const close = useMemo(
+    () =>
+      activeTab === 'current'
+        ? {
+            sessions: sessionTimeline.flatMap((group) =>
+              group.sessions.map(({ session }) => session),
+            ),
+            onCloseSession,
+          }
+        : undefined,
+    [activeTab, onCloseSession, sessionTimeline],
+  )
   const isSessionInList = (sessionId: string | null) =>
     sessionId !== null &&
     sessionTimeline.some((group) => group.sessions.some((entry) => entry.session.id === sessionId))
@@ -108,6 +125,7 @@ export function SessionSidebar({
         <SidebarContent className="min-h-full w-full min-w-0 flex-none gap-2 overflow-visible pb-5">
           {sessionCount ? (
             <VirtualSessionList
+              close={close}
               enterListRevision={enterListRevision}
               focusNavigationRevision={focusNavigationRevision}
               focusedSessionId={focusedSessionId}

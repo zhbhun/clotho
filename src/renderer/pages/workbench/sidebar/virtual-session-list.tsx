@@ -3,6 +3,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 
 import { SidebarGroup, SidebarGroupLabel, SidebarMenu } from '@/shadcn/sidebar'
 
+import type { SessionMenuClose } from '../components/session-context-menu'
 import type { WorkbenchSession } from '../stores/workbench-store'
 import type { SessionTimelineGroup } from '../utils/session-list'
 import { SessionItem } from './session-item'
@@ -59,6 +60,7 @@ function renderGroupRow(row: VirtualGroupRow, virtualRow: { size: number; start:
 }
 
 export function VirtualSessionList({
+  close,
   enterListRevision,
   focusNavigationRevision,
   focusedSessionId,
@@ -71,6 +73,7 @@ export function VirtualSessionList({
   onSelectSession,
   onTogglePinSession,
 }: {
+  close?: SessionMenuClose
   enterListRevision: number
   focusNavigationRevision: number
   focusedSessionId: string | null
@@ -190,6 +193,7 @@ export function VirtualSessionList({
             <SidebarMenu className="h-full gap-0.5 px-2 pb-0.5">
               <SessionItem
                 activity={row.entry.activity}
+                close={close}
                 focusRequestRevision={
                   focusedSessionId === row.entry.session.id && listFocusRevision > 0
                     ? listFocusRevision

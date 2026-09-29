@@ -92,6 +92,7 @@ function renderSidebar({
     platform: 'mac',
   })
   const onDeleteSession = vi.fn()
+  const onCloseSession = vi.fn()
   const onOpenSettings = vi.fn()
   const onRenameSession = vi.fn()
   const onSelectSession = vi.fn()
@@ -120,6 +121,7 @@ function renderSidebar({
             selectedSession={selectedSession}
             sessionTimeline={sessionTimeline}
             onDeleteSession={onDeleteSession}
+            onCloseSession={onCloseSession}
             onListKeyDown={vi.fn()}
             onOpenSettings={onOpenSettings}
             onRenameSession={onRenameSession}
@@ -132,7 +134,7 @@ function renderSidebar({
     </ShortcutRuntimeProvider>,
   )
 
-  return { onTabChange, onSelectSession, onTogglePinSession }
+  return { onCloseSession, onTabChange, onSelectSession, onTogglePinSession }
 }
 
 describe('SessionSidebar', () => {
@@ -483,5 +485,41 @@ describe('SessionSidebar', () => {
     await user.click(screen.getByText('置顶'))
 
     expect(onTogglePinSession).toHaveBeenCalledWith(session)
+  })
+
+  it('closes the sessions below one from the current-tab context menu', async () => {
+    await appI18n.changeLanguage('en')
+    const user = userEvent.setup()
+    const otherSession = {
+      ...session,
+      id: 'session-2',
+      claudeSessionId: 'session-2',
+      title: 'Other session',
+    }
+    const { onCloseSession } = renderSidebar({ sessions: [session, otherSession] })
+    const item = document.querySelector<HTMLElement>(`[data-session-item="${session.id}"]`)
+    if (!item) throw new Error('session item not found')
+
+    fireEvent.contextMenu(item)
+    await user.click(screen.getByRole('menuitem', { name: 'Close to the Down' }))
+
+    expect(onCloseSession).toHaveBeenCalledTimes(1)
+    expect(onCloseSession).toHaveBeenCalledWith(otherSession)
+  })
+
+  it('hides the close actions on the history tab', async () => {
+    await appI18n.changeLanguage('en')
+    renderSidebar({ activeTab: 'history' })
+    const item = document.querySelector<HTMLElement>(`[data-session-item="${session.id}"]`)
+    if (!item) throw new Error('session item not found')
+
+    fireEvent.contextMenu(item)
+
+    expect(screen.queryByRole('menuitem', { name: 'Close' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: 'Close Others' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: 'Close to the Down' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: 'Close All' })).not.toBeInTheDocument()
+    // The shared menu still opens with its session actions.
+    expect(screen.getByRole('menuitem', { name: 'Pin' })).toBeInTheDocument()
   })
 })
