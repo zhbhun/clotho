@@ -153,21 +153,117 @@ describe('StreamAssembler', () => {
     })
   })
 
-  it('keeps concurrent subagent streams separated and finalizes only the matching stream', () => {
+  it('streams thinking and text segments across their assistant frames without duplication', () => {
     const stream = new StreamAssembler()
-    for (const [uuid, content] of [
-      ['stream-a', 'partial a'],
-      ['stream-b', 'partial b'],
-    ]) {
-      stream.processLine(line({ type: 'stream_event', uuid, event: { type: 'message_start' } }))
+    // The CLI emits a fresh uuid per stream_event line; deltas must still
+    // reach the placeholder of the message.
+    stream.processLine(
+      line({ type: 'stream_event', uuid: 'evt-1', event: { type: 'message_start' } }),
+    )
+    stream.processLine(
+      line({
+        type: 'stream_event',
+        uuid: 'evt-2',
+        event: {
+          type: 'content_block_start',
+          index: 0,
+          content_block: { type: 'thinking', thinking: '' },
+        },
+      }),
+    )
+    stream.processLine(
+      line({
+        type: 'stream_event',
+        uuid: 'evt-3',
+        event: {
+          type: 'content_block_delta',
+          index: 0,
+          delta: { type: 'thinking_delta', thinking: '思考中' },
+        },
+      }),
+    )
+    expect(stream.getAll()).toHaveLength(1)
+    expect(stream.getAll()[0]).toMatchObject({ blocks: [{ type: 'thinking', text: '思考中' }] })
+
+    // The finished thinking segment is committed as its own assistant frame
+    // while the same message keeps streaming the text block (index 1).
+    stream.processLine(
+      line({
+        type: 'assistant',
+        uuid: 'assistant-thinking',
+        message: { role: 'assistant', content: [{ type: 'thinking', thinking: '思考中' }] },
+      }),
+    )
+    stream.processLine(
+      line({
+        type: 'stream_event',
+        uuid: 'evt-4',
+        event: {
+          type: 'content_block_start',
+          index: 1,
+          content_block: { type: 'text', text: '' },
+        },
+      }),
+    )
+    stream.processLine(
+      line({
+        type: 'stream_event',
+        uuid: 'evt-5',
+        event: {
+          type: 'content_block_delta',
+          index: 1,
+          delta: { type: 'text_delta', text: '你好' },
+        },
+      }),
+    )
+    // The committed thinking no longer renders from the placeholder and the
+    // streaming text continues to accumulate in it.
+    expect(stream.getAll()).toMatchObject([
+      { uuid: 'assistant-thinking', blocks: [{ type: 'thinking', text: '思考中' }] },
+      { blocks: [{ type: 'text', text: '你好' }], content: '你好' },
+    ])
+
+    stream.processLine(
+      line({
+        type: 'assistant',
+        uuid: 'assistant-text',
+        message: { role: 'assistant', content: [{ type: 'text', text: '你好' }] },
+      }),
+    )
+    stream.processLine(
+      line({ type: 'stream_event', uuid: 'evt-6', event: { type: 'message_stop' } }),
+    )
+    expect(stream.getAll()).toMatchObject([
+      { uuid: 'assistant-thinking', blocks: [{ type: 'thinking', text: '思考中' }] },
+      { uuid: 'assistant-text', content: '你好' },
+    ])
+  })
+
+  it('keeps concurrent subagent streams separated by parent tool and finalizes only the matching stream', () => {
+    const stream = new StreamAssembler()
+    for (const [parentToolUseId, text] of [
+      ['task-a', 'partial a'],
+      ['task-b', 'partial b'],
+    ] as const) {
+      let eventIndex = 0
+      const nextEventUuid = () => `evt-${parentToolUseId}-${++eventIndex}`
       stream.processLine(
         line({
           type: 'stream_event',
-          uuid,
+          uuid: nextEventUuid(),
+          parent_tool_use_id: parentToolUseId,
+          event: { type: 'message_start' },
+        }),
+      )
+      stream.processLine(
+        line({
+          type: 'stream_event',
+          uuid: nextEventUuid(),
+          parent_tool_use_id: parentToolUseId,
           event: {
             type: 'content_block_delta',
             index: 0,
-            delta: { type: 'text_delta', text: content },
+            delta: { type: 'text_delta', text },
           },
         }),
       )
@@ -175,14 +271,15 @@ describe('StreamAssembler', () => {
     stream.processLine(
       line({
         type: 'assistant',
-        uuid: 'stream-a',
+        uuid: 'assistant-a',
+        parent_tool_use_id: 'task-a',
         message: { role: 'assistant', content: [{ type: 'text', text: 'final a' }] },
       }),
     )
 
     expect(stream.getAll()).toMatchObject([
-      { uuid: 'stream-a', content: 'final a' },
-      { uuid: 'stream-b', content: 'partial b' },
+      { uuid: 'assistant-a', parentToolUseId: 'task-a', content: 'final a' },
+      { parentToolUseId: 'task-b', content: 'partial b' },
     ])
   })
 

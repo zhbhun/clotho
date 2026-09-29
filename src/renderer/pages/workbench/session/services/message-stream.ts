@@ -5,7 +5,7 @@ import { type ClaudeContentBlock, type ClaudeMessage, claudeJsonToMessage } from
  *
  * Accumulate Claude Code `--output-format stream-json` line output into messages:
  * - Mutate the current streaming content block directly for `stream_event` content_block_delta, creating the typing effect.
- * - Replace the streaming placeholder when a complete `assistant` line arrives, avoiding duplicates.
+ * - Retire the blocks a complete `assistant` frame covers: the CLI emits one frame per finished segment (thinking, text) while the rest of the message keeps streaming.
  * - Commit `user` lines, including tool_result, directly.
  * - Return false for other lines (system / result / non-JSON) so the caller can use parseClaudeLine as a fallback.
  *
@@ -36,9 +36,26 @@ interface StreamEventEnvelope {
   uuid?: string
 }
 
+/**
+ * Stable identity of an open stream: one placeholder per parent tool (the root
+ * conversation included). The CLI stamps every stream_event with its own uuid,
+ * so the uuid cannot key the placeholder that later events mutate.
+ */
+function streamKey(parentToolUseId: string | null | undefined) {
+  return `parent:${parentToolUseId ?? 'root'}`
+}
+
+/** Per-stream bookkeeping that must outlive a partially finalized placeholder. */
+interface StreamMeta {
+  /** How many leading blocks complete assistant frames have already committed. */
+  offset: number
+  parentToolUseId?: string
+}
+
 export class StreamAssembler {
   private committed: ClaudeMessage[] = []
   private streaming = new Map<string, ClaudeMessage>()
+  private streamMeta = new Map<string, StreamMeta>()
   /** Transcript entries can arrive once from the live query and again from the follower replay. */
   private seenEntryUuids = new Set<string>()
   private lineIndex = 0
@@ -47,6 +64,7 @@ export class StreamAssembler {
   reset(messages: ClaudeMessage[]) {
     this.committed = messages
     this.streaming.clear()
+    this.streamMeta.clear()
     this.seenEntryUuids = new Set(
       messages.flatMap((message) => (message.uuid ? [message.uuid] : [])),
     )
@@ -55,7 +73,7 @@ export class StreamAssembler {
 
   commit(message: ClaudeMessage) {
     this.committed = [...this.committed, message]
-    this.streaming.delete(this.messageKey(message))
+    if (message.role === 'assistant') this.finalizeStreamedBlocks(message)
     if (message.uuid) this.seenEntryUuids.add(message.uuid)
     this.revision += 1
   }
@@ -104,9 +122,10 @@ export class StreamAssembler {
         },
         this.lineIndex,
       )
-      // A complete assistant line replaces only the streaming placeholder with the same UUID/parent tool.
-      this.streaming.delete(this.messageKey(message ?? undefined))
+      // A complete assistant line retires only the blocks of its own stream
+      // that it covers; concurrent subagent placeholders keep accumulating.
       if (message) {
+        this.finalizeStreamedBlocks(message)
         this.committed = [...this.committed, message]
         if (message.uuid) this.seenEntryUuids.add(message.uuid)
         this.revision += 1
@@ -130,17 +149,9 @@ export class StreamAssembler {
     return false
   }
 
-  private envelopeKey(envelope: StreamEventEnvelope) {
-    return envelope.uuid ?? `parent:${envelope.parent_tool_use_id ?? 'root'}`
-  }
-
-  private messageKey(message?: ClaudeMessage) {
-    return message?.uuid ?? `parent:${message?.parentToolUseId ?? 'root'}`
-  }
-
   private handleStreamEvent(envelope: StreamEventEnvelope, receivedAt: string) {
     const event = envelope.event
-    const key = this.envelopeKey(envelope)
+    const key = streamKey(envelope.parent_tool_use_id)
     switch (event.type) {
       case 'message_start':
         this.streaming.set(key, {
@@ -152,10 +163,13 @@ export class StreamAssembler {
           timestamp: receivedAt,
           parentToolUseId: envelope.parent_tool_use_id ?? undefined,
         })
+        this.streamMeta.set(key, {
+          offset: 0,
+          parentToolUseId: envelope.parent_tool_use_id ?? undefined,
+        })
         break
       case 'content_block_start':
-        this.mutateBlock(key, event, (blocks) => {
-          if (event.index == null) return
+        this.mutateBlock(key, event, receivedAt, (blocks, localIndex) => {
           const cb = event.content_block ?? {}
           const block: StreamBlock = { type: cb.type ?? 'text' }
           if (cb.type === 'text' && cb.text) block.text = cb.text
@@ -165,18 +179,17 @@ export class StreamAssembler {
             block.toolUseId = cb.id
             block.partialJson = ''
           }
-          blocks[event.index] = block
+          blocks[localIndex] = block
         })
         break
       case 'content_block_delta':
-        this.mutateBlock(key, event, (blocks) => {
-          if (event.index == null) return
+        this.mutateBlock(key, event, receivedAt, (blocks, localIndex) => {
           const delta = event.delta
           if (!delta) return
           const block =
-            blocks[event.index] ??
+            blocks[localIndex] ??
             ({ type: delta.type === 'thinking_delta' ? 'thinking' : 'text' } satisfies StreamBlock)
-          blocks[event.index] = block
+          blocks[localIndex] = block
           if (delta.type === 'text_delta' && delta.text != null) {
             block.text = (block.text ?? '') + delta.text
           } else if (delta.type === 'thinking_delta' && delta.thinking != null) {
@@ -187,9 +200,8 @@ export class StreamAssembler {
         })
         break
       case 'content_block_stop':
-        this.mutateBlock(key, event, (blocks) => {
-          if (event.index == null) return
-          const block = blocks[event.index]
+        this.mutateBlock(key, event, receivedAt, (blocks, localIndex) => {
+          const block = blocks[localIndex]
           if (block?.type === 'tool_use' && block.partialJson) {
             try {
               block.input = JSON.parse(block.partialJson)
@@ -201,16 +213,76 @@ export class StreamAssembler {
         })
         break
       case 'message_stop':
-        // Keep the placeholder until a complete assistant line replaces it; otherwise getAll() displays it naturally.
+        // The message is complete. Blocks the assistant frames already
+        // retired leave an empty placeholder; an uncommitted remainder is a
+        // tail the CLI never framed (an interrupted turn) and stays visible
+        // until the next message restarts the stream.
+        if ((this.streaming.get(key)?.blocks ?? []).length === 0) {
+          this.streaming.delete(key)
+          this.streamMeta.delete(key)
+        }
         break
     }
   }
 
-  private mutateBlock(key: string, _event: StreamEvent, fn: (blocks: StreamBlock[]) => void) {
+  /**
+   * Retire the placeholder blocks a complete assistant frame covers. The CLI
+   * emits one frame per finished segment while the rest of the message keeps
+   * streaming, so only the matched leading blocks leave the placeholder and
+   * the remaining blocks keep their stream-local indexes.
+   */
+  private finalizeStreamedBlocks(message: ClaudeMessage) {
+    const key = streamKey(message.parentToolUseId)
     const streaming = this.streaming.get(key)
-    if (!streaming) return
+    const meta = this.streamMeta.get(key)
+    if (!streaming || !meta) return
     const blocks = (streaming.blocks ?? []) as StreamBlock[]
-    fn(blocks)
+    const committed = message.blocks ?? []
+    if (committed.length > blocks.length) return
+    for (let index = 0; index < committed.length; index++) {
+      if (blocks[index]?.type !== committed[index]?.type) return
+    }
+    meta.offset += committed.length
+    if (committed.length === blocks.length) {
+      // The frame covers everything streamed so far; the placeholder goes but
+      // the offset survives so later blocks of this message can rejoin it.
+      this.streaming.delete(key)
+      return
+    }
+    streaming.blocks = blocks.slice(committed.length)
+    this.rebuildContent(key)
+  }
+
+  /**
+   * Apply a block mutation at the stream-local index: the CLI addresses blocks
+   * by their position in the whole message, while the placeholder only holds
+   * the blocks no assistant frame has committed yet.
+   */
+  private mutateBlock(
+    key: string,
+    event: StreamEvent,
+    receivedAt: string,
+    fn: (blocks: StreamBlock[], localIndex: number) => void,
+  ) {
+    if (event.index == null) return
+    const meta = this.streamMeta.get(key)
+    const localIndex = event.index - (meta?.offset ?? 0)
+    if (localIndex < 0) return
+    let streaming = this.streaming.get(key)
+    if (!streaming) {
+      if (!meta) return
+      streaming = {
+        id: `stream-${this.lineIndex}`,
+        role: 'assistant',
+        content: '',
+        blocks: [],
+        timestamp: receivedAt,
+        parentToolUseId: meta.parentToolUseId,
+      }
+      this.streaming.set(key, streaming)
+    }
+    const blocks = (streaming.blocks ?? []) as StreamBlock[]
+    fn(blocks, localIndex)
     streaming.blocks = blocks
     this.rebuildContent(key)
   }
