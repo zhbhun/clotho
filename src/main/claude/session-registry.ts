@@ -13,6 +13,8 @@ import type {
   ClaudeSessionQueryRebuildParams,
   ClaudeSessionQueryRecycleCheckParams,
   ClaudeSessionQueryRecycleCheckResult,
+  ClaudeSessionQuerySetModelParams,
+  ClaudeSessionQuerySetModelResult,
   ClaudeStreamId,
   ClaudeToolRequest,
 } from '@/shared/rpc'
@@ -46,6 +48,8 @@ interface SessionQueryEntry {
   /** Owns in-flight attachment preparation; aborted on teardown. */
   abort: AbortController
   idleTimer: ReturnType<typeof setTimeout> | null
+  /** The qualified model the query was created with (or last switched to). */
+  model: string | undefined
   state: {
     claudeSessionId: string | null
     status: 'starting' | 'ready' | 'dead'
@@ -62,6 +66,11 @@ export interface SessionQueryRegistry {
   push(params: ClaudeSessionQueryPushParams): Promise<void>
   rebuild(params: ClaudeSessionQueryRebuildParams): Promise<ClaudeSessionQueryEnsureResult>
   recycleCheck(params: ClaudeSessionQueryRecycleCheckParams): ClaudeSessionQueryRecycleCheckResult
+  /**
+   * Switch the live query to another model of the same class; cross-class
+   * switches (claude ↔ proxy) report back so the caller rebuilds instead.
+   */
+  setModel(params: ClaudeSessionQuerySetModelParams): Promise<ClaudeSessionQuerySetModelResult>
   /** Force-close the session's query regardless of liveness (session deletion). */
   close(sessionId: string): Promise<void>
   sampleContextUsage(
@@ -70,6 +79,11 @@ export interface SessionQueryRegistry {
   /** True when a live query owns this Claude session — callers must not spawn another CLI for it. */
   hasLiveQuery(claudeSessionId: string): boolean
   closeAll(): Promise<void>
+}
+
+/** Claude-hosted models carry no proxy env; every other qualified model does. */
+function isClaudeQualifiedModel(model: string | undefined): boolean {
+  return model?.startsWith('claude/') ?? false
 }
 
 /**
@@ -266,6 +280,7 @@ export function createSessionQueryRegistry(
       queue,
       abort: new AbortController(),
       idleTimer: null,
+      model: options?.model,
       state: {
         claudeSessionId: claudeSessionId ?? null,
         status: 'starting',
@@ -381,6 +396,46 @@ export function createSessionQueryRegistry(
       if (!gate.canRecycle) return { recycled: false, busy: gate.busy }
       void recycle(entry)
       return { recycled: true, busy: [] }
+    },
+    async setModel({
+      sessionId,
+      model,
+    }: ClaudeSessionQuerySetModelParams): Promise<ClaudeSessionQuerySetModelResult> {
+      return chain(sessionId, async () => {
+        const entry = entries.get(sessionId)
+        if (!entry || entry.state.status === 'dead') return { applied: false, reason: 'missing' }
+        // A claude ↔ proxy switch changes the process env (the proxy base URL),
+        // which only a rebuild can apply; same-class switches keep the query.
+        if (isClaudeQualifiedModel(entry.model) !== isClaudeQualifiedModel(model)) {
+          return { applied: false, reason: 'model-class' }
+        }
+        const isClaude = isClaudeQualifiedModel(model)
+        await controlQuery({
+          streamId: entry.streamId,
+          command: 'setModel',
+          params: [isClaude ? model.slice('claude/'.length) : model],
+        })
+        // The query options baked the previous model's thinking mapping; replay
+        // the new model's effort tier (claude models carry no mapping).
+        if (!isClaude) {
+          const effort = proxy.sessionThinking(model)?.effort
+          if (effort) {
+            await controlQuery({
+              streamId: entry.streamId,
+              command: 'applyFlagSettings',
+              params: [{ effortLevel: effort }],
+            }).catch((error: unknown) => {
+              logger.warning('session.model_effort_failed', 'Failed to replay the effort level', {
+                context: { sessionId, model },
+                error,
+              })
+            })
+          }
+        }
+        entry.model = model
+        armIdleTimer(entry)
+        return { applied: true }
+      })
     },
     async sampleContextUsage(params) {
       for (const entry of entries.values()) {

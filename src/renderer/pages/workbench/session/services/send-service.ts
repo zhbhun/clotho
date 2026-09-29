@@ -70,6 +70,11 @@ export class SendService {
   private stream: ClaudeSessionStream | null = null
   /** True after a resident stream ended on its own; the next send rebuilds it. */
   private streamDied = false
+  /** What the resident query was created (or last switched) to run with. */
+  private streamModel: string | undefined
+  private streamAgent: string | undefined
+  /** A background task's auto-continued turn is running with no user send. */
+  private backgroundTurnActive = false
   private turnEndWaiters: Array<() => void> = []
   private turnOutcome: SessionActivityEvent = 'idle'
   private turnPrompt = ''
@@ -269,7 +274,7 @@ export class SendService {
       ...(claudeSessionId ? { claudeSessionId } : {}),
       options,
     })
-    this.adoptStream(stream)
+    this.adoptStream(stream, model, agent)
     return stream
   }
 
@@ -300,8 +305,21 @@ export class SendService {
       ...(extra.dropFromMessageUuid ? { dropFromMessageUuid: extra.dropFromMessageUuid } : {}),
       ...(context.projectId ? { projectId: context.projectId } : {}),
     })
-    this.adoptStream(stream)
+    this.adoptStream(stream, model, agent)
     return stream
+  }
+
+  /**
+   * Why the resident query cannot serve the next turn as-is. An agent switch
+   * cannot be applied to a live query, and a claude ↔ proxy switch changes the
+   * process env — both need a rebuild. A same-class model change switches the
+   * live query instead.
+   */
+  private streamMismatch(model: string, agent: string | undefined): 'agent' | 'model-class' | null {
+    if (agent !== this.streamAgent) return 'agent'
+    const isClaudeModel = (qualified: string | undefined) => qualified?.startsWith('claude/')
+    if (isClaudeModel(model) !== isClaudeModel(this.streamModel)) return 'model-class'
+    return null
   }
 
   private seedToolRequest(request: ClaudeToolRequest) {
@@ -315,9 +333,11 @@ export class SendService {
     this.controller.options.onActivityChange?.(sessionId, 'awaiting-user')
   }
 
-  private adoptStream(stream: ClaudeSessionStream) {
+  private adoptStream(stream: ClaudeSessionStream, model: string, agent: string | undefined) {
     this.detachStream()
     this.stream = stream
+    this.streamModel = model
+    this.streamAgent = agent
     this.streamDied = false
     this.stopToolSubscription = stream.subscribeToolRequests((request) => {
       this.seedToolRequest(request)
@@ -351,6 +371,7 @@ export class SendService {
   }
 
   private handleStreamFrame(message: SDKMessage) {
+    if (this.sendLifecycle.phase === 'idle') this.trackBackgroundTurn(message)
     if (!this.hasSampledContextUsage) {
       // The first streamed message proves the CLI transport is live; sample
       // the real context usage (reflects the history as of the previous
@@ -380,6 +401,28 @@ export class SendService {
     }
     // A result frame ends the current turn — never the resident stream.
     if (message.type === 'result') void this.finishTurn(null)
+  }
+
+  /**
+   * A finished background task auto-continues as a turn with no user send:
+   * the lifecycle stays idle, so the activity state alone tracks it — the
+   * session shows as processing while it runs and settles on the result.
+   */
+  private trackBackgroundTurn(message: SDKMessage) {
+    const isTurnFrame =
+      message.type === 'user' || message.type === 'assistant' || message.type === 'stream_event'
+    if (isTurnFrame && !this.backgroundTurnActive) {
+      this.backgroundTurnActive = true
+      const { sessionId } = this.controller.contextStore.getState()
+      this.controller.options.onActivityChange?.(sessionId, 'processing')
+      return
+    }
+    if (message.type === 'result' && this.backgroundTurnActive) {
+      this.backgroundTurnActive = false
+      const { sessionId } = this.controller.contextStore.getState()
+      const outcome = message.subtype === 'success' ? 'success' : 'error'
+      this.controller.options.onActivityChange?.(sessionId, outcome)
+    }
   }
 
   private handleStreamDeath(stream: ClaudeSessionStream, error: unknown) {
@@ -607,7 +650,24 @@ export class SendService {
         editTarget,
       })
     } else if (this.stream) {
-      stream = this.stream
+      const mismatch = this.streamMismatch(model, agent)
+      if (mismatch) {
+        stream = this.rebuildStream(mismatch, model, permissionMode, agent)
+      } else if (model !== this.streamModel) {
+        // Same class, different model: switch the live query. When the main
+        // process cannot apply it, fall back to a rebuild.
+        const switched = await this.controller.claudeService
+          .setSessionQueryModel(this.controller.contextStore.getState().sessionId, model)
+          .catch(() => null)
+        if (switched?.applied) {
+          this.streamModel = model
+          stream = this.stream
+        } else {
+          stream = this.rebuildStream('model-class', model, permissionMode, agent)
+        }
+      } else {
+        stream = this.stream
+      }
     } else if (this.streamDied) {
       stream = this.rebuildStream('recovery', model, permissionMode, agent)
     } else {

@@ -749,6 +749,11 @@ export const claude = {
     if (!isTauriRuntime()) return { recycled: true, busy: [] as string[] }
     return requestFromDesktop('claudeSessionQueryRecycleCheck', { sessionId })
   },
+  /** Switch the resident query to a same-class model; false means "rebuild instead". */
+  async setSessionQueryModel(sessionId: string, model: string) {
+    if (!isTauriRuntime()) return { applied: true as const }
+    return requestFromDesktop('claudeSessionQuerySetModel', { sessionId, model })
+  },
   async closeSessionQuery(sessionId: string) {
     if (!isTauriRuntime()) return
     return requestFromDesktop('claudeSessionQueryClose', { sessionId })

@@ -5,6 +5,70 @@ import { claudeJsonToMessage, isUserPromptMessage, parseClaudeLine } from './mes
 import type { ClaudeJsonLine, ClaudeMessage } from './message'
 import { StreamAssembler } from './message-stream'
 
+const INTERRUPTION_MARKER_TEXTS = new Set([
+  '[Request interrupted by user]',
+  '[Request interrupted by user for tool use]',
+])
+
+function entryText(entry: ClaudeJsonLine): string {
+  const content = entry.message?.content
+  if (typeof content === 'string') return content.trim()
+  if (!Array.isArray(content)) return ''
+  return content
+    .flatMap((part) =>
+      part && typeof part === 'object' && part.type === 'text' && typeof part.text === 'string'
+        ? [part.text]
+        : [],
+    )
+    .join('\n')
+    .trim()
+}
+
+function isRootUserPromptEntry(entry: ClaudeJsonLine): boolean {
+  return (
+    entry.type === 'user' &&
+    entry.isMeta !== true &&
+    entry.isSidechain !== true &&
+    !INTERRUPTION_MARKER_TEXTS.has(entryText(entry))
+  )
+}
+
+function isInterruptionMarkerEntry(entry: ClaudeJsonLine): boolean {
+  return entry.type === 'user' && INTERRUPTION_MARKER_TEXTS.has(entryText(entry))
+}
+
+/**
+ * Indexes of dead turns — a root user prompt whose run (up to the next root
+ * user prompt) produced no real assistant reply and ends in an interruption
+ * marker. The marker requirement keeps a merely unfinished run (another
+ * client's live turn, a crashed query) visible until the rebuild's purge
+ * settles it in the JSONL.
+ */
+export function deadTurnIndexes(entries: ReadonlyArray<ClaudeJsonLine>): Set<number> {
+  const dead = new Set<number>()
+  for (let index = 0; index < entries.length; index++) {
+    if (!isRootUserPromptEntry(entries[index]!)) continue
+    let end = index + 1
+    let hasReply = false
+    let hasMarker = false
+    while (end < entries.length) {
+      const next = entries[end]!
+      if (isRootUserPromptEntry(next)) break
+      if (isInterruptionMarkerEntry(next)) hasMarker = true
+      if (
+        next.type === 'assistant' &&
+        (next.message as { model?: unknown } | undefined)?.model !== '<synthetic>'
+      ) {
+        hasReply = true
+      }
+      end++
+    }
+    if (hasMarker && !hasReply) for (let i = index; i < end; i++) dead.add(i)
+    index = end - 1
+  }
+  return dead
+}
+
 export type HistoryIngestResult = {
   json?: ClaudeJsonLine
   rootUserHistory?: {
@@ -174,14 +238,19 @@ export class HistoryService {
     // transcript as a fresh session so the next send does not resume that ID.
     const hasConversation = history.some(isRecoverableConversationEntry)
     this.syncUsageAnchor(history)
-    const mapped = history
+    // Dead pairs — cancelled turns that never got a reply — stay in the JSONL
+    // until the next rebuild purges them; loading hides them everywhere in the
+    // transcript, not just at the tail, matching the purge predicate.
+    const dead = deadTurnIndexes(history)
+    const entries = dead.size ? history.filter((_, index) => !dead.has(index)) : history
+    const mapped = entries
       .map((entry, index) => claudeJsonToMessage(entry, index))
       .filter((message): message is ClaudeMessage => Boolean(message))
     // Rebuild the cache-usage counters from the transcript so a reopened
     // session shows its historical average, not just turns sent this run.
     this.controller.usageStore.setState((current) => ({
       ...current,
-      ...backfillUsageFromHistory(history),
+      ...backfillUsageFromHistory(entries),
     }))
     // Restore the cached usage snapshot only when the conversation still ends
     // at the assistant message it was sampled after — turns added by another

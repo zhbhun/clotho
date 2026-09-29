@@ -10,6 +10,7 @@ import type {
   ClaudeSessionQueryPushParams,
   ClaudeSessionQueryRebuildParams,
   ClaudeSessionQueryRecycleCheckParams,
+  ClaudeSessionQuerySetModelParams,
   ClaudeStartupParams,
   ClaudeUpdateProjectParams,
   FetchProviderModelsParams,
@@ -270,6 +271,8 @@ export function createClaudeDesktopService(
       sessionRegistry.rebuild(params),
     sessionQueryRecycleCheck: (params: ClaudeSessionQueryRecycleCheckParams) =>
       sessionRegistry.recycleCheck(params),
+    sessionQuerySetModel: (params: ClaudeSessionQuerySetModelParams) =>
+      sessionRegistry.setModel(params),
     sessionQueryClose: (sessionId: string) => sessionRegistry.close(sessionId),
     sessionPurgeDeadPairs: (params: ClaudePurgeDeadPairsParams) => purgeDeadPairs(params),
     closeAllSessionQueries: () => sessionRegistry.closeAll(),

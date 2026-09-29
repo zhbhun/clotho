@@ -617,6 +617,15 @@ export type ClaudeSessionQueryRecycleCheckResult = {
   busy: string[]
 }
 
+export type ClaudeSessionQuerySetModelParams = {
+  sessionId: string
+  /** The qualified `<provider>/<model>` the next turn should run on. */
+  model: string
+}
+
+export type ClaudeSessionQuerySetModelResult =
+  { applied: true } | { applied: false; reason: 'missing' | 'model-class' }
+
 export type ClaudeSessionQueryCloseParams = {
   sessionId: string
 }
@@ -857,6 +866,10 @@ export type DesktopRPC = {
       claudeSessionQueryRecycleCheck: {
         params: ClaudeSessionQueryRecycleCheckParams
         response: ClaudeSessionQueryRecycleCheckResult
+      }
+      claudeSessionQuerySetModel: {
+        params: ClaudeSessionQuerySetModelParams
+        response: ClaudeSessionQuerySetModelResult
       }
       claudeSessionQueryClose: {
         params: ClaudeSessionQueryCloseParams

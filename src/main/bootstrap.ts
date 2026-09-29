@@ -228,6 +228,7 @@ export async function bootstrap() {
         claudeSessionQueryPush: (params) => service.sessionQueryPush(params),
         claudeSessionQueryRebuild: (params) => service.sessionQueryRebuild(params),
         claudeSessionQueryRecycleCheck: (params) => service.sessionQueryRecycleCheck(params),
+        claudeSessionQuerySetModel: (params) => service.sessionQuerySetModel(params),
         claudeSessionQueryClose: (params) => service.sessionQueryClose(params.sessionId),
         claudeSessionPurgeDeadPairs: (params) => service.sessionPurgeDeadPairs(params),
         claudeListProjects: () => service.listProjects(),

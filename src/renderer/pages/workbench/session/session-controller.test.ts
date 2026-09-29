@@ -67,6 +67,7 @@ function createClient() {
     setProjectModel: vi.fn(async () => {}),
     listProviders: vi.fn(async (): Promise<ModelProvider[]> => []),
     sampleContextUsage: vi.fn(async (): Promise<ClaudeContextUsageSnapshot | null> => null),
+    setSessionQueryModel: vi.fn(async () => ({ applied: true as const })),
   }
 }
 
@@ -2321,6 +2322,185 @@ describe('SessionController', () => {
       options: expect.objectContaining({ permissionMode: 'plan' }),
     })
     expect(store.getState().permissionMode).toBe('plan')
+  })
+
+  it('switches the resident query model without rebuilding for same-class changes', async () => {
+    const client = createClient()
+    const successful = createSuccessfulStream()
+    client.openSessionStream.mockReturnValue(successful.stream as never)
+    const store = trackedStore({ ...createOptions('local:model-switch'), client })
+    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
+    store.getState().setPrompt('first')
+    await store.getState().sendPrompt()
+
+    store.getState().setSelectedProviderModel('zhipu', 'glm-5.3')
+    store.getState().setPrompt('second')
+    await store.getState().sendPrompt()
+
+    expect(client.setSessionQueryModel).toHaveBeenCalledWith('local:model-switch', 'zhipu/glm-5.3')
+    expect(client.openSessionStream).toHaveBeenCalledOnce()
+    expect(client.rebuildSessionStream).not.toHaveBeenCalled()
+    expect(successful.pushes.map((push) => push.text)).toEqual(['first', 'second'])
+  })
+
+  it('rebuilds the resident query when the model class changes', async () => {
+    const client = createClient()
+    const successful = createSuccessfulStream()
+    const rebuilt = createSuccessfulStream()
+    client.openSessionStream.mockReturnValue(successful.stream as never)
+    client.rebuildSessionStream.mockReturnValue(rebuilt.stream as never)
+    const store = trackedStore({ ...createOptions('local:model-class-switch'), client })
+    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
+    store.getState().setPrompt('first')
+    await store.getState().sendPrompt()
+
+    store.getState().setSelectedProviderModel('claude', 'sonnet-4-6')
+    store.getState().setPrompt('second')
+    await store.getState().sendPrompt()
+
+    expect(client.setSessionQueryModel).not.toHaveBeenCalled()
+    expect(client.rebuildSessionStream).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sessionId: 'local:model-class-switch',
+        reason: 'model-class',
+        options: expect.objectContaining({ model: 'claude/sonnet-4-6' }),
+      }),
+    )
+    expect(rebuilt.pushes[0]).toMatchObject({ text: 'second' })
+  })
+
+  it('rebuilds the resident query when the agent changes', async () => {
+    const client = createClient()
+    const successful = createSuccessfulStream()
+    const rebuilt = createSuccessfulStream()
+    client.openSessionStream.mockReturnValue(successful.stream as never)
+    client.rebuildSessionStream.mockReturnValue(rebuilt.stream as never)
+    const store = trackedStore({ ...createOptions('local:agent-switch'), client })
+    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
+    store.getState().setPrompt('first')
+    await store.getState().sendPrompt()
+
+    store.getState().setSelectedAgent('reviewer')
+    store.getState().setPrompt('second')
+    await store.getState().sendPrompt()
+
+    expect(client.rebuildSessionStream).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sessionId: 'local:agent-switch',
+        reason: 'agent',
+        options: expect.objectContaining({ agent: 'reviewer' }),
+      }),
+    )
+  })
+
+  it('hides dead pairs anywhere in the loaded transcript', async () => {
+    const client = createClient()
+    client.loadSessionHistory.mockResolvedValue([
+      {
+        type: 'user',
+        uuid: 'user-1',
+        message: { role: 'user', content: 'Prompt one' },
+      },
+      {
+        type: 'assistant',
+        uuid: 'assistant-1',
+        message: { role: 'assistant', content: [{ type: 'text', text: 'Reply one' }] },
+      },
+      {
+        type: 'user',
+        uuid: 'dead-user',
+        message: { role: 'user', content: 'Dead prompt' },
+      },
+      {
+        type: 'user',
+        uuid: 'dead-marker',
+        message: { role: 'user', content: '[Request interrupted by user]' },
+      },
+      {
+        type: 'user',
+        uuid: 'user-2',
+        message: { role: 'user', content: 'Prompt two' },
+      },
+      {
+        type: 'assistant',
+        uuid: 'assistant-2',
+        message: { role: 'assistant', content: [{ type: 'text', text: 'Reply two' }] },
+      },
+      {
+        type: 'user',
+        uuid: 'partial-user',
+        message: { role: 'user', content: 'Partial prompt' },
+      },
+      {
+        type: 'assistant',
+        uuid: 'partial-assistant',
+        message: { role: 'assistant', content: [{ type: 'text', text: 'Partial reply' }] },
+      },
+      {
+        type: 'user',
+        uuid: 'partial-marker',
+        message: { role: 'user', content: '[Request interrupted by user]' },
+      },
+    ] as never)
+    const store = trackedStore({
+      ...createOptions('local:dead-pairs'),
+      claudeSessionId: 'claude-session',
+      client,
+    })
+
+    await store.getState().initialize()
+
+    // The interrupted turn that had streamed a partial reply stays visible —
+    // including its interruption marker, which renders as a stopped-turn hint;
+    // only the no-response pair is hidden.
+    expect(Object.values(store.getState().messages).map((message) => message.content)).toEqual([
+      'Prompt one',
+      'Reply one',
+      'Prompt two',
+      'Reply two',
+      'Partial prompt',
+      'Partial reply',
+      '[Request interrupted by user]',
+    ])
+  })
+
+  it('marks background task turns in the activity state', async () => {
+    const onActivityChange = vi.fn()
+    const client = createClient()
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
+    const store = trackedStore({
+      ...createOptions('local:background-turn'),
+      client,
+      onActivityChange,
+    })
+    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
+    store.getState().setPrompt('start the task')
+
+    const sending = store.getState().sendPrompt()
+    controlled.emit(userHistoryMessage('start the task'))
+    controlled.emitResult()
+    await sending
+    onActivityChange.mockClear()
+
+    // A finished background task auto-continues with no user send: frames
+    // arrive while the send lifecycle is idle and only the activity moves.
+    controlled.emit({
+      type: 'assistant',
+      uuid: 'background-assistant',
+      message: { role: 'assistant', content: [{ type: 'text', text: 'Background work done' }] },
+    })
+    await vi.waitFor(() =>
+      expect(onActivityChange).toHaveBeenLastCalledWith('local:background-turn', 'processing'),
+    )
+    expect(Object.values(store.getState().messages).map((message) => message.content)).toContain(
+      'Background work done',
+    )
+
+    controlled.emitResult()
+    await vi.waitFor(() =>
+      expect(onActivityChange).toHaveBeenLastCalledWith('local:background-turn', 'success'),
+    )
   })
 
   it('sends the configured fallback model when the session and project have no selection', async () => {

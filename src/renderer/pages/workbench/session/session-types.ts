@@ -72,6 +72,7 @@ export type SessionClient = Pick<
   | 'rebuildSessionStream'
   | 'rewindSessionFiles'
   | 'sampleContextUsage'
+  | 'setSessionQueryModel'
   | 'startup'
   | 'setProjectModel'
 >
