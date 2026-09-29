@@ -200,6 +200,7 @@ export function ConversationHeader({
           error={historyError}
           isLoading={isHistoryLoading}
           open={historyOpen}
+          sessionActivity={sessionActivity}
           sessions={historySessions}
           onOpenChange={onHistoryOpenChange}
           onRetry={onRetryHistory}

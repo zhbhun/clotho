@@ -7,7 +7,8 @@ import { Skeleton } from '@/shadcn/skeleton'
 
 import { LoadFailure } from '../components/loading-state'
 import { ShortcutTooltip } from '../components/shortcut-tooltip'
-import type { WorkbenchSession } from '../stores/workbench-store'
+import { SessionStatus } from '../session-status'
+import type { SessionActivity, WorkbenchSession } from '../stores/workbench-store'
 import { sessionTitle } from '../utils/session-list'
 import { type WorkbenchTranslator, sessionDateLabel } from '../utils/session-list'
 import {
@@ -53,6 +54,7 @@ export function SessionHistory({
   error = null,
   isLoading = false,
   open,
+  sessionActivity = {},
   sessions,
   onOpenChange,
   onRetry = () => {},
@@ -63,6 +65,7 @@ export function SessionHistory({
   error?: string | null
   isLoading?: boolean
   open?: boolean
+  sessionActivity?: Record<string, SessionActivity>
   sessions: WorkbenchSession[]
   onOpenChange?: (isOpen: boolean) => void
   onRetry?: () => void
@@ -134,12 +137,20 @@ export function SessionHistory({
               <SwitcherCommandGroup>
                 {filteredSessions.map((session) => {
                   const time = sessionTimeLabel(session.created_at, now, t, locale)
+                  const activity = session.isDraft
+                    ? 'idle'
+                    : (sessionActivity[session.id] ?? 'idle')
 
                   return (
                     <SwitcherCommandItem
                       key={session.id}
                       description={time}
-                      iconElement={<MessageCircleCode className="size-4" strokeWidth={1.5} />}
+                      iconElement={
+                        <SessionStatus
+                          activity={activity}
+                          icon={<MessageCircleCode className="size-4" strokeWidth={1.5} />}
+                        />
+                      }
                       label={sessionTitle(session)}
                       value={session.id}
                       onSelect={() => {

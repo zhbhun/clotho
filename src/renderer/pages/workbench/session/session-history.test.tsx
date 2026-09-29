@@ -7,7 +7,7 @@ import { TooltipProvider } from '@/shadcn/tooltip'
 import { appI18n } from '../../../i18n/runtime'
 import { commandCatalog } from '../../../services/shortcuts/catalog'
 import { ShortcutRuntimeProvider, createShortcutRuntime } from '../../../services/shortcuts/runtime'
-import type { WorkbenchSession } from '../stores/workbench-store'
+import type { SessionActivity, WorkbenchSession } from '../stores/workbench-store'
 import { SessionHistory } from './session-history'
 
 const SESSION: WorkbenchSession = {
@@ -27,11 +27,13 @@ function renderHistory({
   error = null,
   isLoading = false,
   onRetry = vi.fn(),
+  sessionActivity = {},
   sessions = [SESSION],
 }: {
   error?: string | null
   isLoading?: boolean
   onRetry?: () => void
+  sessionActivity?: Record<string, SessionActivity>
   sessions?: WorkbenchSession[]
 } = {}) {
   const runtime = createShortcutRuntime({
@@ -58,6 +60,7 @@ function renderHistory({
           error={error}
           isLoading={isLoading}
           open
+          sessionActivity={sessionActivity}
           sessions={sessions}
           onRetry={onRetry}
           onSelectSession={vi.fn()}
@@ -100,5 +103,29 @@ describe('SessionHistory', () => {
     expect(screen.getByText(appI18n.t('workbench.history.loadFailed'))).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Retry' }))
     expect(onRetry).toHaveBeenCalledOnce()
+  })
+
+  it('marks each session row with its activity at the row icon', () => {
+    const processingSession = { ...SESSION, id: 'session-processing', title: 'Running chat' }
+    const erroredSession = { ...SESSION, id: 'session-error', title: 'Failed chat' }
+    renderHistory({
+      sessionActivity: {
+        'session-processing': 'processing',
+        'session-error': 'unread-error',
+      },
+      sessions: [SESSION, processingSession, erroredSession],
+    })
+
+    const items = screen.getAllByRole('option')
+    const statusById = new Map(
+      items.map((item) => [
+        item.getAttribute('data-value'),
+        item.querySelector('[data-session-status]')?.getAttribute('data-session-status'),
+      ]),
+    )
+
+    expect(statusById.get('session-1')).toBeUndefined()
+    expect(statusById.get('session-processing')).toBe('processing')
+    expect(statusById.get('session-error')).toBe('unread-error')
   })
 })
