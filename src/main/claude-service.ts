@@ -270,6 +270,7 @@ export function createClaudeDesktopService(
       sessionRegistry.rebuild(params),
     sessionQueryRecycleCheck: (params: ClaudeSessionQueryRecycleCheckParams) =>
       sessionRegistry.recycleCheck(params),
+    sessionQueryClose: (sessionId: string) => sessionRegistry.close(sessionId),
     sessionPurgeDeadPairs: (params: ClaudePurgeDeadPairsParams) => purgeDeadPairs(params),
     closeAllSessionQueries: () => sessionRegistry.closeAll(),
   }

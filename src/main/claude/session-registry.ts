@@ -62,6 +62,8 @@ export interface SessionQueryRegistry {
   push(params: ClaudeSessionQueryPushParams): Promise<void>
   rebuild(params: ClaudeSessionQueryRebuildParams): Promise<ClaudeSessionQueryEnsureResult>
   recycleCheck(params: ClaudeSessionQueryRecycleCheckParams): ClaudeSessionQueryRecycleCheckResult
+  /** Force-close the session's query regardless of liveness (session deletion). */
+  close(sessionId: string): Promise<void>
   sampleContextUsage(
     params: ClaudeSampleContextUsageParams,
   ): Promise<ClaudeContextUsageSnapshot | null>
@@ -277,7 +279,11 @@ export function createSessionQueryRegistry(
       queryOptions.resume = claudeSessionId
     } else {
       delete queryOptions.resume
-      queryOptions.sessionId = sessionId
+      delete queryOptions.resumeSessionAt
+      // A fresh query keeps the caller's reserved Claude session id (a
+      // first-turn recall can recreate the same id) or falls back to the clotho
+      // session id so the CLI transcript lands under a stable key.
+      queryOptions.sessionId = queryOptions.sessionId ?? sessionId
     }
     startQuery(decorateSink(entry), { streamId, prompt: '', options: queryOptions }, proxy, {
       tolerateResultErrors: true,
@@ -388,6 +394,11 @@ export function createSessionQueryRegistry(
       }
       return null
     },
+    close: (sessionId: string) =>
+      chain(sessionId, async () => {
+        const entry = entries.get(sessionId)
+        if (entry) await teardown(entry, false)
+      }),
     hasLiveQuery(claudeSessionId: string): boolean {
       for (const entry of entries.values()) {
         if (entry.state.claudeSessionId === claudeSessionId && entry.state.status !== 'dead') {

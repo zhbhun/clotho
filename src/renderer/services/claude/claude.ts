@@ -3,6 +3,7 @@ import type { SDKMessage, SDKUserMessage } from '@anthropic-ai/claude-agent-sdk'
 import type { ProviderApiType as RpcProviderApiType } from '@/shared/provider'
 import type {
   ClaudeAgentInfo as RpcClaudeAgentInfo,
+  ClaudeAttachment as RpcClaudeAttachment,
   ClaudeAttachmentPreview as RpcClaudeAttachmentPreview,
   ClaudeAttachmentPreviewParams as RpcClaudeAttachmentPreviewParams,
   ClaudeAttachmentReadParams as RpcClaudeAttachmentReadParams,
@@ -31,6 +32,10 @@ import type {
   ClaudeSession as RpcClaudeSession,
   ClaudeSessionEditAnchor as RpcClaudeSessionEditAnchor,
   ClaudeSessionEditAnchorParams as RpcClaudeSessionEditAnchorParams,
+  ClaudeSessionQueryEnsureParams as RpcClaudeSessionQueryEnsureParams,
+  ClaudeSessionQueryEnsureResult as RpcClaudeSessionQueryEnsureResult,
+  ClaudeSessionQueryRebuildParams as RpcClaudeSessionQueryRebuildParams,
+  ClaudeSessionStreamState as RpcClaudeSessionStreamState,
   ClaudeSlashCommand as RpcClaudeSlashCommand,
   ClaudeStartupParams as RpcClaudeStartupParams,
   ClaudeSubagent as RpcClaudeSubagent,
@@ -66,6 +71,7 @@ import { isDesktopRuntime, listenDesktopEvent, requestFromDesktop } from '../des
 export type ClaudeAgentInfo = RpcClaudeAgentInfo
 export type ClaudeAttachmentReadParams = RpcClaudeAttachmentReadParams
 export type ClaudeAttachmentReadResult = RpcClaudeAttachmentReadResult
+export type ClaudeAttachment = RpcClaudeAttachment
 export type ClaudeAttachmentPreview = RpcClaudeAttachmentPreview
 export type ClaudeAttachmentPreviewParams = RpcClaudeAttachmentPreviewParams
 export type ClaudePrepareAttachmentsParams = RpcClaudePrepareAttachmentsParams
@@ -102,6 +108,9 @@ export type ProviderApiType = RpcProviderApiType
 export type ProviderModel = RpcProviderModel
 export type ProviderModelSelection = RpcProviderModelSelection
 export type ClaudeSession = RpcClaudeSession
+export type ClaudeSessionQueryEnsureParams = RpcClaudeSessionQueryEnsureParams
+export type ClaudeSessionQueryRebuildParams = RpcClaudeSessionQueryRebuildParams
+export type ClaudeSessionStreamState = RpcClaudeSessionStreamState
 export type ClaudeSlashCommand = RpcClaudeSlashCommand
 export type ClaudeStartupParams = RpcClaudeStartupParams
 export type ClaudeSubagent = RpcClaudeSubagent
@@ -449,6 +458,252 @@ function isTauriRuntime() {
   return isDesktopRuntime()
 }
 
+export interface ClaudeSessionStreamPushParams {
+  text: string
+  attachments?: ClaudeAttachment[]
+  userMessageUuid?: string
+  syntheticOrigin?: 'auto-continuation'
+}
+
+/**
+ * A long-lived, session-keyed Claude query owned by the main process. Unlike a
+ * per-send ClaudeQuery, the generator only ends when the query dies or the
+ * consumer detaches — result frames end turns, not the stream.
+ */
+export interface ClaudeSessionStream extends AsyncGenerator<SDKMessage, void> {
+  [Symbol.asyncDispose](): Promise<void>
+  readonly sessionId: string
+  readonly streamId: string
+  getState(): ClaudeSessionStreamState
+  push(params: ClaudeSessionStreamPushParams): Promise<void>
+  subscribeToolRequests(handler: (request: ClaudeToolRequest) => void): () => void
+  respondToolRequest(toolUseId: string, result: ClaudeToolResult): Promise<void>
+  interrupt(): Promise<void>
+  setPermissionMode(mode: ClaudePermissionMode): Promise<void>
+  setModel(model?: string): Promise<void>
+  setMaxThinkingTokens(maxThinkingTokens: number | null): Promise<void>
+  applyFlagSettings(settings: Record<string, unknown>): Promise<void>
+  getContextUsage(): Promise<ClaudeContextUsageSnapshot | null>
+  stopTask(taskId: string): Promise<void>
+  /** Stop consuming and unsubscribe; the query keeps running in the main process. */
+  detach(): void
+}
+
+function createSessionStream(
+  sessionId: string,
+  attach: Promise<RpcClaudeSessionQueryEnsureResult>,
+): ClaudeSessionStream {
+  const queue = new AsyncQueue<SDKMessage>()
+  const toolRequestHandlers = new Set<(request: ClaudeToolRequest) => void>()
+  const unlisteners: Promise<() => void>[] = []
+  const unlisten = (stop: Promise<() => void>) => unlisteners.push(stop)
+  // Events can arrive before the ensure reply resolves the stream id; they are
+  // buffered and filtered once attached, so no live frame is dropped.
+  const buffered: Array<() => void> = []
+  let state: ClaudeSessionStreamState = {
+    claudeSessionId: null,
+    status: 'starting',
+    turnInFlight: false,
+    pendingToolRequests: [],
+    backgroundTaskIds: [],
+  }
+  let streamId = ''
+  let detached = false
+
+  const applyFrameState = (message: SDKMessage) => {
+    if (message.type === 'result') {
+      state = { ...state, turnInFlight: false }
+    } else if (
+      message.type === 'user' ||
+      message.type === 'assistant' ||
+      message.type === 'stream_event'
+    ) {
+      state = { ...state, turnInFlight: true }
+    }
+    if (message.type === 'system' && message.subtype === 'init') {
+      const claudeSessionId = (message as { session_id?: string }).session_id
+      state = {
+        ...state,
+        claudeSessionId: claudeSessionId ?? state.claudeSessionId,
+        status: 'ready',
+      }
+    }
+  }
+
+  const deliver = (run: () => void) => {
+    if (!streamId) {
+      buffered.push(run)
+      return
+    }
+    run()
+  }
+
+  const die = (error?: Error) => {
+    state = { ...state, status: 'dead' }
+    if (error) queue.fail(error)
+    else queue.finish()
+  }
+
+  unlisten(
+    listenDesktopEvent('claude-output', (payload) => {
+      deliver(() => {
+        if (payload.streamId !== streamId) return
+        applyFrameState(payload.message)
+        queue.push(payload.message)
+      })
+    }),
+  )
+  unlisten(
+    listenDesktopEvent('claude-error', (payload) => {
+      deliver(() => {
+        if (payload.streamId !== streamId) return
+        const error = new Error(payload.message)
+        if (payload.stack) error.stack = payload.stack
+        die(error)
+      })
+    }),
+  )
+  unlisten(
+    listenDesktopEvent('claude-complete', (payload) => {
+      deliver(() => {
+        if (payload.streamId !== streamId) return
+        die(
+          payload.success
+            ? undefined
+            : new Error('Claude finished with an error. Check the last output line for details.'),
+        )
+      })
+    }),
+  )
+  unlisten(
+    listenDesktopEvent('claude-tool-request', (payload) => {
+      deliver(() => {
+        if (payload.streamId !== streamId) return
+        state = {
+          ...state,
+          pendingToolRequests: [...state.pendingToolRequests, payload.request],
+        }
+        for (const handler of [...toolRequestHandlers]) handler(payload.request)
+      })
+    }),
+  )
+
+  const attached = attach.then(
+    (result) => {
+      if (detached) return result
+      streamId = result.streamId
+      state = { ...state, ...result.state }
+      // Mid-turn attach renders the partial turn first; live frames follow.
+      for (const frame of result.replay) {
+        applyFrameState(frame)
+        queue.push(frame)
+      }
+      for (const flush of buffered.splice(0)) flush()
+      // Requests already pending at attach time still owe an answer.
+      for (const request of result.state.pendingToolRequests) {
+        for (const handler of [...toolRequestHandlers]) handler(request)
+      }
+      return result
+    },
+    (caught: unknown) => {
+      die(caught instanceof Error ? caught : new Error('Failed to attach the session query'))
+      throw caught
+    },
+  )
+
+  const stream: ClaudeSessionStream = {
+    sessionId,
+    get streamId() {
+      return streamId
+    },
+    [Symbol.asyncIterator]() {
+      return stream
+    },
+    async [Symbol.asyncDispose]() {
+      detach()
+    },
+    next() {
+      return queue.next()
+    },
+    async throw(error?: unknown) {
+      detach()
+      throw error instanceof Error
+        ? error
+        : new Error(String(error ?? 'Session stream interrupted'))
+    },
+    async return() {
+      detach()
+      return { done: true as const, value: undefined }
+    },
+    getState: () => state,
+    async push({ attachments, syntheticOrigin, text, userMessageUuid }) {
+      const { streamId: id } = await attached
+      await requestFromDesktop('claudeSessionQueryPush', {
+        streamId: id,
+        text,
+        ...(attachments?.length ? { attachments } : {}),
+        ...(userMessageUuid ? { userMessageUuid } : {}),
+        ...(syntheticOrigin ? { syntheticOrigin } : {}),
+      })
+    },
+    subscribeToolRequests(handler) {
+      toolRequestHandlers.add(handler)
+      return () => toolRequestHandlers.delete(handler)
+    },
+    async respondToolRequest(toolUseId, result) {
+      const { streamId: id } = await attached
+      state = {
+        ...state,
+        pendingToolRequests: state.pendingToolRequests.filter(
+          (request) => request.toolUseId !== toolUseId,
+        ),
+      }
+      await requestFromDesktop('claudeRespondToolRequest', { streamId: id, toolUseId, result })
+    },
+    async interrupt() {
+      const { streamId: id } = await attached
+      await controlRequest<void>(id, 'interrupt')
+    },
+    async setPermissionMode(mode) {
+      const { streamId: id } = await attached
+      await controlRequest<void>(id, 'setPermissionMode', [mode])
+    },
+    async setModel(model) {
+      const { streamId: id } = await attached
+      await controlRequest<void>(id, 'setModel', [model])
+    },
+    async setMaxThinkingTokens(maxThinkingTokens) {
+      const { streamId: id } = await attached
+      await controlRequest<void>(id, 'setMaxThinkingTokens', [maxThinkingTokens])
+    },
+    async applyFlagSettings(settings) {
+      const { streamId: id } = await attached
+      await controlRequest<void>(id, 'applyFlagSettings', [settings])
+    },
+    async getContextUsage() {
+      const { streamId: id } = await attached
+      return controlRequest<ClaudeContextUsageSnapshot | null>(id, 'getContextUsage')
+    },
+    async stopTask(taskId) {
+      const { streamId: id } = await attached
+      await controlRequest<void>(id, 'stopTask', [taskId])
+    },
+    detach() {
+      detach()
+    },
+  }
+
+  function detach() {
+    if (detached) return
+    detached = true
+    for (const stop of unlisteners) void stop.then((fn) => fn())
+    toolRequestHandlers.clear()
+    queue.finish()
+  }
+
+  return stream
+}
+
 export const claude = {
   async startup(params: ClaudeStartupParams = {}) {
     if (!isTauriRuntime()) {
@@ -463,6 +718,44 @@ export const claude = {
     }
 
     return createDesktopQuery(params)
+  },
+  /** Attach to the session's resident query, creating it when none is live. */
+  openSessionStream(params: ClaudeSessionQueryEnsureParams): ClaudeSessionStream {
+    if (!isTauriRuntime()) {
+      return createSessionStream(
+        params.sessionId,
+        Promise.reject(new Error('Claude execution is available inside the desktop app.')),
+      )
+    }
+    return createSessionStream(
+      params.sessionId,
+      requestFromDesktop('claudeSessionQueryEnsure', params),
+    )
+  },
+  /** Stop the session's query, run transcript surgery, and return the fresh stream. */
+  rebuildSessionStream(params: ClaudeSessionQueryRebuildParams): ClaudeSessionStream {
+    if (!isTauriRuntime()) {
+      return createSessionStream(
+        params.sessionId,
+        Promise.reject(new Error('Claude execution is available inside the desktop app.')),
+      )
+    }
+    return createSessionStream(
+      params.sessionId,
+      requestFromDesktop('claudeSessionQueryRebuild', params),
+    )
+  },
+  async recycleCheckSessionQuery(sessionId: string) {
+    if (!isTauriRuntime()) return { recycled: true, busy: [] as string[] }
+    return requestFromDesktop('claudeSessionQueryRecycleCheck', { sessionId })
+  },
+  async closeSessionQuery(sessionId: string) {
+    if (!isTauriRuntime()) return
+    return requestFromDesktop('claudeSessionQueryClose', { sessionId })
+  },
+  async purgeDeadPairs(params: { projectId: string; sessionId: string }) {
+    if (!isTauriRuntime()) return { removed: 0 }
+    return requestFromDesktop('claudeSessionPurgeDeadPairs', params)
   },
   async listProviders() {
     if (!isTauriRuntime()) {

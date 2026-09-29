@@ -617,6 +617,10 @@ export type ClaudeSessionQueryRecycleCheckResult = {
   busy: string[]
 }
 
+export type ClaudeSessionQueryCloseParams = {
+  sessionId: string
+}
+
 export type ClaudePurgeDeadPairsParams = {
   projectId: string
   sessionId: string
@@ -853,6 +857,10 @@ export type DesktopRPC = {
       claudeSessionQueryRecycleCheck: {
         params: ClaudeSessionQueryRecycleCheckParams
         response: ClaudeSessionQueryRecycleCheckResult
+      }
+      claudeSessionQueryClose: {
+        params: ClaudeSessionQueryCloseParams
+        response: void
       }
       claudeSessionPurgeDeadPairs: {
         params: ClaudePurgeDeadPairsParams

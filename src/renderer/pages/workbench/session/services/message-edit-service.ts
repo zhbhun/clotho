@@ -26,6 +26,12 @@ export class MessageEditService {
     const context = this.controller.contextStore.getState()
     const runtime = this.controller.runtimeStore.getState()
     const conversation = this.controller.conversationStore.getState()
+    // The rebuild drops the edited tail before resending, so the in-memory
+    // card can already be gone; the retained retry draft and the cleared-tail
+    // note keep the retry valid in both directions.
+    const draftRetained =
+      runtime.messageEditDraft?.messageId === draft.messageId &&
+      runtime.messageEditDraft?.messageUuid === draft.messageUuid
     if (
       this.activeEdit ||
       runtime.isMessageEditPending ||
@@ -33,6 +39,7 @@ export class MessageEditService {
       !context.claudeSessionId ||
       !context.projectId ||
       (conversation.messages[draft.messageId]?.uuid !== draft.messageUuid &&
+        !draftRetained &&
         !this.clearedEditTails.has(`${context.claudeSessionId}:${draft.messageUuid}`))
     ) {
       return undefined
@@ -196,27 +203,10 @@ export class MessageEditService {
         }
       }
 
-      // A same-session edit replaces this message and every later turn. Remove
-      // that transcript tail before resuming so the edited prompt is not added
-      // after the old branch in Claude's context.
-      if (editTarget.strategy === 'resume' || editTarget.strategy === 'fresh') {
-        const tailKey = `${operation.sessionId}:${draft.messageUuid}`
-        if (!this.clearedEditTails.has(tailKey)) {
-          const result = await this.controller.claudeService.dropTrailingTurn({
-            sessionId: operation.sessionId,
-            projectId: operation.projectId,
-            userMessageUuid: draft.messageUuid,
-          })
-          if (!result.dropped) {
-            throw new Error('Failed to clear the historical message before resending')
-          }
-          if (result.removedSession) this.controller.historyService.markFreshSession()
-          this.clearedEditTails.add(tailKey)
-        }
-        if (!this.isCurrent(operation, draft)) {
-          throw new Error('The historical edit is no longer active')
-        }
-      }
+      // A same-session edit replaces this message and every later turn; the
+      // send's rebuild drops that transcript tail in the main process before
+      // the query resumes, so the edited prompt is not added after the old
+      // branch in Claude's context.
 
       const sent = await this.controller.sendService.runPrompt({
         clearPrompt: false,
@@ -258,6 +248,14 @@ export class MessageEditService {
   cancel() {
     this.release()
     this.controller.runtimeStore.setState({ messageEditDraft: null })
+  }
+
+  /**
+   * Record that a rebuild already dropped this message's transcript tail, so
+   * retrying the edit still validates after the in-memory card is gone.
+   */
+  noteClearedTail(sessionId: string, messageUuid: string) {
+    this.clearedEditTails.add(`${sessionId}:${messageUuid}`)
   }
 
   dispose() {

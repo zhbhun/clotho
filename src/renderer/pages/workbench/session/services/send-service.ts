@@ -1,12 +1,15 @@
+import type { SDKMessage } from '@anthropic-ai/claude-agent-sdk'
+
 import { toast } from '@/shadcn/toast'
-import type { ClaudeAttachment } from '@/shared/rpc'
+import type { ClaudeAttachment, ClaudeOptions } from '@/shared/rpc'
 
 import { appI18n } from '../../../../i18n/runtime'
 import type {
   ClaudeContextUsageSnapshot,
   ClaudePermissionMode,
-  ClaudeQuery,
   ClaudeSessionEditAnchor,
+  ClaudeSessionStream,
+  ClaudeToolRequest,
   ClaudeToolResult,
 } from '../../../../services/claude/claude'
 import { getLogger } from '../../../../services/logging'
@@ -63,9 +66,16 @@ function isClearPrompt(prompt: string, attachments: ClaudeAttachment[]) {
 export class SendService {
   private readonly logger = getLogger('query')
   private readonly controller: SessionController
-  private activeQuery: ClaudeQuery | null = null
-  private recallQuery: (() => void) | null = null
-  private recallApplied: Promise<void> | null = null
+  /** The session's resident query; owned by the main process, only consumed here. */
+  private stream: ClaudeSessionStream | null = null
+  /** True after a resident stream ended on its own; the next send rebuilds it. */
+  private streamDied = false
+  private turnEndWaiters: Array<() => void> = []
+  private turnOutcome: SessionActivityEvent = 'idle'
+  private turnPrompt = ''
+  private turnRestoreToComposer = false
+  private hasAssistantResponse = false
+  private hasSampledContextUsage = false
   private readonly recalledInput: RecalledInputService
   private readonly turnStream: TurnStreamService
   private sendLifecycle = createSendLifecycle()
@@ -222,6 +232,281 @@ export class SendService {
     this.controller.options.onStartNewSession?.(draft)
   }
 
+  private baseStreamOptions(context: {
+    isHomeMode: boolean
+    projectPath: string | null
+    additionalDirectories?: string[]
+  }) {
+    return {
+      cwd: context.isHomeMode ? undefined : (context.projectPath ?? undefined),
+      ...(!context.isHomeMode && context.additionalDirectories?.length
+        ? { additionalDirectories: context.additionalDirectories }
+        : {}),
+    }
+  }
+
+  /** Attach the session's resident query, resuming the Claude session when its loaded history is real. */
+  private ensureStream(
+    model: string,
+    permissionMode: ClaudePermissionMode,
+    agent: string | undefined,
+    editTarget?: ClaudeSessionEditAnchor,
+  ): ClaudeSessionStream {
+    const context = this.controller.contextStore.getState()
+    const canResumeSession = this.controller.historyService.canResumeLoadedSession()
+    const claudeSessionId =
+      context.claudeSessionId && canResumeSession ? context.claudeSessionId : undefined
+    const options: ClaudeOptions = {
+      ...this.baseStreamOptions(context),
+      ...(claudeSessionId ? {} : { sessionId: context.claudeSessionId ?? context.sessionId }),
+      ...(editTarget?.strategy === 'resume' ? { resumeSessionAt: editTarget.resumeSessionAt } : {}),
+      ...(agent ? { agent } : {}),
+      model,
+      permissionMode,
+    }
+    const stream = this.controller.claudeService.openSessionStream({
+      sessionId: context.sessionId,
+      ...(claudeSessionId ? { claudeSessionId } : {}),
+      options,
+    })
+    this.adoptStream(stream)
+    return stream
+  }
+
+  /** Restart the resident query: stop it, run transcript surgery, and re-attach. */
+  private rebuildStream(
+    reason: 'edit' | 'model-class' | 'agent' | 'recovery',
+    model: string,
+    permissionMode: ClaudePermissionMode,
+    agent: string | undefined,
+    extra: { dropFromMessageUuid?: string; editTarget?: ClaudeSessionEditAnchor } = {},
+  ): ClaudeSessionStream {
+    const context = this.controller.contextStore.getState()
+    const options: ClaudeOptions = {
+      ...this.baseStreamOptions(context),
+      ...(context.claudeSessionId ? {} : { sessionId: context.sessionId }),
+      ...(extra.editTarget?.strategy === 'resume'
+        ? { resumeSessionAt: extra.editTarget.resumeSessionAt }
+        : {}),
+      ...(agent ? { agent } : {}),
+      model,
+      permissionMode,
+    }
+    const stream = this.controller.claudeService.rebuildSessionStream({
+      sessionId: context.sessionId,
+      ...(context.claudeSessionId ? { claudeSessionId: context.claudeSessionId } : {}),
+      options,
+      reason,
+      ...(extra.dropFromMessageUuid ? { dropFromMessageUuid: extra.dropFromMessageUuid } : {}),
+      ...(context.projectId ? { projectId: context.projectId } : {}),
+    })
+    this.adoptStream(stream)
+    return stream
+  }
+
+  private seedToolRequest(request: ClaudeToolRequest) {
+    const { sessionId } = this.controller.contextStore.getState()
+    this.controller.runtimeStore.setState((current) => ({
+      pendingToolRequests: {
+        ...current.pendingToolRequests,
+        [request.toolUseId]: request,
+      },
+    }))
+    this.controller.options.onActivityChange?.(sessionId, 'awaiting-user')
+  }
+
+  private adoptStream(stream: ClaudeSessionStream) {
+    this.detachStream()
+    this.stream = stream
+    this.streamDied = false
+    this.stopToolSubscription = stream.subscribeToolRequests((request) => {
+      this.seedToolRequest(request)
+    })
+    // Requests that were already pending when attaching still owe an answer;
+    // their cards are restored instead of hanging invisibly.
+    for (const request of stream.getState().pendingToolRequests) {
+      this.seedToolRequest(request)
+    }
+    this.runStreamLoop(stream)
+  }
+
+  private detachStream() {
+    this.stopToolSubscription?.()
+    this.stopToolSubscription = null
+    this.stream?.detach()
+    this.stream = null
+  }
+
+  private runStreamLoop(stream: ClaudeSessionStream) {
+    void (async () => {
+      try {
+        for await (const message of stream) {
+          this.handleStreamFrame(message)
+        }
+        this.handleStreamDeath(stream, null)
+      } catch (caught) {
+        this.handleStreamDeath(stream, caught)
+      }
+    })()
+  }
+
+  private handleStreamFrame(message: SDKMessage) {
+    if (!this.hasSampledContextUsage) {
+      // The first streamed message proves the CLI transport is live; sample
+      // the real context usage (reflects the history as of the previous
+      // turn). Fire-and-forget — must not delay the send.
+      this.hasSampledContextUsage = true
+      void this.fetchContextUsage()
+    }
+    if (message.type === 'conversation_reset') {
+      // /clear and fresh-session flows: the SDK resets its running usage
+      // total, so the local counters and snapshot start over as well.
+      this.controller.usageStore.setState(initialUsageState())
+    }
+    if (message.type === 'result' && message.usage) {
+      this.controller.usageStore.setState((current) => recordResultUsage(current, message.usage))
+      // Refresh the snapshot with the turn's final usage — this is where
+      // compaction drops become visible. Fire-and-forget; the query stays
+      // resident while the stream keeps flowing.
+      void this.fetchContextUsage()
+    }
+    if (this.turnStream.processLine(JSON.stringify(message)) && !this.hasAssistantResponse) {
+      this.hasAssistantResponse = true
+      // The first agent content proves the transcript is real: complete
+      // the draft now. Waiting for a fully successful turn would leave a
+      // stopped or errored first turn stuck as a draft forever.
+      const { sessionId } = this.controller.contextStore.getState()
+      this.controller.options.onPromptStarted?.(sessionId)
+    }
+    // A result frame ends the current turn — never the resident stream.
+    if (message.type === 'result') void this.finishTurn(null)
+  }
+
+  private handleStreamDeath(stream: ClaudeSessionStream, error: unknown) {
+    // A replaced stream (edit/model rebuild) ends by design; only an
+    // unexpected end of the current stream marks the session for recovery.
+    if (this.stream !== stream) return
+    this.stream = null
+    this.streamDied = true
+    this.stopToolSubscription?.()
+    this.stopToolSubscription = null
+    if (this.sendLifecycle.phase !== 'idle') {
+      // A clean end while a turn runs behaves like the old per-send EOF: the
+      // lifecycle decides whether it was a recall, a completion, or a failure.
+      void this.finishTurn(error ?? null)
+    }
+  }
+
+  private waitForTurnEnd(): Promise<void> {
+    return new Promise((resolve) => {
+      this.turnEndWaiters.push(resolve)
+    })
+  }
+
+  private async finishTurn(error: unknown) {
+    const turnActive = this.sendLifecycle.phase !== 'idle'
+    if (!turnActive) {
+      // Background-task turns carry no user send; frames were ingested, the
+      // lifecycle has nothing to finish.
+      for (const resolve of this.turnEndWaiters.splice(0)) resolve()
+      return
+    }
+    const isUserCancel = isSendCancellationRequested(this.sendLifecycle)
+    const queryFailure =
+      error === null || isUserCancel
+        ? null
+        : error instanceof Error
+          ? error.message
+          : 'Failed to execute Claude'
+    if (queryFailure) {
+      this.logger.error('query.stream_failed', 'The Claude turn failed', {
+        context: { phase: this.sendLifecycle.phase },
+        error: error instanceof Error ? error : new Error(queryFailure),
+      })
+    }
+    const terminalEffect = this.transition({
+      type: 'finished',
+      result: queryFailure ? 'error' : 'success',
+      message: queryFailure ?? undefined,
+      finishedAt: Date.now(),
+    })
+    this.turnStream.stop()
+    let outcome: SessionActivityEvent = 'success'
+    if (terminalEffect?.kind !== 'history-confirmed') {
+      outcome = terminalEffect?.activity ?? outcome
+    }
+    const { sessionId } = this.controller.contextStore.getState()
+    if (!this.controller.isDisposed) {
+      if (!queryFailure && outcome === 'success' && this.hasAssistantResponse) {
+        const session = useWorkbenchStore.getState().sessions[sessionId]
+        if (session?.title === DEFAULT_SESSION_TITLE && !session.custom_title) {
+          // A placeholder until the next catalog refresh brings the SDK title;
+          // the transcript must stay free of clotho-written custom-title records.
+          const title = draftTitleFromPrompt(this.turnPrompt)
+          if (title) useWorkbenchStore.getState().setLocalTitle(sessionId, title)
+        }
+        // onPromptStarted already fired when the first agent content
+        // streamed in; the draft is completed there, not here.
+      }
+      if (terminalEffect?.kind === 'recalled') {
+        const recalledMessages = terminalEffect.snapshot.messages
+        this.controller.historyService.reset(recalledMessages)
+        if (terminalEffect.snapshot.optimisticMessageId) {
+          this.controller.conversationStore
+            .getState()
+            .removeSent(terminalEffect.snapshot.optimisticMessageId)
+        }
+        // The cancelled pair stays in the transcript: the resident query's
+        // context cannot be edited mid-flight, and the next rebuild purges it.
+        // A failed record write must not block the state reset below.
+        try {
+          await this.recalledInput.record(terminalEffect.snapshot, this.turnRestoreToComposer)
+        } catch (recordError) {
+          this.logger.error('recall.record_failed', 'Failed to persist the recalled input', {
+            error: recordError,
+          })
+        }
+        if (
+          !terminalEffect.snapshot.messages.some(
+            (message) => isUserPromptMessage(message) || message.role === 'assistant',
+          )
+        ) {
+          this.controller.options.onPromptRecalled?.(sessionId)
+        }
+        this.controller.runtimeStore.setState({
+          runtimeError: terminalEffect.error
+            ? {
+                kind: 'message-send',
+                message: terminalEffect.error,
+              }
+            : null,
+        })
+      } else if (terminalEffect?.kind === 'stopped') {
+        this.controller.conversationStore
+          .getState()
+          .markStopped(terminalEffect.turnId, terminalEffect.elapsed)
+      } else if (terminalEffect?.kind === 'failed') {
+        this.controller.runtimeStore.setState({ runtimeError: null })
+        this.controller.conversationStore.getState().markFailed(terminalEffect.turnId, {
+          elapsed: terminalEffect.elapsed,
+          message: terminalEffect.message,
+        })
+      }
+      const runtimeError = this.controller.runtimeStore.getState().runtimeError
+      this.controller.runtimeStore.setState({
+        isSubmitting: false,
+        isStreaming: false,
+        streamingElapsed: 0,
+        runtimeStatus: runtimeError ? 'error' : 'ready',
+        pendingToolRequests: {},
+      })
+      this.controller.options.onActivityChange?.(sessionId, outcome)
+      await this.controller.options.onRefreshCatalog?.()
+    }
+    this.turnOutcome = outcome
+    for (const resolve of this.turnEndWaiters.splice(0)) resolve()
+  }
+
   async runPrompt({
     clearPrompt,
     model,
@@ -232,7 +517,7 @@ export class SendService {
     editTarget,
     kind = 'prompt',
     turnMessageId,
-  }: RunPromptInput) {
+  }: RunPromptInput): Promise<boolean> {
     const blockedModel = attachments.length ? this.findMultimodalBlockedModel(model) : undefined
     if (blockedModel) {
       toast.add({
@@ -259,9 +544,6 @@ export class SendService {
       )
     }
     const recallMessages = this.controller.historyService.messages()
-    // The session's own permission mode drives the query; new sessions start
-    // from the app default, and in-turn changes stay scoped to this session.
-    // Historical edits truncate the existing transcript and resend on the same Claude session ID.
     const hasRecallToPrepare = this.recalledInput.hasInput()
     let historyPrefix: ClaudeMessage[] | undefined
     if (replaceFromMessageId) {
@@ -309,88 +591,33 @@ export class SendService {
       this.controller.options.onActivityChange?.(context.sessionId, 'processing')
     }
 
-    // A recalled trailing turn must leave the transcript before this send
-    // resumes the session, otherwise it would re-enter the model context.
-    let startFreshSession: boolean
-    let query: ClaudeQuery
-    try {
-      startFreshSession = hasRecallToPrepare && (await this.recalledInput.clear())
-      const canResumeSession =
-        !startFreshSession && this.controller.historyService.canResumeLoadedSession()
-
-      const queryOptions = {
-        cwd: context.isHomeMode ? undefined : (context.projectPath ?? undefined),
-        ...(!context.isHomeMode && context.additionalDirectories?.length
-          ? { additionalDirectories: context.additionalDirectories }
-          : {}),
-        ...(context.claudeSessionId && !canResumeSession
-          ? { sessionId: context.claudeSessionId }
-          : !context.claudeSessionId
-            ? { sessionId: context.sessionId }
-            : {}),
-        ...(context.claudeSessionId && canResumeSession ? { resume: context.claudeSessionId } : {}),
-        ...(editTarget?.strategy === 'resume'
-          ? { resumeSessionAt: editTarget.resumeSessionAt }
-          : {}),
-        agent: kind === 'auto-continue' ? undefined : (composer.selectedAgent ?? undefined),
-        model,
-        permissionMode,
-      }
-      query = this.controller.claudeService.query({
-        prompt,
-        options: queryOptions,
-        ...(attachments.length ? { attachments } : {}),
-        ...(preparedUserMessage?.uuid ? { userMessageUuid: preparedUserMessage.uuid } : {}),
-        ...(kind === 'auto-continue' ? { syntheticOrigin: 'auto-continuation' as const } : {}),
+    // Acquire the resident query: reuse it for a plain follow-up, rebuild for
+    // a historical edit, and rebuild after a query death so the transcript
+    // surgery (dead-pair purge) runs before the session is resumed again.
+    const agent = kind === 'auto-continue' ? undefined : (composer.selectedAgent ?? undefined)
+    let dropFromMessageUuid: string | undefined
+    let stream: ClaudeSessionStream
+    if (replaceFromMessageId) {
+      const targetMessage = recallMessages.find((message) => message.id === replaceFromMessageId)
+      dropFromMessageUuid =
+        targetMessage?.uuid ?? this.controller.runtimeStore.getState().messageEditDraft?.messageUuid
+      if (!dropFromMessageUuid) throw new Error('The historical message is no longer available')
+      stream = this.rebuildStream('edit', model, permissionMode, agent, {
+        dropFromMessageUuid,
+        editTarget,
       })
-    } catch (caught) {
-      if (preparedUserMessage) {
-        this.controller.historyService.reset(recallMessages)
-        this.controller.conversationStore.getState().removeSent(preparedUserMessage.id)
-        if (clearPrompt) {
-          this.controller.composerService.restorePrompt(prompt, attachments)
-        }
-        this.sendLifecycle = createSendLifecycle()
-        this.controller.runtimeStore.setState({
-          isSubmitting: false,
-          isStreaming: false,
-          streamingElapsed: 0,
-          runtimeStatus: 'error',
-          runtimeError: {
-            kind: 'message-send',
-            message: caught instanceof Error ? caught.message : 'Failed to execute Claude',
-          },
-        })
-        this.controller.options.onActivityChange?.(context.sessionId, 'error')
-      }
-
-      throw caught
-    }
-    // Reserve the ID before init so cancellation and catalog updates keep
-    // referring to the same local card, including when its log is recreated.
-    if (query.sessionId && (startFreshSession || !context.claudeSessionId)) {
-      this.controller.historyService.markFreshSession()
-      this.controller.contextStore.setState({ claudeSessionId: query.sessionId })
-      this.controller.runtimeStore.setState({ runtimeResume: query.sessionId })
-      this.controller.options.onBindClaudeSession?.(context.sessionId, query.sessionId)
-      void this.controller.persistenceService
-        .update(context.sessionId, (record) =>
-          record ? { ...record, claudeSessionId: query.sessionId } : record,
-        )
-        .catch((error: unknown) =>
-          this.logger.error(
-            'send.binding_persist_failed',
-            'Failed to persist the session binding',
-            {
-              error,
-            },
-          ),
-        )
+    } else if (this.stream) {
+      stream = this.stream
+    } else if (this.streamDied) {
+      stream = this.rebuildStream('recovery', model, permissionMode, agent)
+    } else {
+      stream = this.ensureStream(model, permissionMode, agent)
     }
 
     if (historyPrefix) this.controller.historyService.reset(historyPrefix)
 
     const isAutoContinue = kind === 'auto-continue'
+    const userMessageUuid = preparedUserMessage?.uuid ?? createUuid()
     if (!preparedUserMessage) {
       const userMessage: ClaudeMessage = {
         id: isAutoContinue ? `local-nudge-${Date.now()}` : `local-user-${Date.now()}`,
@@ -408,7 +635,7 @@ export class SendService {
           // session history instead.
           messages: historyPrefix ?? recallMessages,
           optimisticMessageId: userMessage.id,
-          userMessageUuid: query.userMessageUuid,
+          userMessageUuid,
           prompt,
           attachments,
           ...(isAutoContinue ? { isSynthetic: true } : {}),
@@ -439,203 +666,60 @@ export class SendService {
       this.controller.options.onActivityChange?.(context.sessionId, 'processing')
     }
 
-    this.activeQuery = query
-    let resolveRecallApplied = () => {}
-    this.recallApplied = new Promise<void>((resolve) => {
-      resolveRecallApplied = resolve
-    })
-    const recalled = new Promise<null>((resolve) => {
-      this.recallQuery = () => resolve(null)
-    })
-    this.stopToolSubscription = query.subscribeToolRequests((request) => {
-      this.controller.runtimeStore.setState((current) => ({
-        pendingToolRequests: {
-          ...current.pendingToolRequests,
-          [request.toolUseId]: request,
-        },
-      }))
-      this.controller.options.onActivityChange?.(context.sessionId, 'awaiting-user')
-    })
-
-    let outcome: SessionActivityEvent = 'success'
-    let hasAssistantResponse = false
-    let hasSampledContextUsage = false
-    let queryFailure: string | null = null
+    this.hasAssistantResponse = false
+    this.hasSampledContextUsage = false
+    this.turnPrompt = prompt
+    this.turnRestoreToComposer = clearPrompt || Boolean(historyPrefix)
+    // Register the waiter before pushing: the turn's result frame can only
+    // arrive afterwards, and the loop resolves it in finishTurn.
+    const turnEnd = this.waitForTurnEnd()
     try {
-      const iterator = query[Symbol.asyncIterator]()
-      while (true) {
-        const next = await Promise.race([iterator.next(), recalled])
-        if (!next || next.done || this.sendLifecycle.phase === 'recall-requested') break
-        const message = next.value
-        if (!hasSampledContextUsage) {
-          // The first streamed message proves the CLI transport is live; sample
-          // the real context usage (reflects the history as of the previous
-          // turn). Fire-and-forget — must not delay the send.
-          hasSampledContextUsage = true
-          void this.fetchContextUsage()
-        }
-        if (message.type === 'conversation_reset') {
-          // /clear and fresh-session flows: the SDK resets its running usage
-          // total, so the local counters and snapshot start over as well.
-          this.controller.usageStore.setState(initialUsageState())
-        }
-        if (message.type === 'result' && message.usage) {
-          this.controller.usageStore.setState((current) =>
-            recordResultUsage(current, message.usage),
-          )
-          // Refresh the snapshot with the turn's final usage — this is where
-          // compaction drops become visible. Fire-and-forget; the query is
-          // still alive while the stream is being consumed.
-          void this.fetchContextUsage()
-        }
-        if (this.turnStream.processLine(JSON.stringify(message)) && !hasAssistantResponse) {
-          hasAssistantResponse = true
-          // The first agent content proves the transcript is real: complete
-          // the draft now. Waiting for a fully successful turn would leave a
-          // stopped or errored first turn stuck as a draft forever.
-          this.controller.options.onPromptStarted?.(context.sessionId)
-        }
+      await stream.push({
+        text: prompt,
+        ...(attachments.length ? { attachments } : {}),
+        userMessageUuid,
+        ...(isAutoContinue ? { syntheticOrigin: 'auto-continuation' as const } : {}),
+      })
+      // A successful push proves an edit rebuild completed its transcript
+      // surgery; retries no longer need to re-drop the same tail.
+      if (dropFromMessageUuid && context.claudeSessionId) {
+        this.controller.messageEditService.noteClearedTail(
+          context.claudeSessionId,
+          dropFromMessageUuid,
+        )
       }
     } catch (caught) {
-      const isUserCancel = isSendCancellationRequested(this.sendLifecycle)
-      const message = caught instanceof Error ? caught.message : 'Failed to execute Claude'
-      if (!isUserCancel) {
-        this.logger.error('query.stream_failed', 'Claude query stream failed', {
-          context: {
-            phase: this.sendLifecycle.phase,
-          },
-          error: caught,
-        })
-      }
-      queryFailure = message
-      outcome = isUserCancel ? 'idle' : 'error'
-      // Same-session historical edits clear the old branch before starting the
-      // query. Restore the in-memory view on a failed query so the edit can be
-      // retried with its captured draft; the transcript tail remains cleared.
-    } finally {
-      if (!this.recalledInput.hasCleanup) await Promise.resolve(query.close()).catch(() => {})
-      const terminalEffect = this.transition({
-        type: 'finished',
-        result: queryFailure ? 'error' : 'success',
-        message: queryFailure ?? undefined,
-        finishedAt: Date.now(),
-      })
-      if (this.activeQuery === query) {
-        this.activeQuery = null
-        this.recallQuery = null
-        this.recallApplied = null
-      }
-      this.stopToolSubscription?.()
-      this.stopToolSubscription = null
-      this.turnStream.stop()
-      if (terminalEffect?.kind !== 'history-confirmed') {
-        outcome = terminalEffect?.activity ?? outcome
-      }
-      if (!this.controller.isDisposed) {
-        if (!queryFailure && outcome === 'success' && hasAssistantResponse) {
-          const session = useWorkbenchStore.getState().sessions[context.sessionId]
-          if (session?.title === DEFAULT_SESSION_TITLE && !session.custom_title) {
-            // A placeholder until the next catalog refresh brings the SDK title;
-            // the transcript must stay free of clotho-written custom-title records.
-            const title = draftTitleFromPrompt(prompt)
-            if (title) useWorkbenchStore.getState().setLocalTitle(context.sessionId, title)
-          }
-          // onPromptStarted already fired when the first agent content
-          // streamed in; the draft is completed there, not here.
-        }
-        if (terminalEffect?.kind === 'recalled') {
-          const recalledMessages = terminalEffect.snapshot.messages
-          this.controller.historyService.reset(recalledMessages)
-          if (terminalEffect.snapshot.optimisticMessageId) {
-            this.controller.conversationStore
-              .getState()
-              .removeSent(terminalEffect.snapshot.optimisticMessageId)
-          }
-          // The user line still sits at the transcript tail; remember it so the
-          // next send truncates it before resuming the session. A failed write
-          // must not escape this finally block, otherwise the streaming-state
-          // reset and the recallApplied resolution below are skipped and the
-          // session stays blocked until reload.
-          try {
-            await this.recalledInput.record(
-              terminalEffect.snapshot,
-              clearPrompt || Boolean(historyPrefix),
-            )
-          } catch (error) {
-            this.logger.error('recall.record_failed', 'Failed to persist the recalled input', {
-              error,
-            })
-          }
-          if (
-            !terminalEffect.snapshot.messages.some(
-              (message) => isUserPromptMessage(message) || message.role === 'assistant',
-            )
-          ) {
-            this.controller.options.onPromptRecalled?.(context.sessionId)
-          }
-          this.controller.runtimeStore.setState({
-            runtimeError: terminalEffect.error
-              ? {
-                  kind: 'message-send',
-                  message: terminalEffect.error,
-                }
-              : null,
-          })
-        } else if (terminalEffect?.kind === 'stopped') {
-          this.controller.conversationStore
-            .getState()
-            .markStopped(terminalEffect.turnId, terminalEffect.elapsed)
-        } else if (terminalEffect?.kind === 'failed') {
-          this.controller.runtimeStore.setState({ runtimeError: null })
-          this.controller.conversationStore.getState().markFailed(terminalEffect.turnId, {
-            elapsed: terminalEffect.elapsed,
-            message: terminalEffect.message,
-          })
-        }
-        const runtimeError = this.controller.runtimeStore.getState().runtimeError
-        this.controller.runtimeStore.setState({
-          isSubmitting: false,
-          isStreaming: false,
-          streamingElapsed: 0,
-          runtimeStatus: runtimeError ? 'error' : 'ready',
-          pendingToolRequests: {},
-        })
-        resolveRecallApplied()
-        this.controller.options.onActivityChange?.(context.sessionId, outcome)
-        await this.controller.options.onRefreshCatalog?.()
-      }
-      resolveRecallApplied()
+      // The stream loop may already have reported the death; finishTurn is a
+      // no-op when no turn is active anymore.
+      void this.finishTurn(caught)
     }
-    return outcome === 'success'
+    await turnEnd
+    return this.turnOutcome === 'success'
   }
 
   async stop() {
-    const query = this.activeQuery
-    if (!query) return
     this.transition({ type: 'stop-requested' })
-    const recallApplied = this.recallApplied
-    if (this.sendLifecycle.phase === 'recall-requested') {
-      // Stop consuming immediately. Late SDK output cannot turn a recall into a stopped reply.
-      // Closing the transport is the immediate cancellation boundary. Do not
-      // make the next send wait for an interrupt acknowledgment that may never
-      // arrive from a disconnected host.
-      // Host close already aborts the query. A concurrent interrupt RPC can
-      // arrive after close removed the stream and produce a spurious error.
-      const cleanup = Promise.resolve(query.close())
-      this.recalledInput.setCleanup(cleanup)
-      // Cancellation stays immediate; the next send waits for host closure.
-      void cleanup.catch(() => {})
-      this.recallQuery?.()
-      await recallApplied
-      return
-    }
-    await query.interrupt().catch(() => {})
+    const stream = this.stream
+    if (!stream) return
+    // Verified stop recipe: interrupt first so the turn ends, then deny every
+    // still-pending canUseTool (the CLI silently discards a too-late answer).
+    // The turn's result frame drives the recall/stop effect afterwards.
+    await stream.interrupt().catch(() => {})
+    const pending = Object.keys(this.controller.runtimeStore.getState().pendingToolRequests)
+    await Promise.all(
+      pending.map((toolUseId) =>
+        this.respondToolRequest(toolUseId, {
+          behavior: 'deny',
+          message: 'Interrupted',
+        }).catch(() => {}),
+      ),
+    )
   }
 
   async respondToolRequest(toolUseId: string, result: ClaudeToolResult) {
     const runtimeStore = this.controller.runtimeStore
     const hasPendingRequest = Boolean(runtimeStore.getState().pendingToolRequests[toolUseId])
-    await this.activeQuery?.respondToolRequest(toolUseId, result)
+    await this.stream?.respondToolRequest(toolUseId, result)
     if (hasPendingRequest) {
       runtimeStore.setState((state) => {
         const pendingToolRequests = { ...state.pendingToolRequests }
@@ -645,7 +729,7 @@ export class SendService {
     }
     if (
       hasPendingRequest &&
-      this.activeQuery &&
+      this.stream &&
       Object.keys(runtimeStore.getState().pendingToolRequests).length === 0
     ) {
       const { sessionId } = this.controller.contextStore.getState()
@@ -654,7 +738,7 @@ export class SendService {
   }
 
   setPermissionMode(permissionMode: ClaudePermissionMode) {
-    if (this.activeQuery) void this.activeQuery.setPermissionMode(permissionMode)
+    if (this.stream) void this.stream.setPermissionMode(permissionMode)
   }
 
   /**
@@ -664,10 +748,10 @@ export class SendService {
    * previous snapshot stays in every null case.
    */
   async fetchContextUsage(): Promise<ClaudeContextUsageSnapshot | null> {
-    const query = this.activeQuery
-    if (query) {
+    const stream = this.stream
+    if (stream && stream.getState().status !== 'dead') {
       try {
-        const snapshot = await query.getContextUsage()
+        const snapshot = await stream.getContextUsage()
         if (snapshot) this.controller.usageStore.setState({ snapshot })
         return snapshot
       } catch {
@@ -678,22 +762,15 @@ export class SendService {
   }
 
   dispose() {
-    const wasProcessing = this.activeQuery !== null
     this.stopToolSubscription?.()
     this.stopToolSubscription = null
     this.turnStream.stop()
-    let interrupted: Promise<void> = Promise.resolve()
-    if (this.activeQuery) {
-      interrupted = Promise.resolve(this.activeQuery.interrupt()).catch(() => {})
-      this.activeQuery.close()
-      this.activeQuery = null
-    }
-    if (wasProcessing) {
-      const { sessionId } = this.controller.contextStore.getState()
-      this.controller.options.onActivityChange?.(sessionId, 'idle')
-    }
-    // Awaited by session deletion so the CLI cannot append to a transcript
-    // after it has been deleted.
-    return interrupted
+    // The resident query keeps running in the main process after the consumer
+    // walks away; recycling (idle/tab close) and session deletion decide when
+    // it actually stops.
+    const stream = this.stream
+    this.stream = null
+    stream?.detach()
+    return Promise.resolve()
   }
 }

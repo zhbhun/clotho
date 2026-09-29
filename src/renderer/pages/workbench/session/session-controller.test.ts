@@ -8,7 +8,11 @@ import type {
   ClaudeModelMappings,
   ClaudePermissionMode,
   ClaudeRewindFilesResult,
+  ClaudeSdkMessage,
   ClaudeSessionEditAnchor,
+  ClaudeSessionStream,
+  ClaudeSessionStreamPushParams,
+  ClaudeSessionStreamState,
   ClaudeToolRequest,
   ModelProvider,
 } from '../../../services/claude/claude'
@@ -54,27 +58,16 @@ function createClient() {
     query: vi.fn(() => {
       throw new Error('query is not expected in this test')
     }),
+    openSessionStream: vi.fn(() => {
+      throw new Error('openSessionStream is not expected in this test')
+    }),
+    rebuildSessionStream: vi.fn(() => {
+      throw new Error('rebuildSessionStream is not expected in this test')
+    }),
     setProjectModel: vi.fn(async () => {}),
     listProviders: vi.fn(async (): Promise<ModelProvider[]> => []),
     sampleContextUsage: vi.fn(async (): Promise<ClaudeContextUsageSnapshot | null> => null),
   }
-}
-
-function createQuery(messages: unknown[], error?: Error, userMessageUuid?: string) {
-  async function* iterate() {
-    for (const message of messages) yield message
-    if (error) throw error
-  }
-
-  return Object.assign(iterate(), {
-    close: vi.fn(),
-    interrupt: vi.fn(async () => {}),
-    respondToolRequest: vi.fn(async () => {}),
-    setModel: vi.fn(async () => {}),
-    setPermissionMode: vi.fn(async () => {}),
-    subscribeToolRequests: vi.fn(() => () => {}),
-    ...(userMessageUuid ? { userMessageUuid } : {}),
-  })
 }
 
 let successfulQueryIndex = 0
@@ -88,60 +81,43 @@ function userHistoryMessage(content: string) {
   }
 }
 
-function createSuccessfulQuery(content: string) {
-  return createQuery([userHistoryMessage(content)])
+const successResult = () => ({ type: 'result', subtype: 'success' })
+const interruptResult = () => ({
+  type: 'result',
+  subtype: 'error_during_execution',
+  is_error: true,
+})
+
+type StreamHarness = {
+  stream: ClaudeSessionStream
+  pushes: ClaudeSessionStreamPushParams[]
+  emit(frame: unknown): void
+  emitResult(): void
+  fail(error: Error): void
+  finish(): void
+  emitRequest(request: ClaudeToolRequest): void
 }
 
-function createInteractiveQuery(messages: unknown[] = []) {
-  let emitRequest: ((request: ClaudeToolRequest) => void) | undefined
-  let finishQuery: (() => void) | undefined
+type StreamScript = (params: ClaudeSessionStreamPushParams, harness: StreamHarness) => void
 
-  async function* iterate() {
-    for (const message of messages) yield message
-    await new Promise<void>((resolve) => {
-      finishQuery = resolve
-    })
-    yield* []
-  }
+let streamCounter = 0
 
-  const query = Object.assign(iterate(), {
-    close: vi.fn(),
-    interrupt: vi.fn(async () => {}),
-    respondToolRequest: vi.fn(async () => {}),
-    setModel: vi.fn(async () => {}),
-    setPermissionMode: vi.fn(async () => {}),
-    subscribeToolRequests: vi.fn((handler: (request: ClaudeToolRequest) => void) => {
-      emitRequest = handler
-      return () => {}
-    }),
-  })
-
-  return {
-    query,
-    emitRequest(request: ClaudeToolRequest) {
-      if (!emitRequest) throw new Error('Tool request subscriber is not ready')
-      emitRequest(request)
-    },
-    finish() {
-      if (!finishQuery) throw new Error('Query iterator is not ready')
-      finishQuery()
-    },
-  }
-}
-
-function createControllableQuery(
-  options: { finishOnInterrupt?: boolean; userMessageUuid?: string } = {},
+/**
+ * Emulates the main-process resident query: one long-lived generator whose
+ * turns are driven by pushes. A turn ends on a result frame (or when the
+ * stream dies); the stream itself stays alive in between.
+ */
+function createStreamHarness(
+  options: { script?: StreamScript; onInterrupt?: 'result' | 'none' } = {},
 ) {
   type Item = { done: true; error?: Error } | { done: false; value: unknown }
   const queued: Item[] = []
   const waiters: Array<(item: Item) => void> = []
-
   const deliver = (item: Item) => {
     const waiter = waiters.shift()
     if (waiter) waiter(item)
     else queued.push(item)
   }
-
   async function* iterate() {
     while (true) {
       const item = queued.shift() ?? (await new Promise<Item>((resolve) => waiters.push(resolve)))
@@ -152,31 +128,95 @@ function createControllableQuery(
       yield item.value
     }
   }
-
-  const query = Object.assign(iterate(), {
-    close: vi.fn(),
-    interrupt: vi.fn(async () => {
-      if (options.finishOnInterrupt !== false) deliver({ done: true })
-    }),
-    respondToolRequest: vi.fn(async () => {}),
-    setModel: vi.fn(async () => {}),
-    setPermissionMode: vi.fn(async () => {}),
-    subscribeToolRequests: vi.fn(() => () => {}),
-    ...(options.userMessageUuid ? { userMessageUuid: options.userMessageUuid } : {}),
-  })
-
-  return {
-    query,
-    emit(value: unknown) {
-      deliver({ done: false, value })
-    },
-    fail(error: Error) {
-      deliver({ done: true, error })
-    },
-    finish() {
-      deliver({ done: true })
-    },
+  const iterator = iterate()
+  const toolHandlers = new Set<(request: ClaudeToolRequest) => void>()
+  const state: ClaudeSessionStreamState = {
+    claudeSessionId: null,
+    status: 'ready',
+    turnInFlight: false,
+    pendingToolRequests: [],
+    backgroundTaskIds: [],
   }
+  const pushes: ClaudeSessionStreamPushParams[] = []
+  const harness = {} as StreamHarness
+  const stream: ClaudeSessionStream = {
+    sessionId: 'test-session',
+    streamId: `stream-${++streamCounter}`,
+    [Symbol.asyncIterator]: () => iterator as unknown as AsyncGenerator<ClaudeSdkMessage, void>,
+    async [Symbol.asyncDispose]() {
+      harness.finish()
+    },
+    next: () => iterator.next() as Promise<IteratorResult<ClaudeSdkMessage, void>>,
+    async throw(error?: unknown) {
+      harness.fail(error instanceof Error ? error : new Error(String(error ?? 'Stream failed')))
+      return { done: true as const, value: undefined }
+    },
+    async return() {
+      harness.finish()
+      return { done: true as const, value: undefined }
+    },
+    getState: () => state,
+    async push(params) {
+      pushes.push(params)
+      options.script?.(params, harness)
+    },
+    subscribeToolRequests(handler) {
+      toolHandlers.add(handler)
+      return () => toolHandlers.delete(handler)
+    },
+    respondToolRequest: vi.fn(async () => {}),
+    interrupt: vi.fn(async () => {
+      if ((options.onInterrupt ?? 'result') === 'result')
+        deliver({ done: false, value: interruptResult() })
+    }),
+    setPermissionMode: vi.fn(async () => {}),
+    setModel: vi.fn(async () => {}),
+    setMaxThinkingTokens: vi.fn(async () => {}),
+    applyFlagSettings: vi.fn(async () => {}),
+    getContextUsage: vi.fn(async (): Promise<ClaudeContextUsageSnapshot | null> => null),
+    stopTask: vi.fn(async () => {}),
+    detach: vi.fn(() => {
+      deliver({ done: true })
+    }),
+  }
+  Object.assign(harness, {
+    stream,
+    pushes,
+    emit: (frame: unknown) => deliver({ done: false, value: frame }),
+    emitResult: () => deliver({ done: false, value: successResult() }),
+    fail: (error: Error) => deliver({ done: true, error }),
+    finish: () => deliver({ done: true }),
+    emitRequest: (request: ClaudeToolRequest) => {
+      for (const handler of [...toolHandlers]) handler(request)
+    },
+  })
+  return harness
+}
+
+/** Each push replays the user echo and a success result, like a completed turn. */
+function createSuccessfulStream() {
+  return createStreamHarness({
+    script: (params, harness) => {
+      harness.emit(userHistoryMessage(params.text))
+      harness.emitResult()
+    },
+  })
+}
+
+/** The test drives every frame by hand; interrupt ends the turn like the CLI. */
+function createManualStream(options: { finishOnInterrupt?: boolean } = {}) {
+  return createStreamHarness({
+    onInterrupt: options.finishOnInterrupt === false ? 'none' : 'result',
+  })
+}
+
+/** Every push kills the stream with the given technical error. */
+function createFailingStream(error: Error) {
+  return createStreamHarness({
+    script: (_params, harness) => {
+      harness.fail(error)
+    },
+  })
 }
 
 function createOptions(sessionId: string) {
@@ -188,14 +228,6 @@ function createOptions(sessionId: string) {
     isHomeMode: false,
     isMockProject: false,
   }
-}
-
-/** The vi.fn() query mock declares no parameters, so read its calls untyped. */
-function queryCalls(client: { query: ReturnType<typeof vi.fn> }) {
-  const calls = client.query.mock.calls as unknown as Array<
-    [{ syntheticOrigin?: string; options?: { resume?: string } }]
-  >
-  return calls.map(([params]) => params)
 }
 
 const controllers: ReturnType<typeof createSessionController>[] = []
@@ -287,7 +319,7 @@ describe('SessionController', () => {
 
     await store.getState().sendPrompt()
 
-    expect(client.query).not.toHaveBeenCalled()
+    expect(client.openSessionStream).not.toHaveBeenCalled()
     expect(onStartNewSession).toHaveBeenCalledOnce()
     expect(store.getState().prompt).toBe('')
   })
@@ -306,7 +338,7 @@ describe('SessionController', () => {
 
     await store.getState().sendSlashCommand('/clear')
 
-    expect(client.query).not.toHaveBeenCalled()
+    expect(client.openSessionStream).not.toHaveBeenCalled()
     expect(onStartNewSession).toHaveBeenCalledOnce()
     expect(onStartNewSession).toHaveBeenCalledWith({
       prompt: 'Keep this draft',
@@ -327,7 +359,11 @@ describe('SessionController', () => {
       },
     ]
     client.prepareAttachments.mockResolvedValue({ attachments: captured })
-    client.query.mockReturnValueOnce(createQuery([], new Error('Offline after rewind')) as never)
+    const failing = createFailingStream(new Error('Offline after rewind'))
+    const successful = createSuccessfulStream()
+    client.rebuildSessionStream
+      .mockReturnValueOnce(failing.stream as never)
+      .mockReturnValueOnce(successful.stream as never)
     const store = trackedStore({
       ...createOptions('local:retry-upload'),
       claudeSessionId: 'claude-session',
@@ -359,11 +395,11 @@ describe('SessionController', () => {
 
     const retry = store.getState().messageEditDraft
     expect(retry).toMatchObject({ prompt: 'Edited prompt', attachments: captured })
-    client.query.mockReturnValue(createSuccessfulQuery('Edited prompt') as never)
     expect(await store.getState().submitMessageEdit(retry!, anchor, false)).toBe(true)
-    expect(client.query).toHaveBeenLastCalledWith(
-      expect.objectContaining({ attachments: captured }),
-    )
+    expect(successful.pushes[0]).toMatchObject({
+      text: 'Edited prompt',
+      attachments: captured,
+    })
     expect(client.prepareAttachments).toHaveBeenCalledTimes(1)
     expect(store.getState().messageEditDraft).toBeNull()
   })
@@ -387,7 +423,8 @@ describe('SessionController', () => {
         if (readFails) throw new Error('Attachment is unreadable')
         return { attachments: captured }
       })
-      client.query.mockReturnValue(createSuccessfulQuery('Edited prompt') as never)
+      const successful = createSuccessfulStream()
+      client.rebuildSessionStream.mockReturnValue(successful.stream as never)
       const store = trackedStore({
         ...createOptions('local:rewind-upload'),
         claudeSessionId: 'claude-session',
@@ -418,21 +455,20 @@ describe('SessionController', () => {
       expect(sent).toBe(!readFails)
       if (readFails) {
         expect(client.rewindSessionFiles).not.toHaveBeenCalled()
-        expect(client.query).not.toHaveBeenCalled()
+        expect(client.rebuildSessionStream).not.toHaveBeenCalled()
       } else {
         expect(client.prepareAttachments.mock.invocationCallOrder[0]).toBeLessThan(
           client.rewindSessionFiles.mock.invocationCallOrder[0]!,
         )
-        expect(client.query).toHaveBeenCalledWith(
-          expect.objectContaining({ attachments: captured }),
-        )
+        expect(successful.pushes[0]).toMatchObject({ attachments: captured })
       }
     },
   )
 
   it('sends attachments without rewriting @ references in the prompt', async () => {
     const client = createClient()
-    client.query.mockReturnValue(createSuccessfulQuery('Compare @src/app.tsx') as never)
+    const successful = createSuccessfulStream()
+    client.openSessionStream.mockReturnValue(successful.stream as never)
     const store = trackedStore({ ...createOptions('local:upload-and-reference'), client })
     store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
     store.getState().setPrompt('Compare @src/app.tsx')
@@ -440,18 +476,17 @@ describe('SessionController', () => {
 
     await store.getState().sendPrompt()
 
-    expect(client.query).toHaveBeenCalledWith(
-      expect.objectContaining({
-        prompt: 'Compare @src/app.tsx',
-        attachments: [{ name: 'diagram.png', path: '/project/diagram.png' }],
-      }),
-    )
+    expect(successful.pushes[0]).toMatchObject({
+      text: 'Compare @src/app.tsx',
+      attachments: [{ name: 'diagram.png', path: '/project/diagram.png' }],
+    })
     expect(store.getState().attachments).toEqual([])
   })
 
   it('keeps the draft when a model marked without multimodal support receives attachments', async () => {
     const client = createClient()
-    client.query.mockReturnValue(createSuccessfulQuery('Check this') as never)
+    const successful = createSuccessfulStream()
+    client.openSessionStream.mockReturnValue(successful.stream as never)
     const modelConfigurationStore = createModelConfigurationStore()
     modelConfigurationStore.getState().replaceSettings(
       [
@@ -484,7 +519,7 @@ describe('SessionController', () => {
 
     await store.getState().sendPrompt()
 
-    expect(client.query).not.toHaveBeenCalled()
+    expect(client.openSessionStream).not.toHaveBeenCalled()
     expect(store.getState().prompt).toBe('Check this')
     expect(store.getState().attachments).toEqual([
       { name: 'diagram.png', path: '/project/diagram.png' },
@@ -493,14 +528,14 @@ describe('SessionController', () => {
     store.getState().setSelectedProviderModel('zhipu', 'glm-vision')
     await store.getState().sendPrompt()
 
-    expect(client.query).toHaveBeenCalledOnce()
+    expect(client.openSessionStream).toHaveBeenCalledOnce()
     expect(store.getState().attachments).toEqual([])
   })
 
   it('restores an attachment-only draft when sending fails before history is recorded', async () => {
     const client = createClient()
-    const controlled = createControllableQuery()
-    client.query.mockReturnValue(controlled.query as never)
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
     const persistence = createMemoryPersistence()
     const store = trackedStore({ ...createOptions('local:upload-only'), client, persistence })
     store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
@@ -522,7 +557,8 @@ describe('SessionController', () => {
 
   it('resends stored attachment contents when editing a historical message', async () => {
     const client = createClient()
-    client.query.mockReturnValue(createSuccessfulQuery('Edited prompt') as never)
+    const successful = createSuccessfulStream()
+    client.rebuildSessionStream.mockReturnValue(successful.stream as never)
     const store = trackedStore({
       ...createOptions('local:edit-upload'),
       claudeSessionId: 'claude-session',
@@ -560,7 +596,7 @@ describe('SessionController', () => {
     })
 
     expect(result.status).toBe('sent')
-    expect(client.query).toHaveBeenCalledWith(expect.objectContaining({ attachments }))
+    expect(successful.pushes[0]).toMatchObject({ attachments })
   })
 
   it('preserves optional defaults when syncing an incomplete options snapshot', () => {
@@ -917,8 +953,8 @@ describe('SessionController', () => {
     const client = createClient()
     client.loadSessionHistory.mockReturnValue(history)
     client.startup.mockReturnValue(new Promise(() => {}))
-    const controlled = createControllableQuery()
-    client.query.mockReturnValue(controlled.query as never)
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
     const store = trackedStore({
       ...createOptions('local:history-gated-send'),
       claudeSessionId: 'claude-existing-id',
@@ -948,9 +984,9 @@ describe('SessionController', () => {
       messageIds: [expect.stringMatching(/^local-user-/)],
     })
 
-    controlled.finish()
+    controlled.emitResult()
     await sending
-    expect(client.query).toHaveBeenCalledOnce()
+    expect(client.openSessionStream).toHaveBeenCalledOnce()
   })
 
   it('preserves the prompt and skips the query when history loading fails', async () => {
@@ -966,7 +1002,7 @@ describe('SessionController', () => {
 
     await store.getState().sendPrompt()
 
-    expect(client.query).not.toHaveBeenCalled()
+    expect(client.openSessionStream).not.toHaveBeenCalled()
     expect(store.getState()).toMatchObject({
       prompt: 'keep this prompt',
       isSubmitting: false,
@@ -1097,16 +1133,8 @@ describe('SessionController', () => {
     const onActivityChange = vi.fn()
     const onPromptStarted = vi.fn()
     const client = createClient()
-    client.query.mockReturnValue(
-      createQuery([
-        userHistoryMessage('continue'),
-        {
-          type: 'assistant',
-          uuid: 'assistant-background',
-          message: { role: 'assistant', content: [{ type: 'text', text: 'done' }] },
-        },
-      ]) as never,
-    )
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
     const store = trackedStore({
       ...createOptions('local:background'),
       client,
@@ -1116,7 +1144,15 @@ describe('SessionController', () => {
     store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
     store.getState().setPrompt('continue')
 
-    await store.getState().sendPrompt()
+    const sending = store.getState().sendPrompt()
+    controlled.emit(userHistoryMessage('continue'))
+    controlled.emit({
+      type: 'assistant',
+      uuid: 'assistant-background',
+      message: { role: 'assistant', content: [{ type: 'text', text: 'done' }] },
+    })
+    controlled.emitResult()
+    await sending
 
     expect(onPromptStarted).toHaveBeenCalledOnce()
     expect(onPromptStarted).toHaveBeenCalledWith('local:background')
@@ -1127,7 +1163,8 @@ describe('SessionController', () => {
   it('does not complete a draft when the query closes without an assistant response', async () => {
     const onPromptStarted = vi.fn()
     const client = createClient()
-    client.query.mockReturnValue(createSuccessfulQuery('continue') as never)
+    const successful = createSuccessfulStream()
+    client.openSessionStream.mockReturnValue(successful.stream as never)
     const store = trackedStore({
       ...createOptions('local:no-response'),
       client,
@@ -1144,19 +1181,8 @@ describe('SessionController', () => {
   it('accepts assistant output when a single-message query does not echo user history', async () => {
     const onActivityChange = vi.fn()
     const client = createClient()
-    client.query.mockReturnValue(
-      createQuery([
-        {
-          type: 'assistant',
-          uuid: 'assistant-uuid',
-          session_id: 'claude-session',
-          message: {
-            role: 'assistant',
-            content: [{ type: 'text', text: 'Done' }],
-          },
-        },
-      ]) as never,
-    )
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
     const store = trackedStore({
       ...createOptions('local:single-message'),
       client,
@@ -1165,7 +1191,18 @@ describe('SessionController', () => {
     store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
     store.getState().setPrompt('continue')
 
-    await store.getState().sendPrompt()
+    const sending = store.getState().sendPrompt()
+    controlled.emit({
+      type: 'assistant',
+      uuid: 'assistant-uuid',
+      session_id: 'claude-session',
+      message: {
+        role: 'assistant',
+        content: [{ type: 'text', text: 'Done' }],
+      },
+    })
+    controlled.emitResult()
+    await sending
 
     expect(Object.values(store.getState().messages)).toMatchObject([
       { role: 'user', content: 'continue' },
@@ -1181,21 +1218,20 @@ describe('SessionController', () => {
 
   it('accepts a successful result when a query emits no earlier response', async () => {
     const client = createClient()
-    client.query.mockReturnValue(
-      createQuery([
-        {
-          type: 'result',
-          subtype: 'success',
-          result: 'Done',
-          session_id: 'claude-session',
-        },
-      ]) as never,
-    )
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
     const store = trackedStore({ ...createOptions('local:result-only'), client })
     store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
     store.getState().setPrompt('continue')
 
-    await store.getState().sendPrompt()
+    const sending = store.getState().sendPrompt()
+    controlled.emit({
+      type: 'result',
+      subtype: 'success',
+      result: 'Done',
+      session_id: 'claude-session',
+    })
+    await sending
 
     expect(Object.values(store.getState().messages)).toEqual(
       expect.arrayContaining([expect.objectContaining({ role: 'user', content: 'continue' })]),
@@ -1210,7 +1246,8 @@ describe('SessionController', () => {
   it('recalls an ordinary optimistic message when the SDK reaches EOF before user history', async () => {
     const onActivityChange = vi.fn()
     const client = createClient()
-    client.query.mockReturnValue(createQuery([]) as never)
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
     const store = trackedStore({
       ...createOptions('local:eof-before-user-history'),
       client,
@@ -1219,9 +1256,10 @@ describe('SessionController', () => {
     store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
     store.getState().setPrompt('continue')
 
-    const didSend = await store.getState().sendPrompt()
+    const didSend = store.getState().sendPrompt()
+    controlled.finish()
+    await didSend
 
-    expect(didSend).toBeUndefined()
     expect(Object.values(store.getState().messages)).toEqual([])
     expect(store.getState()).toMatchObject({
       prompt: 'continue',
@@ -1248,17 +1286,8 @@ describe('SessionController', () => {
         },
       ],
     })
-    client.query.mockReturnValue(
-      createQuery([
-        {
-          type: 'system',
-          subtype: 'local_command_output',
-          content: 'Current usage: 10%',
-          uuid: 'local-output-uuid',
-          session_id: 'claude-session',
-        },
-      ]) as never,
-    )
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
     const store = trackedStore({ ...createOptions('local:slash-command'), client })
     await store.getState().initialize()
     store.setState({
@@ -1274,6 +1303,14 @@ describe('SessionController', () => {
       { id: expect.stringMatching(/^local-user-/), role: 'user', content: '/usage' },
     ])
     expect(store.getState().prompt).toBe('')
+    controlled.emit({
+      type: 'system',
+      subtype: 'local_command_output',
+      content: 'Current usage: 10%',
+      uuid: 'local-output-uuid',
+      session_id: 'claude-session',
+    })
+    controlled.emitResult()
     await sending
     expect(Object.values(store.getState().messages).map((message) => message.content)).toEqual([
       '/usage',
@@ -1297,8 +1334,8 @@ describe('SessionController', () => {
         },
       ],
     })
-    const controlled = createControllableQuery()
-    client.query.mockReturnValue(controlled.query as never)
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
     const store = trackedStore({ ...createOptions('local:stop-slash-command'), client })
     await store.getState().initialize()
     store.getState().commitUserMessage({
@@ -1326,8 +1363,8 @@ describe('SessionController', () => {
 
   it('keeps the optimistic user message recallable until the real user history event', async () => {
     const client = createClient()
-    const controlled = createControllableQuery()
-    client.query.mockReturnValue(controlled.query as never)
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
     const store = trackedStore({ ...createOptions('local:recall-until-user'), client })
     store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
     store.getState().setPrompt('continue')
@@ -1348,16 +1385,12 @@ describe('SessionController', () => {
   })
 
   it.each([false, true])(
-    'reuses the recalled first-turn session ID (initialized: %s)',
+    'keeps sending on the resident stream after a first-turn recall (initialized: %s)',
     async (initialized) => {
       const persistence = createMemoryPersistence()
       const client = createClient()
-      const firstQuery = createControllableQuery({ userMessageUuid: 'first-user-uuid' })
-      Object.assign(firstQuery.query, { sessionId: 'first-session' })
-      client.query
-        .mockReturnValueOnce(firstQuery.query as never)
-        .mockReturnValueOnce(createSuccessfulQuery('hello again') as never)
-      client.dropTrailingTurn.mockResolvedValueOnce({ dropped: true, removedSession: true })
+      const controlled = createManualStream()
+      client.openSessionStream.mockReturnValue(controlled.stream as never)
       const onBindClaudeSession = vi.fn()
       const store = trackedStore({
         ...createOptions('local:fresh-resend'),
@@ -1371,45 +1404,42 @@ describe('SessionController', () => {
       const firstSending = store.getState().sendPrompt()
       await vi.waitFor(() => expect(store.getState().isStreaming).toBe(true))
       if (initialized) {
-        firstQuery.emit({ type: 'system', subtype: 'init', session_id: 'first-session' })
-        await vi.waitFor(() => expect(onBindClaudeSession).toHaveBeenCalledTimes(2))
+        controlled.emit({ type: 'system', subtype: 'init', session_id: 'first-session' })
+        await vi.waitFor(() => expect(store.getState().claudeSessionId).toBe('first-session'))
       }
       await store.getState().stopStreaming()
       await firstSending
 
-      expect(store.getState().claudeSessionId).toBe('first-session')
       client.loadSessionHistory.mockResolvedValue([
-        { type: 'user', uuid: 'first-user-uuid', message: { role: 'user', content: 'hello?' } },
+        {
+          type: 'user',
+          uuid: controlled.pushes[0]!.userMessageUuid,
+          message: { role: 'user', content: 'hello?' },
+        },
       ] as never)
       store.getState().setPrompt('hello again')
-      await store.getState().sendPrompt()
+      const secondSending = store.getState().sendPrompt()
+      await vi.waitFor(() => expect(controlled.pushes).toHaveLength(2))
+      controlled.emitResult()
+      await secondSending
 
-      expect(client.dropTrailingTurn).toHaveBeenCalledWith({
-        projectId: 'project-1',
-        sessionId: 'first-session',
-        userMessageUuid: 'first-user-uuid',
-      })
-      expect(onBindClaudeSession).toHaveBeenNthCalledWith(1, 'local:fresh-resend', 'first-session')
-      expect(onBindClaudeSession.mock.calls.every(([, id]) => id === 'first-session')).toBe(true)
-      expect(store.getState().claudeSessionId).toBe('first-session')
-      expect(queryCalls(client)[1]!.options).not.toHaveProperty('resume')
-      expect(queryCalls(client)[1]!.options).toHaveProperty('sessionId', 'first-session')
-      expect(persistence.get('local:fresh-resend')?.composer.recalledFromMessage).toBeUndefined()
+      // The cancelled pair stays in the resident query's context; no transcript
+      // surgery happens between turns — the next rebuild purges it instead.
+      expect(client.openSessionStream).toHaveBeenCalledOnce()
+      expect(client.rebuildSessionStream).not.toHaveBeenCalled()
+      expect(client.dropTrailingTurn).not.toHaveBeenCalled()
+      expect(controlled.pushes.map((push) => push.text)).toEqual(['hello?', 'hello again'])
+      expect(
+        onBindClaudeSession.mock.calls.every(([, id]) => id === 'first-session' || !initialized),
+      ).toBe(true)
+      expect(store.getState().claudeSessionId).toBe(initialized ? 'first-session' : null)
     },
   )
 
-  it('recalls immediately but waits for query close before clearing and reusing its session', async () => {
+  it('sends the next prompt immediately after a recall without waiting for cleanup', async () => {
     const client = createClient()
-    const first = createControllableQuery({ userMessageUuid: 'first-user-uuid' })
-    let resolveClose!: () => void
-    const closing = new Promise<void>((resolve) => {
-      resolveClose = resolve
-    })
-    Object.assign(first.query, { sessionId: 'first-session', close: vi.fn(() => closing) })
-    client.query
-      .mockReturnValueOnce(first.query as never)
-      .mockReturnValueOnce(createSuccessfulQuery('next') as never)
-    client.dropTrailingTurn.mockResolvedValueOnce({ dropped: true, removedSession: true })
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
     const store = trackedStore({ ...createOptions('local:wait-close'), client })
     store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
     store.getState().setPrompt('hello')
@@ -1420,51 +1450,20 @@ describe('SessionController', () => {
     expect(store.getState().prompt).toBe('hello')
     expect(Object.values(store.getState().messages)).toEqual([])
 
-    client.loadSessionHistory.mockResolvedValue([
-      { type: 'user', uuid: 'first-user-uuid', message: { role: 'user', content: 'hello' } },
-    ] as never)
+    store.getState().setPrompt('next')
     const resend = store.getState().sendPrompt()
-    await new Promise((resolve) => setTimeout(resolve, 0))
-    expect(client.dropTrailingTurn).not.toHaveBeenCalled()
-    expect(client.query).toHaveBeenCalledTimes(1)
-    resolveClose()
-    await resend
-    expect(client.dropTrailingTurn).toHaveBeenCalledTimes(1)
-    expect(queryCalls(client)[1]!.options).toMatchObject({ sessionId: 'first-session' })
-    expect(queryCalls(client)[1]!.options).not.toHaveProperty('resume')
-  })
-
-  it('does not start the next query when closing the recalled query fails', async () => {
-    const client = createClient()
-    const first = createControllableQuery({ userMessageUuid: 'first-user-uuid' })
-    Object.assign(first.query, {
-      sessionId: 'first-session',
-      close: vi.fn(async () => {
-        throw new Error('Failed to close the old query')
-      }),
-    })
-    client.query.mockReturnValueOnce(first.query as never)
-    const store = trackedStore({ ...createOptions('local:close-failed'), client })
-    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
-    store.getState().setPrompt('hello')
-    const sending = store.getState().sendPrompt()
     await vi.waitFor(() => expect(store.getState().isStreaming).toBe(true))
-    await store.getState().stopStreaming()
-    await sending
-
-    store.getState().setPrompt('new prompt')
-    await expect(store.getState().sendPrompt()).rejects.toThrow('Failed to close the old query')
-    expect(client.query).toHaveBeenCalledTimes(1)
+    expect(controlled.pushes.map((push) => push.text)).toEqual(['hello', 'next'])
     expect(client.dropTrailingTurn).not.toHaveBeenCalled()
-    expect(store.getState().prompt).toBe('new prompt')
-    expect(store.getState().isStreaming).toBe(false)
+    controlled.emitResult()
+    await resend
   })
 
   it('hides the dangling recalled turn and restores the prompt on reopen', async () => {
     const persistence = createMemoryPersistence()
     const client = createClient()
-    const controlled = createControllableQuery({ userMessageUuid: 'sent-user-uuid' })
-    client.query.mockReturnValue(controlled.query as never)
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
     const store = trackedStore({
       ...createOptions('local:reopen-recall'),
       claudeSessionId: 'claude-session',
@@ -1479,9 +1478,8 @@ describe('SessionController', () => {
     await store.getState().stopStreaming()
     await sending
 
-    expect(persistence.get('local:reopen-recall')?.composer.recalledFromMessage).toBe(
-      'sent-user-uuid',
-    )
+    const recalledUuid = controlled.pushes[0]!.userMessageUuid
+    expect(persistence.get('local:reopen-recall')?.composer.recalledFromMessage).toBe(recalledUuid)
 
     // The user cleared the restored draft again before reopening elsewhere.
     store.getState().setPrompt('')
@@ -1490,7 +1488,7 @@ describe('SessionController', () => {
     restoredClient.loadSessionHistory.mockResolvedValue([
       {
         type: 'user',
-        uuid: 'sent-user-uuid',
+        uuid: recalledUuid,
         timestamp: '2026-09-11T12:22:18.843Z',
         message: { role: 'user', content: 'hello777' },
       },
@@ -1505,14 +1503,14 @@ describe('SessionController', () => {
 
     expect(
       Object.values(restored.getState().messages).map((message) => message.uuid),
-    ).not.toContain('sent-user-uuid')
+    ).not.toContain(recalledUuid)
     expect(restored.getState().prompt).toBe('hello777')
   })
 
   it('does not treat the synthetic cleanup frame as a response while stopping', async () => {
     const client = createClient()
-    const controlled = createControllableQuery({ finishOnInterrupt: false })
-    client.query.mockReturnValue(controlled.query as never)
+    const controlled = createManualStream({ finishOnInterrupt: false })
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
     const store = trackedStore({ ...createOptions('local:synthetic-stop-cleanup'), client })
     store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
     store.getState().setPrompt('hello777')
@@ -1551,8 +1549,8 @@ describe('SessionController', () => {
         },
       ],
     })
-    const controlled = createControllableQuery()
-    client.query.mockReturnValue(controlled.query as never)
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
     const store = trackedStore({ ...createOptions('local:reconcile-user'), client })
     await store.getState().initialize()
     store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
@@ -1591,14 +1589,14 @@ describe('SessionController', () => {
     expect(persistedUser?.id).not.toBe(optimisticId)
     expect(store.getState().sentTurnIds).toEqual(new Set([persistedUser!.id]))
 
-    controlled.finish()
+    controlled.emitResult()
     await sending
   })
 
   it('ignores cancelled-turn assistant cleanup before the next user history event', async () => {
     const client = createClient()
-    const controlled = createControllableQuery()
-    client.query.mockReturnValue(controlled.query as never)
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
     const store = trackedStore({ ...createOptions('local:cancel-cleanup'), client })
     store.getState().commitUserMessage({
       id: 'previous-user',
@@ -1654,7 +1652,7 @@ describe('SessionController', () => {
       uuid: 'current-assistant-uuid',
       message: { role: 'assistant', content: [{ type: 'text', text: 'Current reply' }] },
     })
-    controlled.finish()
+    controlled.emitResult()
     await sending
 
     expect(Object.values(store.getState().messages).map((message) => message.content)).toContain(
@@ -1673,8 +1671,8 @@ describe('SessionController', () => {
 
   it('keeps local slash-command output after an interrupted turn', async () => {
     const client = createClient()
-    const controlled = createControllableQuery()
-    client.query.mockReturnValue(controlled.query as never)
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
     const store = trackedStore({ ...createOptions('local:cancel-then-command'), client })
     store.getState().commitUserMessage({
       id: 'previous-user',
@@ -1696,7 +1694,7 @@ describe('SessionController', () => {
       subtype: 'local_command_output',
       content: 'Current usage: 10%',
     })
-    controlled.finish()
+    controlled.emitResult()
     await sending
 
     expect(Object.values(store.getState().messages).map((message) => message.content)).toEqual([
@@ -1710,8 +1708,8 @@ describe('SessionController', () => {
 
   it('does not confirm a new prompt from a cancelled-turn cleanup result', async () => {
     const client = createClient()
-    const controlled = createControllableQuery()
-    client.query.mockReturnValue(controlled.query as never)
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
     const store = trackedStore({ ...createOptions('local:cancel-cleanup-result'), client })
     store.getState().commitUserMessage({
       id: 'previous-user',
@@ -1735,7 +1733,6 @@ describe('SessionController', () => {
       message: { role: 'assistant', content: [{ type: 'text', text: 'SDK cleanup' }] },
     })
     controlled.emit({ type: 'result', subtype: 'success' })
-    controlled.finish()
     await sending
 
     expect(Object.values(store.getState().messages).map((message) => message.content)).toEqual([
@@ -1747,8 +1744,8 @@ describe('SessionController', () => {
 
   it('confirms a UUID-matched response after an interrupted turn without user history echo', async () => {
     const client = createClient()
-    const controlled = createControllableQuery({ userMessageUuid: 'client-user-uuid' })
-    client.query.mockReturnValue(controlled.query as never)
+    const controlled = createManualStream({ finishOnInterrupt: false })
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
     const store = trackedStore({ ...createOptions('local:cancel-cleanup-matched'), client })
     store.getState().commitUserMessage({
       id: 'previous-user',
@@ -1766,18 +1763,18 @@ describe('SessionController', () => {
     store.getState().setPrompt('Continue')
 
     const sending = store.getState().sendPrompt()
+    const clientUserUuid = controlled.pushes[0]!.userMessageUuid
     controlled.emit({
       type: 'assistant',
       uuid: 'current-assistant-uuid',
-      user_message_uuid: 'client-user-uuid',
+      user_message_uuid: clientUserUuid,
       message: { role: 'assistant', content: [{ type: 'text', text: 'Current reply' }] },
     })
     controlled.emit({
       type: 'result',
       subtype: 'success',
-      user_message_uuids: ['other-client-user-uuid', 'client-user-uuid'],
+      user_message_uuids: ['other-client-user-uuid', clientUserUuid],
     })
-    controlled.finish()
     await sending
 
     expect(Object.values(store.getState().messages).map((message) => message.content)).toContain(
@@ -1791,9 +1788,16 @@ describe('SessionController', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-08-27T10:00:00.000Z'))
     const client = createClient()
-    const controlled = createControllableQuery()
-    client.query.mockReturnValue(controlled.query as never)
-    const store = trackedStore({ ...createOptions('local:real-history-time'), client })
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
+    // Fake timers must not capture the shared persistence singleton's
+    // debounced flush — an abandoned fake timer would wedge every later
+    // awaited update. Isolated memory persistence keeps the timer local.
+    const store = trackedStore({
+      ...createOptions('local:real-history-time'),
+      persistence: createMemoryPersistence(),
+      client,
+    })
     store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
     store.getState().setPrompt('continue')
 
@@ -1825,9 +1829,9 @@ describe('SessionController', () => {
 
     const persistedUser = Object.values(store.getState().messages).find(
       (message) => message.uuid === 'persisted-user-uuid',
-    )!
-    expect(persistedUser.timestamp).toBe('2026-08-27T10:00:02.000Z')
-    expect(store.getState().interruptedTurnDurations[persistedUser.id]).toBe(10)
+    )
+    expect(persistedUser?.timestamp).toBe('2026-08-27T10:00:02.000Z')
+    expect(store.getState().interruptedTurnDurations[persistedUser!.id]).toBe(10)
   })
 
   it('continues an interrupted turn through a hidden synthetic nudge', async () => {
@@ -1867,8 +1871,8 @@ describe('SessionController', () => {
         message: { role: 'user', content: '[Request interrupted by user]' },
       },
     ] as never)
-    const controlled = createControllableQuery({ finishOnInterrupt: false })
-    client.query.mockReturnValue(controlled.query as never)
+    const controlled = createManualStream({ finishOnInterrupt: false })
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
     const store = trackedStore({
       ...createOptions('local:auto-continue'),
       claudeSessionId: 'claude-session',
@@ -1880,9 +1884,13 @@ describe('SessionController', () => {
     const resuming = store.getState().resumeInterrupted()
     await vi.waitFor(() => expect(store.getState().isStreaming).toBe(true))
 
-    const queryParams = queryCalls(client)[0]!
-    expect(queryParams).toMatchObject({ prompt: 'resume', syntheticOrigin: 'auto-continuation' })
-    expect(queryParams.options).toMatchObject({ resume: 'claude-session' })
+    expect(client.openSessionStream).toHaveBeenCalledWith(
+      expect.objectContaining({ claudeSessionId: 'claude-session' }),
+    )
+    expect(controlled.pushes[0]).toMatchObject({
+      text: 'resume',
+      syntheticOrigin: 'auto-continuation',
+    })
     expect(
       Object.values(store.getState().messages).filter(
         (message) => message.role === 'user' && !message.isInterruption,
@@ -1913,7 +1921,7 @@ describe('SessionController', () => {
       ).toBeDefined(),
     )
 
-    controlled.finish()
+    controlled.emitResult()
     await resuming
 
     const contents = Object.values(store.getState().messages).map((message) => message.content)
@@ -1924,8 +1932,8 @@ describe('SessionController', () => {
 
   it('recalls the persisted user turn when stopping after history but without a response', async () => {
     const client = createClient()
-    const controlled = createControllableQuery()
-    client.query.mockReturnValue(controlled.query as never)
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
     const store = trackedStore({ ...createOptions('local:stop-after-user'), client })
     store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
     store.getState().setPrompt('continue')
@@ -1954,8 +1962,8 @@ describe('SessionController', () => {
 
   it('recalls when history confirmation arrives after Stop without a response', async () => {
     const client = createClient()
-    const controlled = createControllableQuery({ finishOnInterrupt: false })
-    client.query.mockReturnValue(controlled.query as never)
+    const controlled = createManualStream({ finishOnInterrupt: false })
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
     const store = trackedStore({ ...createOptions('local:history-wins-recall-race'), client })
     store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
     store.getState().setPrompt('continue')
@@ -1964,12 +1972,13 @@ describe('SessionController', () => {
     await vi.waitFor(() => expect(store.getState().isStreaming).toBe(true))
     await store.getState().stopStreaming()
 
+    // The history confirmation lands after Stop: the turn still ends in a
+    // recall once the stream dies, never as a stopped turn with content.
     controlled.emit({
       type: 'user',
       uuid: 'persisted-user-uuid',
       message: { role: 'user', content: 'continue' },
     })
-    expect(store.getState().prompt).toBe('continue')
     controlled.finish()
     await sending
 
@@ -1982,7 +1991,9 @@ describe('SessionController', () => {
 
   it('recalls the optimistic message when a technical error happens before history', async () => {
     const client = createClient()
-    client.query.mockReturnValue(createQuery([], new Error('model offline')) as never)
+    client.openSessionStream.mockReturnValue(
+      createFailingStream(new Error('model offline')).stream as never,
+    )
     const store = trackedStore({ ...createOptions('local:prehistory-error'), client })
     store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
     store.getState().setPrompt('continue')
@@ -1998,18 +2009,18 @@ describe('SessionController', () => {
 
   it('attaches a technical error to the persisted user turn', async () => {
     const client = createClient()
-    client.query.mockReturnValue(
-      createQuery(
-        [
-          {
-            type: 'user',
-            uuid: 'persisted-user-uuid',
-            message: { role: 'user', content: 'continue' },
-          },
-        ],
-        new Error('model offline'),
-      ) as never,
-    )
+    const error = new Error('model offline')
+    const controlled = createStreamHarness({
+      script: (_params, harness) => {
+        harness.emit({
+          type: 'user',
+          uuid: 'persisted-user-uuid',
+          message: { role: 'user', content: 'continue' },
+        })
+        harness.fail(error)
+      },
+    })
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
     const store = trackedStore({ ...createOptions('local:posthistory-error'), client })
     store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
     store.getState().setPrompt('continue')
@@ -2033,8 +2044,8 @@ describe('SessionController', () => {
   it('reports awaiting user until every interactive request has a response', async () => {
     const onActivityChange = vi.fn()
     const client = createClient()
-    const interactive = createInteractiveQuery([userHistoryMessage('continue')])
-    client.query.mockReturnValue(interactive.query as never)
+    const interactive = createManualStream()
+    client.openSessionStream.mockReturnValue(interactive.stream as never)
     const store = trackedStore({
       ...createOptions('local:interactive'),
       client,
@@ -2044,6 +2055,7 @@ describe('SessionController', () => {
     store.getState().setPrompt('continue')
 
     const sending = store.getState().sendPrompt()
+    interactive.emit(userHistoryMessage('continue'))
     interactive.emitRequest({ kind: 'ask', toolUseId: 'ask-1', toolName: 'AskUserQuestion' })
     interactive.emitRequest({ kind: 'permission', toolUseId: 'permission-1', toolName: 'Write' })
 
@@ -2059,7 +2071,7 @@ describe('SessionController', () => {
       .respondToolRequest('permission-1', { behavior: 'deny', message: 'Not now' })
     expect(onActivityChange).toHaveBeenLastCalledWith('local:interactive', 'processing')
 
-    interactive.finish()
+    interactive.emitResult()
     await sending
     expect(onActivityChange).toHaveBeenLastCalledWith('local:interactive', 'success')
   })
@@ -2067,9 +2079,11 @@ describe('SessionController', () => {
   it('keeps an interactive request pending when sending the response fails', async () => {
     const onActivityChange = vi.fn()
     const client = createClient()
-    const interactive = createInteractiveQuery([userHistoryMessage('continue')])
-    interactive.query.respondToolRequest.mockRejectedValueOnce(new Error('RPC unavailable'))
-    client.query.mockReturnValue(interactive.query as never)
+    const interactive = createManualStream()
+    vi.mocked(interactive.stream.respondToolRequest).mockRejectedValueOnce(
+      new Error('RPC unavailable'),
+    )
+    client.openSessionStream.mockReturnValue(interactive.stream as never)
     const store = trackedStore({
       ...createOptions('local:interactive-response-failure'),
       client,
@@ -2093,7 +2107,7 @@ describe('SessionController', () => {
       'awaiting-user',
     )
 
-    interactive.finish()
+    interactive.emitResult()
     await sending
   })
 
@@ -2101,9 +2115,11 @@ describe('SessionController', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-07-26T12:34:56.000Z'))
     const client = createClient()
-    client.query.mockReturnValue(createSuccessfulQuery('continue') as never)
+    const successful = createSuccessfulStream()
+    client.openSessionStream.mockReturnValue(successful.stream as never)
     const store = trackedStore({
       ...createOptions('local:timestamp'),
+      persistence: createMemoryPersistence(),
       client,
     })
     store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
@@ -2117,9 +2133,10 @@ describe('SessionController', () => {
     expect(userMessage?.timestamp).toBe('2026-07-26T12:34:56.000Z')
   })
 
-  it('sends the selected provider and model through options.model', async () => {
+  it('sends the selected provider and model through the stream options', async () => {
     const client = createClient()
-    client.query.mockReturnValue(createSuccessfulQuery('continue') as never)
+    const successful = createSuccessfulStream()
+    client.openSessionStream.mockReturnValue(successful.stream as never)
     const store = trackedStore({
       ...createOptions('local:proxy-model'),
       client,
@@ -2129,17 +2146,18 @@ describe('SessionController', () => {
 
     await store.getState().sendPrompt()
 
-    expect(client.query).toHaveBeenCalledWith({
-      prompt: 'continue',
+    expect(client.openSessionStream).toHaveBeenCalledWith({
+      sessionId: 'local:proxy-model',
       options: expect.objectContaining({
         model: 'zhipu/glm-5.2/fast',
       }),
     })
   })
 
-  it('passes context additional directories through to the query options', async () => {
+  it('passes context additional directories through to the stream options', async () => {
     const client = createClient()
-    client.query.mockReturnValue(createSuccessfulQuery('continue') as never)
+    const successful = createSuccessfulStream()
+    client.openSessionStream.mockReturnValue(successful.stream as never)
     const store = trackedStore({
       ...createOptions('local:additional-directories'),
       additionalDirectories: ['/Users/me/docs', '/Users/me/assets'],
@@ -2150,8 +2168,8 @@ describe('SessionController', () => {
 
     await store.getState().sendPrompt()
 
-    expect(client.query).toHaveBeenCalledWith({
-      prompt: 'continue',
+    expect(client.openSessionStream).toHaveBeenCalledWith({
+      sessionId: 'local:additional-directories',
       options: expect.objectContaining({
         cwd: '/Users/me/project',
         additionalDirectories: ['/Users/me/docs', '/Users/me/assets'],
@@ -2159,9 +2177,10 @@ describe('SessionController', () => {
     })
   })
 
-  it('omits additional directories from the query options when none are configured', async () => {
+  it('omits additional directories from the stream options when none are configured', async () => {
     const client = createClient()
-    client.query.mockReturnValue(createSuccessfulQuery('continue') as never)
+    const successful = createSuccessfulStream()
+    client.openSessionStream.mockReturnValue(successful.stream as never)
     const store = trackedStore({
       ...createOptions('local:no-additional-directories'),
       client,
@@ -2171,15 +2190,16 @@ describe('SessionController', () => {
 
     await store.getState().sendPrompt()
 
-    expect(client.query).toHaveBeenCalledWith({
-      prompt: 'continue',
+    expect(client.openSessionStream).toHaveBeenCalledWith({
+      sessionId: 'local:no-additional-directories',
       options: expect.not.objectContaining({ additionalDirectories: expect.anything() }),
     })
   })
 
   it('omits context additional directories in home mode', async () => {
     const client = createClient()
-    client.query.mockReturnValue(createSuccessfulQuery('continue') as never)
+    const successful = createSuccessfulStream()
+    client.openSessionStream.mockReturnValue(successful.stream as never)
     const store = trackedStore({
       ...createOptions('local:home-additional-directories'),
       isHomeMode: true,
@@ -2191,8 +2211,8 @@ describe('SessionController', () => {
 
     await store.getState().sendPrompt()
 
-    expect(client.query).toHaveBeenCalledWith({
-      prompt: 'continue',
+    expect(client.openSessionStream).toHaveBeenCalledWith({
+      sessionId: 'local:home-additional-directories',
       options: expect.not.objectContaining({ additionalDirectories: expect.anything() }),
     })
   })
@@ -2200,8 +2220,8 @@ describe('SessionController', () => {
   it('captures the global permission mode at session creation and keeps it for the session', async () => {
     let defaultPermissionMode: ClaudePermissionMode = 'bypassPermissions'
     const client = createClient()
-    const prompts = ['first', 'second']
-    client.query.mockImplementation(() => createSuccessfulQuery(prompts.shift()!) as never)
+    const successful = createSuccessfulStream()
+    client.openSessionStream.mockReturnValue(successful.stream as never)
     const store = trackedStore({
       ...createOptions('local:session-scoped-permission'),
       persistence: createMemoryPersistence(),
@@ -2220,21 +2240,21 @@ describe('SessionController', () => {
     store.getState().setPrompt('second')
     await store.getState().sendPrompt()
 
-    expect(client.query).toHaveBeenNthCalledWith(1, {
-      prompt: 'first',
+    expect(client.openSessionStream).toHaveBeenCalledOnce()
+    expect(client.openSessionStream).toHaveBeenCalledWith({
+      sessionId: 'local:session-scoped-permission',
       options: expect.objectContaining({ permissionMode: 'bypassPermissions' }),
     })
-    expect(client.query).toHaveBeenNthCalledWith(2, {
-      prompt: 'second',
-      options: expect.objectContaining({ permissionMode: 'bypassPermissions' }),
-    })
+    expect(successful.pushes.map((push) => push.text)).toEqual(['first', 'second'])
+    expect(successful.stream.setPermissionMode).not.toHaveBeenCalled()
     expect(store.getState().permissionMode).toBe('bypassPermissions')
   })
 
-  it('applies an in-session permission change to the next query and persists it', async () => {
+  it('applies an in-session permission change to the resident stream and persists it', async () => {
     const persistence = createMemoryPersistence()
     const client = createClient()
-    client.query.mockReturnValue(createSuccessfulQuery('check this') as never)
+    const successful = createSuccessfulStream()
+    client.openSessionStream.mockReturnValue(successful.stream as never)
     const store = trackedStore({
       ...createOptions('local:in-session-permission'),
       persistence,
@@ -2247,8 +2267,8 @@ describe('SessionController', () => {
     await store.getState().sendPrompt()
     await persistence.flush()
 
-    expect(client.query).toHaveBeenCalledWith({
-      prompt: 'check this',
+    expect(client.openSessionStream).toHaveBeenCalledWith({
+      sessionId: 'local:in-session-permission',
       options: expect.objectContaining({ permissionMode: 'acceptEdits' }),
     })
     expect(persistence.get('local:in-session-permission')?.composer.permissionMode).toBe(
@@ -2282,7 +2302,8 @@ describe('SessionController', () => {
 
   it('keeps Plan mode when the global permission mode changes', async () => {
     const client = createClient()
-    client.query.mockReturnValue(createSuccessfulQuery('plan this change') as never)
+    const successful = createSuccessfulStream()
+    client.openSessionStream.mockReturnValue(successful.stream as never)
     const store = trackedStore({
       ...createOptions('local:plan-permission'),
       persistence: createMemoryPersistence(),
@@ -2295,8 +2316,8 @@ describe('SessionController', () => {
 
     await store.getState().sendPrompt()
 
-    expect(client.query).toHaveBeenCalledWith({
-      prompt: 'plan this change',
+    expect(client.openSessionStream).toHaveBeenCalledWith({
+      sessionId: 'local:plan-permission',
       options: expect.objectContaining({ permissionMode: 'plan' }),
     })
     expect(store.getState().permissionMode).toBe('plan')
@@ -2328,7 +2349,8 @@ describe('SessionController', () => {
       ],
       modelMappings: { fallback: 'fallback/model-b' },
     } as never)
-    client.query.mockReturnValue(createSuccessfulQuery('continue') as never)
+    const successful = createSuccessfulStream()
+    client.openSessionStream.mockReturnValue(successful.stream as never)
     const store = trackedStore({
       ...createOptions('local:fallback-model'),
       client,
@@ -2338,8 +2360,8 @@ describe('SessionController', () => {
     store.getState().setPrompt('continue')
     await store.getState().sendPrompt()
 
-    expect(client.query).toHaveBeenCalledWith({
-      prompt: 'continue',
+    expect(client.openSessionStream).toHaveBeenCalledWith({
+      sessionId: 'local:fallback-model',
       options: expect.objectContaining({
         model: 'fallback/model-b',
       }),
@@ -2384,7 +2406,8 @@ describe('SessionController', () => {
       },
     ])
     client.listModelMappings.mockResolvedValue({ fallback: 'fallback/model-b' })
-    client.query.mockReturnValue(createSuccessfulQuery('continue') as never)
+    const successful = createSuccessfulStream()
+    client.openSessionStream.mockReturnValue(successful.stream as never)
     const store = trackedStore({
       ...createOptions('local:refreshed-fallback-model'),
       client,
@@ -2395,8 +2418,8 @@ describe('SessionController', () => {
     store.getState().setPrompt('continue')
     await store.getState().sendPrompt()
 
-    expect(client.query).toHaveBeenCalledWith({
-      prompt: 'continue',
+    expect(client.openSessionStream).toHaveBeenCalledWith({
+      sessionId: 'local:refreshed-fallback-model',
       options: expect.objectContaining({
         model: 'fallback/model-b',
       }),
@@ -2437,7 +2460,8 @@ describe('SessionController', () => {
       },
     ])
     client.listModelMappings.mockResolvedValue({ fallback: 'fallback/model-b' })
-    client.query.mockReturnValue(createSuccessfulQuery('continue') as never)
+    const successful = createSuccessfulStream()
+    client.openSessionStream.mockReturnValue(successful.stream as never)
     const store = trackedStore({
       ...createOptions('local:removed-selection'),
       client,
@@ -2455,9 +2479,11 @@ describe('SessionController', () => {
 
     store.getState().setPrompt('continue')
     await store.getState().sendPrompt()
-    expect(client.query).toHaveBeenCalledWith({
-      prompt: 'continue',
-      options: expect.objectContaining({ model: 'fallback/model-b' }),
+    expect(client.openSessionStream).toHaveBeenCalledWith({
+      sessionId: 'local:removed-selection',
+      options: expect.objectContaining({
+        model: 'fallback/model-b',
+      }),
     })
   })
 
@@ -2550,7 +2576,8 @@ describe('SessionController', () => {
         },
       },
     ] as never)
-    client.query.mockReturnValue(createSuccessfulQuery('Edited prompt') as never)
+    const successful = createSuccessfulStream()
+    client.rebuildSessionStream.mockReturnValue(successful.stream as never)
     const store = trackedStore({
       ...createOptions('local:historical-edit'),
       claudeSessionId: 'same-session',
@@ -2559,13 +2586,13 @@ describe('SessionController', () => {
     await store.getState().initialize()
     const userMessage = Object.values(store.getState().messages).find(
       (message) => message.uuid === 'target-user-uuid',
-    )!
+    )
     const { prepareMessageEdit } = store.getState()
 
     expect(prepareMessageEdit).toBeTypeOf('function')
     await expect(
       prepareMessageEdit?.({
-        messageId: userMessage.id,
+        messageId: userMessage!.id,
         messageUuid: 'target-user-uuid',
         prompt: 'Edited prompt',
         providerId: 'zhipu',
@@ -2585,22 +2612,23 @@ describe('SessionController', () => {
       userMessageId: 'target-user-uuid',
       dryRun: true,
     })
-    expect(client.dropTrailingTurn).toHaveBeenCalledWith({
-      sessionId: 'same-session',
-      projectId: 'project-1',
-      userMessageUuid: 'target-user-uuid',
-    })
-    expect(client.dropTrailingTurn.mock.invocationCallOrder[0]).toBeLessThan(
-      client.query.mock.invocationCallOrder[0]!,
-    )
-    expect(client.query).toHaveBeenCalledWith({
-      prompt: 'Edited prompt',
-      options: expect.objectContaining({
-        model: 'zhipu/glm-5.2',
-        resume: 'same-session',
-        resumeSessionAt: 'parent-message-uuid',
+    // The rebuild owns the transcript surgery: the dropped tail travels with
+    // the rebuild request instead of a separate renderer-side drop.
+    expect(client.dropTrailingTurn).not.toHaveBeenCalled()
+    expect(client.rebuildSessionStream).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sessionId: 'local:historical-edit',
+        claudeSessionId: 'same-session',
+        reason: 'edit',
+        dropFromMessageUuid: 'target-user-uuid',
+        projectId: 'project-1',
+        options: expect.objectContaining({
+          model: 'zhipu/glm-5.2',
+          resumeSessionAt: 'parent-message-uuid',
+        }),
       }),
-    })
+    )
+    expect(successful.pushes[0]).toMatchObject({ text: 'Edited prompt' })
     expect(
       Object.values(store.getState().messages).some(
         (message) => message.content === 'Old branch reply',
@@ -2628,11 +2656,8 @@ describe('SessionController', () => {
         message: { role: 'assistant', content: [{ type: 'text', text: 'Old reply' }] },
       },
     ] as never)
-    const controlled = createControllableQuery({
-      finishOnInterrupt: true,
-      userMessageUuid: 'edited-user-uuid',
-    })
-    client.query.mockReturnValue(controlled.query as never)
+    const controlled = createManualStream()
+    client.rebuildSessionStream.mockReturnValue(controlled.stream as never)
     const store = trackedStore({
       ...createOptions('local:first-edit-cancel'),
       claudeSessionId: 'source-session',
@@ -2641,10 +2666,10 @@ describe('SessionController', () => {
     await store.getState().initialize()
     const first = Object.values(store.getState().messages).find(
       (message) => message.uuid === 'first-user-uuid',
-    )!
+    )
 
     const editing = store.getState().prepareMessageEdit({
-      messageId: first.id,
+      messageId: first!.id,
       messageUuid: 'first-user-uuid',
       prompt: 'Edited first prompt',
       providerId: 'zhipu',
@@ -2658,11 +2683,13 @@ describe('SessionController', () => {
     expect(store.getState().claudeSessionId).toBe('source-session')
     expect(store.getState().prompt).toBe('Edited first prompt')
     expect(Object.values(store.getState().messages).map((message) => message.content)).toEqual([])
-    expect(client.dropTrailingTurn).toHaveBeenCalledWith({
-      projectId: 'project-1',
-      sessionId: 'source-session',
-      userMessageUuid: 'first-user-uuid',
-    })
+    expect(client.rebuildSessionStream).toHaveBeenCalledWith(
+      expect.objectContaining({
+        claudeSessionId: 'source-session',
+        reason: 'edit',
+        dropFromMessageUuid: 'first-user-uuid',
+      }),
+    )
   })
 
   it('waits for confirmation when historical file changes can be rewound', async () => {
@@ -2681,7 +2708,8 @@ describe('SessionController', () => {
       insertions: 3,
       deletions: 1,
     })
-    client.query.mockReturnValue(createSuccessfulQuery('Edited prompt') as never)
+    const successful = createSuccessfulStream()
+    client.rebuildSessionStream.mockReturnValue(successful.stream as never)
     const store = trackedStore({
       ...createOptions('local:historical-confirm'),
       claudeSessionId: 'same-session',
@@ -2690,10 +2718,10 @@ describe('SessionController', () => {
     await store.getState().initialize()
     const userMessage = Object.values(store.getState().messages).find(
       (message) => message.uuid === 'target-user-uuid',
-    )!
+    )
     const editState = store.getState()
     const draft = {
-      messageId: userMessage.id,
+      messageId: userMessage!.id,
       messageUuid: 'target-user-uuid',
       prompt: 'Edited prompt',
       providerId: 'zhipu',
@@ -2714,7 +2742,7 @@ describe('SessionController', () => {
         deletions: 1,
       },
     })
-    expect(client.query).not.toHaveBeenCalled()
+    expect(client.rebuildSessionStream).not.toHaveBeenCalled()
     expect(store.getState().isMessageEditPending).toBe(true)
 
     await expect(
@@ -2728,18 +2756,20 @@ describe('SessionController', () => {
     ).resolves.toBe(true)
     expect(store.getState().isMessageEditPending).toBe(false)
     expect(client.rewindSessionFiles).toHaveBeenCalledTimes(1)
-    expect(client.query).toHaveBeenCalledWith({
-      prompt: 'Edited prompt',
-      options: expect.objectContaining({
-        resume: 'same-session',
-        resumeSessionAt: 'parent-message-uuid',
+    expect(client.rebuildSessionStream).toHaveBeenCalledWith(
+      expect.objectContaining({
+        claudeSessionId: 'same-session',
+        options: expect.objectContaining({
+          resumeSessionAt: 'parent-message-uuid',
+        }),
       }),
-    })
+    )
   })
 
   it('applies file rewind before resending when the user confirms revert', async () => {
     const client = createClient()
-    client.query.mockReturnValue(createSuccessfulQuery('Edited prompt') as never)
+    const successful = createSuccessfulStream()
+    client.rebuildSessionStream.mockReturnValue(successful.stream as never)
     const store = trackedStore({
       ...createOptions('local:historical-revert'),
       claudeSessionId: 'same-session',
@@ -2775,7 +2805,7 @@ describe('SessionController', () => {
       dryRun: false,
     })
     expect(client.rewindSessionFiles.mock.invocationCallOrder[0]).toBeLessThan(
-      client.query.mock.invocationCallOrder[0]!,
+      client.rebuildSessionStream.mock.invocationCallOrder[0]!,
     )
   })
 
@@ -2812,12 +2842,11 @@ describe('SessionController', () => {
       kind: 'message-edit',
       message: 'No file checkpoint found',
     })
-    expect(client.query).not.toHaveBeenCalled()
+    expect(client.rebuildSessionStream).not.toHaveBeenCalled()
   })
 
   it('does not rewind files when the historical message is no longer in the active UI branch', async () => {
     const client = createClient()
-    client.query.mockReturnValue(createQuery([]) as never)
     const store = trackedStore({
       ...createOptions('local:stale-historical-edit'),
       claudeSessionId: 'same-session',
@@ -2840,7 +2869,7 @@ describe('SessionController', () => {
     ).resolves.toBe(false)
 
     expect(client.rewindSessionFiles).not.toHaveBeenCalled()
-    expect(client.query).not.toHaveBeenCalled()
+    expect(client.rebuildSessionStream).not.toHaveBeenCalled()
     expect(store.getState().runtimeError).toEqual({
       kind: 'message-edit',
       message: 'The historical message is no longer available',
@@ -2854,7 +2883,8 @@ describe('SessionController', () => {
     })
     const client = createClient()
     client.rewindSessionFiles.mockImplementationOnce(async () => preview)
-    client.query.mockReturnValue(createSuccessfulQuery('Edited historical prompt') as never)
+    const successful = createSuccessfulStream()
+    client.rebuildSessionStream.mockReturnValue(successful.stream as never)
     const store = trackedStore({
       ...createOptions('local:historical-lock'),
       claudeSessionId: 'same-session',
@@ -2881,7 +2911,8 @@ describe('SessionController', () => {
     await vi.waitFor(() => expect(client.rewindSessionFiles).toHaveBeenCalledOnce())
 
     await store.getState().sendPrompt()
-    expect(client.query).not.toHaveBeenCalled()
+    expect(client.rebuildSessionStream).not.toHaveBeenCalled()
+    expect(client.openSessionStream).not.toHaveBeenCalled()
 
     resolvePreview({
       canRewind: true,
@@ -2890,15 +2921,15 @@ describe('SessionController', () => {
       deletions: 0,
     })
     await expect(preparing).resolves.toEqual({ status: 'sent' })
-    expect(client.query).toHaveBeenCalledOnce()
-    expect(client.query).toHaveBeenCalledWith(
-      expect.objectContaining({ prompt: 'Edited historical prompt' }),
-    )
+    expect(client.rebuildSessionStream).toHaveBeenCalledOnce()
+    expect(successful.pushes[0]).toMatchObject({ text: 'Edited historical prompt' })
   })
 
   it('reports a failed historical query instead of returning a successful edit', async () => {
     const client = createClient()
-    client.query.mockReturnValue(createQuery([], new Error('model offline')) as never)
+    client.rebuildSessionStream.mockReturnValue(
+      createFailingStream(new Error('model offline')).stream as never,
+    )
     const store = trackedStore({
       ...createOptions('local:historical-query-error'),
       claudeSessionId: 'same-session',
@@ -2931,7 +2962,6 @@ describe('SessionController', () => {
   it('does not start a query without a configured provider model', async () => {
     const client = createClient()
     const onModelConfigurationRequired = vi.fn()
-    client.query.mockReturnValue(createQuery([]) as never)
     const store = trackedStore({
       ...createOptions('local:missing-model'),
       client,
@@ -2941,7 +2971,7 @@ describe('SessionController', () => {
 
     await store.getState().sendPrompt()
 
-    expect(client.query).not.toHaveBeenCalled()
+    expect(client.openSessionStream).not.toHaveBeenCalled()
     expect(onModelConfigurationRequired).toHaveBeenCalledOnce()
     expect(store.getState().runtimeError).toBeNull()
   })
@@ -2992,7 +3022,9 @@ describe('SessionController', () => {
   it('keeps a completed failure unread when its runtime is disposed', async () => {
     const onActivityChange = vi.fn()
     const client = createClient()
-    client.query.mockReturnValue(createQuery([], new Error('offline')) as never)
+    client.openSessionStream.mockReturnValue(
+      createFailingStream(new Error('offline')).stream as never,
+    )
     const store = trackedStore({
       ...createOptions('local:background'),
       client,
@@ -3006,5 +3038,32 @@ describe('SessionController', () => {
 
     expect(onActivityChange).toHaveBeenCalledWith('local:background', 'error')
     expect(onActivityChange).toHaveBeenLastCalledWith('local:background', 'error')
+  })
+
+  it('denies pending tool requests after the interrupt when stopping', async () => {
+    const client = createClient()
+    const interactive = createManualStream({ finishOnInterrupt: false })
+    client.openSessionStream.mockReturnValue(interactive.stream as never)
+    const store = trackedStore({ ...createOptions('local:stop-deny-order'), client })
+    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
+    store.getState().setPrompt('continue')
+
+    const sending = store.getState().sendPrompt()
+    await vi.waitFor(() => expect(store.getState().isStreaming).toBe(true))
+    interactive.emitRequest({ kind: 'permission', toolUseId: 'perm-1', toolName: 'Write' })
+    expect(store.getState().pendingToolRequests).toHaveProperty('perm-1')
+
+    const stopping = store.getState().stopStreaming()
+    // The verified recipe: the interrupt lands before any deny response.
+    expect(vi.mocked(interactive.stream.interrupt)).toHaveBeenCalledOnce()
+    await stopping
+    expect(vi.mocked(interactive.stream.respondToolRequest)).toHaveBeenCalledWith('perm-1', {
+      behavior: 'deny',
+      message: 'Interrupted',
+    })
+    expect(store.getState().pendingToolRequests).toEqual({})
+
+    interactive.emitResult()
+    await sending
   })
 })

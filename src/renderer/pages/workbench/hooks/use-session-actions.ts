@@ -124,8 +124,10 @@ export function useSessionActions(options: SessionActionsOptions) {
       try {
         // Stop the session's query and dispose its controller first, so an
         // in-flight stream or usage write cannot recreate the files after
-        // the delete RPCs remove them.
+        // the delete RPCs remove them. The resident query needs an explicit
+        // close: detaching the consumer leaves it running in the background.
         await releaseSessionController(sessionId)
+        await claude.closeSessionQuery(sessionId)
         if (session.isDraft !== true) {
           if (!session.claudeSessionId) {
             // An unbound local draft only exists in local persistence.
