@@ -2,9 +2,14 @@ import type {
   AppPreferences,
   ClaudeInitializationResult,
   ClaudeModelMappings,
+  ClaudePurgeDeadPairsParams,
   ClaudeQueryStartParams,
   ClaudeRewindSessionFilesParams,
   ClaudeSampleContextUsageParams,
+  ClaudeSessionQueryEnsureParams,
+  ClaudeSessionQueryPushParams,
+  ClaudeSessionQueryRebuildParams,
+  ClaudeSessionQueryRecycleCheckParams,
   ClaudeStartupParams,
   ClaudeUpdateProjectParams,
   FetchProviderModelsParams,
@@ -43,12 +48,13 @@ import {
   loadWorkflowRuns,
   resolveSessionEditAnchor,
 } from './claude/session'
+import { createSessionQueryRegistry } from './claude/session-registry'
 import {
   type SettingsStore,
   sanitizeAppPreferences,
   sanitizeModelMappings,
 } from './claude/settings'
-import { dropTrailingTurn } from './claude/transcript'
+import { dropTrailingTurn, purgeDeadPairs } from './claude/transcript'
 import {
   addProjectFromFolder,
   createProject,
@@ -113,7 +119,15 @@ export function createClaudeDesktopService(
     sessionOwnership: () => Promise<Record<string, string | null>>
     sessionRebindProject: (ids: { fromProjectId: string; toProjectId: string }) => Promise<void>
   },
+  sessionHooks?: {
+    /** Fired after a session query was closed because it went idle or was recycled. */
+    onSessionRecycled?: (sessionId: string) => void
+  },
 ) {
+  const sessionRegistry = createSessionQueryRegistry(events, proxy, {
+    onRecycled: sessionHooks?.onSessionRecycled,
+  })
+
   async function persistProvider(provider: ModelProvider, operation: 'create' | 'update') {
     const normalizedProvider = normalizeProvider(provider)
     if (!normalizedProvider) {
@@ -185,8 +199,13 @@ export function createClaudeDesktopService(
         dryRun: params.dryRun,
       }),
     dropTrailingTurn,
-    sampleContextUsage: (params: ClaudeSampleContextUsageParams) =>
-      sampleSessionContextUsage(params, proxy),
+    sampleContextUsage: async (params: ClaudeSampleContextUsageParams) => {
+      const live = await sessionRegistry.sampleContextUsage(params)
+      // A live query owns the Claude session; a throwaway sampler would collide
+      // with it, so a failed live sample stays null instead of falling back.
+      if (live !== null || sessionRegistry.hasLiveQuery(params.sessionId ?? '')) return live
+      return sampleSessionContextUsage(params, proxy)
+    },
     getProjectGitBranch,
     renameSession,
     deleteSession,
@@ -245,5 +264,13 @@ export function createClaudeDesktopService(
     completeQueryInputStream,
     failQueryInputStream,
     respondToolRequest,
+    sessionQueryEnsure: (params: ClaudeSessionQueryEnsureParams) => sessionRegistry.ensure(params),
+    sessionQueryPush: (params: ClaudeSessionQueryPushParams) => sessionRegistry.push(params),
+    sessionQueryRebuild: (params: ClaudeSessionQueryRebuildParams) =>
+      sessionRegistry.rebuild(params),
+    sessionQueryRecycleCheck: (params: ClaudeSessionQueryRecycleCheckParams) =>
+      sessionRegistry.recycleCheck(params),
+    sessionPurgeDeadPairs: (params: ClaudePurgeDeadPairsParams) => purgeDeadPairs(params),
+    closeAllSessionQueries: () => sessionRegistry.closeAll(),
   }
 }

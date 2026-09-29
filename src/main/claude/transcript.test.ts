@@ -3,7 +3,7 @@ import { promises as fs } from 'node:fs'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { dropTrailingTurn } from './transcript'
+import { dropTrailingTurn, purgeDeadPairs } from './transcript'
 
 vi.mock('node:fs', () => ({
   promises: {
@@ -103,5 +103,102 @@ describe('recalled transcript tail', () => {
     })
     expect(fs.rm).not.toHaveBeenCalled()
     expect(fs.writeFile).not.toHaveBeenCalled()
+  })
+})
+
+const turn = (n: number) => [
+  { type: 'user', uuid: `user-${n}`, message: { content: `q${n}` } },
+  { type: 'assistant', uuid: `reply-${n}`, message: { model: 'claude-sonnet', content: `a${n}` } },
+]
+const deadTurn = (n: number) => [
+  { type: 'user', uuid: `user-${n}`, message: { content: `q${n}` } },
+  { type: 'user', message: { content: '[Request interrupted by user]' } },
+  { type: 'assistant', message: { model: '<synthetic>', content: 'No response requested.' } },
+]
+const partialTurn = (n: number) => [
+  { type: 'user', uuid: `user-${n}`, message: { content: `q${n}` } },
+  {
+    type: 'assistant',
+    uuid: `reply-${n}`,
+    message: { model: 'claude-sonnet', content: 'partial' },
+  },
+  { type: 'user', message: { content: '[Request interrupted by user]' } },
+]
+const purgeParams = { projectId: 'project-1', sessionId: 'session-1' }
+
+describe('dead pair purge', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('purges a mid-history dead turn and keeps replied turns', async () => {
+    vi.mocked(fs.readFile).mockResolvedValue(jsonl([...turn(1), ...deadTurn(2), ...turn(3)]))
+
+    await expect(purgeDeadPairs(purgeParams)).resolves.toEqual({
+      removed: 1,
+      removedSession: false,
+    })
+    expect(fs.writeFile).toHaveBeenCalledWith(
+      expect.any(String),
+      jsonl([...turn(1), ...turn(3)]),
+      'utf8',
+    )
+    expect(fs.rm).not.toHaveBeenCalled()
+  })
+
+  it('keeps an interrupted turn that streamed a partial reply', async () => {
+    vi.mocked(fs.readFile).mockResolvedValue(jsonl([...turn(1), ...partialTurn(2)]))
+
+    await expect(purgeDeadPairs(purgeParams)).resolves.toEqual({ removed: 0 })
+    expect(fs.writeFile).not.toHaveBeenCalled()
+    expect(fs.rm).not.toHaveBeenCalled()
+  })
+
+  it('keeps normal adjacent turns untouched', async () => {
+    vi.mocked(fs.readFile).mockResolvedValue(jsonl([...turn(1), ...turn(2)]))
+
+    await expect(purgeDeadPairs(purgeParams)).resolves.toEqual({ removed: 0 })
+    expect(fs.writeFile).not.toHaveBeenCalled()
+  })
+
+  it('removes the session file when every turn is dead', async () => {
+    vi.mocked(fs.readFile).mockResolvedValue(jsonl([{ type: 'summary' }, ...deadTurn(1)]))
+
+    await expect(purgeDeadPairs(purgeParams)).resolves.toEqual({
+      removed: 1,
+      removedSession: true,
+    })
+    expect(fs.rm).toHaveBeenCalledWith(expect.any(String), { force: true })
+    expect(fs.writeFile).not.toHaveBeenCalled()
+  })
+
+  it('treats sidechain entries as part of the enclosing turn', async () => {
+    vi.mocked(fs.readFile).mockResolvedValue(
+      jsonl([
+        {
+          type: 'user',
+          uuid: 'user-1',
+          message: { content: 'q1' },
+        },
+        {
+          type: 'user',
+          isSidechain: true,
+          message: { content: '[Request interrupted by user]' },
+        },
+        { type: 'assistant', message: { model: '<synthetic>', content: 'No response requested.' } },
+        ...turn(2),
+      ]),
+    )
+
+    await expect(purgeDeadPairs(purgeParams)).resolves.toEqual({
+      removed: 1,
+      removedSession: false,
+    })
+    expect(fs.writeFile).toHaveBeenCalledWith(expect.any(String), jsonl([...turn(2)]), 'utf8')
+  })
+
+  it('treats a missing transcript as nothing to purge', async () => {
+    vi.mocked(fs.readFile).mockRejectedValue(
+      Object.assign(new Error('Missing transcript'), { code: 'ENOENT' }),
+    )
+    await expect(purgeDeadPairs(purgeParams)).resolves.toEqual({ removed: 0 })
   })
 })

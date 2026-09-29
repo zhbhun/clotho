@@ -559,6 +559,75 @@ export interface ClaudeQueryStreamInputErrorParams {
   message: string
 }
 
+// --- Session-keyed long-lived queries (one reused query per clotho session) --
+
+/** Liveness snapshot of a session's long-lived query, reported on attach. */
+export interface ClaudeSessionStreamState {
+  claudeSessionId: string | null
+  status: 'starting' | 'ready' | 'dead'
+  turnInFlight: boolean
+  pendingToolRequests: ClaudeToolRequest[]
+  /** Live non-ambient background task ids (the CLI's level signal). */
+  backgroundTaskIds: string[]
+}
+
+export type ClaudeSessionQueryEnsureParams = {
+  /** The clotho session id that owns the query. */
+  sessionId: string
+  /** Resume this Claude session when the query has to be created. */
+  claudeSessionId?: string
+  options: ClaudeOptions
+}
+
+export type ClaudeSessionQueryEnsureResult = {
+  streamId: ClaudeStreamId
+  state: ClaudeSessionStreamState
+  /** Frames emitted since the last result message, replayed on re-attach. */
+  replay: SDKMessage[]
+}
+
+export type ClaudeSessionQueryPushParams = {
+  streamId: ClaudeStreamId
+  text: string
+  attachments?: ClaudeAttachment[]
+  userMessageUuid?: string
+  syntheticOrigin?: 'auto-continuation'
+}
+
+export type ClaudeSessionQueryRebuildReason = 'edit' | 'model-class' | 'agent' | 'recovery'
+
+export type ClaudeSessionQueryRebuildParams = {
+  sessionId: string
+  claudeSessionId?: string
+  options: ClaudeOptions
+  reason: ClaudeSessionQueryRebuildReason
+  /** Drop the transcript from this user message onward before restarting. */
+  dropFromMessageUuid?: string
+  /** Required for transcript surgery; omit to skip it. */
+  projectId?: string
+}
+
+export type ClaudeSessionQueryRecycleCheckParams = {
+  sessionId: string
+}
+
+export type ClaudeSessionQueryRecycleCheckResult = {
+  recycled: boolean
+  /** Human-readable reasons the query is still busy. */
+  busy: string[]
+}
+
+export type ClaudePurgeDeadPairsParams = {
+  projectId: string
+  sessionId: string
+}
+
+export type ClaudePurgeDeadPairsResult = {
+  /** Number of dead turns removed. */
+  removed: number
+  removedSession?: boolean
+}
+
 /**
  * A request reported when the underlying canUseTool routes a decision to the host.
  * - `ask`: The agent asks for clarification (AskUserQuestion) → replace the floating form above the input.
@@ -768,6 +837,26 @@ export type DesktopRPC = {
       claudeQueryStreamInputError: {
         params: ClaudeQueryStreamInputErrorParams
         response: void
+      }
+      claudeSessionQueryEnsure: {
+        params: ClaudeSessionQueryEnsureParams
+        response: ClaudeSessionQueryEnsureResult
+      }
+      claudeSessionQueryPush: {
+        params: ClaudeSessionQueryPushParams
+        response: void
+      }
+      claudeSessionQueryRebuild: {
+        params: ClaudeSessionQueryRebuildParams
+        response: ClaudeSessionQueryEnsureResult
+      }
+      claudeSessionQueryRecycleCheck: {
+        params: ClaudeSessionQueryRecycleCheckParams
+        response: ClaudeSessionQueryRecycleCheckResult
+      }
+      claudeSessionPurgeDeadPairs: {
+        params: ClaudePurgeDeadPairsParams
+        response: ClaudePurgeDeadPairsResult
       }
       claudeListProjects: {
         params: Record<string, never>
@@ -983,6 +1072,8 @@ export type DesktopRPC = {
       claudeError: { streamId: ClaudeStreamId; message: string; stack?: string }
       claudeComplete: { streamId: ClaudeStreamId; success: boolean }
       claudeToolRequest: { streamId: ClaudeStreamId; request: ClaudeToolRequest }
+      /** A session's idle query was recycled; its stream has (or will) end. */
+      claudeSessionRecycled: { sessionId: string }
     }
   }>
 }

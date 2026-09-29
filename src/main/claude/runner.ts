@@ -75,7 +75,7 @@ const activeQueries = new Map<ClaudeStreamId, ActiveQueryEntry>()
 const activeInputStreams = new Map<string, AsyncInputQueue<SDKUserMessage>>()
 type SdkUserMessageUuid = NonNullable<SDKUserMessage['uuid']>
 
-class AsyncInputQueue<T> implements AsyncIterable<T> {
+export class AsyncInputQueue<T> implements AsyncIterable<T> {
   private items: Array<
     { kind: 'value'; value: T } | { kind: 'done' } | { kind: 'error'; error: Error }
   > = []
@@ -181,6 +181,14 @@ export function respondToolRequest(
   }
 }
 
+/** Tool use ids whose permission decisions are still pending for a stream. */
+export function pendingToolRequestIds(streamId: ClaudeStreamId): string[] {
+  const prefix = `${streamId}:`
+  return [...pendingToolRequests.keys()]
+    .filter((key) => key.startsWith(prefix))
+    .map((key) => key.slice(prefix.length))
+}
+
 /**
  * canUseTool callback: forward the routed tool decision to the host and suspend until it responds.
  * AskUserQuestion → kind='ask' (replace the bottom input form); other tools → kind='permission' (authorization button).
@@ -243,6 +251,7 @@ async function streamQuery(
   entry: ActiveQueryEntry,
   sdk: Query,
   onFirstMessage?: () => void,
+  tolerateResultErrors = false,
 ) {
   let initialized = false
   const markInitialized = () => {
@@ -262,7 +271,10 @@ async function streamQuery(
         message as unknown as ClaudeJsonLine,
       )) as unknown as SDKMessage
       events.onOutput(streamId, output)
-      if (isSdkResultError(message)) {
+      // A long-lived session query keeps running across turns: error results
+      // (an interrupt's error_during_execution, a failed tool) end only the
+      // current turn and must flow to the host instead of killing the stream.
+      if (isSdkResultError(message) && !tolerateResultErrors) {
         throw new Error(sdkResultErrorMessage(message))
       }
     }
@@ -477,8 +489,13 @@ export function startQuery(
     syntheticOrigin,
   }: ClaudeQueryStartParams,
   proxy: ClaudeProxyConnection,
+  extras: {
+    tolerateResultErrors?: boolean
+    /** Own the query's prompt source: turns arrive as pushes on this queue. */
+    promptQueue?: AsyncIterable<SDKUserMessage>
+  } = {},
 ): { initialized: Promise<void> } {
-  if (!prompt.trim() && !attachments?.length) {
+  if (!extras.promptQueue && !prompt.trim() && !attachments?.length) {
     throw new Error('Prompt cannot be empty')
   }
 
@@ -522,10 +539,26 @@ export function startQuery(
             }),
       },
     })
-    void streamQuery(events, streamId, entry, entry.sdk, resolveInitialized)
+    void streamQuery(
+      events,
+      streamId,
+      entry,
+      entry.sdk,
+      resolveInitialized,
+      extras.tolerateResultErrors,
+    )
   }
 
-  if (attachments?.length) {
+  if (extras.promptQueue) {
+    try {
+      launch(extras.promptQueue)
+    } catch (caught) {
+      activeQueries.delete(streamId)
+      logQueryTerminal(entry, 'failed', caught)
+      entry.resolveFinished()
+      throw caught
+    }
+  } else if (attachments?.length) {
     void (async () => {
       try {
         const content = await prepareAttachments(attachments, abortController.signal)

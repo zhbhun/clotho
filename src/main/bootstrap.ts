@@ -198,6 +198,11 @@ export async function bootstrap() {
         sessionOwnership: () => sessionStorage.sessionOwnership(),
         sessionRebindProject: (ids) => sessionStorage.sessionRebindProject(ids),
       },
+      {
+        onSessionRecycled: (sessionId) => {
+          sendToMainView(mainWindowWebview, 'claudeSessionRecycled', { sessionId })
+        },
+      },
     )
 
     const requestHandlers = wrapRequestHandlers(
@@ -219,6 +224,11 @@ export async function bootstrap() {
         claudeQueryStreamInputMessage: (params) => service.pushQueryInputMessage(params),
         claudeQueryStreamInputComplete: (params) => service.completeQueryInputStream(params),
         claudeQueryStreamInputError: (params) => service.failQueryInputStream(params),
+        claudeSessionQueryEnsure: (params) => service.sessionQueryEnsure(params),
+        claudeSessionQueryPush: (params) => service.sessionQueryPush(params),
+        claudeSessionQueryRebuild: (params) => service.sessionQueryRebuild(params),
+        claudeSessionQueryRecycleCheck: (params) => service.sessionQueryRecycleCheck(params),
+        claudeSessionPurgeDeadPairs: (params) => service.sessionPurgeDeadPairs(params),
         claudeListProjects: () => service.listProjects(),
         claudeAddProjectFromFolder: () => service.addProjectFromFolder(),
         claudeSelectProjectFolder: (params) => service.selectProjectFolder(params),
@@ -352,7 +362,14 @@ export async function bootstrap() {
           error: caught,
         })
       })
-      void Promise.all([stopModelProxy, saveWindowState]).finally(async () => {
+      // Resident session queries own CLI subprocesses; quitting tears them down
+      // (running background tasks are killed with them by design).
+      const stopSessionQueries = service.closeAllSessionQueries().catch((caught) => {
+        appLogger.error('session.close_all_failed', 'Failed to close session queries', {
+          error: caught,
+        })
+      })
+      void Promise.all([stopModelProxy, saveWindowState, stopSessionQueries]).finally(async () => {
         await shutdownLogging().catch(() => undefined)
         app.exit(0)
       })
