@@ -22,8 +22,6 @@ import type {
   ClaudePrepareAttachmentsParams as RpcClaudePrepareAttachmentsParams,
   ClaudePreparedAttachments as RpcClaudePreparedAttachments,
   ClaudeProject as RpcClaudeProject,
-  ClaudeQueryParams as RpcClaudeQueryParams,
-  ClaudeQueryStartParams as RpcClaudeQueryStartParams,
   ClaudeRewindFilesResult as RpcClaudeRewindFilesResult,
   ClaudeRewindSessionFilesParams as RpcClaudeRewindSessionFilesParams,
   ClaudeSampleContextUsageParams as RpcClaudeSampleContextUsageParams,
@@ -91,8 +89,6 @@ export type ClaudeProjectIcon = RpcProjectIcon
 export type ClaudeProject = RpcClaudeProject
 export type ClaudeSelectProjectFolderParams = RpcClaudeSelectProjectFolderParams
 export type ClaudeUpdateProjectParams = RpcClaudeUpdateProjectParams
-export type ClaudeQueryParams = RpcClaudeQueryParams
-export type ClaudeQueryStartParams = RpcClaudeQueryStartParams
 export type ClaudeRewindFilesResult = RpcClaudeRewindFilesResult
 export type ClaudeRewindSessionFilesParams = RpcClaudeRewindSessionFilesParams
 export type ClaudeSampleContextUsageParams = RpcClaudeSampleContextUsageParams
@@ -204,254 +200,12 @@ class AsyncQueue<T> {
   }
 }
 
-export interface ClaudeQuery extends AsyncGenerator<SDKMessage, void> {
-  /** Client-generated UUID attached to the initial user message. */
-  userMessageUuid?: string
-  /** Session ID reserved for a fresh query before the SDK emits system/init. */
-  sessionId?: string
-  subscribeToolRequests(handler: (request: ClaudeToolRequest) => void): () => void
-  respondToolRequest(toolUseId: string, result: ClaudeToolResult): Promise<void>
-  interrupt(): Promise<void>
-  rewindFiles(userMessageId: string, options?: { dryRun?: boolean }): Promise<unknown>
-  setPermissionMode(mode: ClaudePermissionMode): Promise<void>
-  setModel(model?: string): Promise<void>
-  setMaxThinkingTokens(maxThinkingTokens: number | null): Promise<void>
-  applyFlagSettings(settings: Record<string, unknown>): Promise<void>
-  initializationResult(): Promise<ClaudeInitializationResult>
-  reinitialize(): Promise<ClaudeInitializationResult>
-  supportedCommands(): Promise<ClaudeSlashCommand[]>
-  supportedModels(): Promise<ClaudeModelInfo[]>
-  getContextUsage(): Promise<ClaudeContextUsageSnapshot | null>
-  supportedAgents(): Promise<ClaudeAgentInfo[]>
-  mcpServerStatus(): Promise<unknown[]>
-  accountInfo(): Promise<ClaudeInitializationResult['account']>
-  reconnectMcpServer(serverName: string): Promise<void>
-  toggleMcpServer(serverName: string, enabled: boolean): Promise<void>
-  setMcpServers(servers: Record<string, unknown>): Promise<unknown>
-  streamInput(stream: AsyncIterable<SDKUserMessage>): Promise<void>
-  stopTask(taskId: string): Promise<void>
-  close(): void | Promise<void>
-}
-
-function createStreamId() {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID()
-  }
-
-  return `claude-${Date.now()}-${Math.random().toString(36).slice(2)}`
-}
-
-function createUserMessageUuid() {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID()
-  }
-
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {
-    const random = Math.floor(Math.random() * 16)
-    const value = character === 'x' ? random : (random & 0x3) | 0x8
-    return value.toString(16)
-  })
-}
-
-function desktopUnavailableQuery(): ClaudeQuery {
-  const queue = new AsyncQueue<SDKMessage>()
-  queue.fail(new Error('Claude execution is available inside the desktop app.'))
-  return createClaudeQueryFromQueue({
-    streamId: 'unavailable',
-    queue,
-    cleanup: () => {},
-    respondToolRequest: async () => {},
-    subscribeToolRequests: () => () => {},
-    userMessageUuid: createUserMessageUuid(),
-  })
-}
-
 function controlRequest<T>(streamId: string, command: string, params: unknown[] = []) {
   return requestFromDesktop('claudeQueryControl', {
     streamId,
     command: command as never,
     params,
   }) as Promise<T>
-}
-
-function createClaudeQueryFromQueue({
-  cleanup,
-  queue,
-  respondToolRequest,
-  streamId,
-  subscribeToolRequests,
-  userMessageUuid,
-}: {
-  cleanup: () => void
-  queue: AsyncQueue<SDKMessage>
-  respondToolRequest: (toolUseId: string, result: ClaudeToolResult) => Promise<void>
-  streamId: string
-  subscribeToolRequests: (handler: (request: ClaudeToolRequest) => void) => () => void
-  userMessageUuid?: string
-}): ClaudeQuery {
-  let closed = false
-  let closeResult: Promise<void> | undefined
-  const close = () => {
-    if (closed) return closeResult
-    closed = true
-    cleanup()
-    queue.finish()
-    if (streamId !== 'unavailable') {
-      closeResult = requestFromDesktop('claudeQueryClose', { streamId })
-      void closeResult.catch(() => {})
-    }
-    return closeResult
-  }
-
-  const query: ClaudeQuery = {
-    userMessageUuid,
-    [Symbol.asyncIterator]() {
-      return query
-    },
-    async [Symbol.asyncDispose]() {
-      close()
-    },
-    next() {
-      return queue.next()
-    },
-    async throw(error?: unknown) {
-      close()
-      throw error instanceof Error ? error : new Error(String(error ?? 'Claude query interrupted'))
-    },
-    async return() {
-      close()
-      return { done: true as const, value: undefined }
-    },
-    subscribeToolRequests,
-    respondToolRequest,
-    interrupt: () => controlRequest<void>(streamId, 'interrupt'),
-    rewindFiles: (userMessageId: string, options?: { dryRun?: boolean }) =>
-      controlRequest<unknown>(streamId, 'rewindFiles', [userMessageId, options]),
-    setPermissionMode: (mode: ClaudePermissionMode) =>
-      controlRequest<void>(streamId, 'setPermissionMode', [mode]),
-    setModel: (model?: string) => controlRequest<void>(streamId, 'setModel', [model]),
-    setMaxThinkingTokens: (maxThinkingTokens: number | null) =>
-      controlRequest<void>(streamId, 'setMaxThinkingTokens', [maxThinkingTokens]),
-    applyFlagSettings: (settings: Record<string, unknown>) =>
-      controlRequest<void>(streamId, 'applyFlagSettings', [settings]),
-    initializationResult: () =>
-      controlRequest<ClaudeInitializationResult>(streamId, 'initializationResult'),
-    reinitialize: () => controlRequest<ClaudeInitializationResult>(streamId, 'reinitialize'),
-    supportedCommands: () => controlRequest<ClaudeSlashCommand[]>(streamId, 'supportedCommands'),
-    supportedModels: () => controlRequest<ClaudeModelInfo[]>(streamId, 'supportedModels'),
-    getContextUsage: () =>
-      controlRequest<ClaudeContextUsageSnapshot | null>(streamId, 'getContextUsage'),
-    supportedAgents: () => controlRequest<ClaudeAgentInfo[]>(streamId, 'supportedAgents'),
-    mcpServerStatus: () => controlRequest<unknown[]>(streamId, 'mcpServerStatus'),
-    accountInfo: () =>
-      controlRequest<ClaudeInitializationResult['account']>(streamId, 'accountInfo'),
-    reconnectMcpServer: (serverName: string) =>
-      controlRequest<void>(streamId, 'reconnectMcpServer', [serverName]),
-    toggleMcpServer: (serverName: string, enabled: boolean) =>
-      controlRequest<void>(streamId, 'toggleMcpServer', [serverName, enabled]),
-    setMcpServers: (servers: Record<string, unknown>) =>
-      controlRequest<unknown>(streamId, 'setMcpServers', [servers]),
-    async streamInput(stream: AsyncIterable<SDKUserMessage>) {
-      const inputStreamId = createStreamId()
-      await requestFromDesktop('claudeQueryStreamInputStart', { streamId, inputStreamId })
-      try {
-        for await (const message of stream) {
-          await requestFromDesktop('claudeQueryStreamInputMessage', {
-            streamId,
-            inputStreamId,
-            message,
-          })
-        }
-        await requestFromDesktop('claudeQueryStreamInputComplete', { streamId, inputStreamId })
-      } catch (caught) {
-        await requestFromDesktop('claudeQueryStreamInputError', {
-          streamId,
-          inputStreamId,
-          message: caught instanceof Error ? caught.message : 'Failed to stream Claude input',
-        })
-      }
-    },
-    stopTask: (taskId: string) => controlRequest<void>(streamId, 'stopTask', [taskId]),
-    close,
-  } satisfies ClaudeQuery
-
-  return query
-}
-
-function createDesktopQuery(params: ClaudeQueryParams): ClaudeQuery {
-  const streamId = createStreamId()
-  const userMessageUuid = params.userMessageUuid ?? createUserMessageUuid()
-  const sessionId = params.options?.resume
-    ? undefined
-    : (params.options?.sessionId ?? createUserMessageUuid())
-  const queue = new AsyncQueue<SDKMessage>()
-  const toolRequestHandlers = new Set<(request: ClaudeToolRequest) => void>()
-  const unlisteners: Promise<() => void>[] = []
-  const cleanup = () => {
-    toolRequestHandlers.clear()
-    for (const unlisten of unlisteners) {
-      void unlisten.then((fn) => fn())
-    }
-  }
-
-  unlisteners.push(
-    listenDesktopEvent('claude-output', (payload) => {
-      if (payload.streamId === streamId) {
-        queue.push(payload.message)
-      }
-    }),
-    listenDesktopEvent('claude-error', (payload) => {
-      if (payload.streamId === streamId) {
-        const error = new Error(payload.message)
-        if (payload.stack) error.stack = payload.stack
-        queue.fail(error)
-        cleanup()
-      }
-    }),
-    listenDesktopEvent('claude-complete', (payload) => {
-      if (payload.streamId !== streamId) return
-      if (payload.success) {
-        queue.finish()
-      } else {
-        queue.fail(
-          new Error('Claude finished with an error. Check the last output line for details.'),
-        )
-      }
-      cleanup()
-    }),
-    listenDesktopEvent('claude-tool-request', (payload) => {
-      if (payload.streamId !== streamId) return
-      for (const handler of toolRequestHandlers) {
-        handler(payload.request)
-      }
-    }),
-  )
-
-  void requestFromDesktop('claudeQueryStart', {
-    ...params,
-    options: { ...params.options, ...(sessionId ? { sessionId } : {}) },
-    userMessageUuid,
-    streamId,
-  }).catch((caught) => {
-    queue.fail(caught instanceof Error ? caught : new Error('Failed to start Claude query'))
-    cleanup()
-  })
-
-  return Object.assign(
-    createClaudeQueryFromQueue({
-      streamId,
-      queue,
-      cleanup,
-      respondToolRequest: (toolUseId, result) =>
-        requestFromDesktop('claudeRespondToolRequest', { streamId, toolUseId, result }),
-      subscribeToolRequests: (handler) => {
-        toolRequestHandlers.add(handler)
-        return () => toolRequestHandlers.delete(handler)
-      },
-      userMessageUuid,
-    }),
-    sessionId ? { sessionId } : {},
-  )
 }
 
 function isTauriRuntime() {
@@ -711,13 +465,6 @@ export const claude = {
     }
 
     return requestFromDesktop('claudeStartup', params)
-  },
-  query(params: ClaudeQueryParams) {
-    if (!isTauriRuntime()) {
-      return desktopUnavailableQuery()
-    }
-
-    return createDesktopQuery(params)
   },
   /** Attach to the session's resident query, creating it when none is live. */
   openSessionStream(params: ClaudeSessionQueryEnsureParams): ClaudeSessionStream {

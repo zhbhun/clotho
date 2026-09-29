@@ -217,13 +217,7 @@ export async function bootstrap() {
           return saved
         },
         claudeStartup: (params) => service.startup(params),
-        claudeQueryStart: (params) => service.startQuery(params),
         claudeQueryControl: (params) => service.controlQuery(params),
-        claudeQueryClose: (params) => service.closeQuery(params.streamId),
-        claudeQueryStreamInputStart: (params) => service.startQueryInputStream(params),
-        claudeQueryStreamInputMessage: (params) => service.pushQueryInputMessage(params),
-        claudeQueryStreamInputComplete: (params) => service.completeQueryInputStream(params),
-        claudeQueryStreamInputError: (params) => service.failQueryInputStream(params),
         claudeSessionQueryEnsure: (params) => service.sessionQueryEnsure(params),
         claudeSessionQueryPush: (params) => service.sessionQueryPush(params),
         claudeSessionQueryRebuild: (params) => service.sessionQueryRebuild(params),

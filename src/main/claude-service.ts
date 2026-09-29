@@ -3,7 +3,6 @@ import type {
   ClaudeInitializationResult,
   ClaudeModelMappings,
   ClaudePurgeDeadPairsParams,
-  ClaudeQueryStartParams,
   ClaudeRewindSessionFilesParams,
   ClaudeSampleContextUsageParams,
   ClaudeSessionQueryEnsureParams,
@@ -29,16 +28,10 @@ import { getProviderUsage } from './claude/provider-usage'
 import { normalizeProvider } from './claude/providers'
 import {
   type ClaudeEventSink,
-  closeQuery,
-  completeQueryInputStream,
   controlQuery,
-  failQueryInputStream,
-  pushQueryInputMessage,
   respondToolRequest,
   rewindSessionFiles,
   sampleSessionContextUsage,
-  startQuery,
-  startQueryInputStream,
   startup,
 } from './claude/runner'
 import {
@@ -94,21 +87,6 @@ async function startupWithProviders(
     ...catalog,
     providers: settings.providers,
     modelMappings: settings.models,
-  }
-}
-
-function startProxyQuery(
-  events: ClaudeEventSink,
-  params: ClaudeQueryStartParams,
-  proxy: ModelProxy,
-) {
-  try {
-    startQuery(events, params, proxy)
-  } catch (caught) {
-    const { streamId } = params
-    const error = caught instanceof Error ? caught : undefined
-    events.onError(streamId, error?.message ?? 'Failed to start query', error?.stack)
-    events.onComplete(streamId, false)
   }
 }
 
@@ -257,13 +235,7 @@ export function createClaudeDesktopService(
     },
     setProjectModel: (params: { projectId: string; providerId: string; modelId: string }) =>
       setProjectDefaultModel(params),
-    startQuery: (params: ClaudeQueryStartParams) => startProxyQuery(events, params, proxy),
     controlQuery,
-    closeQuery,
-    startQueryInputStream,
-    pushQueryInputMessage,
-    completeQueryInputStream,
-    failQueryInputStream,
     respondToolRequest,
     sessionQueryEnsure: (params: ClaudeSessionQueryEnsureParams) => sessionRegistry.ensure(params),
     sessionQueryPush: (params: ClaudeSessionQueryPushParams) => sessionRegistry.push(params),

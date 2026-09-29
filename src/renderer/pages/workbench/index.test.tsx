@@ -1426,8 +1426,18 @@ describe('prompt composer surface', () => {
           return startup
         case 'claudeSelectFiles':
           return ['/Users/test/wait-for-startup.md']
-        case 'claudeQueryStart':
-          return undefined
+        case 'claudeSessionQueryEnsure':
+          return {
+            streamId: 'stream-1',
+            state: {
+              claudeSessionId: null,
+              status: 'ready',
+              turnInFlight: false,
+              pendingToolRequests: [],
+              backgroundTaskIds: [],
+            },
+            replay: [],
+          }
         default:
           return null
       }
@@ -1445,7 +1455,10 @@ describe('prompt composer surface', () => {
     const draftId = useWorkbenchStore.getState().currentSessionId
     expect(draftId).not.toBeNull()
     expect(useWorkbenchStore.getState().sessions[draftId!]?.isDraft).toBe(true)
-    expect(requestFromDesktop).not.toHaveBeenCalledWith('claudeQueryStart', expect.anything())
+    expect(requestFromDesktop).not.toHaveBeenCalledWith(
+      'claudeSessionQueryEnsure',
+      expect.anything(),
+    )
 
     resolveStartup({
       cwd: '/Users/test',
@@ -1457,7 +1470,10 @@ describe('prompt composer surface', () => {
     await waitFor(() => {
       expect(requestFromDesktop).toHaveBeenCalledWith('claudeStartup', expect.anything())
     })
-    expect(requestFromDesktop).not.toHaveBeenCalledWith('claudeQueryStart', expect.anything())
+    expect(requestFromDesktop).not.toHaveBeenCalledWith(
+      'claudeSessionQueryEnsure',
+      expect.anything(),
+    )
     expect(useWorkbenchStore.getState().currentSessionId).toBe(draftId)
   })
 
@@ -1488,8 +1504,18 @@ describe('prompt composer surface', () => {
           return startup
         case 'claudeSelectFiles':
           return ['/Users/test/keep-in-home.md']
-        case 'claudeQueryStart':
-          return undefined
+        case 'claudeSessionQueryEnsure':
+          return {
+            streamId: 'stream-1',
+            state: {
+              claudeSessionId: null,
+              status: 'ready',
+              turnInFlight: false,
+              pendingToolRequests: [],
+              backgroundTaskIds: [],
+            },
+            replay: [],
+          }
         default:
           return null
       }
@@ -1503,7 +1529,7 @@ describe('prompt composer surface', () => {
     fireEvent.click(screen.getByLabelText('Send'))
 
     await waitFor(() => {
-      expect(requestFromDesktop).toHaveBeenCalledWith('claudeQueryStart', expect.anything())
+      expect(requestFromDesktop).toHaveBeenCalledWith('claudeSessionQueryEnsure', expect.anything())
       expect(useWorkbenchStore.getState().currentSessionId).toMatch(/^[A-Za-z0-9-]+$/)
     })
     resolveStartup({
@@ -1543,8 +1569,18 @@ describe('prompt composer surface', () => {
           return startup
         case 'claudeSelectFiles':
           return ['/Users/test/configure-a-model.md']
-        case 'claudeQueryStart':
-          return undefined
+        case 'claudeSessionQueryEnsure':
+          return {
+            streamId: 'stream-1',
+            state: {
+              claudeSessionId: null,
+              status: 'ready',
+              turnInFlight: false,
+              pendingToolRequests: [],
+              backgroundTaskIds: [],
+            },
+            replay: [],
+          }
         default:
           return null
       }
@@ -1576,7 +1612,10 @@ describe('prompt composer surface', () => {
 
     await screen.findByText('Sign in to Claude or configure a model provider')
     expect(await screen.findByRole('dialog', { name: 'Settings' })).toBeInTheDocument()
-    expect(requestFromDesktop).not.toHaveBeenCalledWith('claudeQueryStart', expect.anything())
+    expect(requestFromDesktop).not.toHaveBeenCalledWith(
+      'claudeSessionQueryEnsure',
+      expect.anything(),
+    )
     const draftId = useWorkbenchStore.getState().currentSessionId
     expect(draftId).not.toBeNull()
     expect(useWorkbenchStore.getState().sessions[draftId!]?.isDraft).toBe(true)
@@ -1596,8 +1635,18 @@ describe('prompt composer surface', () => {
           throw new Error('Startup failed')
         case 'claudeSelectFiles':
           return ['/Users/test/retry-after-startup.md']
-        case 'claudeQueryStart':
-          return undefined
+        case 'claudeSessionQueryEnsure':
+          return {
+            streamId: 'stream-1',
+            state: {
+              claudeSessionId: null,
+              status: 'ready',
+              turnInFlight: false,
+              pendingToolRequests: [],
+              backgroundTaskIds: [],
+            },
+            replay: [],
+          }
         default:
           return null
       }
@@ -1611,7 +1660,7 @@ describe('prompt composer surface', () => {
     fireEvent.click(screen.getByLabelText('Send'))
 
     await waitFor(() => {
-      expect(requestFromDesktop).toHaveBeenCalledWith('claudeQueryStart', expect.anything())
+      expect(requestFromDesktop).toHaveBeenCalledWith('claudeSessionQueryEnsure', expect.anything())
       expect(useWorkbenchStore.getState().currentSessionId).toMatch(/^[A-Za-z0-9-]+$/)
     })
     expect(screen.queryByText('Startup failed')).not.toBeInTheDocument()
@@ -1669,8 +1718,18 @@ describe('prompt composer surface', () => {
           }
         case 'claudeSelectFiles':
           return ['/Users/test/use-fallback.md']
-        case 'claudeQueryStart':
-          return undefined
+        case 'claudeSessionQueryEnsure':
+          return {
+            streamId: 'stream-1',
+            state: {
+              claudeSessionId: null,
+              status: 'ready',
+              turnInFlight: false,
+              pendingToolRequests: [],
+              backgroundTaskIds: [],
+            },
+            replay: [],
+          }
         default:
           return null
       }
@@ -1687,7 +1746,7 @@ describe('prompt composer surface', () => {
 
     await waitFor(() => {
       expect(requestFromDesktop).toHaveBeenCalledWith(
-        'claudeQueryStart',
+        'claudeSessionQueryEnsure',
         expect.objectContaining({
           options: expect.objectContaining({ model: 'fallback/model-b' }),
         }),
@@ -2116,8 +2175,18 @@ describe('prompt composer surface', () => {
           return { cwd: '/Users/test', commands: [], agents: [], models: TEST_MODELS }
         case 'claudeSelectFiles':
           return ['/Users/test/home.md']
-        case 'claudeQueryStart':
-          return undefined
+        case 'claudeSessionQueryEnsure':
+          return {
+            streamId: 'stream-1',
+            state: {
+              claudeSessionId: null,
+              status: 'ready',
+              turnInFlight: false,
+              pendingToolRequests: [],
+              backgroundTaskIds: [],
+            },
+            replay: [],
+          }
         default:
           return null
       }
@@ -2136,13 +2205,10 @@ describe('prompt composer surface', () => {
 
     await waitFor(() => {
       expect(requestFromDesktop).toHaveBeenCalledWith(
-        'claudeQueryStart',
+        'claudeSessionQueryPush',
         expect.objectContaining({
-          prompt: '',
-          attachments: [expect.objectContaining({ name: 'home.md', path: '/Users/test/home.md' })],
-          options: expect.not.objectContaining({
-            cwd: expect.any(String),
-          }),
+          text: '',
+          attachments: [expect.objectContaining({ name: 'home.md' })],
         }),
       )
     })
@@ -2165,8 +2231,18 @@ describe('prompt composer surface', () => {
           return { cwd: '/Users/test', commands: [], agents: [], models: TEST_MODELS }
         case 'claudeSelectFiles':
           return ['/Users/test/home.md']
-        case 'claudeQueryStart':
-          return undefined
+        case 'claudeSessionQueryEnsure':
+          return {
+            streamId: 'stream-1',
+            state: {
+              claudeSessionId: null,
+              status: 'ready',
+              turnInFlight: false,
+              pendingToolRequests: [],
+              backgroundTaskIds: [],
+            },
+            replay: [],
+          }
         default:
           return null
       }
@@ -2207,8 +2283,18 @@ describe('prompt composer surface', () => {
           return { cwd: '/Users/test/project', commands: [], agents: [], models: TEST_MODELS }
         case 'claudeSelectFiles':
           return ['/Users/test/project/docs/temp.md']
-        case 'claudeQueryStart':
-          return undefined
+        case 'claudeSessionQueryEnsure':
+          return {
+            streamId: 'stream-1',
+            state: {
+              claudeSessionId: null,
+              status: 'ready',
+              turnInFlight: false,
+              pendingToolRequests: [],
+              backgroundTaskIds: [],
+            },
+            replay: [],
+          }
         default:
           return null
       }
@@ -2229,12 +2315,10 @@ describe('prompt composer surface', () => {
         startingFolder: '/Users/test/project',
       })
       expect(requestFromDesktop).toHaveBeenCalledWith(
-        'claudeQueryStart',
+        'claudeSessionQueryPush',
         expect.objectContaining({
-          prompt: '',
-          attachments: [
-            expect.objectContaining({ name: 'temp.md', path: '/Users/test/project/docs/temp.md' }),
-          ],
+          text: '',
+          attachments: [expect.objectContaining({ name: 'temp.md' })],
         }),
       )
     })

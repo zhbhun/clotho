@@ -1,4 +1,4 @@
-import type { SDKMessage, SDKUserMessage } from '@anthropic-ai/claude-agent-sdk'
+import type { SDKMessage } from '@anthropic-ai/claude-agent-sdk'
 
 import type { WebviewLogBatch } from './logging'
 import type { ClaudeModelMappingRole, ProviderApiType } from './provider'
@@ -390,20 +390,6 @@ export interface ClaudeAttachmentReadResult {
   rejected: { name: string; reason: ClaudeAttachmentRejectReason }[]
 }
 
-export interface ClaudeQueryParams {
-  prompt: string
-  attachments?: ClaudeAttachment[]
-  /** Client-generated ID used to correlate SDK assistant/result messages with this prompt. */
-  userMessageUuid?: string
-  /**
-   * Send the prompt as a synthetic SDK user message with this origin kind instead of a
-   * human-origin one. Used by the auto-continuation nudge that resumes an interrupted
-   * turn: the message is hidden from the conversation list and never recalled.
-   */
-  syntheticOrigin?: 'auto-continuation'
-  options?: ClaudeOptions
-}
-
 export interface ClaudeSelectFilesParams {
   startingFolder?: string
   allowsMultipleSelection?: boolean
@@ -491,10 +477,6 @@ export interface ProjectFileSearchOutline {
 
 export type ClaudeStreamId = string
 
-export type ClaudeQueryStartParams = ClaudeQueryParams & {
-  streamId: ClaudeStreamId
-}
-
 export type ClaudeQueryControlCommand =
   | 'interrupt'
   | 'rewindFiles'
@@ -535,28 +517,6 @@ export interface ClaudeQueryControlParams {
   streamId: ClaudeStreamId
   command: ClaudeQueryControlCommand
   params?: unknown[]
-}
-
-export interface ClaudeQueryStreamInputStartParams {
-  streamId: ClaudeStreamId
-  inputStreamId: string
-}
-
-export interface ClaudeQueryStreamInputMessageParams {
-  streamId: ClaudeStreamId
-  inputStreamId: string
-  message: SDKUserMessage
-}
-
-export interface ClaudeQueryStreamInputCompleteParams {
-  streamId: ClaudeStreamId
-  inputStreamId: string
-}
-
-export interface ClaudeQueryStreamInputErrorParams {
-  streamId: ClaudeStreamId
-  inputStreamId: string
-  message: string
 }
 
 // --- Session-keyed long-lived queries (one reused query per clotho session) --
@@ -823,33 +783,9 @@ export type DesktopRPC = {
         params: ClaudeStartupParams
         response: ClaudeInitializationResult
       }
-      claudeQueryStart: {
-        params: ClaudeQueryStartParams
-        response: void
-      }
       claudeQueryControl: {
         params: ClaudeQueryControlParams
         response: unknown
-      }
-      claudeQueryClose: {
-        params: { streamId: ClaudeStreamId }
-        response: void
-      }
-      claudeQueryStreamInputStart: {
-        params: ClaudeQueryStreamInputStartParams
-        response: void
-      }
-      claudeQueryStreamInputMessage: {
-        params: ClaudeQueryStreamInputMessageParams
-        response: void
-      }
-      claudeQueryStreamInputComplete: {
-        params: ClaudeQueryStreamInputCompleteParams
-        response: void
-      }
-      claudeQueryStreamInputError: {
-        params: ClaudeQueryStreamInputErrorParams
-        response: void
       }
       claudeSessionQueryEnsure: {
         params: ClaudeSessionQueryEnsureParams

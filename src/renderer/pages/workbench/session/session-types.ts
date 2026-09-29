@@ -68,7 +68,6 @@ export type SessionClient = Pick<
   | 'loadSessionHistory'
   | 'openSessionStream'
   | 'prepareAttachments'
-  | 'query'
   | 'rebuildSessionStream'
   | 'rewindSessionFiles'
   | 'sampleContextUsage'

@@ -303,7 +303,7 @@ export function createSessionQueryRegistry(
       // session id so the CLI transcript lands under a stable key.
       queryOptions.sessionId = queryOptions.sessionId ?? sessionId
     }
-    startQuery(decorateSink(entry), { streamId, prompt: '', options: queryOptions }, proxy, {
+    startQuery(decorateSink(entry), { streamId, options: queryOptions }, proxy, {
       tolerateResultErrors: true,
       promptQueue: queue,
     })

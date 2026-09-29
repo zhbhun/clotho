@@ -55,9 +55,6 @@ function createClient() {
       models: [{ value: 'sonnet', displayName: 'Sonnet', description: 'Balanced' }],
     })),
     listModelMappings: vi.fn(async (): Promise<ClaudeModelMappings> => ({})),
-    query: vi.fn(() => {
-      throw new Error('query is not expected in this test')
-    }),
     openSessionStream: vi.fn(() => {
       throw new Error('openSessionStream is not expected in this test')
     }),

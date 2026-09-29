@@ -51,9 +51,13 @@ describe('session recycle gate', () => {
   })
 })
 
+const { queuePushes } = vi.hoisted(() => ({ queuePushes: [] as unknown[] }))
+
 vi.mock('./runner', () => ({
   AsyncInputQueue: class {
-    push = vi.fn()
+    push = vi.fn((value: unknown) => {
+      queuePushes.push(value)
+    })
     finish = vi.fn()
   },
   startQuery: vi.fn(),
@@ -63,6 +67,12 @@ vi.mock('./runner', () => ({
   respondToolRequest: vi.fn(),
 }))
 
+vi.mock('./attachments', () => ({
+  prepareAttachments: vi.fn(async (attachments: Array<{ name: string }>) =>
+    attachments.map((attachment) => ({ type: 'document', title: attachment.name })),
+  ),
+}))
+
 function sink() {
   return { onOutput: vi.fn(), onError: vi.fn(), onComplete: vi.fn(), onToolRequest: vi.fn() }
 }
@@ -70,6 +80,46 @@ function sink() {
 function proxyOf(thinking?: { effort?: 'low' | 'medium' | 'high' }) {
   return { sessionThinking: vi.fn(() => thinking) } as never
 }
+
+describe('session query push', () => {
+  it('combines prompt and attachments into one human-origin SDK user message', async () => {
+    const registry = createSessionQueryRegistry(sink(), proxyOf())
+    const { streamId } = await registry.ensure({ sessionId: 's1', options: {} as never })
+
+    await registry.push({
+      streamId,
+      text: 'Review this',
+      userMessageUuid: 'client-user-uuid',
+      attachments: [{ name: 'notes.md', path: '/tmp/notes.md' }],
+    })
+
+    expect(queuePushes.at(-1)).toEqual({
+      type: 'user',
+      uuid: 'client-user-uuid',
+      parent_tool_use_id: null,
+      origin: { kind: 'human' },
+      message: {
+        role: 'user',
+        content: [
+          { type: 'text', text: 'Review this' },
+          { type: 'document', title: 'notes.md' },
+        ],
+      },
+    })
+  })
+
+  it('marks auto-continuation pushes as synthetic', async () => {
+    const registry = createSessionQueryRegistry(sink(), proxyOf())
+    const { streamId } = await registry.ensure({ sessionId: 's1', options: {} as never })
+
+    await registry.push({ streamId, text: 'continue', syntheticOrigin: 'auto-continuation' })
+
+    expect(queuePushes.at(-1)).toMatchObject({
+      isSynthetic: true,
+      origin: { kind: 'auto-continuation' },
+    })
+  })
+})
 
 describe('session query model switch', () => {
   beforeEach(() => {

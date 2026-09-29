@@ -6,7 +6,7 @@ const desktopMock = vi.hoisted(() => {
   const listeners = new Map<string, Set<(payload: unknown) => void>>()
   return {
     isDesktopRuntime: vi.fn(() => true),
-    requestFromDesktop: vi.fn(async () => undefined),
+    requestFromDesktop: vi.fn<(...args: unknown[]) => Promise<unknown>>(),
     listenDesktopEvent: vi.fn(async (eventName: string, handler: (payload: unknown) => void) => {
       const handlers = listeners.get(eventName) ?? new Set()
       handlers.add(handler)
@@ -32,120 +32,124 @@ vi.mock('../desktop/client', () => ({
 
 beforeEach(() => desktopMock.reset())
 
+const STREAM_STATE = {
+  claudeSessionId: null,
+  status: 'ready',
+  turnInFlight: false,
+  pendingToolRequests: [],
+  backgroundTaskIds: [],
+} as const
+
+function mockEnsure(options?: {
+  streamId?: string
+  replay?: unknown[]
+  pendingToolRequests?: unknown[]
+}) {
+  desktopMock.requestFromDesktop.mockImplementation(async (method) =>
+    method === 'claudeSessionQueryEnsure'
+      ? {
+          streamId: options?.streamId ?? 'stream-1',
+          state: {
+            ...STREAM_STATE,
+            ...(options?.pendingToolRequests?.length
+              ? { pendingToolRequests: options.pendingToolRequests }
+              : {}),
+          },
+          replay: options?.replay ?? [],
+        }
+      : undefined,
+  )
+  return options?.streamId ?? 'stream-1'
+}
+
 describe('Claude client protocol', () => {
-  it('assigns one client UUID to the query and its desktop start request', () => {
-    const query = claude.query({ prompt: 'hello' })
-    const [, start] = desktopMock.requestFromDesktop.mock.calls[0] as unknown as [
-      string,
-      { userMessageUuid: string },
-    ]
-
-    expect(start.userMessageUuid).toBe(query.userMessageUuid)
-    expect(start.userMessageUuid).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
-    )
-    query.close()
-  })
-
-  it('assigns a fresh session ID before init and sends it to the SDK', () => {
-    const query = claude.query({ prompt: 'hello' })
-    const [, start] = desktopMock.requestFromDesktop.mock.calls[0] as unknown as [
-      string,
-      { options: { sessionId: string } },
-    ]
-    expect(start.options.sessionId).toMatch(/^[0-9a-f-]{36}$/i)
-    expect(query).toMatchObject({ sessionId: start.options.sessionId })
-    query.close()
-  })
-
-  it('exposes the supplied session ID and waits for the desktop close acknowledgment', async () => {
-    const sessionId = '053b14f1-084f-45ac-b983-3f0f8ecc513d'
-    const query = claude.query({ prompt: 'hello again', options: { sessionId } })
-    expect(query.sessionId).toBe(sessionId)
-    expect(desktopMock.requestFromDesktop).toHaveBeenCalledWith(
-      'claudeQueryStart',
-      expect.objectContaining({ options: { sessionId } }),
-    )
-    let resolveClose!: () => void
-    const closing = new Promise<undefined>((resolve) => {
-      resolveClose = () => resolve(undefined)
+  it('ensures the session query and replays buffered frames before live output', async () => {
+    mockEnsure({
+      replay: [{ type: 'assistant', message: { content: [{ type: 'text', text: 'replay' }] } }],
     })
-    desktopMock.requestFromDesktop.mockReturnValueOnce(closing)
-    expect(query.close()).toBe(closing)
-    expect(query.close()).toBe(closing)
-    resolveClose()
-    await closing
+    const stream = claude.openSessionStream({ sessionId: 'session-1', options: {} })
+
+    const first = await stream.next()
+    expect(first).toMatchObject({
+      value: { message: { content: [{ text: 'replay' }] } },
+    })
+    expect(desktopMock.requestFromDesktop).toHaveBeenCalledWith('claudeSessionQueryEnsure', {
+      sessionId: 'session-1',
+      options: {},
+    })
+
+    const live = stream.next()
+    desktopMock.emit('claude-output', {
+      streamId: 'stream-1',
+      message: { type: 'assistant', message: { content: [{ type: 'text', text: 'live' }] } },
+    })
+    await expect(live).resolves.toMatchObject({
+      value: { message: { content: [{ text: 'live' }] } },
+    })
+    stream.detach()
   })
 
-  it('routes concurrent output and control commands to their owning query', async () => {
-    const first = claude.query({ prompt: 'first' })
-    const second = claude.query({ prompt: 'second' })
-    const [, firstStart] = desktopMock.requestFromDesktop.mock.calls[0] as unknown as [
-      string,
-      { streamId: string },
-    ]
-    const [, secondStart] = desktopMock.requestFromDesktop.mock.calls[1] as unknown as [
-      string,
-      { streamId: string },
-    ]
+  it('ignores frames addressed to other streams', async () => {
+    mockEnsure()
+    const stream = claude.openSessionStream({ sessionId: 'session-1', options: {} })
+    await vi.waitFor(() => expect(stream.streamId).toBe('stream-1'))
 
-    const firstNext = first.next()
-    const secondNext = second.next()
+    const live = stream.next()
     desktopMock.emit('claude-output', {
-      streamId: secondStart.streamId,
-      message: { type: 'assistant', message: { content: [{ type: 'text', text: 'two' }] } },
+      streamId: 'other-stream',
+      message: { type: 'assistant', message: { content: [{ type: 'text', text: 'elsewhere' }] } },
     })
     desktopMock.emit('claude-output', {
-      streamId: firstStart.streamId,
-      message: { type: 'assistant', message: { content: [{ type: 'text', text: 'one' }] } },
+      streamId: 'stream-1',
+      message: { type: 'assistant', message: { content: [{ type: 'text', text: 'mine' }] } },
     })
+    await expect(live).resolves.toMatchObject({
+      value: { message: { content: [{ text: 'mine' }] } },
+    })
+    stream.detach()
+  })
 
-    await expect(firstNext).resolves.toMatchObject({
-      value: { message: { content: [{ text: 'one' }] } },
-    })
-    await expect(secondNext).resolves.toMatchObject({
-      value: { message: { content: [{ text: 'two' }] } },
-    })
-    await first.setModel('opus')
+  it('routes control commands with the attached stream id', async () => {
+    mockEnsure({ streamId: 'stream-9' })
+    const stream = claude.openSessionStream({ sessionId: 'session-1', options: {} })
+    await vi.waitFor(() => expect(stream.streamId).toBe('stream-9'))
+    await stream.setModel('opus')
+
     expect(desktopMock.requestFromDesktop).toHaveBeenCalledWith('claudeQueryControl', {
-      streamId: firstStart.streamId,
+      streamId: 'stream-9',
       command: 'setModel',
       params: ['opus'],
     })
-    first.close()
-    expect(desktopMock.requestFromDesktop).toHaveBeenCalledWith('claudeQueryClose', {
-      streamId: firstStart.streamId,
-    })
+    stream.detach()
   })
 
-  it('routes permission requests and stream errors without crossing query boundaries', async () => {
-    const first = claude.query({ prompt: 'first' })
-    const second = claude.query({ prompt: 'second' })
-    const [, secondStart] = desktopMock.requestFromDesktop.mock.calls[1] as unknown as [
-      string,
-      { streamId: string },
-    ]
-    const firstHandler = vi.fn()
-    const secondHandler = vi.fn()
-    first.subscribeToolRequests(firstHandler)
-    second.subscribeToolRequests(secondHandler)
-    desktopMock.emit('claude-tool-request', {
-      streamId: secondStart.streamId,
-      request: { kind: 'permission', toolUseId: 'tool-1', toolName: 'Write', input: {} },
-    })
+  it('routes permission requests and answers with the attached stream id', async () => {
+    const request = { kind: 'permission', toolUseId: 'tool-1', toolName: 'Write', input: {} }
+    mockEnsure({ pendingToolRequests: [request] })
+    const stream = claude.openSessionStream({ sessionId: 'session-1', options: {} })
+    const handler = vi.fn()
+    stream.subscribeToolRequests(handler)
+    await vi.waitFor(() => expect(stream.streamId).toBe('stream-1'))
 
-    expect(firstHandler).not.toHaveBeenCalled()
-    expect(secondHandler).toHaveBeenCalledOnce()
-    await second.respondToolRequest('tool-1', { behavior: 'allow' })
+    // Requests already pending at attach time still reach the subscriber.
+    expect(handler).toHaveBeenCalledWith(request)
+    await stream.respondToolRequest('tool-1', { behavior: 'allow' })
     expect(desktopMock.requestFromDesktop).toHaveBeenCalledWith('claudeRespondToolRequest', {
-      streamId: secondStart.streamId,
+      streamId: 'stream-1',
       toolUseId: 'tool-1',
       result: { behavior: 'allow' },
     })
+    stream.detach()
+  })
 
-    const next = second.next()
+  it('dies with the streamed error message and stack', async () => {
+    mockEnsure()
+    const stream = claude.openSessionStream({ sessionId: 'session-1', options: {} })
+    await vi.waitFor(() => expect(stream.streamId).toBe('stream-1'))
+
+    const next = stream.next()
     desktopMock.emit('claude-error', {
-      streamId: secondStart.streamId,
+      streamId: 'stream-1',
       message: 'model unavailable',
       stack: 'Error: model unavailable\n    at streamQuery (/app/runner.ts:42:7)',
     })
@@ -153,5 +157,21 @@ describe('Claude client protocol', () => {
       message: 'model unavailable',
       stack: 'Error: model unavailable\n    at streamQuery (/app/runner.ts:42:7)',
     })
+    expect(stream.getState().status).toBe('dead')
+  })
+
+  it('detach stops consuming without touching the resident query', async () => {
+    mockEnsure()
+    const stream = claude.openSessionStream({ sessionId: 'session-1', options: {} })
+    await vi.waitFor(() => expect(stream.streamId).toBe('stream-1'))
+    stream.detach()
+
+    const calls = desktopMock.requestFromDesktop.mock.calls.length
+    desktopMock.emit('claude-output', {
+      streamId: 'stream-1',
+      message: { type: 'assistant', message: { content: [{ type: 'text', text: 'ignored' }] } },
+    })
+    expect(desktopMock.requestFromDesktop.mock.calls.length).toBe(calls)
+    await expect(stream.next()).resolves.toMatchObject({ done: true })
   })
 })

@@ -16,11 +16,6 @@ import type {
   ClaudeJsonLine,
   ClaudeOptions,
   ClaudeQueryControlParams,
-  ClaudeQueryStartParams,
-  ClaudeQueryStreamInputCompleteParams,
-  ClaudeQueryStreamInputErrorParams,
-  ClaudeQueryStreamInputMessageParams,
-  ClaudeQueryStreamInputStartParams,
   ClaudeSampleContextUsageParams,
   ClaudeStartupParams,
   ClaudeStreamId,
@@ -29,7 +24,6 @@ import type {
 } from '@/shared/rpc'
 
 import { getLogger } from '../logging/runtime'
-import { prepareAttachments } from './attachments'
 import { sampleContextUsage } from './context-usage'
 import type { ModelProxy } from './model-proxy'
 import { createQueryProcess } from './query-process'
@@ -72,8 +66,6 @@ type ActiveQueryEntry = {
   process: ReturnType<typeof createQueryProcess>
 }
 const activeQueries = new Map<ClaudeStreamId, ActiveQueryEntry>()
-const activeInputStreams = new Map<string, AsyncInputQueue<SDKUserMessage>>()
-type SdkUserMessageUuid = NonNullable<SDKUserMessage['uuid']>
 
 export class AsyncInputQueue<T> implements AsyncIterable<T> {
   private items: Array<
@@ -146,10 +138,6 @@ export class AsyncInputQueue<T> implements AsyncIterable<T> {
     }
     return Promise.resolve({ done: true, value: undefined })
   }
-}
-
-function inputStreamKey(streamId: ClaudeStreamId, inputStreamId: string) {
-  return `${streamId}:${inputStreamId}`
 }
 
 function toolRequestKey(streamId: ClaudeStreamId, toolUseId: string) {
@@ -482,23 +470,18 @@ export function startQuery(
   events: ClaudeEventSink,
   {
     streamId,
-    prompt,
-    attachments,
     options,
-    userMessageUuid,
-    syntheticOrigin,
-  }: ClaudeQueryStartParams,
+  }: {
+    streamId: ClaudeStreamId
+    options?: ClaudeOptions
+  },
   proxy: ClaudeProxyConnection,
   extras: {
     tolerateResultErrors?: boolean
     /** Own the query's prompt source: turns arrive as pushes on this queue. */
-    promptQueue?: AsyncIterable<SDKUserMessage>
-  } = {},
+    promptQueue: AsyncIterable<SDKUserMessage>
+  },
 ): { initialized: Promise<void> } {
-  if (!extras.promptQueue && !prompt.trim() && !attachments?.length) {
-    throw new Error('Prompt cannot be empty')
-  }
-
   const startedAt = Date.now()
   logger.info('query.started', 'A Claude query started')
   const abortController = new AbortController()
@@ -520,9 +503,9 @@ export function startQuery(
   const initialized = new Promise<void>((resolve) => {
     resolveInitialized = resolve
   })
-  const launch = (input: string | AsyncIterable<SDKUserMessage>) => {
+  try {
     entry.sdk = sdkQuery({
-      prompt: input,
+      prompt: extras.promptQueue,
       options: {
         ...normalizeOptions(options, proxy),
         forwardSubagentText: true,
@@ -547,81 +530,11 @@ export function startQuery(
       resolveInitialized,
       extras.tolerateResultErrors,
     )
-  }
-
-  if (extras.promptQueue) {
-    try {
-      launch(extras.promptQueue)
-    } catch (caught) {
-      activeQueries.delete(streamId)
-      logQueryTerminal(entry, 'failed', caught)
-      entry.resolveFinished()
-      throw caught
-    }
-  } else if (attachments?.length) {
-    void (async () => {
-      try {
-        const content = await prepareAttachments(attachments, abortController.signal)
-        abortController.signal.throwIfAborted()
-        async function* input(): AsyncIterable<SDKUserMessage> {
-          yield {
-            type: 'user',
-            ...(userMessageUuid ? { uuid: userMessageUuid as SdkUserMessageUuid } : {}),
-            parent_tool_use_id: null,
-            origin: { kind: 'human' },
-            message: {
-              role: 'user',
-              content: [
-                ...(prompt.trim() ? [{ type: 'text' as const, text: prompt }] : []),
-                ...content,
-              ],
-            },
-          }
-        }
-        launch(input())
-      } catch (caught) {
-        if (activeQueries.get(streamId) === entry) activeQueries.delete(streamId)
-        const error = caught instanceof Error ? caught : undefined
-        events.onError(streamId, error?.message ?? 'Failed to prepare attachments', error?.stack)
-        events.onComplete(streamId, false)
-        logQueryTerminal(entry, entry.isCancelled ? 'cancelled' : 'failed', caught)
-        resolveInitialized()
-        entry.resolveFinished()
-      }
-    })()
-  } else {
-    try {
-      if (!userMessageUuid) {
-        // Keep the legacy string path for callers that do not provide a client
-        // UUID (for example startup helpers and older RPC clients).
-        launch(prompt)
-      } else {
-        // The CLI rewrites synthetic messages as non-user-source frames and
-        // persists them with isMeta, so they stay out of rendered history.
-        const origin = syntheticOrigin
-          ? ({ kind: syntheticOrigin } as SDKUserMessage['origin'])
-          : ({ kind: 'human' } as const)
-        async function* input(): AsyncIterable<SDKUserMessage> {
-          yield {
-            type: 'user',
-            uuid: userMessageUuid as SdkUserMessageUuid,
-            parent_tool_use_id: null,
-            ...(syntheticOrigin ? { isSynthetic: true } : {}),
-            origin,
-            message: {
-              role: 'user',
-              content: [{ type: 'text', text: prompt }],
-            },
-          }
-        }
-        launch(input())
-      }
-    } catch (caught) {
-      activeQueries.delete(streamId)
-      logQueryTerminal(entry, 'failed', caught)
-      entry.resolveFinished()
-      throw caught
-    }
+  } catch (caught) {
+    activeQueries.delete(streamId)
+    logQueryTerminal(entry, 'failed', caught)
+    entry.resolveFinished()
+    throw caught
   }
   return { initialized }
 }
@@ -680,67 +593,12 @@ export async function controlQuery({ streamId, command, params = [] }: ClaudeQue
   }
 }
 
-export async function startQueryInputStream({
-  streamId,
-  inputStreamId,
-}: ClaudeQueryStreamInputStartParams) {
-  const sdk = activeQueries.get(streamId)?.sdk
-  if (!sdk) {
-    throw new Error(`Claude query stream not found: ${streamId}`)
-  }
-
-  const key = inputStreamKey(streamId, inputStreamId)
-  const queue = new AsyncInputQueue<SDKUserMessage>()
-  activeInputStreams.set(key, queue)
-  void sdk.streamInput(queue).finally(() => {
-    activeInputStreams.delete(key)
-  })
-}
-
-export function pushQueryInputMessage({
-  streamId,
-  inputStreamId,
-  message,
-}: ClaudeQueryStreamInputMessageParams): void {
-  const queue = activeInputStreams.get(inputStreamKey(streamId, inputStreamId))
-  if (!queue) {
-    throw new Error(`Claude query input stream not found: ${inputStreamId}`)
-  }
-
-  queue.push(message)
-}
-
-export function completeQueryInputStream({
-  streamId,
-  inputStreamId,
-}: ClaudeQueryStreamInputCompleteParams): void {
-  const queue = activeInputStreams.get(inputStreamKey(streamId, inputStreamId))
-  if (!queue) return
-  queue.finish()
-}
-
-export function failQueryInputStream({
-  streamId,
-  inputStreamId,
-  message,
-}: ClaudeQueryStreamInputErrorParams): void {
-  const queue = activeInputStreams.get(inputStreamKey(streamId, inputStreamId))
-  if (!queue) return
-  queue.fail(new Error(message))
-}
-
 export async function closeQuery(streamId: ClaudeStreamId): Promise<void> {
   const entry = activeQueries.get(streamId)
   if (!entry) return
   entry.isCancelled = true
   logQueryTerminal(entry, 'cancelled')
   activeQueries.delete(streamId)
-  for (const [key, queue] of activeInputStreams) {
-    if (key.startsWith(`${streamId}:`)) {
-      queue.finish()
-      activeInputStreams.delete(key)
-    }
-  }
   entry.abortController.abort()
   entry.sdk?.close()
   // close() starts cleanup but discards its promise. Async disposal joins that
