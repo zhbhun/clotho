@@ -1,4 +1,4 @@
-import { CircleX, FolderKanban, X } from 'lucide-react'
+import { CircleX, FolderKanban } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -149,13 +149,9 @@ export function ProjectSwitcherButton({
                   onMouseLeave={() => setExitHovered(false)}
                   onPointerDown={(event) => event.stopPropagation()}
                 >
-                  {isHeader ? (
-                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-foreground/6">
-                      <CircleX className="size-3.5" strokeWidth={1.5} />
-                    </span>
-                  ) : (
-                    <X className="size-3.5" />
-                  )}
+                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-foreground/6">
+                    <CircleX className="size-3.5" strokeWidth={1.5} />
+                  </span>
                 </Button>
               }
             />
