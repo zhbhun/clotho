@@ -1,4 +1,4 @@
-import { ArrowUp, ChevronDown, Play, Square, X } from 'lucide-react'
+import { ArrowUp, ChevronDown, Play, Square } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -274,6 +274,93 @@ export function PromptComposer({
   const showResumeButton = Boolean(canResume && onResume && !prompt.trim() && !attachments.length)
   const selectedPermissionOption = permissionModeOption(permissionMode)
   const PermissionIcon = selectedPermissionOption.icon
+  const modelMenu = model ? (
+    <Menu
+      open={isModelMenuOpen}
+      onOpenChange={(open) => {
+        setIsModelMenuOpen(open)
+        if (open) {
+          setIsPermissionMenuOpen(false)
+          // Fresh quota on every open; the shared store dedupes
+          // in-flight queries and keeps cached pills until new
+          // results land.
+          void refreshProviderUsage(providers).catch(() => {})
+        }
+      }}
+    >
+      <MenuTrigger
+        render={
+          <Button
+            className={COMPOSER_TEXT_CONTROL_CLASS}
+            disabled={!modelOptions.length}
+            type="button"
+            variant="ghost"
+          />
+        }
+      >
+        <ModelBrandIcon
+          displayName={selectedModelIconOption.displayName}
+          value={selectedModelIconOption.value}
+          provider={
+            selectedModelIconOption.providerId
+              ? providersById.get(selectedModelIconOption.providerId)
+              : undefined
+          }
+        />
+        <span className="@max-[449px]:hidden">{selectedModelDisplayName}</span>
+        <ChevronDown className="@max-[449px]:hidden" data-icon="inline-end" strokeWidth={1} />
+      </MenuTrigger>
+      <MenuContent
+        aria-label={t('workbench.prompt.modelSelection')}
+        align={appearance === 'message-edit' ? 'start' : 'end'}
+        className="w-64 whitespace-nowrap shadow-float"
+        data-message-edit-surface={interactionScope}
+        glass
+      >
+        <MenuSearch placeholder={t('workbench.prompt.searchModels')} />
+        <MenuList>
+          {modelGroups.map((group) => {
+            const usage = group.providerId ? usageByProviderId[group.providerId] : undefined
+            return (
+              <MenuGroup
+                heading={
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    <span className="min-w-0 truncate">{group.providerName}</span>
+                    <ProviderUsageRings quota={usage} />
+                  </span>
+                }
+                key={group.providerId || group.providerName}
+              >
+                {group.items.map((option) => (
+                  <MenuItem
+                    selected={
+                      selectedModelIconOption.providerId === option.providerId &&
+                      selectedModelIconOption.value === option.value
+                    }
+                    key={`${group.providerId}-${option.value}`}
+                    onSelect={() => {
+                      if (option.providerId) {
+                        setSelectedProviderModel(option.providerId, option.value)
+                      }
+                    }}
+                  >
+                    <ModelBrandIcon
+                      displayName={option.displayName}
+                      value={option.value}
+                      provider={
+                        option.providerId ? providersById.get(option.providerId) : undefined
+                      }
+                    />
+                    {option.displayName}
+                  </MenuItem>
+                ))}
+              </MenuGroup>
+            )
+          })}
+        </MenuList>
+      </MenuContent>
+    </Menu>
+  ) : null
 
   return (
     <Card
@@ -401,156 +488,83 @@ export function PromptComposer({
           </MenuContent>
         </Menu>
 
+        {appearance === 'message-edit' ? modelMenu : null}
+
         <div className="ml-auto flex items-center gap-1">
-          {onCancel ? (
-            <Button
-              aria-label={t('workbench.prompt.cancelEdit')}
-              className="rounded-full"
-              disabled={isSubmitting}
-              size="icon"
-              type="button"
-              variant="mute"
-              onClick={onCancel}
-            >
-              <X data-icon />
-            </Button>
-          ) : null}
-
-          {contextUsage ? (
-            contextUsageDetail ? (
-              <ContextUsagePopover
-                detail={contextUsageDetail}
-                open={isContextPanelOpen}
-                usage={contextUsage}
-                onOpenChange={setIsContextPanelOpen}
-              >
-                <ContextUsageRing usage={contextUsage} />
-              </ContextUsagePopover>
-            ) : (
-              <ContextUsageRing usage={contextUsage} />
-            )
-          ) : isSamplingContext ? (
-            <ContextUsageSamplingRing />
-          ) : null}
-
-          {model ? (
-            <Menu
-              open={isModelMenuOpen}
-              onOpenChange={(open) => {
-                setIsModelMenuOpen(open)
-                if (open) {
-                  setIsPermissionMenuOpen(false)
-                  // Fresh quota on every open; the shared store dedupes
-                  // in-flight queries and keeps cached pills until new
-                  // results land.
-                  void refreshProviderUsage(providers).catch(() => {})
+          {appearance === 'message-edit' ? (
+            <>
+              {onCancel ? (
+                <Button
+                  className="rounded-lg border-input bg-transparent dark:bg-transparent"
+                  disabled={isSubmitting}
+                  type="button"
+                  variant="outline"
+                  onClick={onCancel}
+                >
+                  {t('workbench.action.cancel')}
+                </Button>
+              ) : null}
+              <Button
+                aria-label={
+                  isSubmitting ? t('workbench.prompt.sending') : t('workbench.prompt.send')
                 }
-              }}
-            >
-              <MenuTrigger
-                render={
-                  <Button
-                    className={COMPOSER_TEXT_CONTROL_CLASS}
-                    disabled={!modelOptions.length}
-                    type="button"
-                    variant="ghost"
-                  />
-                }
+                className="rounded-lg bg-foreground text-background hover:bg-foreground/80"
+                disabled={isSubmitting || !canSubmit}
+                type="button"
+                onClick={handleSubmit}
               >
-                <ModelBrandIcon
-                  displayName={selectedModelIconOption.displayName}
-                  value={selectedModelIconOption.value}
-                  provider={
-                    selectedModelIconOption.providerId
-                      ? providersById.get(selectedModelIconOption.providerId)
-                      : undefined
-                  }
-                />
-                <span className="@max-[449px]:hidden">{selectedModelDisplayName}</span>
-                <ChevronDown
-                  className="@max-[449px]:hidden"
-                  data-icon="inline-end"
-                  strokeWidth={1}
-                />
-              </MenuTrigger>
-              <MenuContent
-                aria-label={t('workbench.prompt.modelSelection')}
-                align="end"
-                className="w-64 whitespace-nowrap shadow-float"
-                data-message-edit-surface={interactionScope}
-                glass
-              >
-                <MenuSearch placeholder={t('workbench.prompt.searchModels')} />
-                <MenuList>
-                  {modelGroups.map((group) => {
-                    const usage = group.providerId ? usageByProviderId[group.providerId] : undefined
-                    return (
-                      <MenuGroup
-                        heading={
-                          <span className="flex min-w-0 items-center gap-1.5">
-                            <span className="min-w-0 truncate">{group.providerName}</span>
-                            <ProviderUsageRings quota={usage} />
-                          </span>
-                        }
-                        key={group.providerId || group.providerName}
-                      >
-                        {group.items.map((option) => (
-                          <MenuItem
-                            selected={
-                              selectedModelIconOption.providerId === option.providerId &&
-                              selectedModelIconOption.value === option.value
-                            }
-                            key={`${group.providerId}-${option.value}`}
-                            onSelect={() => {
-                              if (option.providerId) {
-                                setSelectedProviderModel(option.providerId, option.value)
-                              }
-                            }}
-                          >
-                            <ModelBrandIcon
-                              displayName={option.displayName}
-                              value={option.value}
-                              provider={
-                                option.providerId ? providersById.get(option.providerId) : undefined
-                              }
-                            />
-                            {option.displayName}
-                          </MenuItem>
-                        ))}
-                      </MenuGroup>
-                    )
-                  })}
-                </MenuList>
-              </MenuContent>
-            </Menu>
-          ) : null}
+                {isSubmitting ? <Spinner /> : t('workbench.prompt.send')}
+              </Button>
+            </>
+          ) : (
+            <>
+              {contextUsage ? (
+                contextUsageDetail ? (
+                  <ContextUsagePopover
+                    detail={contextUsageDetail}
+                    open={isContextPanelOpen}
+                    usage={contextUsage}
+                    onOpenChange={setIsContextPanelOpen}
+                  >
+                    <ContextUsageRing usage={contextUsage} />
+                  </ContextUsagePopover>
+                ) : (
+                  <ContextUsageRing usage={contextUsage} />
+                )
+              ) : isSamplingContext ? (
+                <ContextUsageSamplingRing />
+              ) : null}
 
-          <Button
-            aria-label={
-              isStreaming
-                ? t('workbench.prompt.stop')
-                : isSubmitting
-                  ? t('workbench.prompt.sending')
-                  : showResumeButton
-                    ? t('workbench.prompt.resume')
-                    : t('workbench.prompt.send')
-            }
-            className={cn('rounded-full', appearance === 'default' && 'prompt-composer-send')}
-            disabled={isStreaming ? false : isSubmitting || (!showResumeButton && !canSubmit)}
-            size="icon"
-            type="button"
-            onClick={isStreaming ? onStop : showResumeButton ? onResume : handleSubmit}
-          >
-            {isStreaming ? (
-              <Square className="size-3" fill="currentColor" strokeWidth={1} />
-            ) : isSubmitting ? (
-              <Spinner />
-            ) : showResumeButton ? (
-              <Play className="size-3.5 translate-x-px" fill="currentColor" strokeWidth={1} />
-            ) : (
-              <ArrowUp />
-            )}
-          </Button>
+              {modelMenu}
+
+              <Button
+                aria-label={
+                  isStreaming
+                    ? t('workbench.prompt.stop')
+                    : isSubmitting
+                      ? t('workbench.prompt.sending')
+                      : showResumeButton
+                        ? t('workbench.prompt.resume')
+                        : t('workbench.prompt.send')
+                }
+                className="rounded-full prompt-composer-send"
+                disabled={isStreaming ? false : isSubmitting || (!showResumeButton && !canSubmit)}
+                size="icon"
+                type="button"
+                onClick={isStreaming ? onStop : showResumeButton ? onResume : handleSubmit}
+              >
+                {isStreaming ? (
+                  <Square className="size-3" fill="currentColor" strokeWidth={1} />
+                ) : isSubmitting ? (
+                  <Spinner />
+                ) : showResumeButton ? (
+                  <Play className="size-3.5 translate-x-px" fill="currentColor" strokeWidth={1} />
+                ) : (
+                  <ArrowUp />
+                )}
+              </Button>
+            </>
+          )}
         </div>
       </CardFooter>
     </Card>
