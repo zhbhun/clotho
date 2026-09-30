@@ -55,11 +55,11 @@ export function SessionContextMenu({
       <ContextMenuContent glass>
         <ContextMenuGroup>
           <ContextMenuItem onClick={() => onTogglePinSession(session)}>
-            {isPinned ? <PinOff /> : <Pin />}
+            {isPinned ? <PinOff strokeWidth={1.5} /> : <Pin strokeWidth={1.5} />}
             {isPinned ? t('workbench.action.unpin') : t('workbench.action.pin')}
           </ContextMenuItem>
           <ContextMenuItem onClick={() => onRenameSession(session)}>
-            <Pencil />
+            <Pencil strokeWidth={1.5} />
             {t('workbench.action.rename')}
           </ContextMenuItem>
         </ContextMenuGroup>
@@ -68,7 +68,7 @@ export function SessionContextMenu({
             <ContextMenuSeparator />
             <ContextMenuGroup>
               <ContextMenuItem onClick={() => close.onCloseSession(session)}>
-                <X />
+                <X strokeWidth={1.5} />
                 {t('workbench.session.closeTab')}
               </ContextMenuItem>
               <ContextMenuItem
@@ -79,7 +79,7 @@ export function SessionContextMenu({
                   }
                 }}
               >
-                <CopyX />
+                <CopyX strokeWidth={1.5} />
                 {t('workbench.session.closeOtherTabs')}
               </ContextMenuItem>
               <ContextMenuItem
@@ -94,7 +94,11 @@ export function SessionContextMenu({
                   }
                 }}
               >
-                {variant === 'list' ? <PanelBottomClose /> : <PanelRightClose />}
+                {variant === 'list' ? (
+                  <PanelBottomClose strokeWidth={1.5} />
+                ) : (
+                  <PanelRightClose strokeWidth={1.5} />
+                )}
                 {t(
                   variant === 'list'
                     ? 'workbench.session.closeTabsToDown'
@@ -106,7 +110,7 @@ export function SessionContextMenu({
                   for (const candidate of close.sessions) close.onCloseSession(candidate)
                 }}
               >
-                <ListX />
+                <ListX strokeWidth={1.5} />
                 {t('workbench.session.closeAllTabs')}
               </ContextMenuItem>
             </ContextMenuGroup>
@@ -115,7 +119,7 @@ export function SessionContextMenu({
         <ContextMenuSeparator />
         <ContextMenuGroup>
           <ContextMenuItem variant="destructive" onClick={() => onDeleteSession(session)}>
-            <Trash2 />
+            <Trash2 strokeWidth={1.5} />
             {t('workbench.action.delete')}
           </ContextMenuItem>
         </ContextMenuGroup>

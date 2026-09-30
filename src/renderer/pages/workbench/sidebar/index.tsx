@@ -98,7 +98,7 @@ export function SessionSidebar({
               onClick={onStartNewSession}
               tabIndex={0}
             >
-              <SquarePen />
+              <SquarePen strokeWidth={1.5} />
               <span>{t('workbench.session.new')}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -164,7 +164,7 @@ export function SessionSidebar({
               tabIndex={0}
               onClick={onOpenSettings}
             >
-              <Settings />
+              <Settings strokeWidth={1.5} />
               <span>{t('workbench.nav.settings')}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
