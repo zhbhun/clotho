@@ -3,6 +3,12 @@
    Only what those bases cannot express lives here: the single-line row layout
    and the inline action slot inside the search field. */
 
+/* The shared CommandList caps at a fixed 288px; the switcher sheets hold the
+   project and history lists, so they scale with the window instead. */
+.spotlight-command-dialog [data-slot='command-list'] {
+  max-height: min(60vh, 640px);
+}
+
 .spotlight-command-item {
   min-height: 32px;
 }
