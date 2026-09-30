@@ -67,11 +67,13 @@ export const DEFAULT_PROJECT_ICON: PresetProjectIcon = {
   color: 'neutral',
 }
 
+/** leading-none keeps the char box at the glyph size; Tailwind's default
+    line-height would inflate auto-sized containers (e.g. switcher rows). */
 const EMOJI_CHAR_CLASSES = {
-  compact: 'text-[10px]',
-  small: 'text-base',
-  default: 'text-xl',
-  large: 'text-2xl',
+  compact: 'text-[10px] leading-none',
+  small: 'text-base leading-none',
+  default: 'text-base leading-none',
+  large: 'text-2xl leading-none',
 } as const
 
 export function ProjectIcon({

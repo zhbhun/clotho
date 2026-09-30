@@ -98,10 +98,12 @@ function renderHeader(
             isContentScrolled={false}
             projectMode={projectMode}
             projectName={selectedProject ? 'Demo' : 'Clotho'}
+            projects={selectedProject ? [selectedProject] : []}
             pinnedSessionIds={new Set()}
             selectedProject={selectedProject}
             sessionActivity={{}}
             sessions={sessions}
+            onAddProject={vi.fn()}
             onCloseSession={vi.fn()}
             onDeleteSession={vi.fn()}
             onRenameSession={vi.fn()}

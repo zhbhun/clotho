@@ -152,10 +152,12 @@ export function SessionArea(props: SessionAreaProps) {
         isContentScrolled={isContentScrolled}
         projectMode={props.projectMode}
         projectName={selectedProject ? projectDisplayName(selectedProject) : ''}
+        projects={props.projects}
         pinnedSessionIds={props.pinnedSessionIds}
         selectedProject={selectedProject}
         sessionActivity={props.sessionActivity}
         sessions={props.tabSessions}
+        onAddProject={props.onAddProject}
         onCloseSession={props.onCloseSession}
         onDeleteSession={props.onDeleteSession}
         onRenameSession={props.onRenameSession}
@@ -253,6 +255,7 @@ function SessionAreaContent({
   selectedSession,
   selectPromptFiles,
   tabSessions,
+  onAddProject,
   onContentScrolledChange,
   onOpenSettings,
   onRenameSession,
@@ -735,7 +738,9 @@ function SessionAreaContent({
           hasTabSessions={tabSessions.length > 0}
           projectMode={projectMode}
           projectName={selectedProject ? projectDisplayName(selectedProject) : ''}
+          projects={projects}
           selectedProject={selectedProject}
+          onAddProject={onAddProject}
           onSelectProject={setSelectedProjectId}
         />
       )}

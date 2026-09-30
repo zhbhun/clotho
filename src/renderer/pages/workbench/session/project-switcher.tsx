@@ -29,7 +29,7 @@ export type ProjectSelectionProps = {
 
 /** The row leaves about two icon buttons of trailing space; paths beyond what
     fits there elide their middle instead of their tail. */
-const PROJECT_PATH_MAX = 80
+export const PROJECT_PATH_MAX = 80
 
 /** Extra props are forwarded to the trigger so this component can itself be the
     `render` target of another trigger (e.g. CommandDialog's DialogTrigger). */

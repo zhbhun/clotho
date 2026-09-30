@@ -1,0 +1,87 @@
+import { CircleX, FolderPlus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+
+import {
+  MenuContent,
+  MenuEmpty,
+  MenuGroup,
+  MenuItem,
+  MenuList,
+  MenuSearch,
+  MenuSeparator,
+} from '../../../components/menu'
+import { ProjectIcon } from '../../../components/project-icon'
+import type { ClaudeProject } from '../../../services/claude/claude'
+import { isUserProject, projectDisplayName } from '../../../utils/project'
+import { tildePath } from '../utils/path-display'
+import { MiddlePath } from './components/middle-path'
+
+export type ProjectSwitcherMenuContentProps = {
+  projectMode: 'project' | 'home'
+  projects: ClaudeProject[]
+  selectedProject?: ClaudeProject
+  onAddProject: () => void
+  onSelectProject: (projectId: string | null) => void
+}
+
+/** Dropdown body for the project button: searchable project rows plus the
+    add / no-project actions pinned below the list. */
+export function ProjectSwitcherMenuContent({
+  projectMode,
+  projects,
+  selectedProject,
+  onAddProject,
+  onSelectProject,
+}: ProjectSwitcherMenuContentProps) {
+  const { t } = useTranslation()
+  const canExitProject =
+    projectMode === 'project' && selectedProject !== undefined && !selectedProject.is_home
+
+  return (
+    <MenuContent
+      align="start"
+      aria-label={t('workbench.project.switch')}
+      className="w-[min(400px,calc(100vw-2rem))] shadow-float"
+      glass
+    >
+      <MenuSearch placeholder={t('workbench.project.search')} />
+      <MenuSeparator />
+      <MenuList>
+        <MenuEmpty>{t('workbench.project.empty')}</MenuEmpty>
+        <MenuGroup>
+          {projects.filter(isUserProject).map((project) => {
+            const name = projectDisplayName(project)
+
+            return (
+              <MenuItem
+                key={project.id}
+                selected={selectedProject?.id === project.id}
+                value={name}
+                keywords={[name, project.path]}
+                onSelect={() => onSelectProject(project.id)}
+              >
+                <ProjectIcon className="size-5 shrink-0" plain icon={project.icon} size="default" />
+                <span className="truncate text-sm/5">{name}</span>
+                <MiddlePath
+                  className="min-w-0 flex-1 text-[12px] text-foreground-subtlest!"
+                  path={tildePath(project.path)}
+                />
+              </MenuItem>
+            )
+          })}
+        </MenuGroup>
+      </MenuList>
+      <MenuSeparator />
+      <MenuItem forceMount value="project-menu-add" onSelect={() => onAddProject()}>
+        <FolderPlus data-icon="inline-start" strokeWidth={1.5} />
+        {t('workbench.project.add')}
+      </MenuItem>
+      {canExitProject ? (
+        <MenuItem forceMount value="project-menu-exit" onSelect={() => onSelectProject(null)}>
+          <CircleX data-icon="inline-start" strokeWidth={1.5} />
+          {t('workbench.project.exit')}
+        </MenuItem>
+      ) : null}
+    </MenuContent>
+  )
+}

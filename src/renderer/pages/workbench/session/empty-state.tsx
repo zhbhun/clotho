@@ -15,7 +15,9 @@ export type SessionEmptyStateProps = {
   hasTabSessions: boolean
   projectMode: 'project' | 'home'
   projectName: string
+  projects: WorkbenchProject[]
   selectedProject?: WorkbenchProject
+  onAddProject: () => void
   onSelectProject: (projectId: string | null) => void
 }
 
@@ -26,7 +28,9 @@ export function SessionEmptyState({
   hasTabSessions,
   projectMode,
   projectName,
+  projects,
   selectedProject,
+  onAddProject,
   onSelectProject,
 }: SessionEmptyStateProps) {
   const { t } = useTranslation()
@@ -68,7 +72,9 @@ export function SessionEmptyState({
                   className="flex-1"
                   projectMode={projectMode}
                   projectName={projectName}
+                  projects={projects}
                   selectedProject={selectedProject}
+                  onAddProject={onAddProject}
                   onSelectProject={onSelectProject}
                 />
                 <SessionHistoryButton appearance="empty-surface" />

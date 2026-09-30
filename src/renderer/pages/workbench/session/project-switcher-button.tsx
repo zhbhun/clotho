@@ -6,10 +6,12 @@ import { Button } from '@/shadcn/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip'
 import { cn } from '@/shadcn/utils'
 
+import { Menu, MenuTrigger } from '../../../components/menu'
 import { DEFAULT_PROJECT_ICON, ProjectIcon } from '../../../components/project-icon'
 import { ShortcutTooltip } from '../components/shortcut-tooltip'
 import type { WorkbenchProject } from '../stores/workbench-store'
 import { ProjectTooltip } from './project-switcher'
+import { ProjectSwitcherMenuContent } from './project-switcher-menu'
 import { useSwitcherStore } from './stores/switcher-store'
 
 export type ProjectSwitcherButtonProps = {
@@ -17,22 +19,26 @@ export type ProjectSwitcherButtonProps = {
   className?: string
   projectMode: 'project' | 'home'
   projectName: string
+  projects: WorkbenchProject[]
   selectedProject?: WorkbenchProject
+  onAddProject: () => void
   onSelectProject: (projectId: string | null) => void
 }
 
-/** Project button opening the globally mounted switcher dialog, shared by the header row and the empty-surface strip. */
+/** Project button; clicking opens the dropdown project menu, while the
+    shortcut command keeps opening the palette dialog through the store. */
 export function ProjectSwitcherButton({
   appearance = 'header',
   className,
   projectMode,
   projectName,
+  projects,
   selectedProject,
+  onAddProject,
   onSelectProject,
 }: ProjectSwitcherButtonProps) {
   const { t } = useTranslation()
   const [isExitHovered, setExitHovered] = useState(false)
-  const openProjectSwitcher = useSwitcherStore((state) => state.openProjectSwitcher)
   const closeProjectSwitcher = useSwitcherStore((state) => state.closeProjectSwitcher)
   const isHeader = appearance === 'header'
   // Exiting a side project lands back on the home-base project (the built-in
@@ -41,27 +47,30 @@ export function ProjectSwitcherButton({
   const canExitProject =
     projectMode === 'project' && selectedProject !== undefined && !selectedProject.is_home
 
-  const button = (
-    <Button
-      className={cn(
-        'min-w-0',
-        isHeader
-          ? 'max-w-[50vw]'
-          : cn(
-              'max-w-full justify-start rounded-xl gap-0.5',
-              canExitProject ? '!pl-0.5' : '!pl-1',
-              '!pr-2',
-            ),
-        isHeader &&
-          canExitProject &&
-          isExitHovered &&
-          'bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_5%)] text-foreground',
-      )}
-      data-active={!isHeader && isExitHovered ? true : undefined}
-      data-window-project-title
-      type="button"
-      variant={isHeader ? 'secondary' : 'surface'}
-      onClick={openProjectSwitcher}
+  const triggerButton = (
+    <MenuTrigger
+      render={
+        <Button
+          className={cn(
+            'min-w-0',
+            isHeader
+              ? 'max-w-[50vw]'
+              : cn(
+                  'max-w-full justify-start rounded-xl gap-0.5',
+                  canExitProject ? '!pl-0.5' : '!pl-1',
+                  '!pr-2',
+                ),
+            isHeader &&
+              canExitProject &&
+              isExitHovered &&
+              'bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_5%)] text-foreground',
+          )}
+          data-active={!isHeader && isExitHovered ? true : undefined}
+          data-window-project-title
+          type="button"
+          variant={isHeader ? 'secondary' : 'surface'}
+        />
+      }
     >
       {selectedProject ? (
         <ProjectIcon
@@ -84,7 +93,7 @@ export function ProjectSwitcherButton({
           {selectedProject ? projectName : t('workbench.project.select')}
         </span>
       ) : null}
-    </Button>
+    </MenuTrigger>
   )
 
   const trigger = isHeader ? (
@@ -93,14 +102,14 @@ export function ProjectSwitcherButton({
       label={t('workbench.project.switch')}
       side="bottom"
     >
-      {button}
+      {triggerButton}
     </ShortcutTooltip>
   ) : selectedProject?.path ? (
     <ProjectTooltip align="start" content={selectedProject.path} side="bottom">
-      {button}
+      {triggerButton}
     </ProjectTooltip>
   ) : (
-    button
+    triggerButton
   )
 
   return (
@@ -109,7 +118,16 @@ export function ProjectSwitcherButton({
         className="group/project-switcher relative flex min-w-0 items-center"
         onMouseLeave={() => setExitHovered(false)}
       >
-        {trigger}
+        <Menu>
+          {trigger}
+          <ProjectSwitcherMenuContent
+            projectMode={projectMode}
+            projects={projects}
+            selectedProject={selectedProject}
+            onAddProject={onAddProject}
+            onSelectProject={onSelectProject}
+          />
+        </Menu>
         {canExitProject ? (
           <Tooltip>
             <TooltipTrigger

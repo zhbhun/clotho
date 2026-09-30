@@ -229,9 +229,11 @@ function renderHeader({
               isContentScrolled={false}
               projectMode="home"
               projectName="Claude"
+              projects={[]}
               pinnedSessionIds={new Set()}
               sessionActivity={{}}
               sessions={sessions}
+              onAddProject={vi.fn()}
               onCloseSession={vi.fn()}
               onDeleteSession={vi.fn()}
               onRenameSession={vi.fn()}
@@ -1985,10 +1987,10 @@ describe('prompt composer surface', () => {
     fireEvent.click(projectTitle)
 
     expect(await screen.findByPlaceholderText('搜索项目')).toBeInTheDocument()
-    const dialog = screen.getByRole('dialog', { name: '切换项目' })
-    expect(within(dialog).getByRole('button', { name: '添加项目' })).toBeInTheDocument()
-    expect(within(dialog).queryByRole('button', { name: '不使用项目' })).not.toBeInTheDocument()
-    expect(within(dialog).getByText('~/project')).toBeInTheDocument()
+    const menu = screen.getByRole('dialog', { name: '切换项目' })
+    expect(within(menu).getByRole('option', { name: '添加项目' })).toBeInTheDocument()
+    expect(within(menu).queryByRole('option', { name: '不使用项目' })).not.toBeInTheDocument()
+    expect(within(menu).getByText('~/project')).toBeInTheDocument()
   })
 
   it('opens the shared project form from the project switcher', async () => {
@@ -2011,8 +2013,8 @@ describe('prompt composer surface', () => {
       return element!
     })
     await userEvent.click(projectTitle)
-    const switcher = screen.getByRole('dialog', { name: '切换项目' })
-    await userEvent.click(within(switcher).getByRole('button', { name: '添加项目' }))
+    const switcher = await screen.findByRole('dialog', { name: '切换项目' })
+    await userEvent.click(within(switcher).getByRole('option', { name: '添加项目' }))
 
     expect(screen.getByRole('dialog', { name: '添加项目' })).toBeInTheDocument()
   })

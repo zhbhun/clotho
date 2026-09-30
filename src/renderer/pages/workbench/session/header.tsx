@@ -15,10 +15,12 @@ export function ConversationHeader({
   isContentScrolled,
   projectMode,
   projectName,
+  projects,
   pinnedSessionIds,
   selectedProject,
   sessionActivity,
   sessions,
+  onAddProject,
   onCloseSession,
   onDeleteSession,
   onRenameSession,
@@ -30,10 +32,12 @@ export function ConversationHeader({
   isContentScrolled: boolean
   projectMode: 'project' | 'home'
   projectName: string
+  projects: WorkbenchProject[]
   pinnedSessionIds: ReadonlySet<string>
   selectedProject?: WorkbenchProject
   sessionActivity: Record<string, SessionActivity>
   sessions: WorkbenchSession[]
+  onAddProject: () => void
   onCloseSession: (session: WorkbenchSession) => void
   onDeleteSession: (session: WorkbenchSession) => void
   onRenameSession: (session: WorkbenchSession) => void
@@ -78,7 +82,9 @@ export function ConversationHeader({
           <ProjectSwitcherButton
             projectMode={projectMode}
             projectName={projectName}
+            projects={projects}
             selectedProject={selectedProject}
+            onAddProject={onAddProject}
             onSelectProject={onSelectProject}
           />
         </div>
