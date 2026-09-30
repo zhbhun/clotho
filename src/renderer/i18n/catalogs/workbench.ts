@@ -1538,7 +1538,7 @@ export const workbenchCatalog = {
     'Chuyển dự án',
   ),
   'workbench.project.exit': messages(
-    'Use no project',
+    "Don't work in a project",
     '不使用项目',
     '不使用專案',
     'プロジェクトを使用しない',
