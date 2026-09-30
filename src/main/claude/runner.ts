@@ -322,6 +322,14 @@ export type ClaudeProxyConnection = Pick<ModelProxy, 'sessionThinking' | 'settin
 /** claude.ai-hosted artifact/design tools — unreachable from SDK sessions, so their schemas are dead context weight. */
 const CLAUDE_AI_SERVICE_TOOLS = ['Artifact', 'ArtifactData', 'ArtifactComments', 'DesignSync']
 
+/**
+ * Client-side tool deferral: non-core tool schemas stay out of each request
+ * until the model pulls them in via the ToolSearch tool. The CLI otherwise
+ * enables tool search only for first-party Anthropic endpoints, so proxied
+ * sessions would resend every connected server's schemas on every turn.
+ */
+const TOOL_SEARCH_ENV = { ENABLE_TOOL_SEARCH: 'true' }
+
 function normalizeOptions(
   options: ClaudeOptions | undefined,
   proxy?: ClaudeProxyConnection,
@@ -336,6 +344,7 @@ function normalizeOptions(
     disallowedTools: [
       ...new Set([...CLAUDE_AI_SERVICE_TOOLS, ...(options?.disallowedTools ?? [])]),
     ],
+    settings: { env: { ...TOOL_SEARCH_ENV } },
   }
   // SDK sessions otherwise run on a two-line stub system prompt; the Claude
   // Code preset keeps sessions on the same prompt as the interactive CLI.
@@ -346,7 +355,7 @@ function normalizeOptions(
   if (claudeCodeBinary) normalized.pathToClaudeCodeExecutable = claudeCodeBinary
   if (isClaudeModel) normalized.model = qualifiedModel?.slice('claude/'.length)
   if (isCustomModel && proxy) {
-    normalized.settings = { env: proxy.settingsEnv(qualifiedModel) }
+    normalized.settings = { env: { ...TOOL_SEARCH_ENV, ...proxy.settingsEnv(qualifiedModel) } }
     // Forward mapping: run the session at the claude effort derived from the
     // model's configured thinking level. Re-injected on every query on
     // purpose — the model configuration is the single source of truth for

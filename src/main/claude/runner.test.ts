@@ -186,7 +186,9 @@ describe('Claude SDK runner', () => {
 
     await startup({ options: { cwd: '/tmp/app' } })
 
-    expect(vi.mocked(sdkQuery).mock.calls[0]?.[0].options).not.toHaveProperty('settings')
+    expect(vi.mocked(sdkQuery).mock.calls[0]?.[0].options?.settings).toEqual({
+      env: { ENABLE_TOOL_SEARCH: 'true' },
+    })
     expect(proxy.settingsEnv).not.toHaveBeenCalled()
   })
 
@@ -213,11 +215,13 @@ describe('Claude SDK runner', () => {
 
     const official = vi.mocked(sdkQuery).mock.calls[0]?.[0].options
     expect(official?.model).toBe('claude-sonnet-4-6')
-    expect(official).not.toHaveProperty('settings')
+    expect(official?.settings).toEqual({ env: { ENABLE_TOOL_SEARCH: 'true' } })
 
     const custom = vi.mocked(sdkQuery).mock.calls[1]?.[0].options
     expect(custom?.model).toBe('zhipu/glm-5.2/fast')
-    expect(custom?.settings).toEqual({ env: proxy.settingsEnv('zhipu/glm-5.2/fast') })
+    expect(custom?.settings).toEqual({
+      env: { ENABLE_TOOL_SEARCH: 'true', ...proxy.settingsEnv('zhipu/glm-5.2/fast') },
+    })
   })
 
   it('previews or applies file rewind against a completed session without creating a new session', async () => {
