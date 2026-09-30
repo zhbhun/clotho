@@ -211,7 +211,11 @@ export function SessionArea(props: SessionAreaProps) {
                 {...props}
                 selectedSession={selectedSession}
                 sessionId={sessionId}
+                historyOpen={isSessionHistoryOpen}
+                projectSwitcherOpen={isProjectSwitcherOpen}
                 onContentScrolledChange={handleContentScrolledChange}
+                onHistoryOpenChange={handleSessionHistoryOpenChange}
+                onProjectSwitcherOpenChange={handleProjectSwitcherOpenChange}
               />
             </SessionControllerProvider>
           </ModelOnboardingGate>
@@ -234,20 +238,35 @@ function ModelOnboardingGate({
 
 function SessionAreaContent({
   forkSession,
+  historyOpen,
   isMockProject,
+  isProjectSessionLoading,
   projectMode,
+  projectSessionError,
+  projectSwitcherOpen,
   projects,
   sessionId,
   selectedProject,
   selectedSession,
   selectPromptFiles,
   tabSessions,
+  workspaceSessions,
+  onAddProject,
   onContentScrolledChange,
+  onHistoryOpenChange,
   onOpenSettings,
+  onProjectSwitcherOpenChange,
   onRenameSession,
+  onRetryProjectSessions,
+  onSelectSession,
+  setSelectedProjectId,
 }: SessionAreaProps & {
   sessionId: string
   onContentScrolledChange: (sessionId: string, isScrolled: boolean) => void
+  historyOpen: boolean
+  projectSwitcherOpen: boolean
+  onHistoryOpenChange: (isOpen: boolean) => void
+  onProjectSwitcherOpenChange: (isOpen: boolean) => void
 }) {
   const { t } = useTranslation()
   const controller = useSessionController()
@@ -721,6 +740,21 @@ function SessionAreaContent({
           composerProps={promptComposerProps}
           error={error}
           hasTabSessions={tabSessions.length > 0}
+          historyError={projectSessionError}
+          historyOpen={historyOpen}
+          historySessions={workspaceSessions}
+          isHistoryLoading={isProjectSessionLoading}
+          projectMode={projectMode}
+          projectName={selectedProject ? projectDisplayName(selectedProject) : ''}
+          projects={projects}
+          projectSwitcherOpen={projectSwitcherOpen}
+          selectedProject={selectedProject}
+          onAddProject={onAddProject}
+          onHistoryOpenChange={onHistoryOpenChange}
+          onProjectSwitcherOpenChange={onProjectSwitcherOpenChange}
+          onRetryHistory={onRetryProjectSessions}
+          onSelectProject={setSelectedProjectId}
+          onSelectSession={onSelectSession}
         />
       )}
     </>

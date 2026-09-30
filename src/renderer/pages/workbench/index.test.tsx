@@ -1031,7 +1031,7 @@ describe('prompt composer surface', () => {
     expect(screen.queryByLabelText('Checking context usage')).toBeNull()
   })
 
-  it('renders the branded elevated composer without project controls', async () => {
+  it('renders the branded elevated composer with the project strip when no tabs exist', async () => {
     await initializeAppI18n('en', ['en-US'])
     vi.mocked(requestFromDesktop).mockImplementation(async (command) => {
       switch (command) {
@@ -1057,8 +1057,15 @@ describe('prompt composer surface', () => {
     const composer = getPromptComposerCard()
     expect(composer).toHaveAttribute('data-elevated', 'true')
     expect(composer.querySelector('[data-slot="card-footer"]')).toBeInTheDocument()
-    expect(document.querySelector('.bg-project-switcher-surface')).toBeNull()
+    const strip = document.querySelector('.bg-project-switcher-surface')
+    expect(strip).not.toBeNull()
+    expect(strip!.querySelector('[data-window-project-title]')).not.toBeNull()
+    expect(
+      within(strip as HTMLElement).getByRole('button', { name: 'History' }),
+    ).toBeInTheDocument()
     expect(within(composer).queryByLabelText('Switch project')).toBeNull()
+    // The header row drops its own project and history controls in this state.
+    expect(document.querySelectorAll('[data-window-project-title]')).toHaveLength(1)
   })
 
   it('creates an empty draft as a normal session', async () => {

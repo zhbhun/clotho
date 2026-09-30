@@ -1,17 +1,12 @@
-import { CircleX, FolderKanban } from 'lucide-react'
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { Button } from '@/shadcn/button'
 import { SidebarTrigger, useSidebar } from '@/shadcn/sidebar'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip'
 import { cn } from '@/shadcn/utils'
 
-import { ProjectIcon } from '../../../components/project-icon'
 import { SidebarToggleIcon } from '../../../components/sidebar-toggle-icon'
 import { ShortcutTooltip } from '../components/shortcut-tooltip'
 import type { SessionActivity, WorkbenchProject, WorkbenchSession } from '../stores/workbench-store'
-import { ProjectSwitchDialog } from './project-switcher'
+import { ProjectSwitcherButton } from './project-switcher-button'
 import { SessionHistory } from './session-history'
 import { SessionTabs } from './session-tabs'
 
@@ -68,17 +63,13 @@ export function ConversationHeader({
 }) {
   const { isMobile, openMobile, state } = useSidebar()
   const { t } = useTranslation()
-  const [isExitHovered, setExitHovered] = useState(false)
   // The sidebar owns the top-left corner while it covers it; below the
   // breakpoint the drawer stays closed until toggled, freeing the inset.
   const showSidebarTrigger = isMobile ? !openMobile : state === 'collapsed'
-  const canExitProject =
-    projectMode === 'project' &&
-    selectedProject !== undefined &&
-    // Exiting a side project lands back on the home-base project (the built-in
-    // homedir project), so while it is the active project the exit affordance
-    // would only offer to leave the very place the X exists to return to.
-    !selectedProject.is_home
+  // Without tabs the selected session is the blank new-chat draft, whose
+  // surface carries the project and history controls above the composer
+  // instead; the header keeps them when nothing is selected at all.
+  const showHeaderActions = sessions.length > 0 || activeSessionId === null
 
   return (
     <header
@@ -102,87 +93,20 @@ export function ConversationHeader({
           />
         </ShortcutTooltip>
       ) : null}
-      <div className="app-region-no-drag flex h-8 min-w-0 items-center self-center">
-        <div
-          className="group/project-header relative flex min-w-0 items-center"
-          onMouseLeave={() => setExitHovered(false)}
-        >
-          <ProjectSwitchDialog
-            open={projectSwitcherOpen}
+      {showHeaderActions ? (
+        <div className="app-region-no-drag flex h-8 min-w-0 items-center self-center">
+          <ProjectSwitcherButton
             projectMode={projectMode}
+            projectName={projectName}
             projects={projects}
             selectedProject={selectedProject}
-            trigger={
-              <ShortcutTooltip
-                commandId="workbench.picker.project.open"
-                label={t('workbench.project.switch')}
-                side="bottom"
-              >
-                <Button
-                  className={cn(
-                    'min-w-0 max-w-[50vw]',
-                    canExitProject &&
-                      isExitHovered &&
-                      'bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_5%)] text-foreground',
-                  )}
-                  data-window-project-title
-                  type="button"
-                  variant="secondary"
-                >
-                  {selectedProject ? (
-                    <ProjectIcon
-                      className={cn(
-                        'size-3.5',
-                        canExitProject &&
-                          'transition-opacity group-hover/project-header:opacity-0 group-focus-within/project-header:opacity-0',
-                      )}
-                      icon={selectedProject.icon}
-                      plain
-                      size="small"
-                    />
-                  ) : (
-                    <FolderKanban className="size-3.5" />
-                  )}
-                  {selectedProject ? <span className="min-w-0 truncate">{projectName}</span> : null}
-                </Button>
-              </ShortcutTooltip>
-            }
+            projectSwitcherOpen={projectSwitcherOpen}
             onAddProject={onAddProject}
             onOpenChange={onProjectSwitcherOpenChange}
             onSelectProject={onSelectProject}
           />
-          {canExitProject ? (
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    aria-label={t('workbench.project.exit')}
-                    className="pointer-events-none absolute inset-y-0 left-1 my-auto bg-transparent opacity-0 transition-opacity group-hover/project-header:pointer-events-auto group-hover/project-header:opacity-100 group-focus-within/project-header:pointer-events-auto group-focus-within/project-header:opacity-100 hover:bg-transparent dark:hover:bg-transparent"
-                    size="icon-sm"
-                    type="button"
-                    variant="ghost"
-                    onClick={(event) => {
-                      event.preventDefault()
-                      event.stopPropagation()
-                      setExitHovered(false)
-                      onProjectSwitcherOpenChange(false)
-                      onSelectProject(null)
-                    }}
-                    onMouseEnter={() => setExitHovered(true)}
-                    onMouseLeave={() => setExitHovered(false)}
-                    onPointerDown={(event) => event.stopPropagation()}
-                  >
-                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-foreground/6">
-                      <CircleX className="size-3.5" strokeWidth={1.5} />
-                    </span>
-                  </Button>
-                }
-              />
-              <TooltipContent side="bottom">{t('workbench.project.exit')}</TooltipContent>
-            </Tooltip>
-          ) : null}
         </div>
-      </div>
+      ) : null}
       <SessionTabs
         activeSessionId={activeSessionId}
         pinnedSessionIds={pinnedSessionIds}
@@ -194,19 +118,21 @@ export function ConversationHeader({
         onSelectSession={onSelectSession}
         onTogglePinSession={onTogglePinSession}
       />
-      <div className="session-tab-actions app-region-no-drag relative flex shrink-0 items-center px-1 text-foreground-subtlest">
-        <SessionHistory
-          activeSessionId={activeSessionId}
-          error={historyError}
-          isLoading={isHistoryLoading}
-          open={historyOpen}
-          sessionActivity={sessionActivity}
-          sessions={historySessions}
-          onOpenChange={onHistoryOpenChange}
-          onRetry={onRetryHistory}
-          onSelectSession={onSelectSession}
-        />
-      </div>
+      {showHeaderActions ? (
+        <div className="session-tab-actions app-region-no-drag relative flex shrink-0 items-center px-1 text-foreground-subtlest">
+          <SessionHistory
+            activeSessionId={activeSessionId}
+            error={historyError}
+            isLoading={isHistoryLoading}
+            open={historyOpen}
+            sessionActivity={sessionActivity}
+            sessions={historySessions}
+            onOpenChange={onHistoryOpenChange}
+            onRetry={onRetryHistory}
+            onSelectSession={onSelectSession}
+          />
+        </div>
+      ) : null}
     </header>
   )
 }

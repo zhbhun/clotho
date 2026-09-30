@@ -31,7 +31,9 @@ export type ProjectSelectionProps = {
     fits there elide their middle instead of their tail. */
 const PROJECT_PATH_MAX = 80
 
-function ProjectTooltip({
+/** Extra props are forwarded to the trigger so this component can itself be the
+    `render` target of another trigger (e.g. CommandDialog's DialogTrigger). */
+export function ProjectTooltip({
   align = 'center',
   children,
   content,

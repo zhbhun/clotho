@@ -3,13 +3,31 @@ import { useTranslation } from 'react-i18next'
 import { cn } from '@/shadcn/utils'
 
 import { APP_CONTENT_CONTAINER_CLASS } from '../../../components/app-layout'
+import type { WorkbenchProject, WorkbenchSession } from '../stores/workbench-store'
 import { ClothoMark } from './clotho-mark'
+import { ProjectSwitcherButton } from './project-switcher-button'
 import { PromptComposer, type PromptComposerBaseProps } from './prompt'
+import { SessionHistory } from './session-history'
 
 export type SessionEmptyStateProps = {
   composerProps: PromptComposerBaseProps
   error: string | null
   hasTabSessions: boolean
+  historyError?: string | null
+  historyOpen: boolean
+  historySessions: WorkbenchSession[]
+  isHistoryLoading?: boolean
+  projectMode: 'project' | 'home'
+  projectName: string
+  projects: WorkbenchProject[]
+  projectSwitcherOpen: boolean
+  selectedProject?: WorkbenchProject
+  onAddProject: () => void
+  onHistoryOpenChange: (isOpen: boolean) => void
+  onProjectSwitcherOpenChange: (isOpen: boolean) => void
+  onRetryHistory?: () => void
+  onSelectProject: (projectId: string | null) => void
+  onSelectSession: (session: WorkbenchSession) => void
 }
 
 /** Surface shown when there is no conversation yet: brand mark centered above the bottom-docked composer. */
@@ -17,8 +35,27 @@ export function SessionEmptyState({
   composerProps,
   error,
   hasTabSessions,
+  historyError,
+  historyOpen,
+  historySessions,
+  isHistoryLoading,
+  projectMode,
+  projectName,
+  projects,
+  projectSwitcherOpen,
+  selectedProject,
+  onAddProject,
+  onHistoryOpenChange,
+  onProjectSwitcherOpenChange,
+  onRetryHistory,
+  onSelectProject,
+  onSelectSession,
 }: SessionEmptyStateProps) {
   const { t } = useTranslation()
+  // Without tabs the selected session is the blank new-chat draft, so the
+  // project and history controls move from the header onto a strip attached
+  // to the composer.
+  const showProjectStrip = !hasTabSessions
 
   return (
     <div
@@ -42,7 +79,48 @@ export function SessionEmptyState({
       </div>
       <div className={cn('shrink-0 px-6 pb-4', hasTabSessions && 'pointer-events-auto')}>
         <div className={cn(APP_CONTENT_CONTAINER_CLASS, 'flex flex-col gap-3')}>
-          <PromptComposer {...composerProps} slashMenuPlacement="above" />
+          {showProjectStrip ? (
+            /* The strip and composer stack without the surrounding gap so the
+               composer overlaps the strip's bottom padding, leaving 8px of
+               visible surface above and below the button row. */
+            <div className="flex flex-col">
+              <div className="mx-2 flex min-h-14 items-center rounded-t-3xl bg-project-switcher-surface px-2 pt-2 pb-6">
+                <ProjectSwitcherButton
+                  appearance="empty-surface"
+                  className="flex-1"
+                  projectMode={projectMode}
+                  projectName={projectName}
+                  projects={projects}
+                  selectedProject={selectedProject}
+                  projectSwitcherOpen={projectSwitcherOpen}
+                  onAddProject={onAddProject}
+                  onOpenChange={onProjectSwitcherOpenChange}
+                  onSelectProject={onSelectProject}
+                />
+                <SessionHistory
+                  activeSessionId={null}
+                  appearance="empty-surface"
+                  error={historyError}
+                  isLoading={isHistoryLoading}
+                  open={historyOpen}
+                  sessions={historySessions}
+                  onOpenChange={onHistoryOpenChange}
+                  onRetry={onRetryHistory}
+                  onSelectSession={onSelectSession}
+                />
+              </div>
+              <div className="relative z-10 -mt-4">
+                <PromptComposer
+                  {...composerProps}
+                  className="rounded-3xl"
+                  shadowDirection="downward"
+                  slashMenuPlacement="below"
+                />
+              </div>
+            </div>
+          ) : (
+            <PromptComposer {...composerProps} slashMenuPlacement="above" />
+          )}
           {error ? (
             <p className="truncate text-xs text-destructive" title={error}>
               {error}
