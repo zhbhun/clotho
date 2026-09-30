@@ -66,7 +66,7 @@ export function ProjectSwitchDialog({
   onSelectProject,
 }: ProjectSelectionProps & {
   open: boolean
-  trigger: ReactElement
+  trigger?: ReactElement
   onOpenChange: (open: boolean) => void
 }) {
   const { t } = useTranslation()

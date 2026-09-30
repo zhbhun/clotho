@@ -7,56 +7,36 @@ import { SidebarToggleIcon } from '../../../components/sidebar-toggle-icon'
 import { ShortcutTooltip } from '../components/shortcut-tooltip'
 import type { SessionActivity, WorkbenchProject, WorkbenchSession } from '../stores/workbench-store'
 import { ProjectSwitcherButton } from './project-switcher-button'
-import { SessionHistory } from './session-history'
+import { SessionHistoryButton } from './session-history'
 import { SessionTabs } from './session-tabs'
 
 export function ConversationHeader({
   activeSessionId,
-  historyError = null,
-  historyOpen,
-  historySessions,
   isContentScrolled,
-  isHistoryLoading = false,
-  projectSwitcherOpen,
   projectMode,
   projectName,
-  projects,
   pinnedSessionIds,
   selectedProject,
   sessionActivity,
   sessions,
-  onAddProject,
   onCloseSession,
   onDeleteSession,
-  onHistoryOpenChange,
-  onProjectSwitcherOpenChange,
   onRenameSession,
-  onRetryHistory = () => {},
   onSelectProject,
   onSelectSession,
   onTogglePinSession,
 }: {
   activeSessionId: string | null
-  historyError?: string | null
-  historyOpen: boolean
-  historySessions: WorkbenchSession[]
   isContentScrolled: boolean
-  isHistoryLoading?: boolean
-  projectSwitcherOpen: boolean
   projectMode: 'project' | 'home'
   projectName: string
-  projects: WorkbenchProject[]
   pinnedSessionIds: ReadonlySet<string>
   selectedProject?: WorkbenchProject
   sessionActivity: Record<string, SessionActivity>
   sessions: WorkbenchSession[]
-  onAddProject: () => void
   onCloseSession: (session: WorkbenchSession) => void
   onDeleteSession: (session: WorkbenchSession) => void
-  onHistoryOpenChange: (isOpen: boolean) => void
-  onProjectSwitcherOpenChange: (isOpen: boolean) => void
   onRenameSession: (session: WorkbenchSession) => void
-  onRetryHistory?: () => void
   onSelectProject: (projectId: string | null) => void
   onSelectSession: (session: WorkbenchSession) => void
   onTogglePinSession: (session: WorkbenchSession) => void
@@ -98,11 +78,7 @@ export function ConversationHeader({
           <ProjectSwitcherButton
             projectMode={projectMode}
             projectName={projectName}
-            projects={projects}
             selectedProject={selectedProject}
-            projectSwitcherOpen={projectSwitcherOpen}
-            onAddProject={onAddProject}
-            onOpenChange={onProjectSwitcherOpenChange}
             onSelectProject={onSelectProject}
           />
         </div>
@@ -120,17 +96,7 @@ export function ConversationHeader({
       />
       {showHeaderActions ? (
         <div className="session-tab-actions app-region-no-drag relative flex shrink-0 items-center px-1 text-foreground-subtlest">
-          <SessionHistory
-            activeSessionId={activeSessionId}
-            error={historyError}
-            isLoading={isHistoryLoading}
-            open={historyOpen}
-            sessionActivity={sessionActivity}
-            sessions={historySessions}
-            onOpenChange={onHistoryOpenChange}
-            onRetry={onRetryHistory}
-            onSelectSession={onSelectSession}
-          />
+          <SessionHistoryButton />
         </div>
       ) : null}
     </header>

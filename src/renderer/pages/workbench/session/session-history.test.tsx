@@ -8,7 +8,7 @@ import { appI18n } from '../../../i18n/runtime'
 import { commandCatalog } from '../../../services/shortcuts/catalog'
 import { ShortcutRuntimeProvider, createShortcutRuntime } from '../../../services/shortcuts/runtime'
 import type { SessionActivity, WorkbenchSession } from '../stores/workbench-store'
-import { SessionHistory } from './session-history'
+import { SessionHistoryPanel } from './session-history'
 
 const SESSION: WorkbenchSession = {
   id: 'session-1',
@@ -55,13 +55,14 @@ function renderHistory({
   const view = render(
     <ShortcutRuntimeProvider runtime={runtime}>
       <TooltipProvider>
-        <SessionHistory
+        <SessionHistoryPanel
           activeSessionId={null}
           error={error}
           isLoading={isLoading}
           open
           sessionActivity={sessionActivity}
           sessions={sessions}
+          onOpenChange={vi.fn()}
           onRetry={onRetry}
           onSelectSession={vi.fn()}
         />
@@ -72,7 +73,7 @@ function renderHistory({
   return { ...view, onRetry }
 }
 
-describe('SessionHistory', () => {
+describe('SessionHistoryPanel', () => {
   it('keeps the history list busy without showing an empty result while sessions load', () => {
     renderHistory({ isLoading: true, sessions: [] })
 

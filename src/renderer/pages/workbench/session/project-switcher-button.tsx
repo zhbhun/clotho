@@ -9,36 +9,31 @@ import { cn } from '@/shadcn/utils'
 import { DEFAULT_PROJECT_ICON, ProjectIcon } from '../../../components/project-icon'
 import { ShortcutTooltip } from '../components/shortcut-tooltip'
 import type { WorkbenchProject } from '../stores/workbench-store'
-import { ProjectSwitchDialog, ProjectTooltip } from './project-switcher'
+import { ProjectTooltip } from './project-switcher'
+import { useSwitcherStore } from './stores/switcher-store'
 
 export type ProjectSwitcherButtonProps = {
   appearance?: 'header' | 'empty-surface'
   className?: string
   projectMode: 'project' | 'home'
   projectName: string
-  projects: WorkbenchProject[]
   selectedProject?: WorkbenchProject
-  projectSwitcherOpen: boolean
-  onAddProject: () => void
-  onOpenChange: (isOpen: boolean) => void
   onSelectProject: (projectId: string | null) => void
 }
 
-/** Project button opening the switcher dialog, shared by the header row and the empty-surface strip. */
+/** Project button opening the globally mounted switcher dialog, shared by the header row and the empty-surface strip. */
 export function ProjectSwitcherButton({
   appearance = 'header',
   className,
   projectMode,
   projectName,
-  projects,
   selectedProject,
-  projectSwitcherOpen,
-  onAddProject,
-  onOpenChange,
   onSelectProject,
 }: ProjectSwitcherButtonProps) {
   const { t } = useTranslation()
   const [isExitHovered, setExitHovered] = useState(false)
+  const openProjectSwitcher = useSwitcherStore((state) => state.openProjectSwitcher)
+  const closeProjectSwitcher = useSwitcherStore((state) => state.closeProjectSwitcher)
   const isHeader = appearance === 'header'
   // Exiting a side project lands back on the home-base project (the built-in
   // homedir project), so while it is the active project the exit affordance
@@ -66,6 +61,7 @@ export function ProjectSwitcherButton({
       data-window-project-title
       type="button"
       variant={isHeader ? 'secondary' : 'surface'}
+      onClick={openProjectSwitcher}
     >
       {selectedProject ? (
         <ProjectIcon
@@ -113,16 +109,7 @@ export function ProjectSwitcherButton({
         className="group/project-switcher relative flex min-w-0 items-center"
         onMouseLeave={() => setExitHovered(false)}
       >
-        <ProjectSwitchDialog
-          open={projectSwitcherOpen}
-          projectMode={projectMode}
-          projects={projects}
-          selectedProject={selectedProject}
-          trigger={trigger}
-          onAddProject={onAddProject}
-          onOpenChange={onOpenChange}
-          onSelectProject={onSelectProject}
-        />
+        {trigger}
         {canExitProject ? (
           <Tooltip>
             <TooltipTrigger
@@ -142,7 +129,7 @@ export function ProjectSwitcherButton({
                     event.preventDefault()
                     event.stopPropagation()
                     setExitHovered(false)
-                    onOpenChange(false)
+                    closeProjectSwitcher()
                     onSelectProject(null)
                   }}
                   onMouseEnter={() => setExitHovered(true)}

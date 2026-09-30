@@ -3,31 +3,20 @@ import { useTranslation } from 'react-i18next'
 import { cn } from '@/shadcn/utils'
 
 import { APP_CONTENT_CONTAINER_CLASS } from '../../../components/app-layout'
-import type { WorkbenchProject, WorkbenchSession } from '../stores/workbench-store'
+import type { WorkbenchProject } from '../stores/workbench-store'
 import { ClothoMark } from './clotho-mark'
 import { ProjectSwitcherButton } from './project-switcher-button'
 import { PromptComposer, type PromptComposerBaseProps } from './prompt'
-import { SessionHistory } from './session-history'
+import { SessionHistoryButton } from './session-history'
 
 export type SessionEmptyStateProps = {
   composerProps: PromptComposerBaseProps
   error: string | null
   hasTabSessions: boolean
-  historyError?: string | null
-  historyOpen: boolean
-  historySessions: WorkbenchSession[]
-  isHistoryLoading?: boolean
   projectMode: 'project' | 'home'
   projectName: string
-  projects: WorkbenchProject[]
-  projectSwitcherOpen: boolean
   selectedProject?: WorkbenchProject
-  onAddProject: () => void
-  onHistoryOpenChange: (isOpen: boolean) => void
-  onProjectSwitcherOpenChange: (isOpen: boolean) => void
-  onRetryHistory?: () => void
   onSelectProject: (projectId: string | null) => void
-  onSelectSession: (session: WorkbenchSession) => void
 }
 
 /** Surface shown when there is no conversation yet: brand mark centered above the bottom-docked composer. */
@@ -35,21 +24,10 @@ export function SessionEmptyState({
   composerProps,
   error,
   hasTabSessions,
-  historyError,
-  historyOpen,
-  historySessions,
-  isHistoryLoading,
   projectMode,
   projectName,
-  projects,
-  projectSwitcherOpen,
   selectedProject,
-  onAddProject,
-  onHistoryOpenChange,
-  onProjectSwitcherOpenChange,
-  onRetryHistory,
   onSelectProject,
-  onSelectSession,
 }: SessionEmptyStateProps) {
   const { t } = useTranslation()
   // Without tabs the selected session is the blank new-chat draft, so the
@@ -90,24 +68,10 @@ export function SessionEmptyState({
                   className="flex-1"
                   projectMode={projectMode}
                   projectName={projectName}
-                  projects={projects}
                   selectedProject={selectedProject}
-                  projectSwitcherOpen={projectSwitcherOpen}
-                  onAddProject={onAddProject}
-                  onOpenChange={onProjectSwitcherOpenChange}
                   onSelectProject={onSelectProject}
                 />
-                <SessionHistory
-                  activeSessionId={null}
-                  appearance="empty-surface"
-                  error={historyError}
-                  isLoading={isHistoryLoading}
-                  open={historyOpen}
-                  sessions={historySessions}
-                  onOpenChange={onHistoryOpenChange}
-                  onRetry={onRetryHistory}
-                  onSelectSession={onSelectSession}
-                />
+                <SessionHistoryButton appearance="empty-surface" />
               </div>
               <div className="relative z-10 -mt-4">
                 <PromptComposer

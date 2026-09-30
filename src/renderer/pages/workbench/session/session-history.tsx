@@ -11,6 +11,7 @@ import { SessionStatus } from '../session-status'
 import type { SessionActivity, WorkbenchSession } from '../stores/workbench-store'
 import { sessionTitle } from '../utils/session-list'
 import { type WorkbenchTranslator, sessionDateLabel } from '../utils/session-list'
+import { useSwitcherStore } from './stores/switcher-store'
 import {
   SwitcherCommand,
   SwitcherCommandDialog,
@@ -48,9 +49,36 @@ export function sessionTimeLabel(
   }).format(date)
 }
 
-export function SessionHistory({
-  activeSessionId,
+export function SessionHistoryButton({
   appearance = 'default',
+}: {
+  appearance?: 'default' | 'empty-surface'
+}) {
+  const { t } = useTranslation()
+  const openSessionHistory = useSwitcherStore((state) => state.openSessionHistory)
+
+  return (
+    <ShortcutTooltip
+      commandId="workbench.picker.session.open"
+      label={t('workbench.history.title')}
+      side="bottom"
+    >
+      <Button
+        aria-label={t('workbench.history.title')}
+        className={appearance === 'empty-surface' ? 'ml-auto rounded-xl' : undefined}
+        size="icon"
+        variant={appearance === 'empty-surface' ? 'surface' : 'mute'}
+        onClick={openSessionHistory}
+      >
+        <Clock data-icon="inline-start" strokeWidth={1.5} />
+      </Button>
+    </ShortcutTooltip>
+  )
+}
+
+/** The globally mounted history dialog; the session area wires `open` to the switcher store. */
+export function SessionHistoryPanel({
+  activeSessionId,
   error = null,
   isLoading = false,
   open,
@@ -61,19 +89,17 @@ export function SessionHistory({
   onSelectSession,
 }: {
   activeSessionId: string | null
-  appearance?: 'default' | 'empty-surface'
   error?: string | null
   isLoading?: boolean
-  open?: boolean
+  open: boolean
   sessionActivity?: Record<string, SessionActivity>
   sessions: WorkbenchSession[]
-  onOpenChange?: (isOpen: boolean) => void
+  onOpenChange: (isOpen: boolean) => void
   onRetry?: () => void
   onSelectSession: (session: WorkbenchSession) => void
 }) {
   const { i18n, t } = useTranslation()
   const locale = i18n.resolvedLanguage ?? i18n.language
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
   const [query, setQuery] = useState('')
   const normalizedQuery = query.trim().toLocaleLowerCase()
   const filteredSessions = normalizedQuery
@@ -82,34 +108,13 @@ export function SessionHistory({
       )
     : sessions
   const now = new Date()
-  const isOpen = open ?? uncontrolledOpen
-  const handleOpenChange = (nextOpen: boolean) => {
-    if (open === undefined) setUncontrolledOpen(nextOpen)
-    onOpenChange?.(nextOpen)
-  }
 
   return (
     <SwitcherCommandDialog
       description={t('workbench.history.description')}
-      open={isOpen}
+      open={open}
       title={t('workbench.history.title')}
-      trigger={
-        <ShortcutTooltip
-          commandId="workbench.picker.session.open"
-          label={t('workbench.history.title')}
-          side="bottom"
-        >
-          <Button
-            aria-label={t('workbench.history.title')}
-            className={appearance === 'empty-surface' ? 'ml-auto rounded-xl' : undefined}
-            size="icon"
-            variant={appearance === 'empty-surface' ? 'surface' : 'mute'}
-          >
-            <Clock data-icon="inline-start" strokeWidth={1.5} />
-          </Button>
-        </ShortcutTooltip>
-      }
-      onOpenChange={handleOpenChange}
+      onOpenChange={onOpenChange}
     >
       <SwitcherCommand defaultValue={activeSessionId ?? undefined} shouldFilter={false}>
         <SwitcherCommandInput
@@ -154,7 +159,7 @@ export function SessionHistory({
                       label={sessionTitle(session)}
                       value={session.id}
                       onSelect={() => {
-                        handleOpenChange(false)
+                        onOpenChange(false)
                         setQuery('')
                         window.setTimeout(() => onSelectSession(session), 0)
                       }}

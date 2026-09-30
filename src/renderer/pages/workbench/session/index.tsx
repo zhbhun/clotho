@@ -29,6 +29,7 @@ import type { VirtualConversationHandle } from './conversation/virtual-conversat
 import { SessionEmptyState } from './empty-state'
 import { ConversationHeader } from './header'
 import { ModelOnboarding } from './model-onboarding'
+import { ProjectSwitchDialog } from './project-switcher'
 import type { PromptComposerBaseProps } from './prompt'
 import {
   SessionControllerProvider,
@@ -40,7 +41,9 @@ import {
   useUsageStore,
 } from './session-controller-context'
 import { sessionErrorKey } from './session-error'
+import { SessionHistoryPanel } from './session-history'
 import type { SessionComposerDraft } from './session-types'
+import { useSwitcherStore } from './stores/switcher-store'
 import { averageCacheHitRate } from './stores/usage-store'
 import { SubagentBreadcrumb } from './subagent-breadcrumb'
 import { SubagentConversation } from './subagent-conversation'
@@ -124,8 +127,6 @@ export function SessionArea(props: SessionAreaProps) {
   const { selectedProject, selectedSession } = props
   const sessionId = selectedSession?.id ?? ''
   const [contentScroll, setContentScroll] = useState({ sessionId, isScrolled: false })
-  const [isProjectSwitcherOpen, setProjectSwitcherOpen] = useState(false)
-  const [isSessionHistoryOpen, setSessionHistoryOpen] = useState(false)
   const isContentScrolled = contentScroll.sessionId === sessionId ? contentScroll.isScrolled : false
   const handleContentScrolledChange = useCallback((nextSessionId: string, isScrolled: boolean) => {
     setContentScroll((current) =>
@@ -134,42 +135,30 @@ export function SessionArea(props: SessionAreaProps) {
         : { sessionId: nextSessionId, isScrolled },
     )
   }, [])
-  const handleProjectSwitcherOpenChange = useCallback((isOpen: boolean) => {
-    setProjectSwitcherOpen(isOpen)
-    if (isOpen) setSessionHistoryOpen(false)
-  }, [])
-  const handleSessionHistoryOpenChange = useCallback((isOpen: boolean) => {
-    setSessionHistoryOpen(isOpen)
-    if (isOpen) setProjectSwitcherOpen(false)
-  }, [])
+  const projectSwitcherOpen = useSwitcherStore((state) => state.projectSwitcherOpen)
+  const sessionHistoryOpen = useSwitcherStore((state) => state.sessionHistoryOpen)
+  const openProjectSwitcher = useSwitcherStore((state) => state.openProjectSwitcher)
+  const openSessionHistory = useSwitcherStore((state) => state.openSessionHistory)
+  const closeProjectSwitcher = useSwitcherStore((state) => state.closeProjectSwitcher)
+  const closeSessionHistory = useSwitcherStore((state) => state.closeSessionHistory)
 
-  useCommandHandler('workbench.picker.project.open', () => handleProjectSwitcherOpenChange(true))
-  useCommandHandler('workbench.picker.session.open', () => handleSessionHistoryOpenChange(true))
+  useCommandHandler('workbench.picker.project.open', openProjectSwitcher)
+  useCommandHandler('workbench.picker.session.open', openSessionHistory)
 
   return (
     <SidebarInset className="relative min-w-0 overflow-hidden bg-background">
       <ConversationHeader
         activeSessionId={selectedSession?.id ?? null}
-        historyOpen={isSessionHistoryOpen}
-        historyError={props.projectSessionError}
-        historySessions={props.workspaceSessions}
-        isHistoryLoading={props.isProjectSessionLoading}
         isContentScrolled={isContentScrolled}
-        projectSwitcherOpen={isProjectSwitcherOpen}
         projectMode={props.projectMode}
         projectName={selectedProject ? projectDisplayName(selectedProject) : ''}
-        projects={props.projects}
         pinnedSessionIds={props.pinnedSessionIds}
         selectedProject={selectedProject}
         sessionActivity={props.sessionActivity}
         sessions={props.tabSessions}
-        onAddProject={props.onAddProject}
         onCloseSession={props.onCloseSession}
         onDeleteSession={props.onDeleteSession}
-        onHistoryOpenChange={handleSessionHistoryOpenChange}
-        onProjectSwitcherOpenChange={handleProjectSwitcherOpenChange}
         onRenameSession={props.onRenameSession}
-        onRetryHistory={props.onRetryProjectSessions}
         onSelectProject={props.setSelectedProjectId}
         onSelectSession={props.onSelectSession}
         onTogglePinSession={props.onTogglePinSession}
@@ -211,16 +200,34 @@ export function SessionArea(props: SessionAreaProps) {
                 {...props}
                 selectedSession={selectedSession}
                 sessionId={sessionId}
-                historyOpen={isSessionHistoryOpen}
-                projectSwitcherOpen={isProjectSwitcherOpen}
                 onContentScrolledChange={handleContentScrolledChange}
-                onHistoryOpenChange={handleSessionHistoryOpenChange}
-                onProjectSwitcherOpenChange={handleProjectSwitcherOpenChange}
               />
             </SessionControllerProvider>
           </ModelOnboardingGate>
         )}
       </ErrorBoundary>
+      {/* The switcher dialogs mount once here; the header and empty-surface
+          buttons toggle them through the switcher store. */}
+      <ProjectSwitchDialog
+        open={projectSwitcherOpen}
+        projectMode={props.projectMode}
+        projects={props.projects}
+        selectedProject={selectedProject}
+        onAddProject={props.onAddProject}
+        onOpenChange={(open) => (open ? openProjectSwitcher() : closeProjectSwitcher())}
+        onSelectProject={props.setSelectedProjectId}
+      />
+      <SessionHistoryPanel
+        activeSessionId={selectedSession?.id ?? null}
+        error={props.projectSessionError}
+        isLoading={props.isProjectSessionLoading}
+        open={sessionHistoryOpen}
+        sessionActivity={props.sessionActivity}
+        sessions={props.workspaceSessions}
+        onOpenChange={(open) => (open ? openSessionHistory() : closeSessionHistory())}
+        onRetry={props.onRetryProjectSessions}
+        onSelectSession={props.onSelectSession}
+      />
     </SidebarInset>
   )
 }
@@ -238,35 +245,21 @@ function ModelOnboardingGate({
 
 function SessionAreaContent({
   forkSession,
-  historyOpen,
   isMockProject,
-  isProjectSessionLoading,
   projectMode,
-  projectSessionError,
-  projectSwitcherOpen,
   projects,
   sessionId,
   selectedProject,
   selectedSession,
   selectPromptFiles,
   tabSessions,
-  workspaceSessions,
-  onAddProject,
   onContentScrolledChange,
-  onHistoryOpenChange,
   onOpenSettings,
-  onProjectSwitcherOpenChange,
   onRenameSession,
-  onRetryProjectSessions,
-  onSelectSession,
   setSelectedProjectId,
 }: SessionAreaProps & {
   sessionId: string
   onContentScrolledChange: (sessionId: string, isScrolled: boolean) => void
-  historyOpen: boolean
-  projectSwitcherOpen: boolean
-  onHistoryOpenChange: (isOpen: boolean) => void
-  onProjectSwitcherOpenChange: (isOpen: boolean) => void
 }) {
   const { t } = useTranslation()
   const controller = useSessionController()
@@ -740,21 +733,10 @@ function SessionAreaContent({
           composerProps={promptComposerProps}
           error={error}
           hasTabSessions={tabSessions.length > 0}
-          historyError={projectSessionError}
-          historyOpen={historyOpen}
-          historySessions={workspaceSessions}
-          isHistoryLoading={isProjectSessionLoading}
           projectMode={projectMode}
           projectName={selectedProject ? projectDisplayName(selectedProject) : ''}
-          projects={projects}
-          projectSwitcherOpen={projectSwitcherOpen}
           selectedProject={selectedProject}
-          onAddProject={onAddProject}
-          onHistoryOpenChange={onHistoryOpenChange}
-          onProjectSwitcherOpenChange={onProjectSwitcherOpenChange}
-          onRetryHistory={onRetryProjectSessions}
           onSelectProject={setSelectedProjectId}
-          onSelectSession={onSelectSession}
         />
       )}
     </>

@@ -9,6 +9,7 @@ import { commandCatalog } from '../../../services/shortcuts/catalog'
 import { ShortcutRuntimeProvider, createShortcutRuntime } from '../../../services/shortcuts/runtime'
 import type { WorkbenchProject, WorkbenchSession } from '../stores/workbench-store'
 import { ConversationHeader } from './header'
+import { useSwitcherStore } from './stores/switcher-store'
 
 const project: WorkbenchProject = {
   id: 'project-1',
@@ -55,7 +56,6 @@ function renderHeader(
   { isMobile = false }: { isMobile?: boolean } = {},
 ) {
   const onSelectProject = vi.fn()
-  const onProjectSwitcherOpenChange = vi.fn()
   Object.defineProperty(window, 'innerWidth', {
     value: isMobile ? 500 : 1200,
     configurable: true,
@@ -95,22 +95,15 @@ function renderHeader(
         <SidebarProvider defaultOpen>
           <ConversationHeader
             activeSessionId={activeSessionId}
-            historyOpen={false}
-            historySessions={[]}
             isContentScrolled={false}
             projectMode={projectMode}
             projectName={selectedProject ? 'Demo' : 'Clotho'}
-            projectSwitcherOpen={false}
-            projects={selectedProject ? [selectedProject] : []}
             pinnedSessionIds={new Set()}
             selectedProject={selectedProject}
             sessionActivity={{}}
             sessions={sessions}
-            onAddProject={vi.fn()}
             onCloseSession={vi.fn()}
             onDeleteSession={vi.fn()}
-            onHistoryOpenChange={vi.fn()}
-            onProjectSwitcherOpenChange={onProjectSwitcherOpenChange}
             onRenameSession={vi.fn()}
             onSelectProject={onSelectProject}
             onSelectSession={vi.fn()}
@@ -121,13 +114,14 @@ function renderHeader(
     </ShortcutRuntimeProvider>,
   )
 
-  return { onSelectProject, onProjectSwitcherOpenChange }
+  return { onSelectProject }
 }
 
 describe('ConversationHeader', () => {
   it('exits to the home workspace when the close button is clicked in project mode', async () => {
     await appI18n.changeLanguage('zh-CN')
-    const { onSelectProject, onProjectSwitcherOpenChange } = renderHeader({
+    useSwitcherStore.setState({ projectSwitcherOpen: true })
+    const { onSelectProject } = renderHeader({
       projectMode: 'project',
       selectedProject: project,
     })
@@ -135,7 +129,7 @@ describe('ConversationHeader', () => {
     fireEvent.click(screen.getByRole('button', { name: appI18n.t('workbench.project.exit') }))
 
     expect(onSelectProject).toHaveBeenCalledWith(null)
-    expect(onProjectSwitcherOpenChange).toHaveBeenCalledWith(false)
+    expect(useSwitcherStore.getState().projectSwitcherOpen).toBe(false)
   })
 
   it('offers no exit outside project mode', async () => {

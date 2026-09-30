@@ -24,6 +24,7 @@ import { WorkbenchPage } from './index'
 import { sessionPersistence } from './services/session-persistence'
 import { ConversationHeader } from './session/header'
 import { saveSessionPreferences } from './session/stores/session-preferences'
+import { useSwitcherStore } from './session/stores/switcher-store'
 import { SessionSidebar } from './sidebar'
 import { type WorkbenchSession, useWorkbenchStore } from './stores/workbench-store'
 import { buildSessionTimeline } from './utils/session-list'
@@ -48,6 +49,7 @@ function isSidebarSessionViewport(element: HTMLElement) {
 
 beforeEach(async () => {
   vi.setSystemTime(new Date('2026-06-25T12:00:00Z'))
+  useSwitcherStore.setState({ projectSwitcherOpen: false, sessionHistoryOpen: false })
   HTMLElement.prototype.scrollTo = vi.fn()
   Element.prototype.scrollIntoView = vi.fn()
   Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
@@ -224,21 +226,14 @@ function renderHeader({
           <SidebarProvider defaultOpen={defaultOpen}>
             <ConversationHeader
               activeSessionId={activeSessionId}
-              historyOpen={false}
-              historySessions={[]}
               isContentScrolled={false}
               projectMode="home"
               projectName="Claude"
-              projectSwitcherOpen={false}
-              projects={[]}
               pinnedSessionIds={new Set()}
               sessionActivity={{}}
               sessions={sessions}
-              onAddProject={vi.fn()}
               onCloseSession={vi.fn()}
               onDeleteSession={vi.fn()}
-              onHistoryOpenChange={vi.fn()}
-              onProjectSwitcherOpenChange={vi.fn()}
               onRenameSession={vi.fn()}
               onSelectProject={vi.fn()}
               onSelectSession={vi.fn()}
