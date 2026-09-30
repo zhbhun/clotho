@@ -55,9 +55,11 @@ export function ProjectSwitcherMenuContent({
             return (
               <MenuItem
                 key={project.id}
-                selected={selectedProject?.id === project.id}
-                value={name}
                 keywords={[name, project.path]}
+                selected={selectedProject?.id === project.id}
+                // The value drives cmdk's single keyboard highlight, so it
+                // must be unique; searchable text lives in the keywords.
+                value={project.id}
                 onSelect={() => onSelectProject(project.id)}
               >
                 <ProjectIcon className="size-5 shrink-0" plain icon={project.icon} size="default" />
