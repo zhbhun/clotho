@@ -319,6 +319,9 @@ type SdkInitializationResult = Omit<ClaudeInitializationResult, 'cwd' | 'resume'
 
 export type ClaudeProxyConnection = Pick<ModelProxy, 'sessionThinking' | 'settingsEnv'>
 
+/** claude.ai-hosted artifact/design tools — unreachable from SDK sessions, so their schemas are dead context weight. */
+const CLAUDE_AI_SERVICE_TOOLS = ['Artifact', 'ArtifactData', 'ArtifactComments', 'DesignSync']
+
 function normalizeOptions(
   options: ClaudeOptions | undefined,
   proxy?: ClaudeProxyConnection,
@@ -330,6 +333,9 @@ function normalizeOptions(
     ...options,
     cwd: options?.cwd ?? os.homedir(),
     enableFileCheckpointing: true,
+    disallowedTools: [
+      ...new Set([...CLAUDE_AI_SERVICE_TOOLS, ...(options?.disallowedTools ?? [])]),
+    ],
   }
   // SDK sessions otherwise run on a two-line stub system prompt; the Claude
   // Code preset keeps sessions on the same prompt as the interactive CLI.
