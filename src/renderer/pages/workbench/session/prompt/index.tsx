@@ -495,7 +495,7 @@ export function PromptComposer({
             <>
               {onCancel ? (
                 <Button
-                  className="rounded-lg border-input bg-transparent dark:bg-transparent"
+                  className="rounded-lg border-input"
                   disabled={isSubmitting}
                   type="button"
                   variant="outline"
