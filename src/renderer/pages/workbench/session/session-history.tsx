@@ -3,15 +3,14 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
-import { Skeleton } from '@/shadcn/skeleton'
 
+import { Menu, MenuTrigger } from '../../../components/menu'
 import { LoadFailure } from '../components/loading-state'
 import { ShortcutTooltip } from '../components/shortcut-tooltip'
 import { SessionStatus } from '../session-status'
 import type { SessionActivity, WorkbenchSession } from '../stores/workbench-store'
-import { sessionTitle } from '../utils/session-list'
-import { type WorkbenchTranslator, sessionDateLabel } from '../utils/session-list'
-import { useSwitcherStore } from './stores/switcher-store'
+import { sessionTimeLabel, sessionTitle } from '../utils/session-list'
+import { SessionHistoryMenuContent, SessionHistorySkeleton } from './session-history-menu'
 import {
   SwitcherCommand,
   SwitcherCommandDialog,
@@ -22,57 +21,59 @@ import {
   SwitcherCommandList,
 } from './switcher-command'
 
-export function sessionTimeLabel(
-  seconds: number,
-  now: Date,
-  t: WorkbenchTranslator,
-  locale: string,
-) {
-  if (!Number.isFinite(seconds) || seconds <= 0) return ''
-
-  const date = new Date(seconds * 1000)
-  if (Number.isNaN(date.getTime())) return ''
-
-  const elapsedSeconds = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 1000))
-  if (elapsedSeconds < 60) return t('workbench.history.justNow')
-  if (elapsedSeconds < 60 * 60) {
-    return t('workbench.history.minutesAgo', { count: Math.floor(elapsedSeconds / 60) })
-  }
-
-  const dateLabel = sessionDateLabel(seconds, now, t, locale)
-  if (dateLabel !== t('workbench.session.today')) return dateLabel
-
-  return new Intl.DateTimeFormat(locale, {
-    hour: '2-digit',
-    hour12: false,
-    minute: '2-digit',
-  }).format(date)
-}
-
+/** History button; clicking opens the dropdown history menu, while the
+    shortcut command keeps opening the palette dialog through the store. */
 export function SessionHistoryButton({
   appearance = 'default',
+  activeSessionId,
+  error = null,
+  isLoading = false,
+  sessionActivity = {},
+  sessions,
+  onRetry = () => {},
+  onSelectSession,
 }: {
   appearance?: 'default' | 'empty-surface'
+  activeSessionId: string | null
+  error?: string | null
+  isLoading?: boolean
+  sessionActivity?: Record<string, SessionActivity>
+  sessions: WorkbenchSession[]
+  onRetry?: () => void
+  onSelectSession: (session: WorkbenchSession) => void
 }) {
   const { t } = useTranslation()
-  const openSessionHistory = useSwitcherStore((state) => state.openSessionHistory)
 
   return (
-    <ShortcutTooltip
-      commandId="workbench.picker.session.open"
-      label={t('workbench.history.title')}
-      side="bottom"
-    >
-      <Button
-        aria-label={t('workbench.history.title')}
-        className={appearance === 'empty-surface' ? 'ml-auto rounded-xl' : undefined}
-        size="icon"
-        variant={appearance === 'empty-surface' ? 'surface' : 'mute'}
-        onClick={openSessionHistory}
+    <Menu>
+      <ShortcutTooltip
+        commandId="workbench.picker.session.open"
+        label={t('workbench.history.title')}
+        side="bottom"
       >
-        <Clock data-icon="inline-start" strokeWidth={1.5} />
-      </Button>
-    </ShortcutTooltip>
+        <MenuTrigger
+          render={
+            <Button
+              aria-label={t('workbench.history.title')}
+              className={appearance === 'empty-surface' ? 'ml-auto rounded-xl' : undefined}
+              size="icon"
+              variant={appearance === 'empty-surface' ? 'surface' : 'mute'}
+            />
+          }
+        >
+          <Clock data-icon="inline-start" strokeWidth={1.5} />
+        </MenuTrigger>
+      </ShortcutTooltip>
+      <SessionHistoryMenuContent
+        activeSessionId={activeSessionId}
+        error={error}
+        isLoading={isLoading}
+        sessionActivity={sessionActivity}
+        sessions={sessions}
+        onRetry={onRetry}
+        onSelectSession={onSelectSession}
+      />
+    </Menu>
   )
 }
 
@@ -172,19 +173,5 @@ export function SessionHistoryPanel({
         </SwitcherCommandList>
       </SwitcherCommand>
     </SwitcherCommandDialog>
-  )
-}
-
-function SessionHistorySkeleton() {
-  return (
-    <div aria-hidden="true" data-session-history-skeleton>
-      {[72, 58, 81, 64].map((width) => (
-        <div className="flex min-h-8 items-center gap-2 rounded-md px-2.5" key={width}>
-          <Skeleton className="size-4 shrink-0 rounded-sm" />
-          <Skeleton className="h-3.5" style={{ width: `${width}%` }} />
-          <Skeleton className="h-3 w-12 shrink-0" />
-        </div>
-      ))}
-    </div>
   )
 }

@@ -149,6 +149,9 @@ export function SessionArea(props: SessionAreaProps) {
     <SidebarInset className="relative min-w-0 overflow-hidden bg-background">
       <ConversationHeader
         activeSessionId={selectedSession?.id ?? null}
+        historyError={props.projectSessionError}
+        historyIsLoading={props.isProjectSessionLoading}
+        historySessions={props.workspaceSessions}
         isContentScrolled={isContentScrolled}
         projectMode={props.projectMode}
         projectName={selectedProject ? projectDisplayName(selectedProject) : ''}
@@ -163,6 +166,7 @@ export function SessionArea(props: SessionAreaProps) {
         onRenameSession={props.onRenameSession}
         onSelectProject={props.setSelectedProjectId}
         onSelectSession={props.onSelectSession}
+        onRetryHistory={props.onRetryProjectSessions}
         onTogglePinSession={props.onTogglePinSession}
       />
 
@@ -208,8 +212,8 @@ export function SessionArea(props: SessionAreaProps) {
           </ModelOnboardingGate>
         )}
       </ErrorBoundary>
-      {/* The switcher dialogs mount once here; the header and empty-surface
-          buttons toggle them through the switcher store. */}
+      {/* The switcher dialogs mount once here; the shortcut commands open
+          them through the switcher store. */}
       <ProjectSwitchDialog
         open={projectSwitcherOpen}
         projectMode={props.projectMode}
@@ -248,17 +252,23 @@ function ModelOnboardingGate({
 function SessionAreaContent({
   forkSession,
   isMockProject,
+  isProjectSessionLoading,
   projectMode,
+  projectSessionError,
   projects,
   sessionId,
   selectedProject,
   selectedSession,
   selectPromptFiles,
+  sessionActivity,
   tabSessions,
+  workspaceSessions,
   onAddProject,
   onContentScrolledChange,
   onOpenSettings,
   onRenameSession,
+  onSelectSession,
+  onRetryProjectSessions,
   setSelectedProjectId,
 }: SessionAreaProps & {
   sessionId: string
@@ -733,15 +743,22 @@ function SessionAreaContent({
         </>
       ) : (
         <SessionEmptyState
+          activeSessionId={selectedSession?.id ?? null}
           composerProps={promptComposerProps}
           error={error}
           hasTabSessions={tabSessions.length > 0}
+          historyError={projectSessionError}
+          historyIsLoading={isProjectSessionLoading}
+          historySessions={workspaceSessions}
           projectMode={projectMode}
           projectName={selectedProject ? projectDisplayName(selectedProject) : ''}
           projects={projects}
           selectedProject={selectedProject}
+          sessionActivity={sessionActivity}
           onAddProject={onAddProject}
           onSelectProject={setSelectedProjectId}
+          onSelectSession={onSelectSession}
+          onRetryHistory={onRetryProjectSessions}
         />
       )}
     </>

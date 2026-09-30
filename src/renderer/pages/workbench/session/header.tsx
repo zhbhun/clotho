@@ -12,6 +12,9 @@ import { SessionTabs } from './session-tabs'
 
 export function ConversationHeader({
   activeSessionId,
+  historyError,
+  historyIsLoading,
+  historySessions,
   isContentScrolled,
   projectMode,
   projectName,
@@ -26,9 +29,13 @@ export function ConversationHeader({
   onRenameSession,
   onSelectProject,
   onSelectSession,
+  onRetryHistory,
   onTogglePinSession,
 }: {
   activeSessionId: string | null
+  historyError: string | null
+  historyIsLoading: boolean
+  historySessions: WorkbenchSession[]
   isContentScrolled: boolean
   projectMode: 'project' | 'home'
   projectName: string
@@ -43,6 +50,7 @@ export function ConversationHeader({
   onRenameSession: (session: WorkbenchSession) => void
   onSelectProject: (projectId: string | null) => void
   onSelectSession: (session: WorkbenchSession) => void
+  onRetryHistory: () => void
   onTogglePinSession: (session: WorkbenchSession) => void
 }) {
   const { isMobile, openMobile, state } = useSidebar()
@@ -102,7 +110,15 @@ export function ConversationHeader({
       />
       {showHeaderActions ? (
         <div className="session-tab-actions app-region-no-drag relative flex shrink-0 items-center px-1 text-foreground-subtlest">
-          <SessionHistoryButton />
+          <SessionHistoryButton
+            activeSessionId={activeSessionId}
+            error={historyError}
+            isLoading={historyIsLoading}
+            sessionActivity={sessionActivity}
+            sessions={historySessions}
+            onRetry={onRetryHistory}
+            onSelectSession={onSelectSession}
+          />
         </div>
       ) : null}
     </header>

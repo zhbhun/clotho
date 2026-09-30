@@ -66,6 +66,33 @@ export function sessionDisplayTitle(
     : sessionTitle(session)
 }
 
+export function sessionTimeLabel(
+  seconds: number,
+  now: Date,
+  t: WorkbenchTranslator,
+  locale: string,
+) {
+  if (!Number.isFinite(seconds) || seconds <= 0) return ''
+
+  const date = new Date(seconds * 1000)
+  if (Number.isNaN(date.getTime())) return ''
+
+  const elapsedSeconds = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 1000))
+  if (elapsedSeconds < 60) return t('workbench.history.justNow')
+  if (elapsedSeconds < 60 * 60) {
+    return t('workbench.history.minutesAgo', { count: Math.floor(elapsedSeconds / 60) })
+  }
+
+  const dateLabel = sessionDateLabel(seconds, now, t, locale)
+  if (dateLabel !== t('workbench.session.today')) return dateLabel
+
+  return new Intl.DateTimeFormat(locale, {
+    hour: '2-digit',
+    hour12: false,
+    minute: '2-digit',
+  }).format(date)
+}
+
 export function sessionDateLabel(
   seconds: number,
   now = new Date(),

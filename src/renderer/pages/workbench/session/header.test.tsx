@@ -95,6 +95,9 @@ function renderHeader(
         <SidebarProvider defaultOpen>
           <ConversationHeader
             activeSessionId={activeSessionId}
+            historyError={null}
+            historyIsLoading={false}
+            historySessions={sessions}
             isContentScrolled={false}
             projectMode={projectMode}
             projectName={selectedProject ? 'Demo' : 'Clotho'}
@@ -109,6 +112,7 @@ function renderHeader(
             onRenameSession={vi.fn()}
             onSelectProject={onSelectProject}
             onSelectSession={vi.fn()}
+            onRetryHistory={vi.fn()}
             onTogglePinSession={vi.fn()}
           />
         </SidebarProvider>

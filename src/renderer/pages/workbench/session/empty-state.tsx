@@ -3,35 +3,49 @@ import { useTranslation } from 'react-i18next'
 import { cn } from '@/shadcn/utils'
 
 import { APP_CONTENT_CONTAINER_CLASS } from '../../../components/app-layout'
-import type { WorkbenchProject } from '../stores/workbench-store'
+import type { SessionActivity, WorkbenchProject, WorkbenchSession } from '../stores/workbench-store'
 import { ClothoMark } from './clotho-mark'
 import { ProjectSwitcherButton } from './project-switcher-button'
 import { PromptComposer, type PromptComposerBaseProps } from './prompt'
 import { SessionHistoryButton } from './session-history'
 
 export type SessionEmptyStateProps = {
+  activeSessionId: string | null
   composerProps: PromptComposerBaseProps
   error: string | null
   hasTabSessions: boolean
+  historyError: string | null
+  historyIsLoading: boolean
+  historySessions: WorkbenchSession[]
   projectMode: 'project' | 'home'
   projectName: string
   projects: WorkbenchProject[]
   selectedProject?: WorkbenchProject
+  sessionActivity: Record<string, SessionActivity>
   onAddProject: () => void
   onSelectProject: (projectId: string | null) => void
+  onSelectSession: (session: WorkbenchSession) => void
+  onRetryHistory: () => void
 }
 
 /** Surface shown when there is no conversation yet: brand mark centered above the bottom-docked composer. */
 export function SessionEmptyState({
+  activeSessionId,
   composerProps,
   error,
   hasTabSessions,
+  historyError,
+  historyIsLoading,
+  historySessions,
   projectMode,
   projectName,
   projects,
   selectedProject,
+  sessionActivity,
   onAddProject,
   onSelectProject,
+  onSelectSession,
+  onRetryHistory,
 }: SessionEmptyStateProps) {
   const { t } = useTranslation()
   // Without tabs the selected session is the blank new-chat draft, so the
@@ -77,7 +91,16 @@ export function SessionEmptyState({
                   onAddProject={onAddProject}
                   onSelectProject={onSelectProject}
                 />
-                <SessionHistoryButton appearance="empty-surface" />
+                <SessionHistoryButton
+                  appearance="empty-surface"
+                  activeSessionId={activeSessionId}
+                  error={historyError}
+                  isLoading={historyIsLoading}
+                  sessionActivity={sessionActivity}
+                  sessions={historySessions}
+                  onRetry={onRetryHistory}
+                  onSelectSession={onSelectSession}
+                />
               </div>
               <div className="relative z-10 -mt-4">
                 <PromptComposer
