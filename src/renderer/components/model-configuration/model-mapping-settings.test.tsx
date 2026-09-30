@@ -94,7 +94,7 @@ describe('ModelMappingSettings', () => {
     expect(document.querySelector("[data-slot='menu-content']")).toBeNull()
   })
 
-  it('automatically saves after filling all six roles with one selected model', async () => {
+  it('automatically saves after filling all roles with one selected model', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn(
       async (models: ClaudeModelMappings): Promise<ClaudeModelMappings> => models,
@@ -109,7 +109,6 @@ describe('ModelMappingSettings', () => {
       expect(onSave).toHaveBeenCalledWith({
         sonnet: 'kimi/k3/long',
         opus: 'kimi/k3/long',
-        fable: 'kimi/k3/long',
         haiku: 'kimi/k3/long',
         subagent: 'kimi/k3/long',
         fallback: 'kimi/k3/long',

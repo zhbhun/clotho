@@ -9,11 +9,15 @@
  */
 export const PROVIDER_ID_PATTERN = /^[a-z0-9][a-z0-9._-]*$/
 
-/** All Claude built-in model mapping roles, in display order. */
+/**
+ * Claude built-in model mapping roles, in display order. 'fable' is
+ * intentionally unmappable: when ANTHROPIC_DEFAULT_FABLE_MODEL equals the
+ * session model, the CLI injects a "Claude Fable 5" identity paragraph into
+ * the system prompt, which is wrong for every third-party model.
+ */
 export const CLAUDE_MODEL_MAPPING_ROLES = [
   'sonnet',
   'opus',
-  'fable',
   'haiku',
   'subagent',
   'fallback',

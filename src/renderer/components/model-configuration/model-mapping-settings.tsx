@@ -42,11 +42,6 @@ const MODEL_MAPPING_ROLES: ModelMappingRoleOption[] = [
     descriptionKey: 'settings.modelMapping.role.opus.description',
   },
   {
-    role: 'fable',
-    labelKey: 'Fable',
-    descriptionKey: 'settings.modelMapping.role.fable.description',
-  },
-  {
     role: 'haiku',
     labelKey: 'Haiku',
     descriptionKey: 'settings.modelMapping.role.haiku.description',

@@ -71,7 +71,6 @@ function providerMap(providers: ModelProvider[]) {
 const MODEL_MAPPING_ENV = {
   sonnet: 'ANTHROPIC_DEFAULT_SONNET_MODEL',
   opus: 'ANTHROPIC_DEFAULT_OPUS_MODEL',
-  fable: 'ANTHROPIC_DEFAULT_FABLE_MODEL',
   haiku: 'ANTHROPIC_DEFAULT_HAIKU_MODEL',
   subagent: 'CLAUDE_CODE_SUBAGENT_MODEL',
   fallback: 'ANTHROPIC_MODEL',
@@ -425,6 +424,13 @@ export async function createModelProxy({
         if (mapping && resolveModel(routes, mapping)) {
           env[name] = mapping
         }
+      }
+      // clotho never maps the fable slot: when ANTHROPIC_DEFAULT_FABLE_MODEL
+      // equals the session model, the CLI adds a "Claude Fable 5" identity
+      // paragraph to the system prompt. Shadow the env so a user-level CLI
+      // setting cannot leak through the env merge and re-enable it.
+      if (!env.ANTHROPIC_DEFAULT_FABLE_MODEL) {
+        env.ANTHROPIC_DEFAULT_FABLE_MODEL = ''
       }
       const current = resolveModel(routes, model)
       if (current && current.model.contextWindow > 0) {

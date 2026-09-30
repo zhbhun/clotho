@@ -534,6 +534,24 @@ describe('model proxy', () => {
     expect(proxy.settingsEnv('kimi/k3/long')).not.toHaveProperty('ANTHROPIC_DEFAULT_OPUS_MODEL')
   })
 
+  test('always shadows ANTHROPIC_DEFAULT_FABLE_MODEL to block the Fable identity paragraph', async () => {
+    const harness = createServeHarness()
+    const proxy = await createModelProxy({
+      authToken: 'local-secret',
+      fetch: vi.fn(async () => Response.json({ ok: true })),
+      models: { haiku: 'zhipu/glm-5.2/fast' },
+      providers: [provider],
+      serve: harness.serve,
+    })
+
+    // An empty value must reach the CLI: if a user-level CLI setting survives
+    // the env merge and equals the session model, the CLI adds a "Claude Fable
+    // 5" identity paragraph to the system prompt.
+    expect(proxy.settingsEnv('zhipu/glm-5.2/fast')).toMatchObject({
+      ANTHROPIC_DEFAULT_FABLE_MODEL: '',
+    })
+  })
+
   test('keeps an immutable snapshot of provider configuration', async () => {
     const harness = createServeHarness()
     let upstreamURL = ''

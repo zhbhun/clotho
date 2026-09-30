@@ -60,11 +60,6 @@ export const settingsCatalog = {
     '請先新增至少一個供應商模型再設定對應。',
   ),
   'settings.modelMapping.notConfigured': setting('Not configured', '未配置', '未設定'),
-  'settings.modelMapping.role.fable.description': setting(
-    'Long-context model for Claude Code',
-    'Claude Code 的长上下文模型',
-    'Claude Code 的長內容模型',
-  ),
   'settings.modelMapping.role.haiku.description': setting(
     'Fast model for Claude Code',
     'Claude Code 的快速模型',

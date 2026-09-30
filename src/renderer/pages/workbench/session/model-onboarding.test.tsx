@@ -53,7 +53,6 @@ describe('ModelOnboarding', () => {
     expect(claudeMock.saveModelMappings).toHaveBeenCalledWith({
       sonnet: 'zhipu-glm/glm-5.2[1M]',
       opus: 'zhipu-glm/glm-5.2[1M]',
-      fable: 'zhipu-glm/glm-5.2[1M]',
       haiku: 'zhipu-glm/glm-5.2[1M]',
       subagent: 'zhipu-glm/glm-5.2[1M]',
       fallback: 'zhipu-glm/glm-5.2[1M]',
