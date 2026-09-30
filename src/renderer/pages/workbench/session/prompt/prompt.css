@@ -31,14 +31,34 @@
 }
 
 .prompt-composer-send:not(:disabled) {
+  background-color: var(--color-neutral-950);
+  color: var(--color-neutral-50);
   box-shadow: 0 4px 10px color-mix(in oklab, var(--color-neutral-950) 16%, transparent);
 }
 
+.prompt-composer-send:not(:disabled):hover {
+  background-color: color-mix(in oklab, var(--color-neutral-950) 80%, transparent);
+}
+
+.dark .prompt-composer-send:not(:disabled) {
+  background-color: var(--color-neutral-50);
+  color: var(--color-neutral-950);
+}
+
+.dark .prompt-composer-send:not(:disabled):hover {
+  background-color: color-mix(in oklab, var(--color-neutral-50) 80%, transparent);
+}
+
 .prompt-composer-send:disabled {
-  background-color: color-mix(in oklab, var(--primary), var(--card) 50%);
-  color: var(--primary-foreground);
+  background-color: color-mix(in oklab, var(--color-neutral-950), var(--card) 50%);
+  color: var(--color-neutral-50);
   opacity: 1;
   box-shadow: none;
+}
+
+.dark .prompt-composer-send:disabled {
+  background-color: color-mix(in oklab, var(--color-neutral-50), var(--card) 50%);
+  color: var(--color-neutral-950);
 }
 
 .prompt-markdown-editor [contenteditable='false'],
