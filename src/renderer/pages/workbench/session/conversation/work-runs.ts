@@ -66,7 +66,15 @@ export function groupWorkRuns(
 
   const flush = () => {
     if (group.length >= 2) {
-      slices.push({ kind: 'run', runId: `${keyPrefix}:run:${group[0].id}`, items: group })
+      // Anchor the run id on the first tool's toolUseId: thinking items re-id
+      // when their segment frame retires from the stream placeholder, which
+      // would orphan an expanded run (expandedRuns is keyed by runId).
+      const firstTool = group.find((item) => item.kind === 'tool')
+      const anchor =
+        firstTool?.kind === 'tool' && firstTool.use?.toolUseId
+          ? firstTool.use.toolUseId
+          : group[0].id
+      slices.push({ kind: 'run', runId: `${keyPrefix}:run:${anchor}`, items: group })
     } else {
       for (const item of group) slices.push({ kind: 'single', item })
     }

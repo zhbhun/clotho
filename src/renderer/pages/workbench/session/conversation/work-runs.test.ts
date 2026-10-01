@@ -27,13 +27,13 @@ function textItem(id: string): ConversationTimelineItem {
 }
 
 describe('groupWorkRuns', () => {
-  it('folds consecutive non-text items into a run keyed by the first item', () => {
+  it('folds consecutive non-text items into a run keyed by the first tool id', () => {
     const slices = groupWorkRuns([thinkingItem('t1'), toolItem('t2'), toolItem('t3')], 'turn:u1')
 
     expect(slices).toEqual([
       {
         kind: 'run',
-        runId: 'turn:u1:run:t1',
+        runId: 'turn:u1:run:t2-use',
         items: [thinkingItem('t1'), toolItem('t2'), toolItem('t3')],
       },
     ])
@@ -52,8 +52,24 @@ describe('groupWorkRuns', () => {
     )
 
     expect(slices.map((slice) => slice.kind)).toEqual(['run', 'single', 'run'])
-    expect(slices[0]).toMatchObject({ runId: 'turn:u1:run:t1' })
-    expect(slices[2]).toMatchObject({ runId: 'turn:u1:run:t3' })
+    expect(slices[0]).toMatchObject({ runId: 'turn:u1:run:t1-use' })
+    expect(slices[2]).toMatchObject({ runId: 'turn:u1:run:t3-use' })
+  })
+
+  it('keeps the run id stable when a leading thinking item retires from the stream placeholder', () => {
+    const before = groupWorkRuns(
+      [thinkingItem('stream-3-thinking-0'), toolItem('t2'), toolItem('t3')],
+      'turn:u1',
+    )
+    const after = groupWorkRuns(
+      [thinkingItem('assistant-2026-09-01T00-00-00-5-thinking-0'), toolItem('t2'), toolItem('t3')],
+      'turn:u1',
+    )
+
+    expect(before[0]?.kind).toBe('run')
+    expect(after[0]?.kind).toBe('run')
+    if (before[0]?.kind !== 'run' || after[0]?.kind !== 'run') return
+    expect(after[0].runId).toBe(before[0].runId)
   })
 
   it('keeps ungroupable items standalone and breaks the surrounding run', () => {

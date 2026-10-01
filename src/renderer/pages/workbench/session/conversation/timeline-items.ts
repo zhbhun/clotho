@@ -36,7 +36,12 @@ function pairToolResult(
   }
 
   timelineItems.push({
-    id: `${message.id}-tool-${index}`,
+    // Anchor the id on toolUseId so it survives the placeholder-to-committed
+    // retirement: the same tool_use first streams inside a `stream-N`
+    // placeholder message, then lands in a committed assistant frame with a
+    // different message id. Message-derived ids remounted the row and dropped
+    // the user's expansion state at every segment-frame boundary.
+    id: block.toolUseId ? `tool-result-${block.toolUseId}` : `${message.id}-tool-${index}`,
     kind: 'tool',
     result: block,
     isError: block.isError || undefined,
@@ -115,7 +120,7 @@ export function appendTimelineItems(sink: TimelineSink, message: ClaudeMessage) 
         const todos = extractTodoItems(block.input)
         if (todos.length) {
           sink.timelineItems.push({
-            id: `${message.id}-todo-${index}`,
+            id: block.toolUseId ? `todo-${block.toolUseId}` : `${message.id}-todo-${index}`,
             kind: 'todo',
             todos,
             toolUseId: block.toolUseId,
@@ -128,7 +133,10 @@ export function appendTimelineItems(sink: TimelineSink, message: ClaudeMessage) 
       }
 
       sink.timelineItems.push({
-        id: `${message.id}-tool-${index}`,
+        // Same toolUseId anchor as the result-only fallback above: the id must
+        // stay constant while the block retires from the stream placeholder
+        // into its committed assistant frame.
+        id: block.toolUseId ? `tool-${block.toolUseId}` : `${message.id}-tool-${index}`,
         kind: 'tool',
         use: block,
         timestamp: message.timestamp,
