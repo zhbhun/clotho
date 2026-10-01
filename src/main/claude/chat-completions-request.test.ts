@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, test } from 'vitest'
 
-import { anthropicToChatCompletions, estimatePromptTokens } from './chat-completions-request'
+import { anthropicToChatCompletions } from './chat-completions-request'
 
 describe('anthropicToChatCompletions', () => {
   test('moves the system prompt and text messages into chat messages', () => {
@@ -208,26 +208,5 @@ describe('anthropicToChatCompletions', () => {
     )
 
     expect(chat.messages).toEqual([{ role: 'system', content: 'First part.\nSecond part.' }])
-  })
-})
-
-describe('estimatePromptTokens', () => {
-  test('approximates one token per four characters of the serialized request', () => {
-    const body = {
-      model: 'm',
-      system: 'abcd',
-      messages: [{ role: 'user', content: 'abcd'.repeat(10) }],
-      tools: [{ name: 'tool' }],
-    }
-    const expected = Math.ceil(
-      JSON.stringify({ system: body.system, messages: body.messages, tools: body.tools }).length /
-        4,
-    )
-
-    expect(estimatePromptTokens(body)).toBe(expected)
-  })
-
-  test('never returns zero', () => {
-    expect(estimatePromptTokens({ messages: [] })).toBeGreaterThanOrEqual(1)
   })
 })

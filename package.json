@@ -49,6 +49,7 @@
     "dompurify": "^3",
     "electron-squirrel-startup": "^1.0.1",
     "emojibase-data": "^17.0.0",
+    "gpt-tokenizer": "^4.0.0",
     "i18next": "^26",
     "lucide-react": "^1",
     "marked": "^18",

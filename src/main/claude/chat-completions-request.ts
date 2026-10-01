@@ -199,16 +199,3 @@ export function anthropicToChatCompletions(
   if (thinking) Object.assign(chat, thinking)
   return chat
 }
-
-/**
- * Rough token estimate for /v1/messages/count_tokens, which Chat Completions
- * upstreams do not offer. One token per four characters is the usual heuristic.
- */
-export function estimatePromptTokens(body: Record<string, unknown>): number {
-  const chars = JSON.stringify({
-    system: body.system,
-    messages: body.messages,
-    tools: body.tools,
-  }).length
-  return Math.max(1, Math.ceil(chars / 4))
-}

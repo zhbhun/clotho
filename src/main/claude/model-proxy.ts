@@ -7,7 +7,7 @@ import type { ReadableStream as NodeWebReadableStream } from 'node:stream/web'
 
 import type { ClaudeModelMappings, ModelProvider, ProviderModel } from '@/shared/rpc'
 
-import { anthropicToChatCompletions, estimatePromptTokens } from './chat-completions-request'
+import { anthropicToChatCompletions } from './chat-completions-request'
 import { chatCompletionsToAnthropic, chatErrorToAnthropic } from './chat-completions-response'
 import { createChatCompletionsStream } from './chat-completions-stream'
 import type { ClaudeskSettings } from './settings'
@@ -17,6 +17,7 @@ import {
   chatThinkingParams,
   sessionThinkingFor,
 } from './thinking-mapping'
+import { countPromptTokens } from './token-count'
 
 export type { SessionThinking } from './thinking-mapping'
 
@@ -203,7 +204,7 @@ async function serveChatCompletions({
   fetchUpstream: ModelProxyFetch
 }): Promise<Response> {
   if (isCountTokens) {
-    return Response.json({ input_tokens: estimatePromptTokens(body) })
+    return Response.json({ input_tokens: countPromptTokens(body) })
   }
 
   const chatBody = anthropicToChatCompletions(
@@ -384,6 +385,12 @@ export async function createModelProxy({
             modelId,
             fetchUpstream,
           })
+        }
+        // Provider-side count_tokens is unreliable (the zhipu endpoint drops
+        // every tool definition when ToolSearch is present and 502s on large
+        // payloads), so the proxy answers the CLI's context report locally.
+        if (requestURL.pathname === '/v1/messages/count_tokens') {
+          return Response.json({ input_tokens: countPromptTokens(body) })
         }
         const upstreamRequest = new Request(upstreamURL(provider.baseURL, request.url), {
           method: request.method,
