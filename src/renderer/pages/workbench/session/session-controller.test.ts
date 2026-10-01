@@ -814,6 +814,136 @@ describe('SessionController', () => {
     expect(store.getState().permissionMode).toBe('bypassPermissions')
   })
 
+  it('adopts the app default permission mode when a plan approval is allowed', async () => {
+    const client = createClient()
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
+    const store = trackedStore({
+      ...createOptions('local:plan-approved-mode'),
+      persistence: createMemoryPersistence(),
+      getDefaultPermissionMode: () => 'acceptEdits',
+      client,
+    })
+    store.getState().setPermissionMode('plan')
+    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
+    store.getState().setPrompt('plan something')
+
+    const sending = store.getState().sendPrompt()
+    controlled.emitRequest({
+      kind: 'permission',
+      toolUseId: 'plan-tool',
+      toolName: 'ExitPlanMode',
+      input: { plan: 'do it' },
+    })
+    await store.getState().respondToolRequest('plan-tool', {
+      behavior: 'allow',
+      updatedInput: {},
+    })
+
+    expect(store.getState().permissionMode).toBe('acceptEdits')
+    expect(controlled.stream.setPermissionMode).toHaveBeenLastCalledWith('acceptEdits')
+
+    controlled.emitResult()
+    await sending
+  })
+
+  it('keeps the plan mode when a plan approval is denied', async () => {
+    const client = createClient()
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
+    const store = trackedStore({
+      ...createOptions('local:plan-denied-mode'),
+      persistence: createMemoryPersistence(),
+      getDefaultPermissionMode: () => 'acceptEdits',
+      client,
+    })
+    store.getState().setPermissionMode('plan')
+    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
+    store.getState().setPrompt('plan something')
+
+    const sending = store.getState().sendPrompt()
+    controlled.emitRequest({
+      kind: 'permission',
+      toolUseId: 'plan-tool',
+      toolName: 'ExitPlanMode',
+      input: { plan: 'do it' },
+    })
+    await store.getState().respondToolRequest('plan-tool', {
+      behavior: 'deny',
+      message: 'revise the plan',
+    })
+
+    expect(store.getState().permissionMode).toBe('plan')
+    expect(controlled.stream.setPermissionMode).not.toHaveBeenCalledWith('acceptEdits')
+
+    controlled.emitResult()
+    await sending
+  })
+
+  it('does not change the permission mode when another tool request is allowed', async () => {
+    const client = createClient()
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
+    const store = trackedStore({
+      ...createOptions('local:plan-other-tool-mode'),
+      persistence: createMemoryPersistence(),
+      getDefaultPermissionMode: () => 'acceptEdits',
+      client,
+    })
+    store.getState().setPermissionMode('plan')
+    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
+    store.getState().setPrompt('plan something')
+
+    const sending = store.getState().sendPrompt()
+    controlled.emitRequest({
+      kind: 'permission',
+      toolUseId: 'bash-tool',
+      toolName: 'Bash',
+      input: { command: 'ls' },
+    })
+    await store.getState().respondToolRequest('bash-tool', {
+      behavior: 'allow',
+      updatedInput: { command: 'ls' },
+    })
+
+    expect(store.getState().permissionMode).toBe('plan')
+
+    controlled.emitResult()
+    await sending
+  })
+
+  it('falls back to the default mode when the app default is plan after approval', async () => {
+    const client = createClient()
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
+    const store = trackedStore({
+      ...createOptions('local:plan-default-fallback'),
+      persistence: createMemoryPersistence(),
+      getDefaultPermissionMode: () => 'plan',
+      client,
+    })
+    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
+    store.getState().setPrompt('plan something')
+
+    const sending = store.getState().sendPrompt()
+    controlled.emitRequest({
+      kind: 'permission',
+      toolUseId: 'plan-tool',
+      toolName: 'ExitPlanModeTool',
+      input: {},
+    })
+    await store.getState().respondToolRequest('plan-tool', {
+      behavior: 'allow',
+      updatedInput: {},
+    })
+
+    expect(store.getState().permissionMode).toBe('default')
+    expect(controlled.stream.setPermissionMode).toHaveBeenLastCalledWith('default')
+
+    controlled.emitResult()
+    await sending
+  })
+
   it('persists composer preferences independently for every local session id', async () => {
     const persistence = createMemoryPersistence()
     const first = trackedStore({

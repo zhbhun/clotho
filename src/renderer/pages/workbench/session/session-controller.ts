@@ -26,6 +26,17 @@ import { createRuntimeStore } from './stores/runtime-store'
 import { createDefaultPreferences, sanitizeSessionPreferences } from './stores/session-preferences'
 import { createUsageStore } from './stores/usage-store'
 
+const EXIT_PLAN_MODE_TOOLS = new Set(['ExitPlanMode', 'ExitPlanModeTool'])
+
+/**
+ * Mode a session lands in once its plan is approved: the app default
+ * permission mode, except 'plan' itself, which would re-enter planning
+ * right after the plan was accepted and falls back to the SDK default.
+ */
+function exitPlanTargetMode(defaultMode: ClaudePermissionMode): ClaudePermissionMode {
+  return defaultMode === 'plan' ? 'default' : defaultMode
+}
+
 function sessionContextFromOptions(options: SessionControllerOptions): SessionContext {
   return {
     claudeSessionId: options.claudeSessionId,
@@ -349,8 +360,14 @@ export class SessionController {
 
   cancelMessageEdit = () => this.messageEditService.cancel()
 
-  respondToolRequest = (toolUseId: string, result: ClaudeToolResult) =>
-    this.sendService.respondToolRequest(toolUseId, result)
+  respondToolRequest = async (toolUseId: string, result: ClaudeToolResult) => {
+    const toolName = this.runtimeStore.getState().pendingToolRequests[toolUseId]?.toolName
+    await this.sendService.respondToolRequest(toolUseId, result)
+    if (result.behavior !== 'allow' || !toolName || !EXIT_PLAN_MODE_TOOLS.has(toolName)) return
+    // Respond first so the CLI completes its own switch out of plan mode, then
+    // land the session on the app default permission mode from settings.
+    this.setPermissionMode(exitPlanTargetMode(this.getDefaultPermissionMode()))
+  }
 
   dispose() {
     if (this.disposed) return Promise.resolve()
