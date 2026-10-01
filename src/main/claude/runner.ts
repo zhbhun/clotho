@@ -319,9 +319,6 @@ type SdkInitializationResult = Omit<ClaudeInitializationResult, 'cwd' | 'resume'
 
 export type ClaudeProxyConnection = Pick<ModelProxy, 'sessionThinking' | 'settingsEnv'>
 
-/** claude.ai-hosted artifact/design tools — unreachable from SDK sessions, so their schemas are dead context weight. */
-const CLAUDE_AI_SERVICE_TOOLS = ['Artifact', 'ArtifactData', 'ArtifactComments', 'DesignSync']
-
 /**
  * Client-side tool deferral: non-core tool schemas stay out of each request
  * until the model pulls them in via the ToolSearch tool. The CLI otherwise
@@ -341,9 +338,6 @@ function normalizeOptions(
     ...options,
     cwd: options?.cwd ?? os.homedir(),
     enableFileCheckpointing: true,
-    disallowedTools: [
-      ...new Set([...CLAUDE_AI_SERVICE_TOOLS, ...(options?.disallowedTools ?? [])]),
-    ],
     settings: { env: { ...TOOL_SEARCH_ENV } },
   }
   // SDK sessions otherwise run on a two-line stub system prompt; the Claude
