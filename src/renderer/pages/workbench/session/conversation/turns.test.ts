@@ -313,6 +313,7 @@ describe('conversation state', () => {
           },
         ],
       },
+      { kind: 'tool', use: { name: 'TaskUpdate' } },
     ])
   })
 

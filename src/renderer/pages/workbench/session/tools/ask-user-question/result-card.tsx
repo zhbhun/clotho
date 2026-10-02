@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next'
 import { ChevronRight, type LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -37,8 +38,7 @@ export function AskResultCard({
   const questions = askQuestions(input, toolUseResult)
   const answers = extractAnswerMap(toolUseResult, result)
   const [open, setOpen] = useState(true)
-  const headline =
-    questions[0]?.question ?? questions[0]?.header ?? t('tools.AskUserQuestion.label')
+  const headline = askHeadline(questions, t)
   const hasBody = questions.length > 0
   const hasErrorStyle = Boolean(isError)
   const headerClassName = cn(
@@ -100,18 +100,34 @@ export function AskResultCard({
         )}
       </div>
 
-      {open && hasBody ? (
-        <div className="mt-2 flex flex-col gap-2">
-          {questions.map((question, index) => (
-            <AskQuestionCard
-              key={index}
-              question={question}
-              answer={answerForQuestion(question, answers)}
-              index={index}
-            />
-          ))}
-        </div>
-      ) : null}
+      {open && hasBody ? <AskQuestionCards questions={questions} answers={answers} /> : null}
+    </div>
+  )
+}
+
+/** Headline of the first question, used as the row summary. */
+export function askHeadline(questions: AskQuestion[], t: TFunction): string {
+  return questions[0]?.question ?? questions[0]?.header ?? t('tools.AskUserQuestion.label')
+}
+
+/** The question cards shown inside an expanded row or the dock panel. */
+export function AskQuestionCards({
+  questions,
+  answers,
+}: {
+  questions: AskQuestion[]
+  answers: Record<string, string>
+}) {
+  return (
+    <div className="mt-2 flex flex-col gap-2">
+      {questions.map((question, index) => (
+        <AskQuestionCard
+          key={index}
+          question={question}
+          answer={answerForQuestion(question, answers)}
+          index={index}
+        />
+      ))}
     </div>
   )
 }
@@ -139,7 +155,10 @@ function parseAnswerMapFromResult(result?: string): Record<string, string> {
   return Object.fromEntries(entries)
 }
 
-function extractAnswerMap(toolUseResult: unknown, resultText?: string): Record<string, string> {
+export function extractAnswerMap(
+  toolUseResult: unknown,
+  resultText?: string,
+): Record<string, string> {
   const toolResult = recordValue(toolUseResult)
   const answers = recordValue(toolResult.answers)
   const entries = Object.entries(answers)
@@ -156,7 +175,7 @@ function extractAnswerMap(toolUseResult: unknown, resultText?: string): Record<s
   return parseAnswerMapFromResult(resultText)
 }
 
-function askQuestions(input: unknown, toolUseResult: unknown): AskQuestion[] {
+export function askQuestions(input: unknown, toolUseResult: unknown): AskQuestion[] {
   const resultQuestions = extractQuestions(toolUseResult)
   return resultQuestions.length ? resultQuestions : extractQuestions(input)
 }

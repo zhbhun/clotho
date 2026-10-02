@@ -96,7 +96,8 @@ describe('summarizeWorkRun', () => {
       toolItem('t8', 'WebSearch'),
       toolItem('t9', 'Agent'),
       toolItem('t10', 'mcp__notebook__run'),
-      { id: 'todo-1', kind: 'todo', todos: [] },
+      toolItem('t11', 'TodoWrite'),
+      toolItem('t12', 'AskUserQuestion'),
     ])
 
     expect(parts).toEqual([
@@ -108,7 +109,24 @@ describe('summarizeWorkRun', () => {
       { countKey: 'agents', count: 1 },
       { countKey: 'other', count: 1 },
       { countKey: 'tasks', count: 1 },
+      { countKey: 'questions', count: 1 },
     ])
+  })
+
+  it('counts a merged task card by its task count', () => {
+    const { parts } = summarizeWorkRun([
+      {
+        id: 'card',
+        kind: 'task',
+        tasks: [
+          { id: '1', subject: 'a', status: 'completed' },
+          { id: '2', subject: 'b', status: 'pending' },
+          { id: '3', subject: 'c', status: 'cancelled' },
+        ],
+      },
+    ])
+
+    expect(parts).toEqual([{ countKey: 'tasks', count: 3 }])
   })
 
   it('orders parts by first appearance instead of category rank', () => {

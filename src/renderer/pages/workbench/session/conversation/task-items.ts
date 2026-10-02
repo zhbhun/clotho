@@ -1,12 +1,22 @@
 import type { ClaudeContentBlock } from '../services/message'
 import type { ClaudeTaskItem, ClaudeTaskStatus, ConversationTimelineItem } from './types'
 
-type TaskToolKind = 'create' | 'update'
+type TaskToolKind = 'create' | 'update' | 'stop'
+
+/** A card closes for merging once every task reached a terminal state. */
+const TERMINAL_TASK_STATUSES = new Set<ClaudeTaskStatus>(['completed', 'cancelled'])
+const TASK_STATUSES = new Set<ClaudeTaskStatus>([
+  'pending',
+  'in_progress',
+  'completed',
+  'cancelled',
+])
 
 function taskToolKind(name?: string): TaskToolKind | null {
   const normalized = name?.replace(/Tool$/, '').toLowerCase()
   if (normalized === 'taskcreate' || normalized === 'task_create') return 'create'
   if (normalized === 'taskupdate' || normalized === 'task_update') return 'update'
+  if (normalized === 'taskstop' || normalized === 'task_stop') return 'stop'
   return null
 }
 
@@ -24,10 +34,9 @@ function taskInputString(input: unknown, keys: string[]): string {
   return ''
 }
 
-function taskInputStatus(input: unknown): ClaudeTaskStatus | null {
+export function taskInputStatus(input: unknown): ClaudeTaskStatus | null {
   const status = taskInputString(input, ['status'])
-  if (status === 'pending' || status === 'in_progress' || status === 'completed') return status
-  return null
+  return TASK_STATUSES.has(status as ClaudeTaskStatus) ? (status as ClaudeTaskStatus) : null
 }
 
 function taskIdFromInput(input: unknown): string {
@@ -35,7 +44,9 @@ function taskIdFromInput(input: unknown): string {
 }
 
 function objectRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === 'object' ? (value as Record<string, unknown>) : {}
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {}
 }
 
 function nestedString(value: unknown, keys: string[]): string {
@@ -60,8 +71,7 @@ function taskIdFromUpdateToolUseResult(result?: ClaudeContentBlock): string {
 
 function taskStatusFromUpdateToolUseResult(result?: ClaudeContentBlock): ClaudeTaskStatus | null {
   const status = nestedString(result?.toolUseResult, ['statusChange', 'to'])
-  if (status === 'pending' || status === 'in_progress' || status === 'completed') return status
-  return null
+  return TASK_STATUSES.has(status as ClaudeTaskStatus) ? (status as ClaudeTaskStatus) : null
 }
 
 function taskIdFromCreateResult(result?: ClaudeContentBlock): string {
@@ -69,46 +79,100 @@ function taskIdFromCreateResult(result?: ClaudeContentBlock): string {
   return match?.[1] ?? ''
 }
 
-function cloneTaskItems(tasks: Map<string, ClaudeTaskItem>): ClaudeTaskItem[] {
-  return Array.from(tasks.values()).map((task) => ({ ...task }))
+type TaskCardState = {
+  ids: string[]
+  item: Extract<ConversationTimelineItem, { kind: 'task' }>
 }
 
-export function absorbTaskTool(
-  item: ConversationTimelineItem,
-  tasks: Map<string, ClaudeTaskItem>,
-): { isAbsorbed: boolean; tasks?: ClaudeTaskItem[] } {
-  if (item.kind !== 'tool') return { isAbsorbed: false }
-  const kind = taskToolKind(item.use?.name)
-  if (!kind) return { isAbsorbed: false }
+/**
+ * Fold TaskCreate calls into collapsible task cards. A create joins the latest
+ * card while it still holds a non-terminal task; once every task completed or
+ * was cancelled, the next create opens a fresh card. TaskUpdate and TaskStop
+ * keep their own tool rows and only refresh the owning card's task state.
+ */
+export function normalizeTaskItems(items: ConversationTimelineItem[]): ConversationTimelineItem[] {
+  const index = new Map<string, ClaudeTaskItem>()
+  const cards: TaskCardState[] = []
+  const normalized: ConversationTimelineItem[] = []
 
-  if (kind === 'create') {
-    const id = taskIdFromCreateToolUseResult(item.result) || taskIdFromCreateResult(item.result)
-    const subject =
-      taskSubjectFromCreateToolUseResult(item.result) ||
-      taskInputString(item.use?.input, ['subject'])
-    if (!id || !subject) return { isAbsorbed: false }
-
-    tasks.set(id, {
-      id,
-      subject,
-      description: taskInputString(item.use?.input, ['description']) || undefined,
-      activeForm: taskInputString(item.use?.input, ['activeForm', 'active_form']) || undefined,
-      status: 'pending',
-    })
-    return { isAbsorbed: true, tasks: cloneTaskItems(tasks) }
+  const refreshCard = (card: TaskCardState) => {
+    card.item.tasks = card.ids.map((id) => ({ ...(index.get(id) as ClaudeTaskItem) }))
   }
 
-  const id = taskIdFromUpdateToolUseResult(item.result) || taskIdFromInput(item.use?.input)
-  const existing = id ? tasks.get(id) : undefined
-  if (!existing) return { isAbsorbed: false }
+  const cardForTask = (id: string) => cards.find((card) => card.ids.includes(id))
 
-  if (kind === 'update') {
-    const status =
-      taskStatusFromUpdateToolUseResult(item.result) || taskInputStatus(item.use?.input)
-    if (status) existing.status = status
-    const activeForm = taskInputString(item.use?.input, ['activeForm', 'active_form'])
-    if (activeForm) existing.activeForm = activeForm
+  const isOpen = (card: TaskCardState) =>
+    card.ids.some((id) => !TERMINAL_TASK_STATUSES.has(index.get(id)?.status as ClaudeTaskStatus))
+
+  for (const item of items) {
+    if (item.kind !== 'tool') {
+      normalized.push(item)
+      continue
+    }
+    const kind = taskToolKind(item.use?.name)
+    if (!kind) {
+      normalized.push(item)
+      continue
+    }
+
+    if (kind === 'create') {
+      const id = taskIdFromCreateToolUseResult(item.result) || taskIdFromCreateResult(item.result)
+      const subject =
+        taskSubjectFromCreateToolUseResult(item.result) ||
+        taskInputString(item.use?.input, ['subject'])
+      if (!id || !subject) {
+        normalized.push(item)
+        continue
+      }
+
+      index.set(id, {
+        id,
+        subject,
+        description: taskInputString(item.use?.input, ['description']) || undefined,
+        activeForm: taskInputString(item.use?.input, ['activeForm', 'active_form']) || undefined,
+        status: 'pending',
+      })
+
+      let target = cards.at(-1)
+      if (target && !isOpen(target)) target = undefined
+      if (!target) {
+        target = {
+          ids: [],
+          item: { id: `${item.id}-tasks`, kind: 'task', tasks: [], timestamp: item.timestamp },
+        }
+        cards.push(target)
+        normalized.push(target.item)
+      }
+      target.ids.push(id)
+      refreshCard(target)
+      continue
+    }
+
+    if (kind === 'update') {
+      const id = taskIdFromUpdateToolUseResult(item.result) || taskIdFromInput(item.use?.input)
+      const existing = id ? index.get(id) : undefined
+      if (existing) {
+        const status =
+          taskStatusFromUpdateToolUseResult(item.result) || taskInputStatus(item.use?.input)
+        if (status) existing.status = status
+        const activeForm = taskInputString(item.use?.input, ['activeForm', 'active_form'])
+        if (activeForm) existing.activeForm = activeForm
+        const card = cardForTask(id)
+        if (card) refreshCard(card)
+      }
+      normalized.push(item)
+      continue
+    }
+
+    const id = taskIdFromUpdateToolUseResult(item.result) || taskIdFromInput(item.use?.input)
+    const existing = id ? index.get(id) : undefined
+    if (existing) {
+      existing.status = 'cancelled'
+      const card = cardForTask(id)
+      if (card) refreshCard(card)
+    }
+    normalized.push(item)
   }
 
-  return { isAbsorbed: true, tasks: cloneTaskItems(tasks) }
+  return normalized
 }

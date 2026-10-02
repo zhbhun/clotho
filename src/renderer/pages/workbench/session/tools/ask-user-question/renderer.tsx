@@ -1,39 +1,21 @@
 import { MessageCircleQuestion } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
 
-import type { ToolItemContext, ToolRenderer } from '../shared/types'
-import { AskResultCard } from './result-card'
-
-const ASK_USER_QUESTION_ICON = MessageCircleQuestion
-const ASK_USER_QUESTION_DESCRIPTION = 'tools.askUserQuestion.description'
+import type { ToolRenderer } from '../shared/types'
+import { AskQuestionCards, askHeadline, askQuestions, extractAnswerMap } from './result-card'
 
 export const askUserQuestionRenderer: ToolRenderer = {
-  icon: ASK_USER_QUESTION_ICON,
+  icon: MessageCircleQuestion,
   label: 'tools.AskUserQuestion.label',
-  description: ASK_USER_QUESTION_DESCRIPTION,
-  summary: () => '',
+  description: 'tools.askUserQuestion.description',
+  summary: (input, _result, toolUseResult, t) =>
+    t ? askHeadline(askQuestions(input, toolUseResult), t) : '',
   inputView: () => null,
-  hasBody: () => false,
-  itemView: (context) => <AskUserQuestionItem {...context} />,
-}
-
-function AskUserQuestionItem({
-  input,
-  result,
-  toolUseResult,
-  isError,
-  isRunning,
-}: ToolItemContext) {
-  const { t } = useTranslation()
-  return (
-    <AskResultCard
-      icon={ASK_USER_QUESTION_ICON}
-      description={t(ASK_USER_QUESTION_DESCRIPTION)}
-      input={input}
-      result={result}
-      toolUseResult={toolUseResult}
-      isError={isError}
-      isRunning={isRunning}
+  hasBody: (input, _result, _images, toolUseResult) =>
+    askQuestions(input, toolUseResult).length > 0,
+  bodyItemView: ({ input, result, toolUseResult }) => (
+    <AskQuestionCards
+      questions={askQuestions(input, toolUseResult)}
+      answers={extractAnswerMap(toolUseResult, result)}
     />
-  )
+  ),
 }

@@ -9,6 +9,7 @@ export interface WorkRunCounts {
   filesEdited: number
   filesRead: number
   other: number
+  questions: number
   searches: number
   tasks: number
   web: number
@@ -50,6 +51,8 @@ const EDIT_TOOL_NAMES = new Set(['Edit', 'FileEditTool', 'Write', 'FileWriteTool
 const SEARCH_TOOL_NAMES = new Set(['Glob', 'GlobTool', 'Grep', 'GrepTool'])
 const WEB_TOOL_NAMES = new Set(['WebFetch', 'WebFetchTool', 'WebSearch', 'WebSearchTool'])
 const AGENT_TOOL_NAMES = new Set(['Agent', 'AgentTool', 'Task'])
+const TODO_TOOL_NAMES = new Set(['TodoWrite', 'TodoWriteTool'])
+const ASK_TOOL_NAMES = new Set(['AskUserQuestion', 'AskUserQuestionTool'])
 
 /**
  * Group consecutive non-text items into collapsible runs; a lone item stays standalone.
@@ -107,8 +110,8 @@ export function summarizeWorkRun(items: ConversationTimelineItem[]): { parts: Wo
       add('thought', 1)
       continue
     }
-    if (item.kind === 'todo' || item.kind === 'task') {
-      add('tasks', 1)
+    if (item.kind === 'task') {
+      add('tasks', item.tasks.length)
       continue
     }
     if (item.kind !== 'tool') continue
@@ -126,6 +129,10 @@ export function summarizeWorkRun(items: ConversationTimelineItem[]): { parts: Wo
       add('web', 1)
     } else if (AGENT_TOOL_NAMES.has(name)) {
       add('agents', 1)
+    } else if (TODO_TOOL_NAMES.has(name)) {
+      add('tasks', 1)
+    } else if (ASK_TOOL_NAMES.has(name)) {
+      add('questions', 1)
     } else {
       add('other', 1)
     }

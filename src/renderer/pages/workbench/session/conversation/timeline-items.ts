@@ -1,7 +1,6 @@
-import { extractTodoItems, isTodoWriteToolName } from '../../../../services/claude/todo'
 import type { ClaudeContentBlock, ClaudeMessage } from '../services/message'
-import { absorbTaskTool } from './task-items'
-import type { ClaudeTaskItem, ConversationTimelineItem } from './types'
+import { normalizeTaskItems } from './task-items'
+import type { ConversationTimelineItem } from './types'
 
 function pushTextTimelineItem(
   timelineItems: ConversationTimelineItem[],
@@ -49,38 +48,6 @@ function pairToolResult(
   })
 }
 
-function pairTodoResult(
-  timelineItems: ConversationTimelineItem[],
-  block: ClaudeContentBlock,
-  options: { allowFallback?: boolean } = {},
-): boolean {
-  if (block.toolUseId) {
-    for (let itemIndex = timelineItems.length - 1; itemIndex >= 0; itemIndex--) {
-      const item = timelineItems[itemIndex]
-      if (
-        item.kind === 'todo' &&
-        item.toolUseId === block.toolUseId &&
-        item.resultText === undefined
-      ) {
-        item.resultText = block.content
-        return true
-      }
-    }
-  }
-
-  if (!options.allowFallback) return false
-
-  for (let itemIndex = timelineItems.length - 1; itemIndex >= 0; itemIndex--) {
-    const item = timelineItems[itemIndex]
-    if (item.kind === 'todo' && item.resultText === undefined) {
-      item.resultText = block.content
-      return true
-    }
-  }
-
-  return false
-}
-
 export type TimelineSink = { timelineItems: ConversationTimelineItem[] }
 export function appendTimelineItems(sink: TimelineSink, message: ClaudeMessage) {
   if (message.taskNotification) {
@@ -89,7 +56,6 @@ export function appendTimelineItems(sink: TimelineSink, message: ClaudeMessage) 
   }
   const blocks = message.blocks ?? []
   const textFragments: string[] = []
-  let ignoredTodoResults = 0
   const flushText = (index: number) => {
     pushTextTimelineItem(sink.timelineItems, message, index, textFragments)
     textFragments.length = 0
@@ -116,22 +82,6 @@ export function appendTimelineItems(sink: TimelineSink, message: ClaudeMessage) 
     }
 
     if (block.type === 'tool_use') {
-      if (isTodoWriteToolName(block.name)) {
-        const todos = extractTodoItems(block.input)
-        if (todos.length) {
-          sink.timelineItems.push({
-            id: block.toolUseId ? `todo-${block.toolUseId}` : `${message.id}-todo-${index}`,
-            kind: 'todo',
-            todos,
-            toolUseId: block.toolUseId,
-            resultText: undefined,
-            timestamp: message.timestamp,
-          })
-        }
-        ignoredTodoResults += 1
-        return
-      }
-
       sink.timelineItems.push({
         // Same toolUseId anchor as the result-only fallback above: the id must
         // stay constant while the block retires from the stream placeholder
@@ -145,12 +95,6 @@ export function appendTimelineItems(sink: TimelineSink, message: ClaudeMessage) 
     }
 
     if (block.type === 'tool_result') {
-      if (ignoredTodoResults > 0) {
-        ignoredTodoResults -= 1
-        pairTodoResult(sink.timelineItems, block, { allowFallback: true })
-        return
-      }
-      if (pairTodoResult(sink.timelineItems, block)) return
       pairToolResult(sink.timelineItems, message, index, block)
     }
   })
@@ -222,36 +166,13 @@ function readCoalesceMeta(item: ConversationTimelineItem): CoalescedRead | null 
 
 /**
  * Timeline normalization:
- * - Convert TodoWrite to a dedicated todo entry during appendTimelineItems.
+ * - Fold TaskCreate calls into task cards (see task-items.ts for the merge rule).
  * - Merge consecutive Reads into one entry (coalescedReads); even a single Read shows only the filename.
  */
 export function normalizeTimelineItems(
   items: ConversationTimelineItem[],
 ): ConversationTimelineItem[] {
-  const normalized: ConversationTimelineItem[] = []
-  const tasks = new Map<string, ClaudeTaskItem>()
-  let currentTaskItem: Extract<ConversationTimelineItem, { kind: 'task' }> | null = null
-
-  for (const item of items) {
-    const taskResult = absorbTaskTool(item, tasks)
-    if (taskResult.isAbsorbed) {
-      if (!currentTaskItem) {
-        currentTaskItem = {
-          id: `${item.id}-tasks`,
-          kind: 'task',
-          tasks: taskResult.tasks ?? [],
-          timestamp: item.timestamp,
-        }
-        normalized.push(currentTaskItem)
-      } else {
-        currentTaskItem.tasks = taskResult.tasks ?? currentTaskItem.tasks
-      }
-      continue
-    }
-
-    normalized.push(item)
-    currentTaskItem = null
-  }
+  const normalized = normalizeTaskItems(items)
 
   const coalesced: ConversationTimelineItem[] = []
   for (const item of normalized) {

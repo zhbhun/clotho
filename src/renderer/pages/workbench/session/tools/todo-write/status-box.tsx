@@ -1,8 +1,8 @@
-import { Asterisk, Check, Loader2 } from 'lucide-react'
+import { Asterisk, Check, Loader2, X } from 'lucide-react'
 
 import { cn } from '@/shadcn/utils'
 
-import type { TodoItem } from '../../../../../services/claude/todo'
+import type { ClaudeTaskStatus } from '../../conversation/types'
 
 type TodoStatusBoxMode = 'loading' | 'static'
 
@@ -13,9 +13,10 @@ export function TodoStatusBox({
 }: {
   className?: string
   mode: TodoStatusBoxMode
-  status: TodoItem['status']
+  status: ClaudeTaskStatus
 }) {
   const done = status === 'completed'
+  const cancelled = status === 'cancelled'
   const inProgress = status === 'in_progress'
 
   return (
@@ -23,7 +24,7 @@ export function TodoStatusBox({
       aria-hidden="true"
       className={cn(
         'mt-0.5 flex size-3.5 shrink-0 items-center justify-center rounded-full border',
-        done
+        done || cancelled
           ? 'border-foreground-subtle/35 bg-muted/40 text-foreground-subtle/60'
           : 'border-foreground-subtle/55 text-foreground-subtle',
         inProgress && 'border-foreground-subtle/70 text-foreground/80',
@@ -33,6 +34,8 @@ export function TodoStatusBox({
     >
       {done ? (
         <Check className="size-2.5" strokeWidth={2.5} />
+      ) : cancelled ? (
+        <X className="size-2.5" strokeWidth={2.5} />
       ) : inProgress && mode === 'loading' ? (
         <Loader2 className="size-2.5 animate-spin" />
       ) : inProgress ? (

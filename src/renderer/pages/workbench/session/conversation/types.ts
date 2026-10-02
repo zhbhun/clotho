@@ -1,4 +1,3 @@
-import type { TodoItem } from '../../../../services/claude/todo'
 import type { ClaudeContentBlock, ClaudeMessage } from '../services/message'
 
 export type ClaudeBackgroundTaskStatus = 'running' | 'completed' | 'failed' | 'stopped'
@@ -11,7 +10,7 @@ export interface ClaudeBackgroundTask {
   exitCode?: number
 }
 
-export type ClaudeTaskStatus = 'pending' | 'in_progress' | 'completed'
+export type ClaudeTaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled'
 
 export interface ClaudeTaskItem {
   id: string
@@ -59,14 +58,6 @@ export type ConversationTimelineItem =
       id: string
       kind: 'thinking'
       text: string
-      timestamp?: string
-    }
-  | {
-      id: string
-      kind: 'todo'
-      todos: TodoItem[]
-      toolUseId?: string
-      resultText?: string
       timestamp?: string
     }
   | {

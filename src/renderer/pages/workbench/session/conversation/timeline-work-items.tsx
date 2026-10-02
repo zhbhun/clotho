@@ -1,105 +1,51 @@
-import { ListTodo } from 'lucide-react'
+import { ChevronRight, ListChecks } from 'lucide-react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { cn } from '@/shadcn/utils'
 
-import { type TodoItem, todoStats } from '../../../../services/claude/todo'
-import { TodoStatusBox } from '../tools/todo-write/status-box'
+import { ToolIcon } from '../tools/shared/content'
+import { TaskSummary } from '../tools/task-summary'
 import type { ClaudeTaskItem } from './types'
 
-export function TodoSummary({ className, todos }: { className?: string; todos: TodoItem[] }) {
+/**
+ * Collapsible row for a merged task card: one summary line (task count and
+ * completed tally) expanding to the task list built by task-items.ts.
+ */
+export function TaskCardRow({ tasks }: { tasks: ClaudeTaskItem[] }) {
   const { t } = useTranslation()
-  const stats = todoStats(todos)
-
-  return (
-    <div className={cn('min-w-0', className)}>
-      <section className="min-w-0 rounded-lg border border-border/60 bg-muted/30 px-3 py-2 text-xs leading-5 text-foreground-subtlest">
-        <div className="mb-1.5 flex items-center justify-between gap-3">
-          <div className="inline-flex min-w-0 items-center gap-1.5 text-foreground-subtlest">
-            <ListTodo className="size-3.5 shrink-0 text-foreground-subtlest" />
-            <span className="truncate">{t('workbench.timeline.todos')}</span>
-          </div>
-          <span className="shrink-0 tabular-nums text-foreground-subtlest">
-            {stats.completed}/{stats.total}
-          </span>
-        </div>
-        <ul className="flex flex-col gap-1">
-          {todos.map((todo, index) => (
-            <TodoSummaryRow key={index} todo={todo} />
-          ))}
-        </ul>
-      </section>
-    </div>
-  )
-}
-
-export function TaskSummary({ tasks }: { tasks: ClaudeTaskItem[] }) {
-  const { t } = useTranslation()
+  const translate = t as unknown as (key: string, options?: Record<string, unknown>) => string
+  const [open, setOpen] = useState(false)
   const completed = tasks.filter((task) => task.status === 'completed').length
 
   return (
     <div className="min-w-0">
-      <section className="min-w-0 rounded-lg border border-border/60 bg-muted/30 px-3 py-2 text-sm leading-5 text-foreground-subtlest">
-        <div className="mb-1.5 flex items-center justify-between gap-3">
-          <div className="inline-flex min-w-0 items-center gap-1.5 text-foreground-subtlest">
-            <ListTodo className="size-3.5 shrink-0 text-foreground-subtlest" />
-            <span className="truncate">{t('workbench.timeline.tasks')}</span>
-          </div>
-          <span className="shrink-0 tabular-nums text-foreground-subtlest">
-            {completed}/{tasks.length}
-          </span>
-        </div>
-        <ul className="flex flex-col gap-1.5">
-          {tasks.map((task) => (
-            <TaskSummaryRow key={task.id} task={task} />
-          ))}
-        </ul>
-      </section>
-    </div>
-  )
-}
-
-function TaskSummaryRow({ task }: { task: ClaudeTaskItem }) {
-  const done = task.status === 'completed'
-  const detail =
-    task.status === 'in_progress' ? task.activeForm || task.description : task.description
-
-  return (
-    <li className="flex min-w-0 items-start gap-2">
-      <TodoStatusBox mode="static" status={task.status} />
-      <div className="min-w-0">
-        <div
-          className={cn(
-            'min-w-0 wrap-break-word',
-            done ? 'text-foreground-subtlest line-through' : 'text-foreground-subtlest',
-          )}
-        >
-          {task.subject}
-        </div>
-        {detail ? (
-          <div className="mt-0.5 wrap-break-word text-xs leading-4 text-foreground-subtlest">
-            {detail}
-          </div>
-        ) : null}
-      </div>
-    </li>
-  )
-}
-
-function TodoSummaryRow({ todo }: { todo: TodoItem }) {
-  const done = todo.status === 'completed'
-
-  return (
-    <li className="flex min-w-0 items-start gap-2">
-      <TodoStatusBox mode="static" status={todo.status} />
-      <span
-        className={cn(
-          'min-w-0 wrap-break-word',
-          done ? 'text-foreground-subtlest line-through' : 'text-foreground-subtlest',
-        )}
+      <button
+        aria-expanded={open}
+        className="group inline-flex min-w-0 max-w-full cursor-pointer items-center gap-1.5 rounded-sm border-0 bg-transparent px-1 text-left leading-6 text-foreground-subtle outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/30"
+        type="button"
+        onClick={() => setOpen((value) => !value)}
       >
-        {todo.content}
-      </span>
-    </li>
+        <ToolIcon
+          className="text-foreground-subtlest transition-colors group-hover:text-foreground"
+          description={translate('tools.taskList.description')}
+          icon={ListChecks}
+        />
+        <span className="truncate font-mono text-foreground-subtlest transition-colors group-hover:text-foreground">
+          {translate('tools.taskList.summary', { total: tasks.length, completed })}
+        </span>
+        <ChevronRight
+          className={cn(
+            'pointer-events-none size-3 shrink-0 text-foreground-subtlest opacity-0 transition-[opacity,transform] group-hover:opacity-100 group-focus-visible:opacity-100',
+            open && 'rotate-90 opacity-100',
+          )}
+        />
+      </button>
+      {open ? (
+        <div className="mt-2">
+          <TaskSummary tasks={tasks} />
+        </div>
+      ) : null}
+    </div>
   )
 }

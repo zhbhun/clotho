@@ -18,6 +18,7 @@ const COUNT_LABELS: Record<WorkRunCountKey, string> = {
   filesEdited: 'workbench.workRun.editedFiles',
   filesRead: 'workbench.workRun.readFiles',
   other: 'workbench.workRun.usedOtherTools',
+  questions: 'workbench.workRun.askedQuestions',
   searches: 'workbench.workRun.searchedFiles',
   tasks: 'workbench.workRun.updatedTasks',
   thought: 'workbench.workRun.thoughtTimes',

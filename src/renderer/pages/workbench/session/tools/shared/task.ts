@@ -1,3 +1,4 @@
+import type { ClaudeTaskStatus } from '../../conversation/types'
 import { recordValue } from './utils'
 
 export interface TaskListRow {
@@ -40,7 +41,13 @@ export function extractCronJobs(toolUseResult: unknown): unknown[] {
   return Array.isArray(jobs) ? jobs : []
 }
 
-export function normalizeTaskStatus(status: unknown): 'pending' | 'in_progress' | 'completed' {
-  if (status === 'completed' || status === 'in_progress' || status === 'pending') return status
+export function normalizeTaskStatus(status: unknown): ClaudeTaskStatus {
+  if (
+    status === 'completed' ||
+    status === 'in_progress' ||
+    status === 'pending' ||
+    status === 'cancelled'
+  )
+    return status
   return 'pending'
 }
