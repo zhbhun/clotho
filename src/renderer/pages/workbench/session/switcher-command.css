@@ -79,9 +79,11 @@
   display: flex;
   gap: 10px;
   align-items: center;
-  /* 8px plus the group's own 4px padding lands the rule and the caption on the
-     12px inset shared by the search row's rule and the row text. */
-  padding: 8px;
+  /* No horizontal padding: the rules run flush with the group's edge, spanning
+     the same width as the accent highlight on the rows, with the caption
+     riding centered between the halves. The preceding group's padding already
+     spaces the rule from the rows above, so its top pad stays slimmer. */
+  padding: 4px 0 8px;
 }
 
 .spotlight-command-group.spotlight-command-group-ruled > [cmdk-group-heading]::before,
@@ -97,12 +99,13 @@
 }
 
 /* A rule below the search row instead of an input border keeps the sheet's top
-   edge quiet; the row itself stays flush with the panel's 16px inset. */
+   edge quiet; it spans the row-highlight width (the Command's 4px padding away
+   from the panel edge), matching the ruled group heading below. */
 .spotlight-command-input::after {
   position: absolute;
-  right: 12px;
+  right: 4px;
   bottom: 0;
-  left: 12px;
+  left: 4px;
   height: 1px;
   background: var(--border);
   content: '';
@@ -118,6 +121,13 @@
   border-radius: 0;
   background: transparent;
   box-shadow: none;
+}
+
+/* The pill spans the sheet's full width, so the input's built-in padding would
+   start the query left of everything below; the text keeps the row text's
+   inset while the rules run on the wider highlight width. */
+.spotlight-command-input [data-slot='command-input'] {
+  padding: 0 12px;
 }
 
 .spotlight-command-input [data-slot='input-group-addon'] {
