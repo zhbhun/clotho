@@ -1,6 +1,6 @@
 :root {
   --floating-glass-background: color-mix(in oklab, var(--background) 80%, transparent);
-  --floating-glass-filter: blur(6px);
+  --floating-glass-filter: blur(8px);
 }
 
 .dark {
