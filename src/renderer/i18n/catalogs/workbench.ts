@@ -1623,7 +1623,7 @@ export const workbenchCatalog = {
     '所有對話',
     'すべての会話',
     '모든 대화',
-    'Todos los chats',
+    'Todas las conversaciones',
     'Toutes les conversations',
     'Alle Unterhaltungen',
     'Todas as conversas',
