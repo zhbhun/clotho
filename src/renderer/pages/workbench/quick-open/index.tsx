@@ -2,8 +2,6 @@ import { MessageCircleCode, MessageSquareText } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { CommandSeparator } from '@/shadcn/command'
-
 import { ProjectIcon } from '../../../components/project-icon'
 import {
   compareProjectsByName,
@@ -212,8 +210,10 @@ export function QuickOpenPanel({
               />
             ))}
           </SwitcherCommandGroup>
-          <CommandSeparator className="my-2" />
-          <SwitcherCommandGroup heading={String(t('workbench.quick.recent'))}>
+          <SwitcherCommandGroup
+            className="spotlight-command-group-ruled"
+            heading={String(t('workbench.quick.recent'))}
+          >
             {recentSessions.map(renderSessionItem)}
           </SwitcherCommandGroup>
         </>

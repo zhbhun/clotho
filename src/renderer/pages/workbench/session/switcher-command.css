@@ -72,6 +72,26 @@
   display: none;
 }
 
+/* The recent section's caption sits on the divider: the heading's ::before and
+   ::after draw the two halves of the rule that used to be a separate
+   separator above the group. */
+.spotlight-command-group.spotlight-command-group-ruled > [cmdk-group-heading] {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  /* 8px plus the group's own 4px padding lands the rule and the caption on the
+     12px inset shared by the search row's rule and the row text. */
+  padding: 8px;
+}
+
+.spotlight-command-group.spotlight-command-group-ruled > [cmdk-group-heading]::before,
+.spotlight-command-group.spotlight-command-group-ruled > [cmdk-group-heading]::after {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+  content: '';
+}
+
 .spotlight-command-input {
   position: relative;
 }
