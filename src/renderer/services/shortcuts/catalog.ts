@@ -145,6 +145,12 @@ export const commandCatalog: CommandCatalog = {
     description: 'Open the quick switcher in all-chats mode (`#`) to search chats across projects.',
     defaultBindings: [{ modifiers: ['primary', 'shift'], key: 'k' }],
   },
+  'workbench.picker.sentMessages.open': {
+    ...WORKBENCH_COMMAND,
+    title: 'Open sent messages picker',
+    description: 'Open the quick switcher in sent-messages mode (`:`) to search sent messages.',
+    defaultBindings: [{ modifiers: ['primary', 'shift'], key: 'o' }],
+  },
   'workbench.picker.quick.open': {
     ...WORKBENCH_COMMAND,
     title: 'Open quick switcher',

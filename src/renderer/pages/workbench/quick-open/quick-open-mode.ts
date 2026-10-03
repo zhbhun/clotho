@@ -56,6 +56,7 @@ export const QUICK_OPEN_MODE_ENTRIES: readonly QuickOpenModeEntry[] = [
     prefix: QUICK_OPEN_PREFIX_BY_MODE.projectSessions,
   },
   {
+    commandId: 'workbench.picker.sentMessages.open',
     key: 'sentMessages',
     labelKey: 'workbench.quick.mode.sentMessages',
     prefix: QUICK_OPEN_PREFIX_BY_MODE.sentMessages,

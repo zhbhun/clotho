@@ -155,6 +155,7 @@ export function SessionArea(props: SessionAreaProps) {
   useCommandHandler('workbench.picker.project.open', () => openQuickOpen('~'))
   useCommandHandler('workbench.picker.session.open', () => openQuickOpen('@'))
   useCommandHandler('workbench.picker.allSessions.open', () => openQuickOpen('#'))
+  useCommandHandler('workbench.picker.sentMessages.open', () => openQuickOpen(':'))
   useCommandHandler('workbench.picker.quick.open', openQuickOpen)
 
   return (
