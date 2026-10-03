@@ -99,14 +99,14 @@ export const commandCatalog: CommandCatalog = {
   },
   'workbench.sidebar.session.previous': {
     ...WORKBENCH_COMMAND,
-    title: 'Previous sidebar session',
-    description: 'Switch to the previous session in sidebar order.',
+    title: 'Previous sidebar chat',
+    description: 'Switch to the previous chat in sidebar order.',
     defaultBindings: [{ modifiers: ['primary', 'shift'], key: 'arrowleft' }],
   },
   'workbench.sidebar.session.next': {
     ...WORKBENCH_COMMAND,
-    title: 'Next sidebar session',
-    description: 'Switch to the next session in sidebar order.',
+    title: 'Next sidebar chat',
+    description: 'Switch to the next chat in sidebar order.',
     defaultBindings: [{ modifiers: ['primary', 'shift'], key: 'arrowright' }],
   },
   'workbench.settings.open': {
@@ -130,19 +130,19 @@ export const commandCatalog: CommandCatalog = {
   'workbench.picker.project.open': {
     ...WORKBENCH_COMMAND,
     title: 'Open project picker',
-    description: 'Open the project picker to enter the Claude home or switch projects.',
+    description: 'Open the quick switcher in project mode (`~`) to search and switch projects.',
     defaultBindings: [{ modifiers: ['primary', 'alt'], key: 'p' }],
   },
   'workbench.picker.session.open': {
     ...WORKBENCH_COMMAND,
-    title: 'Open session picker',
-    description: 'Open the historical session picker for the current workspace.',
+    title: 'Open chat picker',
+    description: 'Open the quick switcher in current-project chat mode (`@`) to search chats.',
     defaultBindings: [{ modifiers: ['primary', 'alt', 'shift'], key: 'p' }],
   },
   'workbench.picker.quick.open': {
     ...WORKBENCH_COMMAND,
     title: 'Open quick switcher',
-    description: 'Open the quick switcher to search projects, sessions, and sent messages.',
+    description: 'Open the quick switcher to search projects, chats, and sent messages.',
     defaultBindings: [{ modifiers: ['primary'], key: 'k' }],
   },
   'workbench.picker.file.open': {
@@ -159,8 +159,8 @@ export const commandCatalog: CommandCatalog = {
         `workbench.tab.activate.${position}`,
         {
           ...WORKBENCH_COMMAND,
-          title: `Go to session ${position}`,
-          description: `Switch to session ${position} in the current workspace tab bar.`,
+          title: `Go to chat ${position}`,
+          description: `Switch to chat ${position} in the current workspace tab bar.`,
           defaultBindings: [{ modifiers: ['primary'], key: String(position) }],
         },
       ]
