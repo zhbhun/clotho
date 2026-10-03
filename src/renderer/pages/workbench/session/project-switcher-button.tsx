@@ -12,7 +12,6 @@ import { ShortcutTooltip } from '../components/shortcut-tooltip'
 import type { WorkbenchProject } from '../stores/workbench-store'
 import { ProjectTooltip } from './project-switcher'
 import { ProjectSwitcherMenuContent } from './project-switcher-menu'
-import { useSwitcherStore } from './stores/switcher-store'
 
 export type ProjectSwitcherButtonProps = {
   appearance?: 'header' | 'empty-surface'
@@ -26,7 +25,7 @@ export type ProjectSwitcherButtonProps = {
 }
 
 /** Project button; clicking opens the dropdown project menu, while the
-    shortcut command keeps opening the palette dialog through the store. */
+    picker shortcut opens the quick switcher's project mode instead. */
 export function ProjectSwitcherButton({
   appearance = 'header',
   className,
@@ -39,7 +38,6 @@ export function ProjectSwitcherButton({
 }: ProjectSwitcherButtonProps) {
   const { t } = useTranslation()
   const [isExitHovered, setExitHovered] = useState(false)
-  const closeProjectSwitcher = useSwitcherStore((state) => state.closeProjectSwitcher)
   const isHeader = appearance === 'header'
   // Exiting a side project lands back on the home-base project (the built-in
   // homedir project), so while it is the active project the exit affordance
@@ -147,7 +145,6 @@ export function ProjectSwitcherButton({
                     event.preventDefault()
                     event.stopPropagation()
                     setExitHovered(false)
-                    closeProjectSwitcher()
                     onSelectProject(null)
                   }}
                   onMouseEnter={() => setExitHovered(true)}

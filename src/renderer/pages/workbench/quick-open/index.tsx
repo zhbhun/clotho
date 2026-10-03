@@ -35,6 +35,7 @@ import {
   type QuickOpenModeEntry,
   parseQuickOpenQuery,
 } from './quick-open-mode'
+import { useQuickOpenStore } from './quick-open-store'
 import {
   MESSAGE_PREVIEW_LIMIT,
   useQuickOpenSentPrompts,
@@ -96,10 +97,15 @@ export function QuickOpenPanel({
   const currentSessionId = useWorkbenchStore((state) => state.currentSessionId)
   const { allSessions, projectSessions, recentSessions } = useQuickOpenSessions()
   const sentPrompts = useQuickOpenSentPrompts(open)
+  const initialQuery = useQuickOpenStore((state) => state.initialQuery)
+  const openCount = useQuickOpenStore((state) => state.openCount)
 
+  // Every open request (⌘K, or a shortcut pre-filling a mode prefix) resets
+  // the query; openCount re-triggers this while the panel is already open.
   useEffect(() => {
-    if (open) setQuery('')
-  }, [open])
+    if (!open) return
+    setQuery(initialQuery)
+  }, [open, openCount, initialQuery])
 
   const enterMode = (entry: QuickOpenModeEntry) => {
     setQuery(entry.prefix)

@@ -31,7 +31,6 @@ import type { VirtualConversationHandle } from './conversation/virtual-conversat
 import { SessionEmptyState } from './empty-state'
 import { ConversationHeader } from './header'
 import { ModelOnboarding } from './model-onboarding'
-import { ProjectSwitchDialog } from './project-switcher'
 import type { PromptComposerBaseProps } from './prompt'
 import {
   SessionControllerProvider,
@@ -43,9 +42,7 @@ import {
   useUsageStore,
 } from './session-controller-context'
 import { sessionErrorKey } from './session-error'
-import { SessionHistoryPanel } from './session-history'
 import type { SessionComposerDraft } from './session-types'
-import { useSwitcherStore } from './stores/switcher-store'
 import { averageCacheHitRate } from './stores/usage-store'
 import { SubagentBreadcrumb } from './subagent-breadcrumb'
 import { SubagentConversation } from './subagent-conversation'
@@ -143,12 +140,6 @@ export function SessionArea(props: SessionAreaProps) {
         : { sessionId: nextSessionId, isScrolled },
     )
   }, [])
-  const projectSwitcherOpen = useSwitcherStore((state) => state.projectSwitcherOpen)
-  const sessionHistoryOpen = useSwitcherStore((state) => state.sessionHistoryOpen)
-  const openProjectSwitcher = useSwitcherStore((state) => state.openProjectSwitcher)
-  const openSessionHistory = useSwitcherStore((state) => state.openSessionHistory)
-  const closeProjectSwitcher = useSwitcherStore((state) => state.closeProjectSwitcher)
-  const closeSessionHistory = useSwitcherStore((state) => state.closeSessionHistory)
   const quickOpenOpen = useQuickOpenStore((state) => state.quickOpenOpen)
   const openQuickOpen = useQuickOpenStore((state) => state.openQuickOpen)
   const closeQuickOpen = useQuickOpenStore((state) => state.closeQuickOpen)
@@ -159,8 +150,10 @@ export function SessionArea(props: SessionAreaProps) {
     setTurnScrollRequest({ revision: turnScrollRevisionRef.current, turnId })
   }, [])
 
-  useCommandHandler('workbench.picker.project.open', openProjectSwitcher)
-  useCommandHandler('workbench.picker.session.open', openSessionHistory)
+  // The legacy picker dialogs are gone: their shortcuts now open the quick
+  // switcher with the matching mode prefix pre-filled.
+  useCommandHandler('workbench.picker.project.open', () => openQuickOpen('~'))
+  useCommandHandler('workbench.picker.session.open', () => openQuickOpen('@'))
   useCommandHandler('workbench.picker.quick.open', openQuickOpen)
 
   return (
@@ -231,28 +224,8 @@ export function SessionArea(props: SessionAreaProps) {
           </ModelOnboardingGate>
         )}
       </ErrorBoundary>
-      {/* The switcher dialogs mount once here; the shortcut commands open
-          them through the switcher store. */}
-      <ProjectSwitchDialog
-        open={projectSwitcherOpen}
-        projectMode={props.projectMode}
-        projects={props.projects}
-        selectedProject={selectedProject}
-        onAddProject={props.onAddProject}
-        onOpenChange={(open) => (open ? openProjectSwitcher() : closeProjectSwitcher())}
-        onSelectProject={props.setSelectedProjectId}
-      />
-      <SessionHistoryPanel
-        activeSessionId={selectedSession?.id ?? null}
-        error={props.projectSessionError}
-        isLoading={props.isProjectSessionLoading}
-        open={sessionHistoryOpen}
-        sessionActivity={props.sessionActivity}
-        sessions={props.workspaceSessions}
-        onOpenChange={(open) => (open ? openSessionHistory() : closeSessionHistory())}
-        onRetry={props.onRetryProjectSessions}
-        onSelectSession={props.onSelectSession}
-      />
+      {/* The quick-open palette mounts once here; the picker commands open it
+          through the quick-open store, pre-filled with their mode prefix. */}
       <QuickOpenPanel
         open={quickOpenOpen}
         projects={props.projects}

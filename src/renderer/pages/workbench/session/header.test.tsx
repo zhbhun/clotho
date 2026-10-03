@@ -9,7 +9,6 @@ import { commandCatalog } from '../../../services/shortcuts/catalog'
 import { ShortcutRuntimeProvider, createShortcutRuntime } from '../../../services/shortcuts/runtime'
 import type { WorkbenchProject, WorkbenchSession } from '../stores/workbench-store'
 import { ConversationHeader } from './header'
-import { useSwitcherStore } from './stores/switcher-store'
 
 const project: WorkbenchProject = {
   id: 'project-1',
@@ -126,7 +125,6 @@ function renderHeader(
 describe('ConversationHeader', () => {
   it('exits to the home workspace when the close button is clicked in project mode', async () => {
     await appI18n.changeLanguage('zh-CN')
-    useSwitcherStore.setState({ projectSwitcherOpen: true })
     const { onSelectProject } = renderHeader({
       projectMode: 'project',
       selectedProject: project,
@@ -135,7 +133,6 @@ describe('ConversationHeader', () => {
     fireEvent.click(screen.getByRole('button', { name: appI18n.t('workbench.project.exit') }))
 
     expect(onSelectProject).toHaveBeenCalledWith(null)
-    expect(useSwitcherStore.getState().projectSwitcherOpen).toBe(false)
   })
 
   it('offers no exit outside project mode', async () => {

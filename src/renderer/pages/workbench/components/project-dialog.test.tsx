@@ -1,16 +1,13 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { type ReactElement, useState } from 'react'
+import { type ReactElement } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { Button } from '@/shadcn/button'
 import { Toaster, toast } from '@/shadcn/toast'
-import { TooltipProvider } from '@/shadcn/tooltip'
 
 import { appI18n } from '../../../i18n/runtime'
 import type { ClaudeProject } from '../../../services/claude/claude'
 import { ShortcutRuntimeProvider, shortcutRuntime } from '../../../services/shortcuts/runtime'
-import { ProjectSwitchDialog } from '../session/project-switcher'
 import { ProjectDialog } from './project-dialog'
 
 const claudeMock = vi.hoisted(() => ({
@@ -37,54 +34,9 @@ const project: ClaudeProject = {
   created_at: 10,
 }
 
-const homeProject: ClaudeProject = {
-  id: 'home-project',
-  path: '/Users/test',
-  name: 'work',
-  is_home: true,
-  sessions: [],
-  created_at: 10,
-}
-
 function renderWithShortcuts(element: ReactElement) {
   return render(
     <ShortcutRuntimeProvider runtime={shortcutRuntime}>{element}</ShortcutRuntimeProvider>,
-  )
-}
-
-function SwitcherFlow() {
-  const [isSwitcherOpen, setSwitcherOpen] = useState(false)
-  const [isDialogOpen, setDialogOpen] = useState(false)
-
-  return (
-    <>
-      <div className="session-tab">
-        <button tabIndex={-1} data-testid="session-tab" type="button">
-          代码审查剪辑节点下载逻辑调整
-        </button>
-      </div>
-      <ProjectSwitchDialog
-        open={isSwitcherOpen}
-        projectMode="home"
-        projects={[]}
-        trigger={
-          <Button data-testid="switcher-trigger" type="button">
-            切换项目
-          </Button>
-        }
-        onAddProject={() => {
-          setDialogOpen(true)
-          setSwitcherOpen(false)
-        }}
-        onOpenChange={setSwitcherOpen}
-        onSelectProject={vi.fn()}
-      />
-      <ProjectDialog
-        open={isDialogOpen}
-        onOpenChange={(open) => !open && setDialogOpen(false)}
-        onSaved={vi.fn()}
-      />
-    </>
   )
 }
 
@@ -105,96 +57,6 @@ describe('ProjectDialog', () => {
       name: params.name,
       icon: params.icon ?? undefined,
     }))
-  })
-
-  it('hides the built-in home project from the switcher list', async () => {
-    renderWithShortcuts(
-      <TooltipProvider>
-        <ProjectSwitchDialog
-          open
-          projectMode="home"
-          projects={[homeProject, project]}
-          trigger={
-            <Button data-testid="switcher-trigger" type="button">
-              切换项目
-            </Button>
-          }
-          onAddProject={vi.fn()}
-          onOpenChange={vi.fn()}
-          onSelectProject={vi.fn()}
-        />
-      </TooltipProvider>,
-    )
-
-    expect(await screen.findByText('Alpha custom')).toBeInTheDocument()
-    expect(screen.queryByText('work')).not.toBeInTheDocument()
-  })
-
-  it('returns to the focus origin from before the switcher opened once both dialogs close', async () => {
-    renderWithShortcuts(
-      <TooltipProvider>
-        <SwitcherFlow />
-      </TooltipProvider>,
-    )
-
-    // The session tab holds focus before the switcher opens. The switcher and
-    // the project dialog close together, so the dialog must fall back to the
-    // flow's origin instead of its own (already unmounted) origin. WebKit
-    // clicks do not move focus, so the clicks here use fireEvent on purpose.
-    const sessionTab = screen.getByTestId('session-tab')
-    sessionTab.focus()
-    expect(document.activeElement).toBe(sessionTab)
-
-    fireEvent.click(screen.getByTestId('switcher-trigger'))
-    const switcherDialog = await screen.findByRole('dialog')
-    await waitFor(() => {
-      expect(switcherDialog.contains(document.activeElement)).toBe(true)
-    })
-
-    fireEvent.click(within(switcherDialog).getByRole('button', { name: '添加项目' }))
-
-    const projectDialog = await screen.findByRole('dialog', { name: '添加项目' })
-    await waitFor(() => {
-      expect(projectDialog.contains(document.activeElement)).toBe(true)
-    })
-
-    fireEvent.keyDown(document, { key: 'Escape' })
-
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: '添加项目' })).not.toBeInTheDocument()
-    })
-    expect(document.activeElement).toBe(sessionTab)
-  })
-
-  it('leaves focus on the window when the switcher flow starts without any focus', async () => {
-    renderWithShortcuts(
-      <TooltipProvider>
-        <SwitcherFlow />
-      </TooltipProvider>,
-    )
-
-    // Nothing is focused when the switcher opens: the dialog has no origin of
-    // its own and there is no flow origin to inherit, so dismissal must not
-    // resurrect a focus target.
-    fireEvent.click(screen.getByTestId('switcher-trigger'))
-    const switcherDialog = await screen.findByRole('dialog')
-    await waitFor(() => {
-      expect(switcherDialog.contains(document.activeElement)).toBe(true)
-    })
-
-    fireEvent.click(within(switcherDialog).getByRole('button', { name: '添加项目' }))
-
-    const projectDialog = await screen.findByRole('dialog', { name: '添加项目' })
-    await waitFor(() => {
-      expect(projectDialog.contains(document.activeElement)).toBe(true)
-    })
-
-    fireEvent.keyDown(document, { key: 'Escape' })
-
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: '添加项目' })).not.toBeInTheDocument()
-    })
-    expect(document.activeElement).toBe(document.body)
   })
 
   it('keeps the file input mounted when the picker closes before the image selection returns', async () => {
