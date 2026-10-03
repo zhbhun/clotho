@@ -6,6 +6,7 @@ const COMMAND_MESSAGE_IDS: Readonly<Record<CommandId, string>> = {
   'workbench.navigation.back': 'navigationBack',
   'workbench.navigation.forward': 'navigationForward',
   'workbench.picker.permission.open': 'permissionPickerOpen',
+  'workbench.picker.allSessions.open': 'allSessionsPickerOpen',
   'workbench.picker.file.open': 'filePickerOpen',
   'workbench.picker.model.open': 'modelPickerOpen',
   'workbench.picker.project.open': 'projectPickerOpen',

@@ -135,9 +135,15 @@ export const commandCatalog: CommandCatalog = {
   },
   'workbench.picker.session.open': {
     ...WORKBENCH_COMMAND,
-    title: 'Open chat picker',
+    title: 'Open project chat picker',
     description: 'Open the quick switcher in current-project chat mode (`@`) to search chats.',
-    defaultBindings: [{ modifiers: ['primary', 'alt', 'shift'], key: 'p' }],
+    defaultBindings: [{ modifiers: ['primary', 'alt'], key: 'k' }],
+  },
+  'workbench.picker.allSessions.open': {
+    ...WORKBENCH_COMMAND,
+    title: 'Open all chats picker',
+    description: 'Open the quick switcher in all-chats mode (`#`) to search chats across projects.',
+    defaultBindings: [{ modifiers: ['primary', 'shift'], key: 'k' }],
   },
   'workbench.picker.quick.open': {
     ...WORKBENCH_COMMAND,

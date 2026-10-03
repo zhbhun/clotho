@@ -154,6 +154,7 @@ export function SessionArea(props: SessionAreaProps) {
   // switcher with the matching mode prefix pre-filled.
   useCommandHandler('workbench.picker.project.open', () => openQuickOpen('~'))
   useCommandHandler('workbench.picker.session.open', () => openQuickOpen('@'))
+  useCommandHandler('workbench.picker.allSessions.open', () => openQuickOpen('#'))
   useCommandHandler('workbench.picker.quick.open', openQuickOpen)
 
   return (
