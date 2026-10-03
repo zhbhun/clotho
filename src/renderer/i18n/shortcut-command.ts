@@ -9,6 +9,7 @@ const COMMAND_MESSAGE_IDS: Readonly<Record<CommandId, string>> = {
   'workbench.picker.file.open': 'filePickerOpen',
   'workbench.picker.model.open': 'modelPickerOpen',
   'workbench.picker.project.open': 'projectPickerOpen',
+  'workbench.picker.quick.open': 'quickPickerOpen',
   'workbench.picker.session.open': 'sessionPickerOpen',
   'workbench.session.close': 'sessionClose',
   'workbench.session.new': 'sessionNew',

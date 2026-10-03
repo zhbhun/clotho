@@ -39,10 +39,18 @@ export function SwitcherCommand({ className, ...props }: ComponentProps<typeof C
 export function SwitcherCommandInput({
   actions,
   className,
+  hideSearchIcon = false,
   ...props
-}: ComponentProps<typeof CommandInput> & { actions?: ReactNode }) {
+}: ComponentProps<typeof CommandInput> & {
+  actions?: ReactNode
+  hideSearchIcon?: boolean
+}) {
   return (
-    <div className="spotlight-command-input" data-has-actions={actions ? 'true' : undefined}>
+    <div
+      className="spotlight-command-input"
+      data-has-actions={actions ? 'true' : undefined}
+      data-hide-search-icon={hideSearchIcon ? 'true' : undefined}
+    >
       <CommandInput {...props} className={className} inputGroupClassName="h-9!" />
       {actions ? (
         <div

@@ -48,7 +48,7 @@ export interface ConversationTocItem {
 const IDE_CONTEXT_PATTERN =
   /<ide_(?:opened_file|selection)[^>]*>[\s\S]*?<\/ide_(?:opened_file|selection)>/g
 
-function previewText(value: string): string {
+export function previewText(value: string): string {
   return value.replace(IDE_CONTEXT_PATTERN, '').replace(/\s+/g, ' ').trim()
 }
 

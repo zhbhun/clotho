@@ -13,6 +13,8 @@ import type { ClaudeSlashCommand } from '../../../services/claude/claude'
 import { projectDisplayName } from '../../../utils/project'
 import { LoadFailure } from '../components/loading-state'
 import { useModelStartupContext } from '../components/model-startup-boundary'
+import { QuickOpenPanel } from '../quick-open'
+import { useQuickOpenStore } from '../quick-open/quick-open-store'
 import {
   type SessionActivity,
   type SessionActivityEvent,
@@ -58,6 +60,12 @@ export const CONVERSATION_BOTTOM_PADDING_CLASS = 'pb-72'
 export const CONVERSATION_CONTAINER_CLASS = APP_CONTENT_CONTAINER_CLASS
 const HISTORY_SKELETON_DELAY_MS = 300
 const SUBAGENT_HEADER_HEIGHT = 44
+
+/** A quick-open `:` selection asks the mounted conversation to scroll to a turn. */
+type TurnScrollRequest = {
+  revision: number
+  turnId: string
+}
 
 export type SessionAreaProps = {
   onAddProject: () => void
@@ -141,9 +149,19 @@ export function SessionArea(props: SessionAreaProps) {
   const openSessionHistory = useSwitcherStore((state) => state.openSessionHistory)
   const closeProjectSwitcher = useSwitcherStore((state) => state.closeProjectSwitcher)
   const closeSessionHistory = useSwitcherStore((state) => state.closeSessionHistory)
+  const quickOpenOpen = useQuickOpenStore((state) => state.quickOpenOpen)
+  const openQuickOpen = useQuickOpenStore((state) => state.openQuickOpen)
+  const closeQuickOpen = useQuickOpenStore((state) => state.closeQuickOpen)
+  const [turnScrollRequest, setTurnScrollRequest] = useState<TurnScrollRequest | null>(null)
+  const turnScrollRevisionRef = useRef(0)
+  const handleScrollToMessage = useCallback((turnId: string) => {
+    turnScrollRevisionRef.current += 1
+    setTurnScrollRequest({ revision: turnScrollRevisionRef.current, turnId })
+  }, [])
 
   useCommandHandler('workbench.picker.project.open', openProjectSwitcher)
   useCommandHandler('workbench.picker.session.open', openSessionHistory)
+  useCommandHandler('workbench.picker.quick.open', openQuickOpen)
 
   return (
     <SidebarInset className="relative min-w-0 overflow-hidden bg-background">
@@ -206,6 +224,7 @@ export function SessionArea(props: SessionAreaProps) {
                 {...props}
                 selectedSession={selectedSession}
                 sessionId={sessionId}
+                turnScrollRequest={turnScrollRequest}
                 onContentScrolledChange={handleContentScrolledChange}
               />
             </SessionControllerProvider>
@@ -232,6 +251,15 @@ export function SessionArea(props: SessionAreaProps) {
         sessions={props.workspaceSessions}
         onOpenChange={(open) => (open ? openSessionHistory() : closeSessionHistory())}
         onRetry={props.onRetryProjectSessions}
+        onSelectSession={props.onSelectSession}
+      />
+      <QuickOpenPanel
+        open={quickOpenOpen}
+        projects={props.projects}
+        sessionActivity={props.sessionActivity}
+        onOpenChange={(isOpen) => (isOpen ? openQuickOpen() : closeQuickOpen())}
+        onScrollToMessage={handleScrollToMessage}
+        onSelectProject={props.setSelectedProjectId}
         onSelectSession={props.onSelectSession}
       />
     </SidebarInset>
@@ -263,6 +291,7 @@ function SessionAreaContent({
   sessionActivity,
   tabSessions,
   workspaceSessions,
+  turnScrollRequest,
   onAddProject,
   onContentScrolledChange,
   onOpenSettings,
@@ -272,6 +301,7 @@ function SessionAreaContent({
   setSelectedProjectId,
 }: SessionAreaProps & {
   sessionId: string
+  turnScrollRequest: TurnScrollRequest | null
   onContentScrolledChange: (sessionId: string, isScrolled: boolean) => void
 }) {
   const { t } = useTranslation()
@@ -430,6 +460,12 @@ function SessionAreaContent({
     [activeMessages, activeVirtualContentSize, dockScrollVersion],
   )
   const virtualConversationRef = useRef<VirtualConversationHandle>(null)
+  // A quick-open `:` pick scrolls the mounted conversation to that turn; the
+  // revision keeps repeat picks of the same turn re-triggering the effect.
+  useEffect(() => {
+    if (!turnScrollRequest) return
+    virtualConversationRef.current?.scrollToTurn(turnScrollRequest.turnId)
+  }, [turnScrollRequest])
   const { isContentScrolled, pauseAutoScroll, resetAutoScroll, viewportRef } =
     useConversationAutoScroll(autoScrollVersion, activeViewKey, virtualConversationRef)
   const [conversationViewport, setConversationViewport] = useState<HTMLDivElement | null>(null)

@@ -139,6 +139,12 @@ export const commandCatalog: CommandCatalog = {
     description: 'Open the historical session picker for the current workspace.',
     defaultBindings: [{ modifiers: ['primary', 'alt', 'shift'], key: 'p' }],
   },
+  'workbench.picker.quick.open': {
+    ...WORKBENCH_COMMAND,
+    title: 'Open quick switcher',
+    description: 'Open the quick switcher to search projects, sessions, and sent messages.',
+    defaultBindings: [{ modifiers: ['primary'], key: 'k' }],
+  },
   'workbench.picker.file.open': {
     ...WORKBENCH_COMMAND,
     title: 'Choose file',

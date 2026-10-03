@@ -111,6 +111,12 @@
   stroke-width: 1.5;
 }
 
+/* The quick-open palette doubles as a mode router; its input reads as a
+   command line, so the leading search glyph is dropped. */
+.spotlight-command-input[data-hide-search-icon='true'] [data-slot='input-group-addon'] {
+  display: none;
+}
+
 .spotlight-command-input [data-slot='command-input']::placeholder {
   color: var(--foreground-subtlest);
 }

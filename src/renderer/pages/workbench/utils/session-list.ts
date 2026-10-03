@@ -199,7 +199,7 @@ export function buildSessionTimeline({
   return pinnedGroup.sessions.length ? [pinnedGroup, ...groups] : groups
 }
 
-function compareSessions(left: WorkbenchSession, right: WorkbenchSession) {
+export function compareSessions(left: WorkbenchSession, right: WorkbenchSession) {
   return (
     (right.updated_at ?? right.created_at) - (left.updated_at ?? left.created_at) ||
     left.id.localeCompare(right.id)
