@@ -1,8 +1,11 @@
 import { MessageCircleCode, MessageSquareText } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ProjectIcon } from '../../../components/project-icon'
+import { formatShortcutBinding } from '../../../services/shortcuts/bindings'
+import { getEffectiveBindings } from '../../../services/shortcuts/keymap'
+import { useShortcutRuntime } from '../../../services/shortcuts/runtime'
 import {
   compareProjectsByName,
   isUserProject,
@@ -99,6 +102,10 @@ export function QuickOpenPanel({
   const sentPrompts = useQuickOpenSentPrompts(open)
   const initialQuery = useQuickOpenStore((state) => state.initialQuery)
   const openCount = useQuickOpenStore((state) => state.openCount)
+  // Mode rows hint the command that opens the palette straight into the mode;
+  // the store subscription keeps the hint in step with binding overrides.
+  const { catalog, overrides: overrideStore, platform } = useShortcutRuntime()
+  const overrideSnapshot = useSyncExternalStore(overrideStore.subscribe, overrideStore.getSnapshot)
 
   // Every open request (⌘K, or a shortcut pre-filling a mode prefix) resets
   // the query; openCount re-triggers this while the panel is already open.
@@ -205,16 +212,27 @@ export function QuickOpenPanel({
       content = (
         <>
           <SwitcherCommandGroup>
-            {QUICK_OPEN_MODE_ENTRIES.map((entry) => (
-              <SwitcherCommandItem
-                key={entry.key}
-                icon={entry.icon}
-                label={String(t(entry.labelKey as never))}
-                trailing={<span className="font-mono">{entry.prefix}</span>}
-                value={`mode:${entry.key}`}
-                onSelect={() => enterMode(entry)}
-              />
-            ))}
+            {QUICK_OPEN_MODE_ENTRIES.map((entry) => {
+              const binding = entry.commandId
+                ? getEffectiveBindings(entry.commandId, catalog, overrideSnapshot.overrides)[0]
+                : undefined
+              return (
+                <SwitcherCommandItem
+                  key={entry.key}
+                  iconElement={
+                    <span className="font-mono text-sm leading-none">{entry.prefix}</span>
+                  }
+                  label={String(t(entry.labelKey as never))}
+                  trailing={
+                    binding ? (
+                      <span className="font-mono">{formatShortcutBinding(binding, platform)}</span>
+                    ) : undefined
+                  }
+                  value={`mode:${entry.key}`}
+                  onSelect={() => enterMode(entry)}
+                />
+              )
+            })}
           </SwitcherCommandGroup>
           <SwitcherCommandGroup
             className="spotlight-command-group-ruled"
