@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'reac
 import { useTranslation } from 'react-i18next'
 
 import { ProjectIcon } from '../../../components/project-icon'
-import { formatShortcutBinding } from '../../../services/shortcuts/bindings'
 import { getEffectiveBindings } from '../../../services/shortcuts/keymap'
 import { useShortcutRuntime } from '../../../services/shortcuts/runtime'
 import {
@@ -12,6 +11,7 @@ import {
   projectDisplayName,
   projectNameFromPath,
 } from '../../../utils/project'
+import { ShortcutKeys } from '../components/shortcut-keys'
 import { SessionStatus } from '../session-status'
 import { PROJECT_PATH_MAX } from '../session/project-switcher'
 import {
@@ -224,9 +224,7 @@ export function QuickOpenPanel({
                   }
                   label={String(t(entry.labelKey as never))}
                   trailing={
-                    binding ? (
-                      <span className="font-mono">{formatShortcutBinding(binding, platform)}</span>
-                    ) : undefined
+                    binding ? <ShortcutKeys binding={binding} platform={platform} /> : undefined
                   }
                   value={`mode:${entry.key}`}
                   onSelect={() => enterMode(entry)}

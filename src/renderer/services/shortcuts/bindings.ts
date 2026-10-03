@@ -134,7 +134,11 @@ function modifierLabel(modifier: ShortcutModifier, platform: ShortcutPlatform) {
   }[modifier]
 }
 
-export function formatShortcutBinding(binding: ShortcutBinding, platform: ShortcutPlatform) {
+/** The binding's labels in display order, one per key (modifiers then key). */
+export function shortcutBindingKeyLabels(
+  binding: ShortcutBinding,
+  platform: ShortcutPlatform,
+): string[] {
   const normalized = normalizeShortcutBinding(binding)
   const order = platform === 'mac' ? MAC_DISPLAY_ORDER : OTHER_DISPLAY_ORDER
   const modifiers = new Set(normalized.modifiers)
@@ -143,5 +147,11 @@ export function formatShortcutBinding(binding: ShortcutBinding, platform: Shortc
     .map((modifier) => modifierLabel(modifier, platform))
   const keyLabel = KEY_LABELS[normalized.key] ?? normalized.key.toLocaleUpperCase('en-US')
 
-  return platform === 'mac' ? `${labels.join('')}${keyLabel}` : [...labels, keyLabel].join('+')
+  return [...labels, keyLabel]
+}
+
+export function formatShortcutBinding(binding: ShortcutBinding, platform: ShortcutPlatform) {
+  const labels = shortcutBindingKeyLabels(binding, platform)
+
+  return platform === 'mac' ? labels.join('') : labels.join('+')
 }
