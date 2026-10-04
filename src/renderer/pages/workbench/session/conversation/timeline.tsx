@@ -193,7 +193,6 @@ export function TimelineRow({
 /** Shared timeline renderer for the main conversation and subagent dialog (dots, Thinking, and tool cards). */
 export function TimelineEntry({
   compactAfter = false,
-  defaultToolOpen,
   isLast,
   isStreaming,
   item,
@@ -204,7 +203,6 @@ export function TimelineEntry({
   onRespond,
 }: {
   compactAfter?: boolean
-  defaultToolOpen?: boolean
   isLast: boolean
   isStreaming?: boolean
   item: ConversationTimelineItem
@@ -227,7 +225,6 @@ export function TimelineEntry({
         <ToolItem
           backgroundTask={item.backgroundTask}
           coalescedReads={item.coalescedReads}
-          defaultOpen={defaultToolOpen}
           images={item.result?.images}
           input={item.use?.input}
           isError={item.isError}

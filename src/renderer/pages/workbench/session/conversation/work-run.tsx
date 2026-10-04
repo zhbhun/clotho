@@ -136,7 +136,6 @@ export function WorkRunRow({
             return (
               <TimelineEntry
                 compactAfter={Boolean(item.kind !== 'text' && nextItem && nextItem.kind !== 'text')}
-                defaultToolOpen={false}
                 isLast={isLast && index === items.length - 1}
                 isStreaming={isStreaming}
                 item={item}

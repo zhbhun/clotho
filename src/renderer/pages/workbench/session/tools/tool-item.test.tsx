@@ -16,7 +16,15 @@ describe('ToolCard', () => {
     render(<ToolCard name="Bash" input={{ command: 'ls -la' }} result="result" />)
 
     const title = screen.getByRole('button', { name: 'Bash ls -la' })
+    expect(title).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByTestId('tool-item-body')).not.toBeInTheDocument()
+
     title.focus()
+    await user.keyboard('{Enter}')
+
+    expect(title).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByTestId('tool-item-body')).toBeInTheDocument()
+
     await user.keyboard('{Enter}')
 
     expect(title).toHaveAttribute('aria-expanded', 'false')
@@ -42,11 +50,13 @@ describe('ToolCard', () => {
     const title = screen.getByRole('button', {
       name: 'AskUserQuestion Choose a path',
     })
+    expect(title).toHaveAttribute('aria-expanded', 'false')
+
     title.focus()
     await user.keyboard('{Enter}')
 
-    expect(title).toHaveAttribute('aria-expanded', 'false')
-    expect(screen.queryByText('Continue')).not.toBeInTheDocument()
+    expect(title).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByText('Continue')).toBeInTheDocument()
   })
 
   it('expands overflowing terminal output on request', async () => {
@@ -59,19 +69,22 @@ describe('ToolCard', () => {
       />,
     )
 
+    await userEvent.click(screen.getByRole('button', { name: 'Bash ls -la' }))
     await userEvent.click(screen.getByRole('button', { name: 'Show more' }))
 
     expect(screen.getByRole('button', { name: 'Show less' })).toBeInTheDocument()
   })
 
-  it('shows only the command while a background Bash launch is unconfirmed', () => {
+  it('shows only the command while a background Bash launch is unconfirmed', async () => {
     render(<ToolCard name="Bash" input={{ command: 'bun run build', run_in_background: true }} />)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Bash bun run build' }))
 
     expect(screen.getByTestId('tool-item-body')).toHaveTextContent('$ bun run build')
     expect(screen.getByTestId('tool-item-body')).not.toHaveTextContent('后台运行中')
   })
 
-  it('shows background completion output inside the original Bash card', () => {
+  it('shows background completion output inside the original Bash card', async () => {
     render(
       <ToolCard
         backgroundTask={{
@@ -86,6 +99,8 @@ describe('ToolCard', () => {
       />,
     )
 
+    await userEvent.click(screen.getByRole('button', { name: 'Bash bun run build' }))
+
     expect(screen.getByTestId('tool-item-body')).toHaveTextContent('$ bun run build')
     expect(screen.getByTestId('tool-item-body')).toHaveTextContent('build completed')
     expect(screen.getByTestId('tool-item-body')).not.toHaveTextContent(
@@ -93,7 +108,7 @@ describe('ToolCard', () => {
     )
   })
 
-  it('shows a stopped Monitor state after any partial output', () => {
+  it('shows a stopped Monitor state after any partial output', async () => {
     render(
       <ToolCard
         backgroundTask={{ taskId: 'task-2', status: 'stopped', output: 'last log line' }}
@@ -101,6 +116,8 @@ describe('ToolCard', () => {
         input={{ command: 'tail -f app.log', description: 'Watch logs' }}
       />,
     )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Monitor Watch logs' }))
 
     expect(screen.getByTestId('tool-item-body')).toHaveTextContent('tail -f app.log')
     expect(screen.getByTestId('tool-item-body')).toHaveTextContent('last log line')
@@ -126,10 +143,12 @@ describe('ToolCard', () => {
       </TooltipProvider>,
     )
 
-    await userEvent.click(screen.getByLabelText('Agent security-auditor Run a security audit'))
+    const title = screen.getByLabelText('Agent security-auditor Run a security audit')
+    expect(title).toHaveAttribute('aria-expanded', 'false')
+
+    await userEvent.click(title)
 
     expect(onOpenSubagent).not.toHaveBeenCalled()
-    expect(screen.queryByTestId('tool-item-body')).not.toBeInTheDocument()
   })
 
   it('keeps a failed agent execution navigable when its transcript exists', async () => {

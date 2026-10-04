@@ -40,7 +40,6 @@ export function ToolItem({
   isError,
   isRunning = false,
   backgroundTask,
-  defaultOpen,
 }: {
   name?: string
   input?: unknown
@@ -56,7 +55,6 @@ export function ToolItem({
   isError?: boolean
   isRunning?: boolean
   backgroundTask?: ClaudeBackgroundTask
-  defaultOpen?: boolean
 }) {
   const { t } = useTranslation()
   const translate = t as unknown as (key: string) => string
@@ -76,7 +74,6 @@ export function ToolItem({
   const errorMessage = isError
     ? backgroundTask?.output?.trim() || backgroundTask?.summary?.trim() || result?.trim()
     : undefined
-  const isReadCoalesced = Boolean(coalescedReads?.length)
   const itemContext = {
     name,
     input,
@@ -100,9 +97,7 @@ export function ToolItem({
   const isSubagent = Boolean(
     renderer.opensSubagent && (renderer.canOpenSubagent?.(toolUseResult, Boolean(isError)) ?? true),
   )
-  const naturalDefaultOpen =
-    !isReadCoalesced && !renderer.itemView && renderer.label !== 'tools.Read.label' && !isSubagent
-  const [open, setOpen] = useState(defaultOpen ?? naturalDefaultOpen)
+  const [open, setOpen] = useState(false)
   const awaitingPermission = pendingRequest?.kind === 'permission' ? pendingRequest : undefined
   const canToggle = hasBody && !isSubagent
   const canInteract = isSubagent || canToggle
