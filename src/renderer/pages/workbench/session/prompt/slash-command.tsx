@@ -168,7 +168,6 @@ const HIDDEN_COMMANDS = new Set([
   'claude-api',
   'code-review:code-review',
   'color',
-  'compact',
   'config',
   'context',
   'debug',

@@ -31,7 +31,6 @@ describe('prepareSlashCommands', () => {
       'debug',
       'run-skill-generator',
       'clear',
-      'compact',
       'config',
       'context',
       'heapdump',
@@ -44,6 +43,7 @@ describe('prepareSlashCommands', () => {
       'code-review:code-review',
     ].map((name) => ({ name }))
     const kept = [
+      { name: 'compact' },
       { name: 'loop', aliases: ['proactive'], argumentHint: '[interval] [prompt]' },
       { name: 'goal' },
       { name: 'batch' },
