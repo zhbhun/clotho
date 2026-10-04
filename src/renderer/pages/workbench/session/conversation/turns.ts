@@ -68,6 +68,43 @@ function isCancelledTurnArtifact(
   return false
 }
 
+/**
+ * Apply one compaction notice to the turn timeline. A lifecycle sequence
+ * (compacting → done/failed) mutates the trailing divider; a duplicate terminal
+ * notice — the success status and the boundary receipt both confirm completion —
+ * only fills in metadata the earlier notice lacked.
+ */
+function foldCompactionItem(items: ConversationTimelineItem[], message: ClaudeMessage) {
+  const compaction = message.compaction
+  if (!compaction) return
+  const last = items.at(-1)
+  const trailing = last?.kind === 'compaction' ? last : undefined
+
+  if (!trailing) {
+    items.push({
+      id: `${message.id}-compaction`,
+      kind: 'compaction',
+      phase: compaction.phase,
+      trigger: compaction.trigger,
+      preTokens: compaction.preTokens,
+      postTokens: compaction.postTokens,
+      error: compaction.error,
+      timestamp: message.timestamp,
+    })
+    return
+  }
+
+  if (compaction.phase === 'compacting') return
+  if (trailing.phase === 'compacting' || compaction.phase === 'failed') {
+    trailing.phase = compaction.phase
+    if (compaction.error) trailing.error = compaction.error
+  }
+  if (compaction.preTokens !== undefined) trailing.preTokens = compaction.preTokens
+  if (compaction.postTokens !== undefined) trailing.postTokens = compaction.postTokens
+  if (compaction.trigger) trailing.trigger = compaction.trigger
+  if (message.timestamp) trailing.timestamp = message.timestamp
+}
+
 export function computeTurns(messages: ClaudeMessage[]): ConversationTurn[] {
   const turns: ConversationTurn[] = []
   let currentTurn: ConversationTurn | null = null
@@ -113,6 +150,13 @@ export function computeTurns(messages: ClaudeMessage[]): ConversationTurn[] {
           timestamp: message.timestamp,
         })
       }
+      continue
+    }
+    // Compaction notices fold into a single timeline divider per compaction:
+    // the lifecycle updates trail the divider instead of stacking new ones.
+    if (message.compaction) {
+      if (!currentTurn) continue
+      foldCompactionItem(currentTurn.timelineItems, message)
       continue
     }
     if (message.role === 'system') continue

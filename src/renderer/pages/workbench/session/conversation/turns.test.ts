@@ -49,6 +49,82 @@ describe('conversation state', () => {
     ).toBe('c')
   })
 
+  it('folds the compaction lifecycle into a single divider in the interrupted turn', () => {
+    const messages = [
+      claudeJsonToMessage({
+        type: 'user',
+        uuid: 'user-1',
+        timestamp: '2026-09-23T11:40:00.000Z',
+        message: { role: 'user', content: 'Keep working' },
+      }),
+      claudeJsonToMessage({ type: 'system', subtype: 'status', status: 'compacting' }),
+      claudeJsonToMessage({
+        type: 'system',
+        subtype: 'status',
+        status: null,
+        compact_result: 'success',
+      }),
+      claudeJsonToMessage({
+        type: 'system',
+        subtype: 'compact_boundary',
+        compact_metadata: { trigger: 'auto', pre_tokens: 222813, post_tokens: 16306 },
+      }),
+    ].filter((message): message is NonNullable<typeof message> => Boolean(message))
+
+    const [turn] = computeTurns(messages)
+
+    expect(turn?.timelineItems).toEqual([
+      {
+        id: expect.stringContaining('compaction'),
+        kind: 'compaction',
+        phase: 'done',
+        trigger: 'auto',
+        preTokens: 222813,
+        postTokens: 16306,
+        timestamp: undefined,
+      },
+    ])
+  })
+
+  it('places an auto-compaction divider mid-timeline between the work it separates', () => {
+    const messages = [
+      claudeJsonToMessage({
+        type: 'user',
+        uuid: 'user-1',
+        timestamp: '2026-09-23T11:40:00.000Z',
+        message: { role: 'user', content: 'Long task' },
+      }),
+      claudeJsonToMessage({
+        type: 'assistant',
+        uuid: 'assistant-1',
+        parentUuid: 'user-1',
+        message: {
+          role: 'assistant',
+          content: [
+            { type: 'tool_use', id: 'read-1', name: 'Read', input: { file_path: '/a.ts' } },
+          ],
+        },
+      }),
+      claudeJsonToMessage({ type: 'system', subtype: 'status', status: 'compacting' }),
+      claudeJsonToMessage({
+        type: 'system',
+        subtype: 'compact_boundary',
+        compact_metadata: { trigger: 'auto', pre_tokens: 200000, post_tokens: 20000 },
+      }),
+      claudeJsonToMessage({
+        type: 'assistant',
+        uuid: 'assistant-2',
+        message: { role: 'assistant', content: [{ type: 'text', text: 'Continuing the task' }] },
+      }),
+    ].filter((message): message is NonNullable<typeof message> => Boolean(message))
+
+    const [turn] = computeTurns(messages)
+
+    expect(turn?.timelineItems.map(({ kind }) => kind)).toEqual(['tool', 'compaction', 'text'])
+    const divider = turn?.timelineItems.find(({ kind }) => kind === 'compaction')
+    expect(divider).toMatchObject({ phase: 'done', trigger: 'auto' })
+  })
+
   it('folds a rejected tool-use interruption into the original turn', () => {
     const messages = [
       {

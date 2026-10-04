@@ -178,4 +178,59 @@ describe('API retry parsing', () => {
       claudeJsonToMessage({ type: 'system', subtype: 'api_retry', error_status: 429 }),
     ).toBeNull()
   })
+
+  it('parses the live compaction status transitions', () => {
+    expect(
+      claudeJsonToMessage({ type: 'system', subtype: 'status', status: 'compacting' }),
+    ).toMatchObject({ role: 'system', compaction: { phase: 'compacting' } })
+    expect(
+      claudeJsonToMessage({
+        type: 'system',
+        subtype: 'status',
+        status: null,
+        compact_result: 'failed',
+        compact_error: 'Prompt too long',
+      }),
+    ).toMatchObject({
+      role: 'system',
+      compaction: { phase: 'failed', error: 'Prompt too long' },
+    })
+  })
+
+  it('parses the boundary receipt in both wire and transcript spellings', () => {
+    expect(
+      claudeJsonToMessage({
+        type: 'system',
+        subtype: 'compact_boundary',
+        compact_metadata: { trigger: 'auto', pre_tokens: 222813, post_tokens: 16306 },
+      }),
+    ).toMatchObject({
+      role: 'system',
+      compaction: { phase: 'done', trigger: 'auto', preTokens: 222813, postTokens: 16306 },
+    })
+    expect(
+      claudeJsonToMessage({
+        type: 'system',
+        subtype: 'compact_boundary',
+        compactMetadata: { trigger: 'manual', preTokens: 1000, postTokens: 200 },
+      }),
+    ).toMatchObject({
+      role: 'system',
+      compaction: { phase: 'done', trigger: 'manual', preTokens: 1000, postTokens: 200 },
+    })
+  })
+
+  it('drops plain status messages and the persisted compaction summary', () => {
+    expect(
+      claudeJsonToMessage({ type: 'system', subtype: 'status', status: 'requesting' }),
+    ).toBeNull()
+    expect(claudeJsonToMessage({ type: 'system', subtype: 'status', status: null })).toBeNull()
+    expect(
+      claudeJsonToMessage({
+        type: 'user',
+        isCompactSummary: true,
+        message: { role: 'user', content: 'This session is being continued…' },
+      }),
+    ).toBeNull()
+  })
 })

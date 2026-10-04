@@ -56,6 +56,17 @@ export type ConversationTimelineItem =
     }
   | {
       id: string
+      /** Context-compaction lifecycle; consecutive notices fold into one divider. */
+      kind: 'compaction'
+      phase: 'compacting' | 'done' | 'failed'
+      trigger?: 'manual' | 'auto'
+      preTokens?: number
+      postTokens?: number
+      error?: string
+      timestamp?: string
+    }
+  | {
+      id: string
       kind: 'thinking'
       text: string
       timestamp?: string

@@ -47,6 +47,20 @@ export interface ApiRetryInfo {
   detail?: string
 }
 
+/**
+ * A context-compaction lifecycle notice. Live, the wire carries `system/status`
+ * messages (`status: 'compacting'`, then `status: null` with `compact_result`)
+ * plus a `system/compact_boundary` receipt on success; the transcript keeps only
+ * the boundary (camelCase `compactMetadata`) and drops the failure result.
+ */
+export interface CompactionInfo {
+  phase: 'compacting' | 'done' | 'failed'
+  trigger?: 'manual' | 'auto'
+  preTokens?: number
+  postTokens?: number
+  error?: string
+}
+
 export interface ClaudeMessage {
   id: string
   uuid?: string
@@ -56,6 +70,8 @@ export interface ClaudeMessage {
   content: string
   /** SDK API-retry notice; rendered as a per-sequence error card in the turn timeline. */
   apiRetry?: ApiRetryInfo
+  /** Context-compaction notice; rendered as a divider in the turn timeline. */
+  compaction?: CompactionInfo
   attachments?: ClaudeAttachment[]
   blocks?: ClaudeContentBlock[]
   type?: string
@@ -145,8 +161,62 @@ export function parseApiRetry(entry: ClaudeJsonLine): ApiRetryInfo | null {
   return null
 }
 
+/**
+ * Parse a compaction lifecycle entry into CompactionInfo. The boundary receipt
+ * spells its metadata snake_case on the wire (`compact_metadata.pre_tokens`)
+ * and camelCase in the transcript (`compactMetadata.preTokens`); `system/status`
+ * entries only carry the live phase transitions.
+ */
+export function parseCompaction(entry: ClaudeJsonLine): CompactionInfo | null {
+  if (entry.type !== 'system') return null
+
+  if (entry.subtype === 'compact_boundary') {
+    const meta = (entry.compact_metadata ?? entry.compactMetadata) as
+      Record<string, unknown> | undefined
+    const trigger =
+      meta?.trigger === 'manual' ? 'manual' : meta?.trigger === 'auto' ? 'auto' : undefined
+    return {
+      phase: 'done',
+      trigger,
+      preTokens: numberField(meta?.pre_tokens ?? meta?.preTokens),
+      postTokens: numberField(meta?.post_tokens ?? meta?.postTokens),
+    }
+  }
+
+  if (entry.subtype === 'status') {
+    if (entry.status === 'compacting') return { phase: 'compacting' }
+    if (entry.status === null && entry.compact_result === 'failed') {
+      return {
+        phase: 'failed',
+        error:
+          typeof entry.compact_error === 'string' && entry.compact_error
+            ? entry.compact_error
+            : undefined,
+      }
+    }
+    if (entry.status === null && entry.compact_result === 'success') return { phase: 'done' }
+  }
+
+  return null
+}
+
 export function claudeJsonToMessage(entry: ClaudeJsonLine, index = 0): ClaudeMessage | null {
   if (shouldSkipEntry(entry)) return null
+
+  const compaction = parseCompaction(entry)
+  if (compaction) {
+    return {
+      id: `${entry.type}-compaction-${entry.timestamp ?? index}-${index}`,
+      uuid: typeof entry.uuid === 'string' ? entry.uuid : undefined,
+      parentUuid: typeof entry.parentUuid === 'string' ? entry.parentUuid : undefined,
+      role: 'system',
+      content: '',
+      type: entry.type,
+      timestamp: entry.timestamp,
+      rawType: entry.subtype ?? entry.type,
+      compaction,
+    }
+  }
 
   const apiRetry = parseApiRetry(entry)
   if (apiRetry) {
@@ -224,6 +294,9 @@ function shouldSkipEntry(entry: ClaudeJsonLine): boolean {
   return (
     !t ||
     isSyntheticNoResponseEntry(entry) ||
+    // The post-compaction summary replays as a giant synthetic user entry; the
+    // compact_boundary divider represents it in the conversation instead.
+    entry.isCompactSummary === true ||
     t === 'attachment' ||
     t === 'file-history-snapshot' ||
     t === 'last-prompt' ||

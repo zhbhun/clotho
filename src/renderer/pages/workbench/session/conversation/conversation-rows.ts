@@ -63,6 +63,15 @@ export type ConversationRow =
       turnTerminalStatus?: TurnTerminalStatus
     }
   | {
+      isLast: boolean
+      isStreaming: boolean
+      item: Extract<ConversationTimelineItem, { kind: 'compaction' }>
+      key: string
+      kind: 'compaction'
+      turnId: string
+      turnTerminalStatus?: TurnTerminalStatus
+    }
+  | {
       /** Terminal turn failure, rendered as a standalone error card under the status row. */
       key: string
       kind: 'error-card'
@@ -167,6 +176,14 @@ export function buildConversationRows(options: {
     )
     const hasStructuredTimeline = timelineItems.some((item) => item.kind !== 'text')
     const usesStatus = timelineItems.length > 0 || isInterrupted || hasFailure
+    // A turn that only carries a compaction divider (an explicit /compact prompt)
+    // needs no Worked-for header — the divider is the turn's whole story.
+    // Interrupted or failed compactions keep their terminal status row.
+    const isCompactionOnlyTurn =
+      !isInterrupted &&
+      !hasFailure &&
+      timelineItems.length > 0 &&
+      timelineItems.every((item) => item.kind === 'compaction')
     const textItems = timelineItems.filter(
       (item): item is Extract<ConversationTimelineItem, { kind: 'text' }> => item.kind === 'text',
     )
@@ -201,7 +218,13 @@ export function buildConversationRows(options: {
         const hasWorkAfterLastText =
           lastTextIndex >= 0 &&
           timelineItems.slice(lastTextIndex + 1).some((item) => item.kind !== 'text')
-        const trailingStartIndex = hasWorkAfterLastText ? lastTextIndex : timelineItems.length
+        let trailingStartIndex = hasWorkAfterLastText ? lastTextIndex : timelineItems.length
+        // A compaction divider survives collapse: never fold the visible window
+        // past the first one.
+        const firstCompactionIndex = timelineItems.findIndex((item) => item.kind === 'compaction')
+        if (firstCompactionIndex >= 0) {
+          trailingStartIndex = Math.min(trailingStartIndex, firstCompactionIndex)
+        }
         const visibleItems = isExpanded ? timelineItems : timelineItems.slice(trailingStartIndex)
         const slices = groupWorkRuns(visibleItems, `turn:${turnId}`, (item) =>
           Boolean(toolRequestFor(options.pendingRequests, item) === undefined),
@@ -229,7 +252,7 @@ export function buildConversationRows(options: {
 
         // A failure ends the turn after its work, so the status row closes the turn instead
         // of heading it; other statuses stay on top as the turn's expandable header.
-        if (!hasFailure) {
+        if (!hasFailure && !isCompactionOnlyTurn) {
           rows.push({
             canToggle: true,
             duration,
@@ -279,6 +302,18 @@ export function buildConversationRows(options: {
             })
             return
           }
+          if (item.kind === 'compaction') {
+            rows.push({
+              isLast: isLastSlice && !showThinkingAfterLatestTool && !hasFailure,
+              isStreaming,
+              item,
+              key: `turn:${turnId}:compaction:${item.id}`,
+              kind: 'compaction',
+              turnId,
+              turnTerminalStatus,
+            })
+            return
+          }
           rows.push({
             compactAfter: item.kind !== 'text' && nextIsWork,
             isLast: isLastSlice && !showThinkingAfterLatestTool && !hasFailure,
@@ -313,7 +348,7 @@ export function buildConversationRows(options: {
           })
         }
       } else {
-        if (!hasFailure) {
+        if (!hasFailure && !isCompactionOnlyTurn) {
           rows.push({
             canToggle: false,
             duration,

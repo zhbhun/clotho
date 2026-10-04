@@ -11,6 +11,7 @@ import type { ClaudeMessage } from '../services/message'
 import type { TurnFailure } from '../session-types'
 import { AgentReplyErrorBoundary } from './agent-reply-error-boundary'
 import { ApiErrorCard } from './api-error-card'
+import { CompactionDivider } from './compaction-divider'
 import {
   type ConversationRow,
   buildConversationRows,
@@ -234,6 +235,7 @@ function estimateConversationRowSize(row: ConversationRow) {
   if (row.kind === 'actions') return 32
   if (row.kind === 'thinking') return 48
   if (row.kind === 'api-retry') return 76
+  if (row.kind === 'compaction') return 40
   if (row.kind === 'error-card') return 96
   if (row.kind === 'work-run') {
     return row.isExpanded ? 32 + row.items.length * 96 : 32
@@ -351,6 +353,17 @@ function ConversationRowContent({
           state={row.isStreaming && row.isLast && !row.turnTerminalStatus ? 'retrying' : 'settled'}
           status={row.item.status}
           timestamp={row.item.timestamp}
+        />
+      </div>
+    )
+  }
+
+  if (row.kind === 'compaction') {
+    return (
+      <div className={cn('px-3 py-3', hasTopPadding && 'pt-2')}>
+        <CompactionDivider
+          isPending={row.isStreaming && row.isLast && !row.turnTerminalStatus}
+          item={row.item}
         />
       </div>
     )

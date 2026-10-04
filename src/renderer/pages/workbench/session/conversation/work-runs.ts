@@ -85,8 +85,14 @@ export function groupWorkRuns(
   }
 
   for (const item of items) {
-    // api-retry cards stay standalone like text: never folded into a tool run.
-    if (item.kind === 'text' || item.kind === 'api-retry' || !isGroupable(item)) {
+    // api-retry cards and compaction dividers stay standalone like text:
+    // never folded into a tool run.
+    if (
+      item.kind === 'text' ||
+      item.kind === 'api-retry' ||
+      item.kind === 'compaction' ||
+      !isGroupable(item)
+    ) {
       flush()
       slices.push({ kind: 'single', item })
       continue

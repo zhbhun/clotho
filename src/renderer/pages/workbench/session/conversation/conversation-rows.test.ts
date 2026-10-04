@@ -34,6 +34,32 @@ describe('buildConversationRows', () => {
     expect(formatConversationDuration(65, instance.t)).toBe('1 分 5 秒')
   })
 
+  it('drops the worked-for header for a turn that only carries a compaction divider', () => {
+    const rows = buildConversationRows({
+      expandedTurns: {},
+      interruptedTurnIds: new Set(),
+      isStreaming: false,
+      lastSentTurnId: null,
+      streamingElapsed: 0,
+      turns: [turn('user-1', [{ id: 'compaction-1', kind: 'compaction', phase: 'done' }])],
+    })
+
+    expect(rows.map(({ kind }) => kind)).toEqual(['user', 'compaction'])
+  })
+
+  it('keeps the terminal status row for an interrupted compaction-only turn', () => {
+    const rows = buildConversationRows({
+      expandedTurns: {},
+      interruptedTurnIds: new Set(['user-1']),
+      isStreaming: false,
+      lastSentTurnId: null,
+      streamingElapsed: 0,
+      turns: [turn('user-1', [{ id: 'compaction-1', kind: 'compaction', phase: 'compacting' }])],
+    })
+
+    expect(rows.map(({ kind }) => kind)).toEqual(['user', 'status', 'compaction'])
+  })
+
   it('resolves work-run summary labels with natural plurals', async () => {
     const instance = await createAppI18n('en', [])
     expect(instance.t('workbench.workRun.ranCommands', { count: 1 })).toBe('ran 1 command')
