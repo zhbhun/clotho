@@ -119,7 +119,7 @@ export function AskQuestionCards({
   answers: Record<string, string>
 }) {
   return (
-    <div className="mt-2 flex flex-col gap-2">
+    <div className="flex flex-col gap-2">
       {questions.map((question, index) => (
         <AskQuestionCard
           key={index}
@@ -298,10 +298,7 @@ function AskQuestionCard({
   const rowsClass = 'flex flex-col gap-1 text-xs leading-5 text-foreground-subtle'
 
   return (
-    <div
-      className="flex flex-col gap-1.5 rounded-md border border-border/50 bg-muted/30 px-3 py-2"
-      data-testid="ask-question-card"
-    >
+    <div className="flex flex-col gap-1.5" data-testid="ask-question-card">
       <div className="text-xs font-medium leading-5 text-foreground-subtle">
         {question.header ? `${question.header}: ` : ''}
         {question.question}
