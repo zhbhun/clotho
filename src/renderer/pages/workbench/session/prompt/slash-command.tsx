@@ -81,7 +81,7 @@ function SlashCommandView({ node }: NodeViewProps) {
             />
           }
         >
-          /{name}
+          <span className="min-w-0 truncate">/{name}</span>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-80 gap-0 p-3" side="top" sideOffset={6}>
           <PopoverHeader className="gap-1.5">
