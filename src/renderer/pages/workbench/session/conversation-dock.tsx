@@ -15,19 +15,17 @@ export type ConversationDockProps = {
   askRequests: ClaudeToolRequest[]
   composerProps: PromptComposerBaseProps
   dockRef: RefCallback<HTMLDivElement>
-  error: string | null
   isSubagentSelected: boolean
   taskProgress: TaskProgress
   onOpenWorkflowAgent: (target: WorkflowSubagentTarget) => void
   onRespond: (toolUseId: string, result: ClaudeToolResult) => Promise<void>
 }
 
-/** Bottom dock floating over the conversation: task progress pills, the ask/prompt input area, and runtime errors. */
+/** Bottom dock floating over the conversation: task progress pills and the ask/prompt input area. */
 export function ConversationDock({
   askRequests,
   composerProps,
   dockRef,
-  error,
   isSubagentSelected,
   taskProgress,
   onOpenWorkflowAgent,
@@ -61,11 +59,6 @@ export function ConversationDock({
             requests={askRequests}
             onRespond={onRespond}
           />
-        ) : null}
-        {!isSubagentSelected && error ? (
-          <p className="truncate text-xs text-destructive" title={error}>
-            {error}
-          </p>
         ) : null}
       </div>
     </div>

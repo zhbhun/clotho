@@ -12,7 +12,6 @@ import { SessionHistoryButton } from './session-history'
 export type SessionEmptyStateProps = {
   activeSessionId: string | null
   composerProps: PromptComposerBaseProps
-  error: string | null
   hasTabSessions: boolean
   historyError: string | null
   historyIsLoading: boolean
@@ -32,7 +31,6 @@ export type SessionEmptyStateProps = {
 export function SessionEmptyState({
   activeSessionId,
   composerProps,
-  error,
   hasTabSessions,
   historyError,
   historyIsLoading,
@@ -114,11 +112,6 @@ export function SessionEmptyState({
           ) : (
             <PromptComposer {...composerProps} slashMenuPlacement="above" />
           )}
-          {error ? (
-            <p className="truncate text-xs text-destructive" title={error}>
-              {error}
-            </p>
-          ) : null}
         </div>
       </div>
     </div>

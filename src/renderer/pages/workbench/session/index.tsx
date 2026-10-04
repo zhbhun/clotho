@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/react/shallow'
 
 import { SidebarInset } from '@/shadcn/sidebar'
+import { toast } from '@/shadcn/toast'
 import { cn } from '@/shadcn/utils'
 
 import { APP_CONTENT_CONTAINER_CLASS } from '../../../components/app-layout'
@@ -420,13 +421,18 @@ function SessionAreaContent({
     !isMessageEditPending &&
     !isMockProject &&
     (projectMode === 'home' || Boolean(selectedProject))
-  const error = runtimeError
-    ? runtimeError.kind === 'session-initialize'
-      ? runtimeError.message
-      : runtimeError.kind === 'message-send' || runtimeError.kind === 'message-edit'
-        ? `${t(sessionErrorKey(runtimeError.kind))}: ${runtimeError.message}`
-        : t(sessionErrorKey(runtimeError.kind))
-    : null
+  // Runtime errors surface as a toast instead of a composer footnote; the
+  // fixed id keeps a re-labelled follow-up (message-send → message-edit)
+  // replacing the first toast rather than stacking a second one.
+  useEffect(() => {
+    if (!runtimeError || runtimeError.kind === 'session-initialize') return
+    toast.add({
+      id: 'workbench-session-error',
+      title: t(sessionErrorKey(runtimeError.kind)),
+      description: runtimeError.message,
+      type: 'error',
+    })
+  }, [runtimeError, t])
   const [virtualContentSize, setVirtualContentSize] = useState({ size: 0, viewKey: activeViewKey })
   const activeVirtualContentSize =
     virtualContentSize.viewKey === activeViewKey ? virtualContentSize.size : 0
@@ -745,7 +751,6 @@ function SessionAreaContent({
             askRequests={askRequests}
             composerProps={promptComposerProps}
             dockRef={dockRef}
-            error={error}
             isSubagentSelected={Boolean(subagentView.selectedSubagent)}
             taskProgress={taskProgress}
             onOpenWorkflowAgent={subagentView.openWorkflowSubagent}
@@ -756,7 +761,6 @@ function SessionAreaContent({
         <SessionEmptyState
           activeSessionId={selectedSession?.id ?? null}
           composerProps={promptComposerProps}
-          error={error}
           hasTabSessions={tabSessions.length > 0}
           historyError={projectSessionError}
           historyIsLoading={isProjectSessionLoading}
