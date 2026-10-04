@@ -55,6 +55,6 @@ export const taskUpdateRenderer: ToolRenderer = {
   hasBody: (input, _result, _images, toolUseResult) => Boolean(updatedTask(input, toolUseResult)),
   bodyItemView: ({ input, toolUseResult }) => {
     const task = updatedTask(input, toolUseResult)
-    return task ? <TaskSummary tasks={[task]} /> : null
+    return task ? <TaskSummary flat tasks={[task]} /> : null
   },
 }

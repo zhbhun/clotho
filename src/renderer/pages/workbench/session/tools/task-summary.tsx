@@ -6,32 +6,48 @@ import { cn } from '@/shadcn/utils'
 import type { ClaudeTaskItem } from '../conversation/types'
 import { TodoStatusBox } from './todo-write/status-box'
 
-/** Latest-state card of the tasks tracked by a task list: checkbox rows with a tally. */
-export function TaskSummary({ tasks }: { tasks: ClaudeTaskItem[] }) {
+/**
+ * Latest state of the tasks tracked by a task list: checkbox rows with a tally.
+ * Renders as a standalone card by default; `flat` drops the surface for use
+ * inside a tool card that already provides one.
+ */
+export function TaskSummary({
+  className,
+  flat = false,
+  tasks,
+}: {
+  className?: string
+  flat?: boolean
+  tasks: ClaudeTaskItem[]
+}) {
   const { t } = useTranslation()
   const settled = tasks.filter(
     (task) => task.status === 'completed' || task.status === 'cancelled',
   ).length
 
   return (
-    <div className="min-w-0">
-      <section className="min-w-0 rounded-lg border border-border/60 bg-muted/30 px-3 py-2 text-sm leading-5 text-foreground-subtlest">
-        <div className="mb-1.5 flex items-center justify-between gap-3">
-          <div className="inline-flex min-w-0 items-center gap-1.5 text-foreground-subtlest">
-            <ListTodo className="size-3.5 shrink-0 text-foreground-subtlest" />
-            <span className="truncate">{t('workbench.timeline.tasks')}</span>
-          </div>
-          <span className="shrink-0 tabular-nums text-foreground-subtlest">
-            {settled}/{tasks.length}
-          </span>
+    <section
+      className={cn(
+        'min-w-0 text-sm leading-5 text-foreground-subtlest',
+        !flat && 'rounded-lg border border-border/60 bg-muted/30 px-3 py-2',
+        className,
+      )}
+    >
+      <div className="mb-1.5 flex items-center justify-between gap-3">
+        <div className="inline-flex min-w-0 items-center gap-1.5 text-foreground-subtlest">
+          <ListTodo className="size-3.5 shrink-0 text-foreground-subtlest" />
+          <span className="truncate">{t('workbench.timeline.tasks')}</span>
         </div>
-        <ul className="flex flex-col gap-1.5">
-          {tasks.map((task) => (
-            <TaskSummaryRow key={task.id} task={task} />
-          ))}
-        </ul>
-      </section>
-    </div>
+        <span className="shrink-0 tabular-nums text-foreground-subtlest">
+          {settled}/{tasks.length}
+        </span>
+      </div>
+      <ul className="flex flex-col gap-1.5">
+        {tasks.map((task) => (
+          <TaskSummaryRow key={task.id} task={task} />
+        ))}
+      </ul>
+    </section>
   )
 }
 
