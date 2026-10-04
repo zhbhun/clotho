@@ -1,8 +1,8 @@
 import { Check, ChevronRight, LoaderCircle, Workflow as WorkflowIcon } from 'lucide-react'
-import { useState } from 'react'
+import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from '@/shadcn/popover'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shadcn/popover'
 import { Separator } from '@/shadcn/separator'
 import { cn } from '@/shadcn/utils'
 
@@ -24,14 +24,18 @@ export function WorkflowProgress({
   onOpenAgent?: (target: WorkflowSubagentTarget) => void
 }) {
   const { t } = useTranslation()
-  const [open, setOpen] = useState(false)
+  // Closes the hover panel imperatively when an agent row is picked.
+  const actionsRef = useRef<{ close: () => void; unmount: () => void } | null>(null)
   const activeWorkflows = workflows.filter((workflow) => !isTerminal(workflow.status))
   if (!activeWorkflows.length) return null
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover actionsRef={actionsRef}>
       <PopoverTrigger
+        closeDelay={120}
+        delay={0}
         nativeButton={false}
+        openOnHover
         render={
           <div className="flex cursor-pointer items-center gap-2 px-2 py-0.5 transition-colors hover:text-foreground" />
         }
@@ -40,19 +44,16 @@ export function WorkflowProgress({
         <span>{t('tools.workflow.progressTitle')}</span>
       </PopoverTrigger>
       <PopoverContent
-        align="center"
-        className="w-[min(28rem,calc(100vw-2rem))] gap-0 p-1.5"
         side="top"
-        sideOffset={6}
+        sideOffset={12}
+        className="w-[min(420px,90vw)] gap-0 p-1.5 shadow-float"
       >
         {activeWorkflows.map((workflow, workflowIndex) => (
           <div key={workflow.runId}>
             {workflowIndex ? <Separator className="my-1" /> : null}
             {workflow.summary ? (
               <div className="px-2 py-1.5">
-                <PopoverTitle className="truncate text-xs text-foreground-subtlest">
-                  {workflow.summary}
-                </PopoverTitle>
+                <div className="truncate text-xs text-foreground-subtlest">{workflow.summary}</div>
               </div>
             ) : null}
             {workflow.agents.length ? (
@@ -68,7 +69,7 @@ export function WorkflowProgress({
                       data-workflow-agent-state={agent.state}
                       onClick={() => {
                         onOpenAgent?.(agent)
-                        setOpen(false)
+                        actionsRef.current?.close()
                       }}
                     >
                       <StateIcon className={cn('size-3.5 shrink-0', !done && 'animate-spin')} />

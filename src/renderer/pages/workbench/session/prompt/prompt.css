@@ -1,17 +1,20 @@
-.prompt-composer-surface {
-  --prompt-composer-border: var(--border);
+:root {
   --prompt-composer-shadow:
     0 0 28px -8px color-mix(in oklab, var(--color-neutral-950) 16%, transparent),
     0 0 6px -2px color-mix(in oklab, var(--color-neutral-950) 6%, transparent);
-
-  position: relative;
-  border: 1px solid var(--prompt-composer-border);
 }
 
-.dark .prompt-composer-surface {
+.dark {
   --prompt-composer-shadow:
     0 0 32px -8px color-mix(in oklab, var(--color-neutral-950) 36%, transparent),
     0 0 8px -2px color-mix(in oklab, var(--color-neutral-950) 16%, transparent);
+}
+
+.prompt-composer-surface {
+  --prompt-composer-border: var(--border);
+
+  position: relative;
+  border: 1px solid var(--prompt-composer-border);
 }
 
 .prompt-composer-surface[data-shadow-direction='downward'] {

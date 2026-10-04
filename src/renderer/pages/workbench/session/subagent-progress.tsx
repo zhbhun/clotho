@@ -1,11 +1,13 @@
 import { GitFork } from 'lucide-react'
 
-import { ProgressSection } from './progress-section'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shadcn/popover'
+
 import type { SessionSubagent } from './subagents'
 
 /**
  * Running-subagent section: finished-versus-dispatched count, shown only while at least one direct
- * subagent is running; hover expands the running list.
+ * subagent is running; hovering expands the running list. Shared panel styling with the sibling
+ * pill sections in TaskProgressPanel.
  */
 export function SubagentProgress({
   running,
@@ -17,20 +19,33 @@ export function SubagentProgress({
   if (!running.length) return null
 
   return (
-    <ProgressSection
-      icon={<GitFork className="size-3.5" />}
-      popover={
+    <Popover>
+      <PopoverTrigger
+        closeDelay={120}
+        delay={0}
+        nativeButton={false}
+        openOnHover
+        render={
+          <div className="flex cursor-pointer items-center gap-2 px-2 py-0.5 transition-colors hover:text-foreground" />
+        }
+      >
+        <GitFork className="size-3.5" />
+        <span className="tabular-nums">
+          {stats.done}/{stats.total}
+        </span>
+      </PopoverTrigger>
+      <PopoverContent
+        side="top"
+        sideOffset={12}
+        className="w-[min(420px,90vw)] gap-0 p-1.5 shadow-float"
+      >
         <ul className="flex flex-col">
           {running.map((subagent) => (
             <SubagentRow key={subagent.id} subagent={subagent} />
           ))}
         </ul>
-      }
-    >
-      <span className="tabular-nums">
-        {stats.done}/{stats.total}
-      </span>
-    </ProgressSection>
+      </PopoverContent>
+    </Popover>
   )
 }
 

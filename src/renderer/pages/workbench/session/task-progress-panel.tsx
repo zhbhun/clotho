@@ -43,7 +43,7 @@ export function TaskProgressPanel({
 
   return (
     <div className="flex justify-center">
-      <div className="flex items-center rounded-full border border-border/60 bg-card/85 py-1 text-xs text-foreground-subtlest shadow-sm backdrop-blur">
+      <div className="flex items-center rounded-full border border-border/60 bg-card/85 py-1 text-xs text-foreground-subtlest shadow-(--prompt-composer-shadow) backdrop-blur">
         {sections.map((section, index) => (
           <Fragment key={index}>
             {index > 0 ? (
