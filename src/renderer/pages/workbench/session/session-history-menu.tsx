@@ -89,9 +89,7 @@ export function SessionHistoryMenuContent({
                       activity={activity}
                       icon={<MessageCircleCode className="size-4" strokeWidth={1.5} />}
                     />
-                    <span className="min-w-0 flex-1 truncate text-sm/5">
-                      {sessionTitle(session)}
-                    </span>
+                    <span className="min-w-0 truncate text-sm/5">{sessionTitle(session)}</span>
                     <span className="shrink-0 text-[12px] text-foreground-subtlest">{time}</span>
                   </MenuItem>
                 )
