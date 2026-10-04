@@ -16,6 +16,7 @@ import { fileLines } from './sessions/file'
 import { mcpLines } from './sessions/mcp'
 import { notebookLines } from './sessions/notebook'
 import { planLines } from './sessions/plan'
+import { progressLines, progressSubagents, progressWorkflowRuns } from './sessions/progress'
 import { reviewLines } from './sessions/review'
 import { skillLines } from './sessions/skill'
 import { taskLines } from './sessions/task'
@@ -187,6 +188,18 @@ export const MOCK_SESSIONS: MockSessionDef[] = [
       first_prompt: 'Start a background task to run the build script and monitor it with Monitor.',
     },
     lines: () => backgroundLines(),
+  },
+  {
+    meta: {
+      id: 'mock-progress',
+      title: 'Progress · Todo + Agent + Workflow',
+      created_at: BASE_TIME + hour,
+      first_prompt:
+        'Track this refactor with a todo list, dispatch two research subagents in parallel, and start the math Workflow at the same time.',
+    },
+    lines: () => progressLines(),
+    subagents: () => progressSubagents(),
+    workflowRuns: () => progressWorkflowRuns(),
   },
 ]
 
