@@ -396,7 +396,6 @@ function SessionAreaContent({
     lastTurn.assistantMessages.length > 0,
   )
   const taskProgress = useTaskProgress({
-    isStreaming,
     messages: activeMessages,
     subagents: subagentView.subagents,
     workflowGroups,

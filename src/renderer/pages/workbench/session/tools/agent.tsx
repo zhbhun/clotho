@@ -1,4 +1,4 @@
-import { Bot } from 'lucide-react'
+import { GitFork } from 'lucide-react'
 
 import type { ToolRenderer } from './shared/types'
 import { pickString } from './shared/utils'
@@ -17,7 +17,7 @@ function agentId(toolUseResult: unknown): string {
 }
 
 export const agentRenderer: ToolRenderer = {
-  icon: Bot,
+  icon: GitFork,
   label: 'tools.Agent.label',
   description: 'tools.agent.description',
   summary: agentSummary,

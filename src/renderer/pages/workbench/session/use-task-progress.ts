@@ -2,16 +2,26 @@ import { useMemo } from 'react'
 
 import { type TodoItem, extractTodoItems, isTodoWriteToolName } from '../../../services/claude/todo'
 import type { ClaudeMessage } from './services/message'
-import { type SessionSubagent, directRunningSubagents } from './subagents'
+import {
+  type SessionSubagent,
+  type SessionSubagentStatus,
+  directRunningSubagents,
+} from './subagents'
 import type { WorkflowSubagentGroup } from './use-subagents'
 
 export interface TaskProgress {
   activeWorkflowGroups: WorkflowSubagentGroup[]
-  hasActiveTodoExecution: boolean
   hasTaskProgress: boolean
   latestTodos: TodoItem[]
   runningSubagents: SessionSubagent[]
+  subagentStats: { done: number; total: number }
 }
+
+const TERMINAL_SUBAGENT_STATUSES = new Set<SessionSubagentStatus>([
+  'completed',
+  'failed',
+  'stopped',
+])
 
 function findLatestTodos(messages: ClaudeMessage[]): TodoItem[] {
   let latest: TodoItem[] | null = null
@@ -25,14 +35,15 @@ function findLatestTodos(messages: ClaudeMessage[]): TodoItem[] {
   return latest ?? []
 }
 
-/** Aggregate todo, subagent, and workflow progress for the currently viewed message list. */
+/**
+ * Aggregate todo, subagent, and workflow progress for the currently viewed message list. Todos
+ * and subagents stay separate: todos render their own pill, running subagents theirs.
+ */
 export function useTaskProgress({
-  isStreaming,
   messages,
   subagents,
   workflowGroups,
 }: {
-  isStreaming: boolean
   messages: ClaudeMessage[]
   subagents: SessionSubagent[]
   workflowGroups: WorkflowSubagentGroup[]
@@ -52,16 +63,22 @@ export function useTaskProgress({
       ),
     [workflowGroups],
   )
-  const hasActiveTodoExecution = isStreaming || runningSubagents.length > 0
+  const subagentStats = useMemo(
+    () => ({
+      done: subagents.filter((subagent) => TERMINAL_SUBAGENT_STATUSES.has(subagent.status)).length,
+      total: subagents.length,
+    }),
+    [subagents],
+  )
   const hasTaskProgress =
-    (hasActiveTodoExecution && latestTodos.some((todo) => todo.status !== 'completed')) ||
+    latestTodos.some((todo) => todo.status !== 'completed') ||
     runningSubagents.length > 0 ||
     activeWorkflowGroups.length > 0
   return {
     activeWorkflowGroups,
-    hasActiveTodoExecution,
     hasTaskProgress,
     latestTodos,
     runningSubagents,
+    subagentStats,
   }
 }

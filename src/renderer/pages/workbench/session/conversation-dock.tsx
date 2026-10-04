@@ -5,9 +5,8 @@ import { cn } from '@/shadcn/utils'
 import { APP_CONTENT_CONTAINER_CLASS } from '../../../components/app-layout'
 import type { ClaudeToolRequest, ClaudeToolResult } from '../../../services/claude/claude'
 import { PromptComposer, type PromptComposerBaseProps } from './prompt'
+import { TaskProgressPanel } from './task-progress-panel'
 import { AskPanel } from './tools/ask-user-question/request-panel'
-import { TodoProgress } from './tools/todo-write/progress'
-import { WorkflowProgress } from './tools/workflow-progress'
 import type { WorkflowSubagentTarget } from './use-subagents'
 import type { TaskProgress } from './use-task-progress'
 
@@ -21,7 +20,7 @@ export type ConversationDockProps = {
   onRespond: (toolUseId: string, result: ClaudeToolResult) => Promise<void>
 }
 
-/** Bottom dock floating over the conversation: task progress pills and the ask/prompt input area. */
+/** Bottom dock floating over the conversation: task progress panel and the ask/prompt input area. */
 export function ConversationDock({
   askRequests,
   composerProps,
@@ -42,17 +41,13 @@ export function ConversationDock({
           'flex flex-col gap-3',
         )}
       >
-        <div className="flex justify-center gap-2">
-          <TodoProgress
-            showTodos={taskProgress.hasActiveTodoExecution}
-            todos={taskProgress.latestTodos}
-            subagents={taskProgress.runningSubagents}
-          />
-          <WorkflowProgress
-            workflows={taskProgress.activeWorkflowGroups}
-            onOpenAgent={onOpenWorkflowAgent}
-          />
-        </div>
+        <TaskProgressPanel
+          runningSubagents={taskProgress.runningSubagents}
+          subagentStats={taskProgress.subagentStats}
+          todos={taskProgress.latestTodos}
+          workflows={taskProgress.activeWorkflowGroups}
+          onOpenAgent={onOpenWorkflowAgent}
+        />
         {!isSubagentSelected ? (
           <AskPanel
             fallback={<PromptComposer {...composerProps} slashMenuPlacement="above" />}

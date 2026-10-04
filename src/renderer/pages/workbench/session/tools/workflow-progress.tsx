@@ -33,7 +33,7 @@ export function WorkflowProgress({
       <PopoverTrigger
         nativeButton={false}
         render={
-          <div className="flex cursor-pointer items-center gap-2 rounded-full border border-border/60 bg-card/85 px-3 py-1 text-xs text-foreground-subtlest shadow-sm backdrop-blur transition-colors hover:border-border" />
+          <div className="flex cursor-pointer items-center gap-2 px-2 py-0.5 transition-colors hover:text-foreground" />
         }
       >
         <WorkflowIcon className="size-3.5" />
