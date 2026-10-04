@@ -33,6 +33,8 @@ export interface ConversationTurn {
   isInterrupted?: boolean
   /** Claude persisted a terminal assistant error for this turn. */
   failure?: { message: string }
+  /** The assistant model changed with this turn's response; rendered as a divider above the prompt. */
+  modelSwitch?: { fromModel: string; toModel: string; timestamp?: string }
 }
 
 export type ConversationTimelineItem =

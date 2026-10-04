@@ -72,6 +72,8 @@ export interface ClaudeMessage {
   apiRetry?: ApiRetryInfo
   /** Context-compaction notice; rendered as a divider in the turn timeline. */
   compaction?: CompactionInfo
+  /** The assistant frame's resolved model id; absent on synthetic cancel placeholders. */
+  model?: string
   attachments?: ClaudeAttachment[]
   blocks?: ClaudeContentBlock[]
   type?: string
@@ -200,6 +202,17 @@ export function parseCompaction(entry: ClaudeJsonLine): CompactionInfo | null {
   return null
 }
 
+/**
+ * The assistant frame's resolved model id. Synthetic assistant frames written
+ * while finalizing a cancelled request carry model `'<synthetic>'`; they are
+ * bookkeeping, not model output, so they must not feed model-switch detection.
+ */
+export function parseAssistantModel(entry: ClaudeJsonLine): string | undefined {
+  if (entry.type !== 'assistant') return undefined
+  const model = (entry.message as { model?: unknown } | undefined)?.model
+  return typeof model === 'string' && model.trim() && model !== '<synthetic>' ? model : undefined
+}
+
 export function claudeJsonToMessage(entry: ClaudeJsonLine, index = 0): ClaudeMessage | null {
   if (shouldSkipEntry(entry)) return null
 
@@ -269,6 +282,7 @@ export function claudeJsonToMessage(entry: ClaudeJsonLine, index = 0): ClaudeMes
         : undefined,
     parentToolUseId:
       typeof entry.parent_tool_use_id === 'string' ? entry.parent_tool_use_id : undefined,
+    model: parseAssistantModel(entry),
     taskNotification,
   }
 }
@@ -289,6 +303,36 @@ export function isSyntheticNoResponseEntry(entry: ClaudeJsonLine): boolean {
   return block?.type === 'text' && block.text?.trim() === 'No response requested.'
 }
 
+/**
+ * The output receipt a CLI slash-command run writes after its
+ * `<command-name>` prompt entry. The raw wrapped text is bookkeeping — the
+ * conversation represents command results with dedicated surfaces (the command
+ * card, the compaction and model-switch dividers) instead.
+ */
+function isLocalCommandOutputEntry(entry: ClaudeJsonLine): boolean {
+  if (entry.type !== 'user') return false
+  const content = entry.message?.content
+  return (
+    typeof content === 'string' &&
+    /^<local-command-(?:stdout|stderr)>[\s\S]*<\/local-command-(?:stdout|stderr)>$/.test(
+      content.trim(),
+    )
+  )
+}
+
+/**
+ * The `/model` receipt the CLI writes when a model switch is applied —
+ * including the echo of clotho's own set-model control command, which the
+ * user never typed. The model-switch divider represents it instead; other
+ * commands keep their command card.
+ */
+function isModelSwitchReceiptEntry(entry: ClaudeJsonLine): boolean {
+  if (entry.type !== 'user') return false
+  const content = entry.message?.content
+  if (typeof content !== 'string' || !content.includes('<command-name>')) return false
+  return parseCommandMessage(content)?.commandName === 'model'
+}
+
 function shouldSkipEntry(entry: ClaudeJsonLine): boolean {
   const t = entry.type
   return (
@@ -297,6 +341,8 @@ function shouldSkipEntry(entry: ClaudeJsonLine): boolean {
     // The post-compaction summary replays as a giant synthetic user entry; the
     // compact_boundary divider represents it in the conversation instead.
     entry.isCompactSummary === true ||
+    isLocalCommandOutputEntry(entry) ||
+    isModelSwitchReceiptEntry(entry) ||
     t === 'attachment' ||
     t === 'file-history-snapshot' ||
     t === 'last-prompt' ||

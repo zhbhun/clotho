@@ -105,9 +105,25 @@ function foldCompactionItem(items: ConversationTimelineItem[], message: ClaudeMe
   if (message.timestamp) trailing.timestamp = message.timestamp
 }
 
+/**
+ * Record a main-chain model change on the turn that first used the new model.
+ * A second switch within the same turn only moves the divider's target model.
+ */
+function foldModelSwitch(turn: ConversationTurn, message: ClaudeMessage, fromModel: string) {
+  const model = message.model
+  if (!model) return
+  if (turn.modelSwitch) {
+    turn.modelSwitch.toModel = model
+    if (message.timestamp) turn.modelSwitch.timestamp = message.timestamp
+    return
+  }
+  turn.modelSwitch = { fromModel, toModel: model, timestamp: message.timestamp }
+}
+
 export function computeTurns(messages: ClaudeMessage[]): ConversationTurn[] {
   const turns: ConversationTurn[] = []
   let currentTurn: ConversationTurn | null = null
+  let lastAssistantModel: string | null = null
   const messagesByUuid = new Map(
     messages.flatMap((message) => (message.uuid ? [[message.uuid, message] as const] : [])),
   )
@@ -203,6 +219,12 @@ export function computeTurns(messages: ClaudeMessage[]): ConversationTurn[] {
       // resumed (auto-continuation): it streams on, so it is no longer shown
       // as stopped at its end.
       if (currentTurn.isInterrupted) currentTurn.isInterrupted = false
+      // A model change on the main chain marks the turn; subagent frames never
+      // reach this branch.
+      if (message.model && lastAssistantModel && message.model !== lastAssistantModel) {
+        foldModelSwitch(currentTurn, message, lastAssistantModel)
+      }
+      if (message.model) lastAssistantModel = message.model
       currentTurn.assistantMessages.push(message)
       if (!currentTurn.startTimestamp && message.timestamp) {
         currentTurn.startTimestamp = message.timestamp

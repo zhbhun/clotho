@@ -20,6 +20,7 @@ import {
 import { parseFailureMessage } from './failure-info'
 import { HistoricalMessageEditor, type MessageEditConfig } from './historical-message-editor'
 import { AgentMessageActions } from './message-actions'
+import { ModelSwitchDivider } from './model-switch-divider'
 import { TimelineEntry, TimelineRow, UserCard } from './timeline'
 import { computeLastSentTurnId, computeTurns } from './turns'
 import type { ConversationTurn } from './types'
@@ -236,6 +237,7 @@ function estimateConversationRowSize(row: ConversationRow) {
   if (row.kind === 'thinking') return 48
   if (row.kind === 'api-retry') return 76
   if (row.kind === 'compaction') return 40
+  if (row.kind === 'model-switch') return 76
   if (row.kind === 'error-card') return 96
   if (row.kind === 'work-run') {
     return row.isExpanded ? 32 + row.items.length * 96 : 32
@@ -277,6 +279,7 @@ function ConversationRowContent({
     return (
       <div className="px-3" data-conversation-turn-id={row.turnId}>
         <UserCard
+          className={row.afterDivider ? 'pt-6' : undefined}
           editor={
             isMessageEditing && messageEdit ? (
               <HistoricalMessageEditor
@@ -365,6 +368,14 @@ function ConversationRowContent({
           isPending={row.isStreaming && row.isLast && !row.turnTerminalStatus}
           item={row.item}
         />
+      </div>
+    )
+  }
+
+  if (row.kind === 'model-switch') {
+    return (
+      <div className={cn('px-3 pt-10 pb-4', hasTopPadding && 'pt-2')}>
+        <ModelSwitchDivider fromModel={row.fromModel} toModel={row.toModel} />
       </div>
     )
   }

@@ -89,3 +89,11 @@ export function findQualifiedModel(models: ClaudeModelInfo[], qualifiedModel: st
   const modelId = qualifiedModel.slice(separator + 1)
   return models.find((model) => model.providerId === providerId && model.value === modelId)
 }
+
+/** Display label for a raw transcript model id: qualified lookup, then bare id, then the raw string. */
+export function modelDisplayLabel(models: ClaudeModelInfo[], rawModel: string): string {
+  const qualified = findQualifiedModel(models, rawModel)
+  if (qualified) return qualified.displayName
+  const bare = models.find((model) => model.value === rawModel)
+  return bare?.displayName ?? rawModel
+}

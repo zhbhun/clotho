@@ -60,6 +60,34 @@ describe('buildConversationRows', () => {
     expect(rows.map(({ kind }) => kind)).toEqual(['user', 'status', 'compaction'])
   })
 
+  it('renders a model-switch divider above the prompt of the turn that used the new model', () => {
+    const switchedTurn = turn('user-2', [{ id: 'text-2', kind: 'text', text: 'New model reply' }])
+    switchedTurn.modelSwitch = {
+      fromModel: 'k3-256k',
+      toModel: 'glm-5.3-flash',
+      timestamp: '2026-10-01T08:02:00.000Z',
+    }
+
+    const rows = buildConversationRows({
+      expandedTurns: {},
+      interruptedTurnIds: new Set(),
+      isStreaming: false,
+      lastSentTurnId: null,
+      streamingElapsed: 0,
+      turns: [turn('user-1', []), switchedTurn],
+    })
+
+    expect(rows.map(({ kind }) => kind)).toEqual(['user', 'model-switch', 'user', 'status', 'text'])
+    expect(rows[1]).toMatchObject({
+      fromModel: 'k3-256k',
+      key: 'turn:user-2:model-switch',
+      kind: 'model-switch',
+      timestamp: '2026-10-01T08:02:00.000Z',
+      toModel: 'glm-5.3-flash',
+      turnId: 'user-2',
+    })
+  })
+
   it('resolves work-run summary labels with natural plurals', async () => {
     const instance = await createAppI18n('en', [])
     expect(instance.t('workbench.workRun.ranCommands', { count: 1 })).toBe('ran 1 command')

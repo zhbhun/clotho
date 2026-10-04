@@ -8,6 +8,8 @@ import { groupWorkRuns } from './work-runs'
 
 export type ConversationRow =
   | {
+      /** The model-switch divider sits directly above; its built-in inter-turn gap is supplied there. */
+      afterDivider?: boolean
       key: string
       kind: 'user'
       message: ClaudeMessage
@@ -76,6 +78,15 @@ export type ConversationRow =
       key: string
       kind: 'error-card'
       message: string
+      turnId: string
+    }
+  | {
+      /** The assistant model changed for this turn; rendered as a divider above the prompt. */
+      fromModel: string
+      key: string
+      kind: 'model-switch'
+      timestamp?: string
+      toModel: string
       turnId: string
     }
   | {
@@ -198,11 +209,23 @@ export function buildConversationRows(options: {
       ? textItems.findLast((item) => item.id.startsWith(`${finalTextMessage.id}-text-`))
       : undefined
 
+    if (turn.modelSwitch) {
+      rows.push({
+        fromModel: turn.modelSwitch.fromModel,
+        key: `turn:${turnId}:model-switch`,
+        kind: 'model-switch',
+        timestamp: turn.modelSwitch.timestamp,
+        toModel: turn.modelSwitch.toModel,
+        turnId,
+      })
+    }
+
     rows.push({
       key: `turn:${turnId}:user`,
       kind: 'user',
       message: turn.userMessage,
       turnId,
+      ...(turn.modelSwitch ? { afterDivider: true } : {}),
     })
 
     if (usesStatus) {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { claudeJsonToMessage } from '../services/message'
+import { type ClaudeJsonLine, claudeJsonToMessage, parseAssistantModel } from '../services/message'
 import { computeLastSentTurnId, computeTurns } from './turns'
 import type { ConversationTurn } from './types'
 
@@ -123,6 +123,235 @@ describe('conversation state', () => {
     expect(turn?.timelineItems.map(({ kind }) => kind)).toEqual(['tool', 'compaction', 'text'])
     const divider = turn?.timelineItems.find(({ kind }) => kind === 'compaction')
     expect(divider).toMatchObject({ phase: 'done', trigger: 'auto' })
+  })
+
+  it('drops model-switch receipts but keeps other command cards', () => {
+    const modelReceipt = claudeJsonToMessage({
+      type: 'user',
+      uuid: 'model-receipt-1',
+      message: {
+        role: 'user',
+        content:
+          '<command-name>/model</command-name>\n            <command-message>model</command-message>\n            <command-args>zhipu-glm/glm-5.3</command-args>',
+      },
+    })
+    expect(modelReceipt).toBeNull()
+
+    const stdout = claudeJsonToMessage({
+      type: 'user',
+      uuid: 'stdout-1',
+      message: {
+        role: 'user',
+        content: '<local-command-stdout>Set model to `zhipu-glm/glm-5.3`</local-command-stdout>',
+      },
+    })
+    expect(stdout).toBeNull()
+
+    const compact = claudeJsonToMessage({
+      type: 'user',
+      uuid: 'command-1',
+      message: {
+        role: 'user',
+        content:
+          '<command-name>/compact</command-name>\n            <command-message>compact</command-message>',
+      },
+    })
+    expect(compact).toMatchObject({ isCommand: true, commandName: 'compact' })
+  })
+
+  it('extracts the assistant model, ignoring synthetic placeholders', () => {
+    expect(
+      parseAssistantModel({
+        type: 'assistant',
+        message: { role: 'assistant', model: 'glm-5.3-flash' },
+      } as ClaudeJsonLine),
+    ).toBe('glm-5.3-flash')
+    expect(
+      parseAssistantModel({
+        type: 'assistant',
+        message: { role: 'assistant', model: '<synthetic>' },
+      } as ClaudeJsonLine),
+    ).toBeUndefined()
+    expect(
+      parseAssistantModel({
+        type: 'user',
+        message: { role: 'user', content: 'Hello' },
+      }),
+    ).toBeUndefined()
+  })
+
+  it('marks the turn whose reply came from a different assistant model', () => {
+    const messages = [
+      claudeJsonToMessage({
+        type: 'user',
+        uuid: 'user-1',
+        timestamp: '2026-10-01T08:00:00.000Z',
+        message: { role: 'user', content: 'First question' },
+      }),
+      claudeJsonToMessage({
+        type: 'assistant',
+        uuid: 'assistant-1',
+        parentUuid: 'user-1',
+        message: {
+          role: 'assistant',
+          model: 'k3-256k',
+          content: [{ type: 'text', text: 'Reply from the old model' }],
+        },
+      } as ClaudeJsonLine),
+      claudeJsonToMessage({
+        type: 'user',
+        uuid: 'user-2',
+        timestamp: '2026-10-01T08:01:00.000Z',
+        message: { role: 'user', content: 'Second question' },
+      }),
+      claudeJsonToMessage({
+        type: 'assistant',
+        uuid: 'assistant-2',
+        parentUuid: 'user-2',
+        timestamp: '2026-10-01T08:02:00.000Z',
+        message: {
+          role: 'assistant',
+          model: 'glm-5.3-flash',
+          content: [{ type: 'text', text: 'Reply from the new model' }],
+        },
+      } as ClaudeJsonLine),
+    ].filter((message): message is NonNullable<typeof message> => Boolean(message))
+
+    const [first, second] = computeTurns(messages)
+
+    expect(first?.modelSwitch).toBeUndefined()
+    expect(second?.modelSwitch).toEqual({
+      fromModel: 'k3-256k',
+      toModel: 'glm-5.3-flash',
+      timestamp: '2026-10-01T08:02:00.000Z',
+    })
+  })
+
+  it('does not mark a model switch while replies keep the same model', () => {
+    const messages = [
+      claudeJsonToMessage({
+        type: 'user',
+        uuid: 'user-1',
+        message: { role: 'user', content: 'First question' },
+      }),
+      claudeJsonToMessage({
+        type: 'assistant',
+        uuid: 'assistant-1',
+        parentUuid: 'user-1',
+        message: {
+          role: 'assistant',
+          model: 'glm-5.3-flash',
+          content: [{ type: 'text', text: 'First reply' }],
+        },
+      } as ClaudeJsonLine),
+      claudeJsonToMessage({
+        type: 'user',
+        uuid: 'user-2',
+        message: { role: 'user', content: 'Second question' },
+      }),
+      claudeJsonToMessage({
+        type: 'assistant',
+        uuid: 'assistant-2',
+        parentUuid: 'user-2',
+        message: {
+          role: 'assistant',
+          model: 'glm-5.3-flash',
+          content: [{ type: 'text', text: 'Second reply' }],
+        },
+      } as ClaudeJsonLine),
+    ].filter((message): message is NonNullable<typeof message> => Boolean(message))
+
+    const turns = computeTurns(messages)
+
+    expect(turns.map((turn) => turn.modelSwitch)).toEqual([undefined, undefined])
+  })
+
+  it('ignores synthetic assistant frames when tracking the reply model', () => {
+    const messages = [
+      claudeJsonToMessage({
+        type: 'user',
+        uuid: 'user-1',
+        message: { role: 'user', content: 'Count slowly' },
+      }),
+      claudeJsonToMessage({
+        type: 'assistant',
+        uuid: 'assistant-1',
+        parentUuid: 'user-1',
+        message: {
+          role: 'assistant',
+          model: 'glm-5.3-flash',
+          content: [{ type: 'text', text: 'Working' }],
+        },
+      } as ClaudeJsonLine),
+      claudeJsonToMessage({
+        type: 'user',
+        uuid: 'user-2',
+        message: { role: 'user', content: 'Go on' },
+      }),
+      claudeJsonToMessage({
+        type: 'assistant',
+        uuid: 'assistant-synthetic',
+        parentUuid: 'user-2',
+        message: {
+          role: 'assistant',
+          model: '<synthetic>',
+          content: [{ type: 'text', text: 'Finalizing' }],
+        },
+      } as ClaudeJsonLine),
+      claudeJsonToMessage({
+        type: 'assistant',
+        uuid: 'assistant-2',
+        parentUuid: 'user-2',
+        message: {
+          role: 'assistant',
+          model: 'glm-5.3-flash',
+          content: [{ type: 'text', text: 'Done' }],
+        },
+      } as ClaudeJsonLine),
+    ].filter((message): message is NonNullable<typeof message> => Boolean(message))
+
+    const turns = computeTurns(messages)
+
+    expect(turns.map((turn) => turn.modelSwitch)).toEqual([undefined, undefined])
+  })
+
+  it('folds a mid-turn model fallback into one switch record', () => {
+    const messages = [
+      claudeJsonToMessage({
+        type: 'user',
+        uuid: 'user-1',
+        message: { role: 'user', content: 'Answer me' },
+      }),
+      claudeJsonToMessage({
+        type: 'assistant',
+        uuid: 'assistant-1',
+        parentUuid: 'user-1',
+        message: {
+          role: 'assistant',
+          model: 'glm-5.3-flash',
+          content: [{ type: 'text', text: 'Partial' }],
+        },
+      } as ClaudeJsonLine),
+      claudeJsonToMessage({
+        type: 'assistant',
+        uuid: 'assistant-2',
+        parentUuid: 'user-1',
+        timestamp: '2026-10-01T09:00:00.000Z',
+        message: {
+          role: 'assistant',
+          model: 'stepfun/step-5-preview',
+          content: [{ type: 'text', text: 'Continued' }],
+        },
+      } as ClaudeJsonLine),
+    ].filter((message): message is NonNullable<typeof message> => Boolean(message))
+
+    const [turn] = computeTurns(messages)
+
+    expect(turn?.modelSwitch).toEqual({
+      fromModel: 'glm-5.3-flash',
+      toModel: 'stepfun/step-5-preview',
+      timestamp: '2026-10-01T09:00:00.000Z',
+    })
   })
 
   it('folds a rejected tool-use interruption into the original turn', () => {
