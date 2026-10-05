@@ -6,11 +6,11 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/shadcn/breadcrumb'
+
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
-  DropdownMenuItem,
   DropdownMenuPortal,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
@@ -19,7 +19,6 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '../../../components/dropdown-menu'
-
 import { type SessionSubagent, type SessionWorkflow, sortSessionItems } from './subagents'
 
 type RootNavigationEntry =
@@ -68,7 +67,7 @@ export function SubagentBreadcrumb({
       workflow,
     })),
   ])
-  const siblingAgents = sortSessionItems(currentWorkflow?.agents ?? subagents)
+  const workflowAgents = sortSessionItems(currentWorkflow?.agents ?? [])
 
   return (
     <Breadcrumb className="py-3">
@@ -99,26 +98,11 @@ export function SubagentBreadcrumb({
                   </BreadcrumbLink>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-72" glass>
-                  <DropdownMenuGroup>
-                    {rootEntries.map((entry) =>
-                      entry.kind === 'agent' ? (
-                        <DropdownMenuItem
-                          key={entry.key}
-                          aria-label={entry.agent.description}
-                          onClick={() => onSelect(entry.agent)}
-                        >
-                          <span className="min-w-0 flex-1 truncate">{entry.agent.description}</span>
-                        </DropdownMenuItem>
-                      ) : (
-                        <WorkflowMenuItem
-                          key={entry.key}
-                          currentToolUseId={current.toolUseId}
-                          workflow={entry.workflow}
-                          onSelect={onSelect}
-                        />
-                      ),
-                    )}
-                  </DropdownMenuGroup>
+                  <RootEntriesContent
+                    currentToolUseId={current.toolUseId}
+                    entries={rootEntries}
+                    onSelect={onSelect}
+                  />
                 </DropdownMenuContent>
               </DropdownMenu>
             </BreadcrumbItem>
@@ -140,24 +124,75 @@ export function SubagentBreadcrumb({
               </BreadcrumbPage>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-72" glass>
-              <DropdownMenuGroup>
-                <DropdownMenuRadioGroup
-                  value={current.toolUseId}
-                  onValueChange={(toolUseId) => {
-                    const selected = siblingAgents.find(
-                      (subagent) => subagent.toolUseId === toolUseId,
-                    )
-                    if (selected) onSelect(selected)
-                  }}
-                >
-                  <SubagentItems subagents={siblingAgents} />
-                </DropdownMenuRadioGroup>
-              </DropdownMenuGroup>
+              {currentWorkflow ? (
+                <DropdownMenuGroup>
+                  <DropdownMenuRadioGroup
+                    value={current.toolUseId}
+                    onValueChange={(toolUseId) => {
+                      const selected = workflowAgents.find(
+                        (subagent) => subagent.toolUseId === toolUseId,
+                      )
+                      if (selected) onSelect(selected)
+                    }}
+                  >
+                    <SubagentItems subagents={workflowAgents} />
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuGroup>
+              ) : (
+                <RootEntriesContent
+                  currentToolUseId={current.toolUseId}
+                  entries={rootEntries}
+                  onSelect={onSelect}
+                />
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
+  )
+}
+
+function RootEntriesContent({
+  currentToolUseId,
+  entries,
+  onSelect,
+}: {
+  currentToolUseId: string
+  entries: RootNavigationEntry[]
+  onSelect: (subagent: SessionSubagent) => void
+}) {
+  return (
+    <DropdownMenuGroup>
+      <DropdownMenuRadioGroup
+        value={currentToolUseId}
+        onValueChange={(toolUseId) => {
+          const selected = entries.find(
+            (entry) => entry.kind === 'agent' && entry.agent.toolUseId === toolUseId,
+          )
+          if (selected?.kind === 'agent') onSelect(selected.agent)
+        }}
+      >
+        {entries.map((entry) =>
+          entry.kind === 'agent' ? (
+            <DropdownMenuRadioItem
+              key={entry.key}
+              aria-label={entry.agent.description}
+              value={entry.agent.toolUseId}
+            >
+              <span className="min-w-0 flex-1 truncate">{entry.agent.description}</span>
+            </DropdownMenuRadioItem>
+          ) : (
+            <WorkflowMenuItem
+              key={entry.key}
+              currentToolUseId={currentToolUseId}
+              workflow={entry.workflow}
+              onSelect={onSelect}
+            />
+          ),
+        )}
+      </DropdownMenuRadioGroup>
+    </DropdownMenuGroup>
   )
 }
 
@@ -178,7 +213,7 @@ function WorkflowMenuItem({
         <span className="min-w-0 flex-1 truncate">Workflow {workflow.name}</span>
       </DropdownMenuSubTrigger>
       <DropdownMenuPortal>
-        <DropdownMenuSubContent className="w-72">
+        <DropdownMenuSubContent className="w-72" sideOffset={8}>
           <DropdownMenuGroup>
             <DropdownMenuRadioGroup
               value={currentToolUseId}
