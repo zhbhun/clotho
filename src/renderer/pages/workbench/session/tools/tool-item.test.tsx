@@ -60,7 +60,7 @@ describe('ToolCard', () => {
   })
 
   it('expands overflowing terminal output on request', async () => {
-    vi.spyOn(HTMLPreElement.prototype, 'scrollHeight', 'get').mockReturnValue(320)
+    vi.spyOn(HTMLDivElement.prototype, 'scrollHeight', 'get').mockReturnValue(320)
     render(
       <ToolCard
         name="Bash"
@@ -70,6 +70,28 @@ describe('ToolCard', () => {
     )
 
     await userEvent.click(screen.getByRole('button', { name: 'Bash ls -la' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Show more' }))
+
+    expect(screen.getByRole('button', { name: 'Show less' })).toBeInTheDocument()
+  })
+
+  it('collapses an unknown tool input and output as one region', async () => {
+    vi.spyOn(HTMLDivElement.prototype, 'scrollHeight', 'get').mockReturnValue(320)
+    render(
+      <ToolCard
+        name="ReportFindings"
+        input={{ level: 'high', findings: [{ file: 'src/auth/handler.ts', line: 42 }] }}
+        result="4 findings reported."
+      />,
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: /ReportFindings/ }))
+
+    const body = screen.getByTestId('tool-item-body')
+    expect(body).toHaveTextContent('"level": "high"')
+    expect(body).toHaveTextContent('4 findings reported.')
+    expect(screen.getAllByRole('button', { name: 'Show more' })).toHaveLength(1)
+
     await userEvent.click(screen.getByRole('button', { name: 'Show more' }))
 
     expect(screen.getByRole('button', { name: 'Show less' })).toBeInTheDocument()

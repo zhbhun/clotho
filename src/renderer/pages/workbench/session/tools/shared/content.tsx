@@ -18,41 +18,36 @@ import type { ClaudeImageSource } from '../../../../../services/claude/claude'
 
 const BODY_COLLAPSE_THRESHOLD_PX = 250
 
-export function HeightCollapsible({
-  text,
-  mono = false,
+export function CollapsibleRegion({
+  children,
   edgeOverlay = false,
 }: {
-  text: string
-  mono?: boolean
+  children: ReactNode
   edgeOverlay?: boolean
 }) {
   const { t } = useTranslation()
-  const ref = useRef<HTMLPreElement>(null)
+  const ref = useRef<HTMLDivElement>(null)
   const [overflows, setOverflows] = useState(false)
   const [expanded, setExpanded] = useState(false)
 
   useLayoutEffect(() => {
-    const el = ref.current
-    if (!el) return
-    setOverflows(el.scrollHeight > BODY_COLLAPSE_THRESHOLD_PX)
-  }, [text])
+    const measure = () => {
+      const el = ref.current
+      if (el) setOverflows(el.scrollHeight > BODY_COLLAPSE_THRESHOLD_PX)
+    }
+    measure()
+    if (!ref.current || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(measure)
+    observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [])
 
-  if (!text) return null
   const collapsed = overflows && !expanded
 
   return (
-    <div>
+    <div className="min-w-0">
       <div className={cn('relative', collapsed && 'max-h-[250px] overflow-hidden')}>
-        <pre
-          ref={ref}
-          className={cn(
-            'min-w-0 whitespace-pre-wrap break-words text-xs leading-relaxed text-foreground-subtlest',
-            mono && 'font-mono',
-          )}
-        >
-          {text}
-        </pre>
+        <div ref={ref}>{children}</div>
         {collapsed ? (
           <div
             className={cn(
@@ -64,22 +59,53 @@ export function HeightCollapsible({
             data-testid="terminal-transcript-fade"
           />
         ) : null}
-        {overflows ? (
-          <div className="absolute inset-x-0 bottom-0 flex justify-center">
-            <Button
-              aria-label={expanded ? t('tools.content.showLess') : t('tools.content.showMore')}
-              className="text-foreground-subtlest hover:bg-transparent hover:text-foreground-subtle"
-              size="icon-sm"
-              type="button"
-              variant="ghost"
-              onClick={() => setExpanded((value) => !value)}
-            >
-              {expanded ? <ChevronUp /> : <ChevronDown />}
-            </Button>
-          </div>
-        ) : null}
       </div>
+      {overflows ? (
+        <div className="-mb-2 mt-0.5 flex justify-center">
+          <Button
+            aria-label={expanded ? t('tools.content.showLess') : t('tools.content.showMore')}
+            className="text-foreground-subtlest hover:bg-transparent hover:text-foreground-subtle"
+            size="icon-sm"
+            type="button"
+            variant="ghost"
+            onClick={() => setExpanded((value) => !value)}
+          >
+            {expanded ? <ChevronUp /> : <ChevronDown />}
+          </Button>
+        </div>
+      ) : null}
     </div>
+  )
+}
+
+export function HeightCollapsible({
+  text,
+  mono = false,
+  edgeOverlay = false,
+}: {
+  text: string
+  mono?: boolean
+  edgeOverlay?: boolean
+}) {
+  if (!text) return null
+
+  return (
+    <CollapsibleRegion edgeOverlay={edgeOverlay}>
+      <PreText mono={mono} text={text} />
+    </CollapsibleRegion>
+  )
+}
+
+export function PreText({ text, mono = false }: { text: string; mono?: boolean }) {
+  return (
+    <pre
+      className={cn(
+        'min-w-0 whitespace-pre-wrap break-words text-xs leading-relaxed text-foreground-subtlest',
+        mono && 'font-mono',
+      )}
+    >
+      {text}
+    </pre>
   )
 }
 
@@ -155,7 +181,7 @@ export function JsonInput({ input }: { input: unknown }) {
     text = String(input)
   }
 
-  return <HeightCollapsible text={text} mono edgeOverlay />
+  return <PreText mono text={text} />
 }
 
 export function ToolResultNote({ note }: { note?: string }) {

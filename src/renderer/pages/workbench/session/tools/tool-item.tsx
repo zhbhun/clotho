@@ -17,8 +17,9 @@ import type { ClaudeBackgroundTask } from '../conversation/types'
 import { useWorkflowContext } from '../workflow-context'
 import { getToolRenderer, getToolSummary } from './registry'
 import {
-  HeightCollapsible,
+  CollapsibleRegion,
   ImageGallery,
+  PreText,
   SectionLabel,
   ToolIcon,
   ToolResultNote,
@@ -221,7 +222,7 @@ export function ToolItem({
                 ) : renderer.bodyView ? (
                   renderer.bodyView(input, result, images, toolUseResult)
                 ) : (
-                  <>
+                  <CollapsibleRegion edgeOverlay>
                     {input ? (
                       <div className="flex flex-col gap-0.5">
                         <SectionLabel>{t('tools.section.input')}</SectionLabel>
@@ -231,7 +232,7 @@ export function ToolItem({
                     {result ? (
                       <div className="flex flex-col gap-0.5">
                         <SectionLabel>{t('tools.section.output')}</SectionLabel>
-                        <HeightCollapsible text={result} mono edgeOverlay />
+                        <PreText mono text={result} />
                       </div>
                     ) : null}
                     {images && images.length ? (
@@ -240,7 +241,7 @@ export function ToolItem({
                         <ImageGallery images={images} />
                       </div>
                     ) : null}
-                  </>
+                  </CollapsibleRegion>
                 )}
               </div>
               {footer ? (
