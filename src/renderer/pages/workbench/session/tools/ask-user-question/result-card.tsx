@@ -220,7 +220,7 @@ function AskOptionRows({
   index: number
 }) {
   const { t } = useTranslation()
-  const indicatorClass = 'size-3.5 disabled:opacity-100 disabled:cursor-default'
+  const indicatorClass = 'mt-[3px] size-3.5 disabled:opacity-100 disabled:cursor-default'
   const otherTestId = index === 0 ? 'ask-other-indicator' : `ask-other-indicator-${index}`
   const showOther = options.length > 0 || Boolean(customAnswer)
 
