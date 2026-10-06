@@ -27,6 +27,7 @@ import {
 } from './logging/runtime'
 import { DEV_SERVER_URL, getMainViewTarget } from './main-view-url'
 import { applyNativeAppearance } from './native-appearance'
+import { saveImage } from './save-image'
 import { createSessionStorage } from './session-storage'
 import { createShortcutStore, readShortcutOverrides } from './shortcuts'
 import { createStateStore, readState } from './state'
@@ -233,6 +234,7 @@ export async function bootstrap() {
         claudeRemoveProject: (params) => service.removeProject(params),
         claudeSelectFiles: (params) => service.selectFiles(params),
         claudeGetAttachmentPreview: (params) => service.getAttachmentPreview(params),
+        claudeSaveImage: (params) => saveImage(params),
         claudePrepareAttachments: (params) => service.prepareAttachments(params),
         attachmentRead: (params) => loadAttachmentFiles(params),
         claudeCanSearchProjectFiles: (params) => service.canSearchProjectFiles(params),

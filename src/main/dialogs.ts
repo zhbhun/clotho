@@ -1,5 +1,4 @@
 import { dialog } from 'electron'
-
 import type { BrowserWindow } from 'electron'
 
 /**
@@ -10,6 +9,11 @@ let ownerWindow: BrowserWindow | undefined
 
 export function setDialogOwnerWindow(window: BrowserWindow | undefined) {
   ownerWindow = window
+}
+
+/** The window native dialogs should attach to, if one has been registered. */
+export function getDialogOwnerWindow() {
+  return ownerWindow
 }
 
 type OpenFolderDialogOptions = {
@@ -40,9 +44,9 @@ export async function showFilesPicker({
 }: OpenFilesDialogOptions = {}) {
   const options = {
     defaultPath: startingFolder,
-    properties: (allowsMultipleSelection
-      ? ['openFile', 'multiSelections']
-      : ['openFile']) as Array<'openFile' | 'multiSelections'>,
+    properties: (allowsMultipleSelection ? ['openFile', 'multiSelections'] : ['openFile']) as Array<
+      'openFile' | 'multiSelections'
+    >,
   }
   const result = ownerWindow
     ? await dialog.showOpenDialog(ownerWindow, options)

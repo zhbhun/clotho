@@ -15,6 +15,7 @@ import { cn } from '@/shadcn/utils'
 import type { ClaudeAttachment } from '@/shared/rpc'
 
 import { TransientScrollArea } from '../../../../components/transient-scroll-area'
+import { ImagePreview } from './image-preview'
 
 function useAttachmentImage(attachment: ClaudeAttachment) {
   const content = attachment.content
@@ -46,68 +47,95 @@ function AttachmentCard({
 }) {
   const { t } = useTranslation()
   const [failedSource, setFailedSource] = useState<string>()
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const { isImage, source } = useAttachmentImage(attachment)
   const extension = attachment.name.includes('.') ? attachment.name.split('.').at(-1) : undefined
+  const previewSource = source && source !== failedSource ? source : undefined
+  const canPreview = isImage && Boolean(previewSource)
 
   return (
-    <Attachment
-      aria-label={attachment.name}
-      className={cn(
-        // 54 = 40px tile + 2×6px padding + 2×1px border: the tile sits flush on every side.
-        'h-[54px] flex-nowrap rounded-xl',
-        isImage ? 'w-[54px] min-w-[54px] p-0!' : 'min-w-32 max-w-48',
-        isEmbedded && [
-          'border-[color-mix(in_oklab,var(--secondary),var(--foreground)_14%)] bg-transparent',
-          'has-[>a,>button]:hover:bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_8%)]',
-        ],
-      )}
-      tabIndex={onRemove && !disabled ? 0 : undefined}
-      title={attachment.name}
-    >
-      <AttachmentMedia
+    <>
+      <Attachment
+        aria-label={attachment.name}
         className={cn(
-          isImage ? 'size-full rounded-[inherit]' : undefined,
-          isEmbedded && !isImage && EMBEDDED_FILL,
+          // 54 = 40px tile + 2×6px padding + 2×1px border: the tile sits flush on every side.
+          'h-[54px] flex-nowrap rounded-xl',
+          isImage ? 'w-[54px] min-w-[54px] p-0!' : 'min-w-32 max-w-48',
+          isEmbedded && [
+            'border-[color-mix(in_oklab,var(--secondary),var(--foreground)_14%)] bg-transparent',
+            'has-[>a,>button]:hover:bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_8%)]',
+          ],
         )}
-        variant={isImage ? 'image' : 'icon'}
+        tabIndex={onRemove && !disabled ? 0 : undefined}
+        title={attachment.name}
+        onMouseDown={
+          canPreview
+            ? (event) => {
+                // Clicking previews the image; keep focus where it is so the card never paints
+                // its focus ring — that stays reserved for Tab navigation.
+                event.preventDefault()
+              }
+            : undefined
+        }
+        onClick={canPreview ? () => setIsPreviewOpen(true) : undefined}
       >
-        {source && source !== failedSource ? (
-          <img
-            alt={attachment.name}
-            className="size-full object-cover"
-            src={source}
-            onError={() => setFailedSource(source)}
-          />
-        ) : isImage ? (
-          <ImageIcon />
-        ) : (
-          <FileText />
-        )}
-      </AttachmentMedia>
-      {!isImage ? (
-        <AttachmentContent>
-          <AttachmentTitle>{attachment.name}</AttachmentTitle>
-          <AttachmentDescription>{extension?.toUpperCase() ?? 'FILE'}</AttachmentDescription>
-        </AttachmentContent>
+        <AttachmentMedia
+          className={cn(
+            isImage ? 'size-full rounded-[inherit]' : undefined,
+            isEmbedded && !isImage && EMBEDDED_FILL,
+          )}
+          variant={isImage ? 'image' : 'icon'}
+        >
+          {source && source !== failedSource ? (
+            <img
+              alt={attachment.name}
+              className="size-full object-cover"
+              src={source}
+              onError={() => setFailedSource(source)}
+            />
+          ) : isImage ? (
+            <ImageIcon />
+          ) : (
+            <FileText />
+          )}
+        </AttachmentMedia>
+        {!isImage ? (
+          <AttachmentContent>
+            <AttachmentTitle>{attachment.name}</AttachmentTitle>
+            <AttachmentDescription>{extension?.toUpperCase() ?? 'FILE'}</AttachmentDescription>
+          </AttachmentContent>
+        ) : null}
+        {onRemove ? (
+          <AttachmentActions className="absolute -top-1.5 -right-1.5 opacity-0 transition-opacity group-focus-within/attachment:opacity-100 group-hover/attachment:opacity-100">
+            <AttachmentAction
+              aria-label={t('workbench.prompt.removeFile', { name: attachment.name })}
+              className="rounded-full bg-popover ring-1 ring-foreground/10"
+              disabled={disabled}
+              variant="secondary"
+              onClick={(event) => {
+                // The card behind this button opens the image preview; keep removal exclusive.
+                event.stopPropagation()
+                onRemove()
+              }}
+              onMouseDown={(event) => {
+                // Keep the composer focused while removing an attachment.
+                event.preventDefault()
+              }}
+            >
+              <X />
+            </AttachmentAction>
+          </AttachmentActions>
+        ) : null}
+      </Attachment>
+      {canPreview && previewSource ? (
+        <ImagePreview
+          alt={attachment.name}
+          open={isPreviewOpen}
+          src={previewSource}
+          onOpenChange={setIsPreviewOpen}
+        />
       ) : null}
-      {onRemove ? (
-        <AttachmentActions className="absolute -top-1.5 -right-1.5 opacity-0 transition-opacity group-focus-within/attachment:opacity-100 group-hover/attachment:opacity-100">
-          <AttachmentAction
-            aria-label={t('workbench.prompt.removeFile', { name: attachment.name })}
-            className="rounded-full bg-popover ring-1 ring-foreground/10"
-            disabled={disabled}
-            variant="secondary"
-            onClick={onRemove}
-            onMouseDown={(event) => {
-              // Keep the composer focused while removing an attachment.
-              event.preventDefault()
-            }}
-          >
-            <X />
-          </AttachmentAction>
-        </AttachmentActions>
-      ) : null}
-    </Attachment>
+    </>
   )
 }
 

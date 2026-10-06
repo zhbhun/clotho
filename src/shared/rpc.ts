@@ -358,6 +358,16 @@ export interface ClaudeAttachmentPreview {
   dataUrl: string | null
 }
 
+export interface ClaudeSaveImageParams {
+  name: string
+  dataUrl: string
+}
+
+export interface ClaudeSaveImageResult {
+  /** Absolute path the image was written to, or null when the dialog was canceled. */
+  path: string | null
+}
+
 export interface ClaudePrepareAttachmentsParams {
   attachments: ClaudeAttachment[]
 }
@@ -858,6 +868,10 @@ export type DesktopRPC = {
       claudeGetAttachmentPreview: {
         params: ClaudeAttachmentPreviewParams
         response: ClaudeAttachmentPreview
+      }
+      claudeSaveImage: {
+        params: ClaudeSaveImageParams
+        response: ClaudeSaveImageResult
       }
       claudePrepareAttachments: {
         params: ClaudePrepareAttachmentsParams

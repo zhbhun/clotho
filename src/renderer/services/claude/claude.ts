@@ -25,6 +25,8 @@ import type {
   ClaudeRewindFilesResult as RpcClaudeRewindFilesResult,
   ClaudeRewindSessionFilesParams as RpcClaudeRewindSessionFilesParams,
   ClaudeSampleContextUsageParams as RpcClaudeSampleContextUsageParams,
+  ClaudeSaveImageParams as RpcClaudeSaveImageParams,
+  ClaudeSaveImageResult as RpcClaudeSaveImageResult,
   ClaudeSelectFilesParams as RpcClaudeSelectFilesParams,
   ClaudeSelectProjectFolderParams as RpcClaudeSelectProjectFolderParams,
   ClaudeSession as RpcClaudeSession,
@@ -72,6 +74,8 @@ export type ClaudeAttachmentReadResult = RpcClaudeAttachmentReadResult
 export type ClaudeAttachment = RpcClaudeAttachment
 export type ClaudeAttachmentPreview = RpcClaudeAttachmentPreview
 export type ClaudeAttachmentPreviewParams = RpcClaudeAttachmentPreviewParams
+export type ClaudeSaveImageParams = RpcClaudeSaveImageParams
+export type ClaudeSaveImageResult = RpcClaudeSaveImageResult
 export type ClaudePrepareAttachmentsParams = RpcClaudePrepareAttachmentsParams
 export type ClaudePreparedAttachments = RpcClaudePreparedAttachments
 export type ClaudeImageSource = RpcClaudeImageSource
@@ -625,6 +629,10 @@ export const claude = {
   ): Promise<ClaudeAttachmentPreview> {
     if (!isTauriRuntime()) return { dataUrl: null }
     return requestFromDesktop('claudeGetAttachmentPreview', params)
+  },
+  async saveImage(params: ClaudeSaveImageParams): Promise<ClaudeSaveImageResult> {
+    if (!isTauriRuntime()) return { path: null }
+    return requestFromDesktop('claudeSaveImage', params)
   },
   async prepareAttachments(
     params: ClaudePrepareAttachmentsParams,
