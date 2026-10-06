@@ -33,6 +33,7 @@ import { SessionEmptyState } from './empty-state'
 import { ConversationHeader } from './header'
 import { ModelOnboarding } from './model-onboarding'
 import type { PromptComposerBaseProps } from './prompt'
+import { isUserPromptMessage } from './services/message'
 import {
   SessionControllerProvider,
   useCatalogStore,
@@ -365,6 +366,17 @@ function SessionAreaContent({
     () => messages.filter((message) => !message.parentToolUseId),
     [messages],
   )
+  // Sent prompts for the composer's arrow-key history recall, oldest first.
+  const sentPrompts = useMemo(
+    () =>
+      rootMessages
+        .filter(
+          (message) =>
+            !message.isMeta && isUserPromptMessage(message) && Boolean(message.content.trim()),
+        )
+        .map((message) => message.content),
+    [rootMessages],
+  )
   const sessionProject = selectedSession?.project_id
     ? projects.find((project) => project.id === selectedSession.project_id)
     : undefined
@@ -591,6 +603,7 @@ function SessionAreaContent({
     projectPath,
     selectedModelLabel,
     selectedProviderId: currentProviderId,
+    sentPrompts,
     setSelectedProviderModel,
     setPermissionMode,
     setPrompt,

@@ -36,6 +36,8 @@ type PromptMarkdownEditorProps = {
   filesToInsert?: PromptFileReference[]
   interactionScope?: string
   onChange: (markdown: string) => void
+  /** Consumes ArrowUp/Down for sent-prompt recall; true keeps the key from the editor. */
+  onPromptHistory?: (direction: 'up' | 'down') => boolean
   /** Clipboard files (images, PDFs, copied files) pasted into the editor. */
   onPasteFiles?: (files: File[]) => void
   onFilesInserted?: () => void
@@ -74,6 +76,7 @@ export function PromptMarkdownEditor({
   onChange,
   onFilesInserted,
   onPasteFiles,
+  onPromptHistory,
   onSubmit,
   placeholder,
   projectPath,
@@ -85,6 +88,7 @@ export function PromptMarkdownEditor({
   const onChangeRef = useRef(onChange)
   const onFilesInsertedRef = useRef(onFilesInserted)
   const onPasteFilesRef = useRef(onPasteFiles)
+  const onPromptHistoryRef = useRef(onPromptHistory)
   const onSubmitRef = useRef(onSubmit)
   const promptCommands = useMemo(() => prepareSlashCommands(availableCommands), [availableCommands])
   const extensions = useMemo(
@@ -120,6 +124,19 @@ export function PromptMarkdownEditor({
             ['ArrowDown', 'ArrowUp', 'Enter', 'Escape', 'Tab'].includes(event.key)
           ) {
             return false
+          }
+          // Sent-prompt recall owns the arrows while it is active; an IME
+          // composition (keyCode 229) still uses them for its candidates.
+          const onPromptHistory = onPromptHistoryRef.current
+          if (
+            onPromptHistory &&
+            !event.isComposing &&
+            event.keyCode !== 229 &&
+            (event.key === 'ArrowUp' || event.key === 'ArrowDown') &&
+            onPromptHistory(event.key === 'ArrowUp' ? 'up' : 'down')
+          ) {
+            event.preventDefault()
+            return true
           }
           // The Enter that commits an IME composition arrives with keyCode 229
           // (isComposing); it confirms the candidate and must never send.
@@ -210,8 +227,9 @@ export function PromptMarkdownEditor({
     onChangeRef.current = onChange
     onFilesInsertedRef.current = onFilesInserted
     onPasteFilesRef.current = onPasteFiles
+    onPromptHistoryRef.current = onPromptHistory
     onSubmitRef.current = onSubmit
-  }, [onChange, onFilesInserted, onPasteFiles, onSubmit])
+  }, [onChange, onFilesInserted, onPasteFiles, onPromptHistory, onSubmit])
 
   useEffect(() => {
     // setEditable re-emits "update" unless suppressed, which would echo the

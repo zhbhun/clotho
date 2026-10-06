@@ -55,9 +55,11 @@ import {
 } from './model-brand-icon'
 import './prompt.css'
 import { resolveDirectSlashCommand } from './slash-command'
+import { usePromptHistory } from './use-prompt-history'
 
 export const COMPOSER_CONTROL_CLASS = 'rounded-full text-foreground-subtlest shadow-none'
 const COMPOSER_TEXT_CONTROL_CLASS = cn(COMPOSER_CONTROL_CLASS, 'px-2.5!')
+const EMPTY_SENT_PROMPTS: string[] = []
 
 function PromptComposerShortcuts({
   canSelectFiles,
@@ -104,6 +106,8 @@ export type PromptComposerProps = {
   onRunCommand?: (command: ClaudeSlashCommand) => void
   /** Reloads the session transcript from disk on user request. */
   onRefreshSession?: () => void
+  /** Sent prompts of the session, newest last, for arrow-key history recall. */
+  sentPrompts?: string[]
   permissionMode: ClaudePermissionMode
   prompt: string
   projectPath?: string
@@ -155,6 +159,7 @@ export function PromptComposer({
   projectPath,
   selectedModelLabel,
   selectedProviderId,
+  sentPrompts,
   shadowDirection = 'ambient',
   setSelectedProviderModel,
   setPermissionMode,
@@ -177,6 +182,12 @@ export function PromptComposer({
   const providersById = useMemo(() => new Map(providers.map((p) => [p.id, p])), [providers])
   const usageByProviderId = useProviderUsageStore((state) => state.usage)
   const refreshProviderUsage = useProviderUsageStore((state) => state.refreshAll)
+  const isEditorDisabled = isMockProject || !canUsePrompt || isStreaming || isSubmitting
+  const handlePromptHistory = usePromptHistory({
+    prompt,
+    prompts: sentPrompts ?? EMPTY_SENT_PROMPTS,
+    setPrompt,
+  })
 
   function notifyRejected(rejected: ClaudeAttachmentReadResult['rejected']) {
     if (!rejected.length) return
@@ -403,9 +414,10 @@ export function PromptComposer({
         <PromptMarkdownEditor
           autoFocus={autoFocus}
           availableCommands={availableCommands}
-          disabled={isMockProject || !canUsePrompt || isStreaming || isSubmitting}
+          disabled={isEditorDisabled}
           interactionScope={interactionScope}
           onPasteFiles={handlePasteFiles}
+          onPromptHistory={isEditorDisabled ? undefined : handlePromptHistory}
           placeholder={
             isMockProject
               ? t('workbench.prompt.mockReadonly')
