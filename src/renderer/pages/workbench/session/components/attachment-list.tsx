@@ -48,6 +48,7 @@ function AttachmentCard({
   const { t } = useTranslation()
   const [failedSource, setFailedSource] = useState<string>()
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const cardRef = useRef<HTMLDivElement>(null)
   const { isImage, source } = useAttachmentImage(attachment)
   const extension = attachment.name.includes('.') ? attachment.name.split('.').at(-1) : undefined
   const previewSource = source && source !== failedSource ? source : undefined
@@ -66,8 +67,18 @@ function AttachmentCard({
             'has-[>a,>button]:hover:bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_8%)]',
           ],
         )}
-        tabIndex={onRemove && !disabled ? 0 : undefined}
+        ref={cardRef}
+        tabIndex={canPreview || (onRemove && !disabled) ? 0 : undefined}
         title={attachment.name}
+        onKeyDown={
+          canPreview
+            ? (event) => {
+                if (event.key !== 'Enter') return
+                event.preventDefault()
+                setIsPreviewOpen(true)
+              }
+            : undefined
+        }
         onMouseDown={
           canPreview
             ? (event) => {
@@ -131,6 +142,7 @@ function AttachmentCard({
         <ImagePreview
           alt={attachment.name}
           open={isPreviewOpen}
+          returnFocusRef={cardRef}
           src={previewSource}
           onOpenChange={setIsPreviewOpen}
         />
@@ -171,15 +183,16 @@ export function AttachmentList({
 
   return (
     <TransientScrollArea
-      className={cn('min-w-0 shrink-0', onRemove && '-mt-1.5', className)}
+      // The viewport is a clipping scroll container and the focus ring is ink overflow it won't
+      // scroll to, so the padding below reserves ring room and the negative margins cancel it
+      // visually to keep the cards aligned with the surrounding content.
+      className={cn('min-w-0 shrink-0 -mx-1', onRemove ? '-mt-1.5' : '-mt-1', className)}
       orientation="horizontal"
       viewportProps={onRemove ? { tabIndex: -1 } : undefined}
       viewportRef={viewportRef}
     >
-      {/* The pt reserves room for the straddling badge inside the scroll viewport; the -mt on the
-          root cancels it visually so the gap above the cards matches the sides. */}
       <div
-        className={cn('flex w-max min-w-0 gap-2.5 pb-2', onRemove && 'pt-1.5')}
+        className={cn('flex w-max min-w-0 gap-2.5 px-1 pb-2 pt-1', onRemove && 'pt-1.5')}
         data-slot="attachment-list"
       >
         {attachments.map((attachment, index) => (

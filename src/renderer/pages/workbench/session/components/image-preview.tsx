@@ -1,5 +1,5 @@
 import { CheckIcon, ChevronDownIcon, DownloadIcon, XIcon } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { type RefObject, useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
@@ -39,11 +39,13 @@ export function ImagePreview({
   alt,
   onOpenChange,
   open,
+  returnFocusRef,
   src,
 }: {
   alt: string
   open: boolean
   onOpenChange: (open: boolean) => void
+  returnFocusRef?: RefObject<HTMLElement | null>
   src: string
 }) {
   const { t } = useTranslation()
@@ -53,6 +55,7 @@ export function ImagePreview({
   const [canvasSize, setCanvasSize] = useState<ImageSize>()
   const [naturalSize, setNaturalSize] = useState<ImageSize>()
   const canvasRef = useRef<HTMLDivElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
   const pinchAnchorRef = useRef<{ scale: number; x: number; y: number } | undefined>(undefined)
   const viewRef = useRef({ fitScale: 1, scale: 1 })
 
@@ -175,7 +178,12 @@ export function ImagePreview({
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent
         className="app-region-no-drag left-0! top-0! h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none bg-black/10 p-0 ring-0 backdrop-blur-xs sm:max-w-none"
+        finalFocus={returnFocusRef}
+        // Default dialog focus lands on the first tabbable element — the zoom button — so
+        // focus the fullscreen container instead and keep the toolbar out of the open flow.
+        initialFocus={dialogRef}
         isFullscreen
+        ref={dialogRef}
         showCloseButton={false}
       >
         <DialogTitle className="sr-only">{alt}</DialogTitle>

@@ -94,6 +94,21 @@ describe('AttachmentList', () => {
     expect(within(dialog).queryByText('Zoom to fit')).not.toBeInTheDocument()
   })
 
+  it('returns focus to the card on Escape and reopens with Enter', async () => {
+    render(<AttachmentList attachments={[IMAGE_ATTACHMENT]} />)
+
+    const card = screen.getByLabelText('party.png')
+    fireEvent.click(card)
+    const dialog = await screen.findByRole('dialog')
+
+    fireEvent.keyDown(dialog, { key: 'Escape' })
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    await waitFor(() => expect(card).toHaveFocus())
+
+    fireEvent.keyDown(card, { key: 'Enter' })
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+  })
+
   it('keeps file cards inert', () => {
     render(
       <AttachmentList
