@@ -4,6 +4,13 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from '@/shadcn/combobox'
 import { Field, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/shadcn/field'
 import { Input } from '@/shadcn/input'
 import {
@@ -30,6 +37,12 @@ import { GENERIC_REASONING_PRESET, findReasoningPreset } from '@/shared/reasonin
 import type { ModelProvider, ProviderModel } from '../../services/claude/claude'
 import { ContextWindowInput } from './context-window-input'
 import { type ProviderPreset, providerPresets } from './provider-presets'
+
+function matchesProviderPreset(preset: ProviderPreset, query: string) {
+  const q = query.trim().toLowerCase()
+  if (!q) return true
+  return preset.id.toLowerCase().includes(q) || preset.name.toLowerCase().includes(q)
+}
 
 function ProviderField({
   id,
@@ -187,29 +200,37 @@ export function ProviderEditorForm({
           {isProviderIdReadOnly ? (
             <Input id={`provider-${suffix}-id`} readOnly value={provider.id} />
           ) : (
-            <>
-              <Input
+            <Combobox
+              items={providerPresets}
+              value={providerPresets.find((item) => item.id === provider.id) ?? null}
+              inputValue={provider.id}
+              itemToStringLabel={(item) => item.id}
+              filter={matchesProviderPreset}
+              onInputValueChange={(id, details) => {
+                if (details.reason !== 'input-change' && details.reason !== 'item-press') return
+                onChange({ id })
+                const preset = providerPresets.find((item) => item.id === id)
+                if (preset) onPreset?.(preset)
+              }}
+            >
+              <ComboboxInput
                 id={`provider-${suffix}-id`}
                 aria-invalid={Boolean(providerIdError)}
-                list={`provider-${suffix}-presets`}
+                className="w-full"
                 placeholder={t('settings.provider.idPlaceholder')}
                 spellCheck={false}
-                value={provider.id}
-                onChange={(event) => {
-                  const id = event.target.value
-                  onChange({ id })
-                  const preset = providerPresets.find((item) => item.id === id)
-                  if (preset) onPreset?.(preset)
-                }}
               />
-              <datalist id={`provider-${suffix}-presets`}>
-                {providerPresets.map((preset) => (
-                  <option key={preset.id} value={preset.id}>
-                    {preset.name}
-                  </option>
-                ))}
-              </datalist>
-            </>
+              <ComboboxContent glass className="data-empty:hidden">
+                <ComboboxList>
+                  {(preset: ProviderPreset) => (
+                    <ComboboxItem key={preset.id} value={preset} className="pr-6">
+                      <span className="font-medium">{preset.id}</span>
+                      <span className="ml-auto text-muted-foreground">{preset.name}</span>
+                    </ComboboxItem>
+                  )}
+                </ComboboxList>
+              </ComboboxContent>
+            </Combobox>
           )}
           {providerIdError ? <FieldError>{providerIdError}</FieldError> : null}
         </Field>
