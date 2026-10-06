@@ -13,8 +13,9 @@ type ImageSize = { width: number; height: number }
 type Zoom = 'fit' | number
 
 const ZOOM_LEVELS: number[] = [0.25, 0.5, 1, 1.5, 2]
-const MIN_ZOOM = 0.1
-const MAX_ZOOM = 4
+// Pinch zoom shares the zoom menu's range.
+const MIN_ZOOM = 0.25
+const MAX_ZOOM = 2
 // Pinch deltas feed an exponential curve; 0.01 keeps a natural pace per wheel tick.
 const PINCH_ZOOM_SPEED = 0.01
 

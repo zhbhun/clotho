@@ -76,9 +76,12 @@ describe('AttachmentList', () => {
     const canvas = preview.parentElement!.parentElement!
 
     // Pinch out: ctrl+wheel with negative deltaY zooms in from the fit fallback (100%).
-    fireEvent.wheel(canvas, { ctrlKey: true, deltaY: -100 })
+    fireEvent.wheel(canvas, { ctrlKey: true, deltaY: -50 })
+    expect(await within(dialog).findByRole('button', { name: '165%' })).toBeInTheDocument()
 
-    expect(await within(dialog).findByRole('button', { name: '272%' })).toBeInTheDocument()
+    // Repeated pinching clamps at the 200% ceiling.
+    fireEvent.wheel(canvas, { ctrlKey: true, deltaY: -50 })
+    expect(await within(dialog).findByRole('button', { name: '200%' })).toBeInTheDocument()
   })
 
   it('switches zoom levels from the fit default', async () => {
