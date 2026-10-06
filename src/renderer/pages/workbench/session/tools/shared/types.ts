@@ -11,6 +11,8 @@ import type { ClaudeBackgroundTask, ClaudeTaskItem } from '../../conversation/ty
 
 export interface ToolRenderer {
   icon: LucideIcon
+  /** Per-call icon override; falls back to `icon` when absent. */
+  iconFor?: (input: unknown, toolUseResult?: unknown) => LucideIcon
   label: string
   description: string
   summary: (input: unknown, result?: string, toolUseResult?: unknown, t?: TFunction) => string

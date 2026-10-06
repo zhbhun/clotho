@@ -143,7 +143,7 @@ export function ToolItem({
       className={workItemLabelClass}
       description={translate(renderer.description)}
       errorMessage={errorMessage}
-      icon={renderer.icon}
+      icon={renderer.iconFor?.(input, toolUseResult) ?? renderer.icon}
       isError={isError}
     />
   )

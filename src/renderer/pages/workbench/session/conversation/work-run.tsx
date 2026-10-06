@@ -103,7 +103,12 @@ export function WorkRunRow({
             <ToolIcon
               className="motion-safe:animate-pulse text-foreground"
               description={translate(runningRenderer.description)}
-              icon={runningRenderer.icon}
+              icon={
+                runningRenderer.iconFor?.(
+                  runningTool.use?.input,
+                  runningTool.result?.toolUseResult,
+                ) ?? runningRenderer.icon
+              }
             />
           ) : (
             <span className="inline-flex shrink-0 text-foreground-subtlest transition-colors group-hover:text-foreground">

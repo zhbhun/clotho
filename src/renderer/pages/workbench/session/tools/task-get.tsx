@@ -1,4 +1,4 @@
-import { ClipboardList } from 'lucide-react'
+import { ListChevronsUpDown } from 'lucide-react'
 
 import { extractTaskDetail, normalizeTaskStatus } from './shared/task'
 import type { ToolRenderer } from './shared/types'
@@ -6,7 +6,7 @@ import { pickString } from './shared/utils'
 import { TodoStatusBox } from './todo-write/status-box'
 
 export const taskGetRenderer: ToolRenderer = {
-  icon: ClipboardList,
+  icon: ListChevronsUpDown,
   label: 'tools.TaskGet.label',
   description: 'tools.taskGet.description',
   summary: (input, _result, toolUseResult) =>

@@ -1,4 +1,4 @@
-import { ListTodo } from 'lucide-react'
+import { List } from 'lucide-react'
 
 import { cn } from '@/shadcn/utils'
 
@@ -7,7 +7,7 @@ import type { ToolRenderer } from './shared/types'
 import { TodoStatusBox } from './todo-write/status-box'
 
 export const taskListRenderer: ToolRenderer = {
-  icon: ListTodo,
+  icon: List,
   label: 'tools.TaskList.label',
   description: 'tools.taskList.description',
   summary: (_input, _result, toolUseResult, t) => {

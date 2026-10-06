@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next'
-import { SquarePen } from 'lucide-react'
+import { ListCheck, ListEnd, ListStart, type LucideIcon } from 'lucide-react'
 
 import { taskInputStatus } from '../conversation/task-items'
 import type { ClaudeTaskItem } from '../conversation/types'
@@ -42,8 +42,17 @@ function updatedTask(input: unknown, toolUseResult: unknown): ClaudeTaskItem | n
   }
 }
 
+/** ListStart while a task runs, ListCheck once done, ListEnd for the rest. */
+function updateIcon(input: unknown, toolUseResult?: unknown): LucideIcon {
+  const status = updatedTask(input, toolUseResult)?.status
+  if (status === 'in_progress') return ListStart
+  if (status === 'completed') return ListCheck
+  return ListEnd
+}
+
 export const taskUpdateRenderer: ToolRenderer = {
-  icon: SquarePen,
+  icon: ListEnd,
+  iconFor: updateIcon,
   label: 'tools.TaskUpdate.label',
   description: 'tools.taskUpdate.description',
   summary: (input, _result, toolUseResult, t) => {
