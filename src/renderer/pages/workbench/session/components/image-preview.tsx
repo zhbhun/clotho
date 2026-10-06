@@ -1,5 +1,5 @@
 import { CheckIcon, ChevronDownIcon, DownloadIcon, XIcon } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
@@ -13,12 +13,15 @@ type ImageSize = { width: number; height: number }
 type Zoom = 'fit' | number
 
 const ZOOM_LEVELS: number[] = [0.25, 0.5, 1, 1.5, 2]
+const MIN_ZOOM = 0.1
+const MAX_ZOOM = 4
+// Pinch deltas feed an exponential curve; 0.01 keeps a natural pace per wheel tick.
+const PINCH_ZOOM_SPEED = 0.01
 
 // The canvas padding doubles as the whitespace revealed when a zoomed image is scrolled to its
 // edges; the fit scale subtracts it so a fitted image never slides under the floating toolbar.
 const CANVAS_PADDING = 48
 
-const TOOLBAR_BUTTON = 'rounded-full bg-popover text-popover-foreground ring-1 ring-foreground/10'
 const ZOOM_ROW =
   'flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-xs/relaxed whitespace-nowrap outline-none hover:bg-accent'
 
@@ -50,11 +53,14 @@ export function ImagePreview({
   const [canvasSize, setCanvasSize] = useState<ImageSize>()
   const [naturalSize, setNaturalSize] = useState<ImageSize>()
   const canvasRef = useRef<HTMLDivElement>(null)
+  const pinchAnchorRef = useRef<{ scale: number; x: number; y: number } | undefined>(undefined)
+  const viewRef = useRef({ fitScale: 1, scale: 1 })
 
   useEffect(() => {
     if (open) {
       setZoom('fit')
       setIsZoomOpen(false)
+      pinchAnchorRef.current = undefined
     }
   }, [open])
 
@@ -68,12 +74,33 @@ export function ImagePreview({
     return () => window.removeEventListener('resize', update)
   }, [open])
 
-  useEffect(() => {
-    const canvas = canvasRef.current
+  // Trackpad pinch arrives as ctrl+wheel; a non-passive listener lets preventDefault stop
+  // Chromium's page-level zoom so the gesture drives the image only. Attached through the
+  // ref callback because Base UI mounts the popup after the commit where `open` flips —
+  // an effect gated on `open` would still see a null canvas and never register.
+  const attachCanvas = useCallback((canvas: HTMLDivElement | null) => {
+    canvasRef.current = canvas
     if (!canvas) return
+    const handleWheel = (event: WheelEvent) => {
+      if (!event.ctrlKey) return
+      event.preventDefault()
+      const rect = canvas.getBoundingClientRect()
+      pinchAnchorRef.current = {
+        scale: viewRef.current.scale,
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
+      }
+      const factor = Math.exp(-event.deltaY * PINCH_ZOOM_SPEED)
+      setZoom((current) => {
+        const base = current === 'fit' ? viewRef.current.fitScale : current
+        return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, base * factor))
+      })
+    }
+    canvas.addEventListener('wheel', handleWheel, { passive: false })
     canvas.scrollLeft = (canvas.scrollWidth - canvas.clientWidth) / 2
     canvas.scrollTop = (canvas.scrollHeight - canvas.clientHeight) / 2
-  }, [zoom])
+    return () => canvas.removeEventListener('wheel', handleWheel)
+  }, [])
 
   const fitScale =
     canvasSize && naturalSize
@@ -87,6 +114,38 @@ export function ImagePreview({
         )
       : 1
   const scale = zoom === 'fit' ? fitScale : zoom
+
+  useEffect(() => {
+    viewRef.current = { fitScale, scale }
+  })
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const anchor = pinchAnchorRef.current
+    pinchAnchorRef.current = undefined
+    if (anchor && anchor.scale !== scale) {
+      // Pinch zooms around the cursor: keep the content point under it fixed.
+      const factor = scale / anchor.scale
+      canvas.scrollLeft = Math.max(
+        0,
+        Math.min(
+          factor * (canvas.scrollLeft + anchor.x) - anchor.x,
+          canvas.scrollWidth - canvas.clientWidth,
+        ),
+      )
+      canvas.scrollTop = Math.max(
+        0,
+        Math.min(
+          factor * (canvas.scrollTop + anchor.y) - anchor.y,
+          canvas.scrollHeight - canvas.clientHeight,
+        ),
+      )
+      return
+    }
+    canvas.scrollLeft = (canvas.scrollWidth - canvas.clientWidth) / 2
+    canvas.scrollTop = (canvas.scrollHeight - canvas.clientHeight) / 2
+  }, [scale])
 
   const handleDownload = async () => {
     if (isSaving) return
@@ -107,6 +166,7 @@ export function ImagePreview({
   }
 
   const selectZoom = (next: Zoom) => {
+    pinchAnchorRef.current = undefined
     setZoom(next)
     setIsZoomOpen(false)
   }
@@ -121,7 +181,7 @@ export function ImagePreview({
         <DialogTitle className="sr-only">{alt}</DialogTitle>
         <div
           className="absolute inset-0 overflow-auto scrollbar-none"
-          ref={canvasRef}
+          ref={attachCanvas}
           onClick={(event) => {
             // The canvas is the viewer's backdrop: clicking anywhere but the image dismisses it.
             if (!(event.target instanceof Element) || !event.target.closest('img')) {
@@ -154,13 +214,13 @@ export function ImagePreview({
         ) : null}
         {/* app-region-no-drag is load-bearing: the workbench keeps a window-drag strip across
             the top 40px, and Electron hit-tests it through this translucent overlay, which
-            would swallow every click on the toolbar sitting inside that strip. */}
-        <div className="absolute top-3 right-3 z-20 flex items-center gap-2">
+            would swallow every click on the toolbar sitting inside that strip. The toolbar
+            keeps equal top and right insets from the window corner. */}
+        <div className="absolute top-2 right-2 z-20 flex items-center gap-2">
           <div className="relative">
             <Button
               aria-expanded={isZoomOpen}
-              className={cn(TOOLBAR_BUTTON, 'rounded-lg')}
-              size="lg"
+              size="default"
               variant="secondary"
               onClick={() => setIsZoomOpen((current) => !current)}
             >
@@ -198,17 +258,15 @@ export function ImagePreview({
           </div>
           <Button
             aria-label={t('workbench.prompt.downloadImage')}
-            className={TOOLBAR_BUTTON}
+            className="rounded-full"
             disabled={isSaving}
-            size="icon-lg"
+            size="icon"
             variant="secondary"
             onClick={handleDownload}
           >
             <DownloadIcon />
           </Button>
-          <DialogClose
-            render={<Button className={TOOLBAR_BUTTON} size="icon-lg" variant="secondary" />}
-          >
+          <DialogClose render={<Button className="rounded-full" size="icon" variant="secondary" />}>
             <XIcon />
             <span className="sr-only">Close</span>
           </DialogClose>

@@ -67,6 +67,20 @@ describe('AttachmentList', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
+  it('zooms continuously with trackpad pinch', async () => {
+    render(<AttachmentList attachments={[IMAGE_ATTACHMENT]} />)
+
+    fireEvent.click(screen.getByAltText('party.png'))
+    const dialog = await screen.findByRole('dialog')
+    const preview = within(dialog).getByAltText('party.png')
+    const canvas = preview.parentElement!.parentElement!
+
+    // Pinch out: ctrl+wheel with negative deltaY zooms in from the fit fallback (100%).
+    fireEvent.wheel(canvas, { ctrlKey: true, deltaY: -100 })
+
+    expect(await within(dialog).findByRole('button', { name: '272%' })).toBeInTheDocument()
+  })
+
   it('switches zoom levels from the fit default', async () => {
     render(<AttachmentList attachments={[IMAGE_ATTACHMENT]} />)
 
