@@ -74,13 +74,19 @@ export function ProjectSwitcherMenuContent({
         </MenuGroup>
       </MenuList>
       <MenuSeparator />
+      {/* Mirror the project rows' icon footprint (size-5 box, size-4 glyph) so
+          the labels below the list line up with the project names above. */}
       <MenuItem forceMount value="project-menu-add" onSelect={() => onAddProject()}>
-        <FolderPlus data-icon="inline-start" strokeWidth={1.5} />
+        <span className="flex size-5 shrink-0 items-center justify-center">
+          <FolderPlus className="size-4" strokeWidth={1.5} />
+        </span>
         {t('workbench.project.add')}
       </MenuItem>
       {canExitProject ? (
         <MenuItem forceMount value="project-menu-exit" onSelect={() => onSelectProject(null)}>
-          <CircleX data-icon="inline-start" strokeWidth={1.5} />
+          <span className="flex size-5 shrink-0 items-center justify-center">
+            <CircleX className="size-4" strokeWidth={1.5} />
+          </span>
           {t('workbench.project.exit')}
         </MenuItem>
       ) : null}
