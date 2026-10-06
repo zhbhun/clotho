@@ -7,7 +7,7 @@ import type {
   ClaudeToolRequest,
   ClaudeToolResult,
 } from '../../../../../services/claude/claude'
-import type { ClaudeBackgroundTask } from '../../conversation/types'
+import type { ClaudeBackgroundTask, ClaudeTaskItem } from '../../conversation/types'
 
 export interface ToolRenderer {
   icon: LucideIcon
@@ -58,6 +58,7 @@ export interface ToolItemContext {
   projectPath?: string
   images?: ClaudeImageSource[]
   coalescedReads?: CoalescedRead[]
+  taskItems?: ClaudeTaskItem[]
   toolUseId?: string
   onOpenSubagent?: (toolUseId: string) => void
   pendingRequest?: ClaudeToolRequest

@@ -13,7 +13,7 @@ import type {
   ClaudeToolRequest,
   ClaudeToolResult,
 } from '../../../../services/claude/claude'
-import type { ClaudeBackgroundTask } from '../conversation/types'
+import type { ClaudeBackgroundTask, ClaudeTaskItem } from '../conversation/types'
 import { useWorkflowContext } from '../workflow-context'
 import { getToolRenderer, getToolSummary } from './registry'
 import {
@@ -34,6 +34,7 @@ export function ToolItem({
   projectPath,
   images,
   coalescedReads,
+  taskItems,
   toolUseId,
   onOpenSubagent,
   pendingRequest,
@@ -49,6 +50,7 @@ export function ToolItem({
   projectPath?: string
   images?: ClaudeImageSource[]
   coalescedReads?: CoalescedRead[]
+  taskItems?: ClaudeTaskItem[]
   toolUseId?: string
   onOpenSubagent?: (toolUseId: string) => void
   pendingRequest?: ClaudeToolRequest
@@ -83,6 +85,7 @@ export function ToolItem({
     projectPath,
     images,
     coalescedReads,
+    taskItems,
     toolUseId,
     onOpenSubagent,
     pendingRequest,

@@ -225,6 +225,7 @@ export function TimelineEntry({
         <ToolItem
           backgroundTask={item.backgroundTask}
           coalescedReads={item.coalescedReads}
+          taskItems={item.taskItems}
           images={item.result?.images}
           input={item.use?.input}
           isError={item.isError}

@@ -614,7 +614,7 @@ describe('conversation state', () => {
             subject: 'Inspect files',
             description: 'Inspect files',
             activeForm: 'Inspecting files',
-            status: 'completed',
+            status: 'pending',
           },
         ],
       },

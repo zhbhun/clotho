@@ -53,8 +53,10 @@ export const taskUpdateRenderer: ToolRenderer = {
   },
   inputView: () => null,
   hasBody: (input, _result, _images, toolUseResult) => Boolean(updatedTask(input, toolUseResult)),
-  bodyItemView: ({ input, toolUseResult }) => {
+  bodyItemView: ({ input, taskItems, toolUseResult }) => {
     const task = updatedTask(input, toolUseResult)
-    return task ? <TaskSummary flat tasks={[task]} /> : null
+    if (!task) return null
+    // Prefer the full tracked list at this point; fall back to the single task.
+    return <TaskSummary flat tasks={taskItems?.length ? taskItems : [task]} />
   },
 }

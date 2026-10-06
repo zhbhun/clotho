@@ -1,4 +1,4 @@
-import { ChevronRight, ListChecks } from 'lucide-react'
+import { ChevronRight, ListPlus } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -9,14 +9,13 @@ import { TaskSummary } from '../tools/task-summary'
 import type { ClaudeTaskItem } from './types'
 
 /**
- * Collapsible row for a merged task card: one summary line (task count and
- * completed tally) expanding to the task list built by task-items.ts.
+ * Collapsible row for a merged task card: one summary line (created task count)
+ * expanding to the task list built by task-items.ts.
  */
 export function TaskCardRow({ tasks }: { tasks: ClaudeTaskItem[] }) {
   const { t } = useTranslation()
   const translate = t as unknown as (key: string, options?: Record<string, unknown>) => string
   const [open, setOpen] = useState(false)
-  const completed = tasks.filter((task) => task.status === 'completed').length
 
   return (
     <div className="min-w-0">
@@ -28,11 +27,11 @@ export function TaskCardRow({ tasks }: { tasks: ClaudeTaskItem[] }) {
       >
         <ToolIcon
           className="text-foreground-subtlest transition-colors group-hover:text-foreground"
-          description={translate('tools.taskList.description')}
-          icon={ListChecks}
+          description={translate('tools.taskCreate.description')}
+          icon={ListPlus}
         />
         <span className="truncate font-mono text-foreground-subtlest transition-colors group-hover:text-foreground">
-          {translate('tools.taskList.summary', { total: tasks.length, completed })}
+          {translate('tools.taskCreate.createdCount', { count: tasks.length })}
         </span>
         <ChevronRight
           className={cn(

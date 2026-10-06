@@ -92,4 +92,6 @@ export type ConversationTimelineItem =
       children?: ConversationTimelineItem[]
       /** Coalesced Read: a list of files from consecutive Read calls (a single Read has length 1). */
       coalescedReads?: { file_path: string; offset?: number; limit?: number }[]
+      /** Task list state as of this tool call, attached to tracked task updates and stops. */
+      taskItems?: ClaudeTaskItem[]
     }

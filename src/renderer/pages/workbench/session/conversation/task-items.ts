@@ -84,22 +84,22 @@ type TaskCardState = {
   item: Extract<ConversationTimelineItem, { kind: 'task' }>
 }
 
+/** Cloned insertion-ordered list, so later status changes never rewrite the snapshot. */
+function snapshotTasks(index: Map<string, ClaudeTaskItem>): ClaudeTaskItem[] {
+  return [...index.values()].map((task) => ({ ...task }))
+}
+
 /**
  * Fold TaskCreate calls into collapsible task cards. A create joins the latest
  * card while it still holds a non-terminal task; once every task completed or
- * was cancelled, the next create opens a fresh card. TaskUpdate and TaskStop
- * keep their own tool rows and only refresh the owning card's task state.
+ * was cancelled, the next create opens a fresh card. Cards snapshot each task
+ * as created (pending); TaskUpdate and TaskStop keep their own tool rows and
+ * only advance the merge state that decides where the next create lands.
  */
 export function normalizeTaskItems(items: ConversationTimelineItem[]): ConversationTimelineItem[] {
   const index = new Map<string, ClaudeTaskItem>()
   const cards: TaskCardState[] = []
   const normalized: ConversationTimelineItem[] = []
-
-  const refreshCard = (card: TaskCardState) => {
-    card.item.tasks = card.ids.map((id) => ({ ...(index.get(id) as ClaudeTaskItem) }))
-  }
-
-  const cardForTask = (id: string) => cards.find((card) => card.ids.includes(id))
 
   const isOpen = (card: TaskCardState) =>
     card.ids.some((id) => !TERMINAL_TASK_STATUSES.has(index.get(id)?.status as ClaudeTaskStatus))
@@ -125,13 +125,14 @@ export function normalizeTaskItems(items: ConversationTimelineItem[]): Conversat
         continue
       }
 
-      index.set(id, {
+      const task: ClaudeTaskItem = {
         id,
         subject,
         description: taskInputString(item.use?.input, ['description']) || undefined,
         activeForm: taskInputString(item.use?.input, ['activeForm', 'active_form']) || undefined,
         status: 'pending',
-      })
+      }
+      index.set(id, task)
 
       let target = cards.at(-1)
       if (target && !isOpen(target)) target = undefined
@@ -144,7 +145,7 @@ export function normalizeTaskItems(items: ConversationTimelineItem[]): Conversat
         normalized.push(target.item)
       }
       target.ids.push(id)
-      refreshCard(target)
+      target.item.tasks.push({ ...task })
       continue
     }
 
@@ -155,10 +156,7 @@ export function normalizeTaskItems(items: ConversationTimelineItem[]): Conversat
         const status =
           taskStatusFromUpdateToolUseResult(item.result) || taskInputStatus(item.use?.input)
         if (status) existing.status = status
-        const activeForm = taskInputString(item.use?.input, ['activeForm', 'active_form'])
-        if (activeForm) existing.activeForm = activeForm
-        const card = cardForTask(id)
-        if (card) refreshCard(card)
+        item.taskItems = snapshotTasks(index)
       }
       normalized.push(item)
       continue
@@ -168,8 +166,7 @@ export function normalizeTaskItems(items: ConversationTimelineItem[]): Conversat
     const existing = id ? index.get(id) : undefined
     if (existing) {
       existing.status = 'cancelled'
-      const card = cardForTask(id)
-      if (card) refreshCard(card)
+      item.taskItems = snapshotTasks(index)
     }
     normalized.push(item)
   }

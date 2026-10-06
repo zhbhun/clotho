@@ -52,6 +52,18 @@ const SEARCH_TOOL_NAMES = new Set(['Glob', 'GlobTool', 'Grep', 'GrepTool'])
 const WEB_TOOL_NAMES = new Set(['WebFetch', 'WebFetchTool', 'WebSearch', 'WebSearchTool'])
 const AGENT_TOOL_NAMES = new Set(['Agent', 'AgentTool', 'Task'])
 const TODO_TOOL_NAMES = new Set(['TodoWrite', 'TodoWriteTool'])
+const TASK_TOOL_NAMES = new Set([
+  'TaskCreate',
+  'TaskCreateTool',
+  'TaskGet',
+  'TaskGetTool',
+  'TaskList',
+  'TaskListTool',
+  'TaskStop',
+  'TaskStopTool',
+  'TaskUpdate',
+  'TaskUpdateTool',
+])
 const ASK_TOOL_NAMES = new Set(['AskUserQuestion', 'AskUserQuestionTool'])
 
 /**
@@ -135,7 +147,7 @@ export function summarizeWorkRun(items: ConversationTimelineItem[]): { parts: Wo
       add('web', 1)
     } else if (AGENT_TOOL_NAMES.has(name)) {
       add('agents', 1)
-    } else if (TODO_TOOL_NAMES.has(name)) {
+    } else if (TODO_TOOL_NAMES.has(name) || TASK_TOOL_NAMES.has(name)) {
       add('tasks', 1)
     } else if (ASK_TOOL_NAMES.has(name)) {
       add('questions', 1)

@@ -34,10 +34,11 @@ describe('normalizeTaskItems', () => {
     expect(items).toHaveLength(2)
     expect(items[0]).toMatchObject({ kind: 'task' })
     expect(items[1]).toMatchObject({ kind: 'tool', use: { name: 'TaskUpdate' } })
+    // The card snapshots tasks as created; later updates only live in their own rows.
     expect(taskCard(items)).toMatchObject({
       tasks: [
         { id: '1', subject: 'One', status: 'pending' },
-        { id: '2', subject: 'Two', status: 'in_progress' },
+        { id: '2', subject: 'Two', status: 'pending' },
       ],
     })
   })
@@ -64,8 +65,8 @@ describe('normalizeTaskItems', () => {
 
     const cards = items.filter((item) => item.kind === 'task')
     expect(cards).toHaveLength(3)
-    expect(cards[0]).toMatchObject({ tasks: [{ id: '1', status: 'completed' }] })
-    expect(cards[1]).toMatchObject({ tasks: [{ id: '2', status: 'cancelled' }] })
+    expect(cards[0]).toMatchObject({ tasks: [{ id: '1', status: 'pending' }] })
+    expect(cards[1]).toMatchObject({ tasks: [{ id: '2', status: 'pending' }] })
     expect(cards[2]).toMatchObject({ tasks: [{ id: '3', status: 'pending' }] })
   })
 
@@ -77,7 +78,32 @@ describe('normalizeTaskItems', () => {
 
     expect(items).toHaveLength(2)
     expect(items[1]).toMatchObject({ kind: 'tool', use: { name: 'TaskStop' } })
-    expect(taskCard(items)).toMatchObject({ tasks: [{ id: '1', status: 'cancelled' }] })
+    expect(taskCard(items)).toMatchObject({ tasks: [{ id: '1', status: 'pending' }] })
+  })
+
+  it('attaches the task list snapshot to tracked update rows', () => {
+    const items = normalizeTaskItems([
+      taskTool('c1', 'TaskCreate', { subject: 'One' }, { task: { id: '1', subject: 'One' } }),
+      taskTool('c2', 'TaskCreate', { subject: 'Two' }, { task: { id: '2', subject: 'Two' } }),
+      taskTool('u1', 'TaskUpdate', { taskId: '1' }, { statusChange: { to: 'completed' } }),
+      taskTool('u2', 'TaskUpdate', { taskId: '2' }, { statusChange: { to: 'in_progress' } }),
+    ])
+
+    // items: [task card, update #1 row, update #2 row] — the two creates fold into one card.
+    expect(items[1]).toMatchObject({
+      kind: 'tool',
+      taskItems: [
+        { id: '1', status: 'completed' },
+        { id: '2', status: 'pending' },
+      ],
+    })
+    expect(items[2]).toMatchObject({
+      kind: 'tool',
+      taskItems: [
+        { id: '1', status: 'completed' },
+        { id: '2', status: 'in_progress' },
+      ],
+    })
   })
 
   it('keeps creates without a resolvable id as plain tool rows', () => {

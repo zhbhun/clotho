@@ -96,8 +96,9 @@ describe('summarizeWorkRun', () => {
       toolItem('t8', 'WebSearch'),
       toolItem('t9', 'Agent'),
       toolItem('t10', 'mcp__notebook__run'),
-      toolItem('t11', 'TodoWrite'),
-      toolItem('t12', 'AskUserQuestion'),
+      toolItem('t11', 'TaskUpdate'),
+      toolItem('t12', 'TodoWrite'),
+      toolItem('t13', 'AskUserQuestion'),
     ])
 
     expect(parts).toEqual([
@@ -108,9 +109,19 @@ describe('summarizeWorkRun', () => {
       { countKey: 'web', count: 2 },
       { countKey: 'agents', count: 1 },
       { countKey: 'other', count: 1 },
-      { countKey: 'tasks', count: 1 },
+      { countKey: 'tasks', count: 2 },
       { countKey: 'questions', count: 1 },
     ])
+  })
+
+  it('counts task tool calls under tasks instead of other', () => {
+    const { parts } = summarizeWorkRun([
+      toolItem('t1', 'TaskUpdate'),
+      toolItem('t2', 'TaskUpdate'),
+      toolItem('t3', 'TaskList'),
+    ])
+
+    expect(parts).toEqual([{ countKey: 'tasks', count: 3 }])
   })
 
   it('counts a merged task card by its task count', () => {
