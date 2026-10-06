@@ -1,11 +1,11 @@
-import { FilePlus } from 'lucide-react'
+import { FilePlusCorner } from 'lucide-react'
 
 import { HeightCollapsible } from './shared/content'
 import { fileSummary } from './shared/file-path'
 import type { ToolRenderer } from './shared/types'
 
 export const writeRenderer: ToolRenderer = {
-  icon: FilePlus,
+  icon: FilePlusCorner,
   label: 'tools.Write.label',
   description: 'tools.write.description',
   summary: (input) => fileSummary(input),
