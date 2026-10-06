@@ -655,8 +655,11 @@ function SessionAreaContent({
                 />
               </div>
             ) : null}
+            {/* select-text sits on the scroll root, not the content column, so
+                drags starting in blank margins and gaps can select text; the
+                scrollbar opt-outs via transient-scroll-area.css. */}
             <TransientScrollArea
-              className="size-full"
+              className="size-full select-text"
               viewportRef={handleViewportRef}
               viewportProps={{ tabIndex: -1 }}
             >
