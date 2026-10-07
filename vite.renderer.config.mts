@@ -20,4 +20,7 @@ export default defineConfig({
     ],
   },
   clearScreen: false,
+  server: {
+    port: 3366,
+  },
 })
