@@ -18,6 +18,7 @@ import type { GitBranchRef } from '../../../services/claude/claude'
 import { useWorkbenchStore } from '../stores/workbench-store'
 
 export type BranchSwitcherMenuContentProps = {
+  align?: 'start' | 'end'
   onCreate: () => void
   onDismiss: () => void
   projectId: string
@@ -28,6 +29,7 @@ export type BranchSwitcherMenuContentProps = {
 /** Dropdown body for the branch button: searchable local branch rows plus the
     create action pinned below the list. */
 export function BranchSwitcherMenuContent({
+  align = 'start',
   onCreate,
   onDismiss,
   projectId,
@@ -83,7 +85,7 @@ export function BranchSwitcherMenuContent({
 
   return (
     <MenuContent
-      align="start"
+      align={align}
       aria-label={t('workbench.branch.switch')}
       className="w-[min(360px,calc(100vw-2rem))] shadow-float"
       glass

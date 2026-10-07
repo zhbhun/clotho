@@ -6,23 +6,33 @@ import { Button } from '@/shadcn/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip'
 
 import { Menu, MenuTrigger } from '../../../components/menu'
-import type { WorkbenchProject } from '../stores/workbench-store'
+import type { ProjectMode, WorkbenchProject } from '../stores/workbench-store'
 import { BranchSwitcherMenuContent } from './branch-switcher-menu'
 import { CreateBranchDialog } from './create-branch-dialog'
 
 export type BranchSwitcherButtonProps = {
+  /** Header mode renders an icon-only button for the top-right action row. */
+  appearance?: 'default' | 'header'
   project?: WorkbenchProject
   projectName: string
+  /** The switcher only makes sense inside a user project, not home mode. */
+  projectMode?: ProjectMode
 }
 
-/** Branch button shown next to the project button; clicking opens the dropdown
-    branch menu. Hidden when the active workspace is not a git-backed project. */
-export function BranchSwitcherButton({ project, projectName }: BranchSwitcherButtonProps) {
+/** Branch button; clicking opens the dropdown branch menu. Hidden unless the
+    active workspace is a git-backed project. */
+export function BranchSwitcherButton({
+  appearance = 'default',
+  project,
+  projectName,
+  projectMode = 'project',
+}: BranchSwitcherButtonProps) {
   const { t } = useTranslation()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const isHeader = appearance === 'header'
 
-  if (!project?.path || !project.gitBranch) return null
+  if (projectMode !== 'project' || !project?.path || !project.gitBranch) return null
 
   return (
     <>
@@ -41,15 +51,27 @@ export function BranchSwitcherButton({ project, projectName }: BranchSwitcherBut
             render={
               <MenuTrigger
                 render={
-                  <Button
-                    aria-label={t('workbench.branch.switch')}
-                    className="ml-1 max-w-56 shrink-0 rounded-xl !pl-2 !pr-2.5"
-                    type="button"
-                    variant="surface"
-                  >
-                    <GitBranch className="size-3.5 shrink-0" strokeWidth={1.5} />
-                    <span className="min-w-0 truncate">{project.gitBranch}</span>
-                  </Button>
+                  isHeader ? (
+                    <Button
+                      aria-label={t('workbench.branch.switch')}
+                      className="shrink-0"
+                      size="icon"
+                      type="button"
+                      variant="mute"
+                    >
+                      <GitBranch data-icon="inline-start" strokeWidth={1.5} />
+                    </Button>
+                  ) : (
+                    <Button
+                      aria-label={t('workbench.branch.switch')}
+                      className="ml-1 max-w-56 shrink-0 rounded-xl !pl-2 !pr-2.5"
+                      type="button"
+                      variant="surface"
+                    >
+                      <GitBranch className="size-3.5 shrink-0" strokeWidth={1.5} />
+                      <span className="min-w-0 truncate">{project.gitBranch}</span>
+                    </Button>
+                  )
                 }
               />
             }
@@ -57,6 +79,7 @@ export function BranchSwitcherButton({ project, projectName }: BranchSwitcherBut
           <TooltipContent side="bottom">{t('workbench.branch.switch')}</TooltipContent>
         </Tooltip>
         <BranchSwitcherMenuContent
+          align={isHeader ? 'end' : 'start'}
           onCreate={() => {
             setIsMenuOpen(false)
             setIsCreateOpen(true)

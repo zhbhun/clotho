@@ -5,6 +5,7 @@ import { cn } from '@/shadcn/utils'
 
 import { SidebarToggleIcon } from '../../../components/sidebar-toggle-icon'
 import { ShortcutTooltip } from '../components/shortcut-tooltip'
+import { BranchSwitcherButton } from './branch-switcher-button'
 import type { SessionActivity, WorkbenchProject, WorkbenchSession } from '../stores/workbench-store'
 import { ProjectSwitcherButton } from './project-switcher-button'
 import { SessionHistoryButton } from './session-history'
@@ -110,6 +111,12 @@ export function ConversationHeader({
       />
       {showHeaderActions ? (
         <div className="session-tab-actions app-region-no-drag relative flex shrink-0 items-center px-1 text-foreground-subtlest">
+          <BranchSwitcherButton
+            appearance="header"
+            project={selectedProject}
+            projectMode={projectMode}
+            projectName={projectName}
+          />
           <SessionHistoryButton
             activeSessionId={activeSessionId}
             error={historyError}

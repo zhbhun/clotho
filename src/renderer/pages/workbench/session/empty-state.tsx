@@ -89,9 +89,11 @@ export function SessionEmptyState({
                   onAddProject={onAddProject}
                   onSelectProject={onSelectProject}
                 />
-                {projectMode === 'project' ? (
-                  <BranchSwitcherButton project={selectedProject} projectName={projectName} />
-                ) : null}
+                <BranchSwitcherButton
+                  project={selectedProject}
+                  projectMode={projectMode}
+                  projectName={projectName}
+                />
                 <SessionHistoryButton
                   appearance="empty-surface"
                   activeSessionId={activeSessionId}
