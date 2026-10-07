@@ -69,6 +69,7 @@ export type WorkbenchState = WorkbenchDataState & {
     providerId: string | undefined,
     modelId: string | undefined,
   ) => void
+  setProjectGitBranch: (projectId: string, branch: string | null) => void
   replaceCatalog: (catalog: WorkbenchCatalog) => void
   createDraftSession: (projectId: string | null, title?: string) => string
   touchDraftSession: (sessionId: string) => void
@@ -466,6 +467,17 @@ export const useWorkbenchStore = create<WorkbenchState>()(
                 default_provider_id: providerId,
                 default_model_id: modelId,
               },
+            },
+          }
+        }),
+      setProjectGitBranch: (projectId, branch) =>
+        set((state) => {
+          const project = state.projects[projectId]
+          if (!project || project.gitBranch === branch) return state
+          return {
+            projects: {
+              ...state.projects,
+              [projectId]: { ...project, gitBranch: branch },
             },
           }
         }),

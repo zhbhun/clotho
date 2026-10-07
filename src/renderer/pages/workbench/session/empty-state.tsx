@@ -4,6 +4,7 @@ import { cn } from '@/shadcn/utils'
 
 import { APP_CONTENT_CONTAINER_CLASS } from '../../../components/app-layout'
 import type { SessionActivity, WorkbenchProject, WorkbenchSession } from '../stores/workbench-store'
+import { BranchSwitcherButton } from './branch-switcher-button'
 import { ClothoMark } from './clotho-mark'
 import { ProjectSwitcherButton } from './project-switcher-button'
 import { PromptComposer, type PromptComposerBaseProps } from './prompt'
@@ -81,7 +82,6 @@ export function SessionEmptyState({
               <div className="mx-2 flex min-h-14 items-center rounded-t-3xl bg-project-switcher-surface px-2 pt-2 pb-6">
                 <ProjectSwitcherButton
                   appearance="empty-surface"
-                  className="flex-1"
                   projectMode={projectMode}
                   projectName={projectName}
                   projects={projects}
@@ -89,6 +89,9 @@ export function SessionEmptyState({
                   onAddProject={onAddProject}
                   onSelectProject={onSelectProject}
                 />
+                {projectMode === 'project' ? (
+                  <BranchSwitcherButton project={selectedProject} projectName={projectName} />
+                ) : null}
                 <SessionHistoryButton
                   appearance="empty-surface"
                   activeSessionId={activeSessionId}

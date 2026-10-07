@@ -55,16 +55,83 @@ export async function getProjectRepositoryRoot(projectPath: string) {
 }
 
 export async function getProjectGitBranch({ projectPath }: { projectPath: string }) {
-  const result = spawnSync('git', ['branch', '--show-current'], {
-    cwd: projectPath,
-    encoding: 'utf8',
-    windowsHide: true,
-  })
-
+  const result = runGit(projectPath, ['branch', '--show-current'], spawnGit)
   if (result.status !== 0) {
     return null
   }
 
   const branch = result.stdout.trim()
   return branch || null
+}
+
+type GitCommandResult = { status: number | null; stdout: string; stderr: string }
+type GitCommandRunner = (command: string, args: string[], cwd: string) => GitCommandResult
+
+const spawnGit: GitCommandRunner = (command, args, cwd) =>
+  spawnSync(command, args, { cwd, encoding: 'utf8', windowsHide: true })
+
+function runGit(projectPath: string, args: string[], run: GitCommandRunner): GitCommandResult {
+  return run('git', args, projectPath)
+}
+
+export interface GitBranchRef {
+  name: string
+  isCurrent: boolean
+}
+
+export interface GitBranchSwitchResult {
+  /** The checked out branch on success; null when the operation failed. */
+  branch: string | null
+  /** Git's failure detail; null on success. */
+  error: string | null
+}
+
+export async function listProjectGitBranches(
+  { projectPath }: { projectPath: string },
+  run: GitCommandRunner = spawnGit,
+) {
+  const result = runGit(
+    projectPath,
+    ['for-each-ref', 'refs/heads', '--format=%(HEAD)%00%(refname:short)', '--sort=-committerdate'],
+    run,
+  )
+
+  if (result.status !== 0) {
+    return null
+  }
+
+  return result.stdout
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => {
+      const [head, name = ''] = line.split('\0')
+      return { name, isCurrent: head === '*' }
+    })
+    .filter((branch) => branch.name)
+}
+
+export async function switchProjectGitBranch(
+  {
+    projectPath,
+    branch,
+    create = false,
+  }: {
+    projectPath: string
+    branch: string
+    create?: boolean
+  },
+  run: GitCommandRunner = spawnGit,
+): Promise<GitBranchSwitchResult> {
+  const name = branch.trim()
+  // A leading dash would be parsed as a git option rather than a ref name.
+  if (!name || name.startsWith('-')) {
+    return { branch: null, error: `Invalid branch name: ${branch}` }
+  }
+
+  const result = runGit(projectPath, create ? ['checkout', '-b', name] : ['checkout', name], run)
+  if (result.status !== 0) {
+    return { branch: null, error: result.stderr.trim() || `Failed to check out ${name}` }
+  }
+
+  return { branch: name, error: null }
 }

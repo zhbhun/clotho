@@ -48,6 +48,8 @@ import type {
   ClaudeWorkflowStatus as RpcClaudeWorkflowStatus,
   FetchProviderModelsParams as RpcFetchProviderModelsParams,
   GetProviderUsageParams as RpcGetProviderUsageParams,
+  GitBranchRef as RpcGitBranchRef,
+  GitBranchSwitchResult as RpcGitBranchSwitchResult,
   ModelProvider as RpcModelProvider,
   ProjectFileSearchCapability as RpcProjectFileSearchCapability,
   ProjectFileSearchEntry as RpcProjectFileSearchEntry,
@@ -101,6 +103,8 @@ export type ClaudeSessionEditAnchor = RpcClaudeSessionEditAnchor
 export type ClaudeSessionEditAnchorParams = RpcClaudeSessionEditAnchorParams
 export type FetchProviderModelsParams = RpcFetchProviderModelsParams
 export type GetProviderUsageParams = RpcGetProviderUsageParams
+export type GitBranchRef = RpcGitBranchRef
+export type GitBranchSwitchResult = RpcGitBranchSwitchResult
 export type ProviderUsageQuota = RpcProviderUsageQuota
 export type ProviderUsageWindow = RpcProviderUsageWindow
 export type ModelProvider = RpcModelProvider
@@ -897,6 +901,30 @@ export const claude = {
       }
     }
     return requestFromDesktop('claudeGetProjectGitBranch', { projectPath })
+  },
+  async listProjectGitBranches(projectPath: string): Promise<RpcGitBranchRef[] | null> {
+    if (!isTauriRuntime()) {
+      return null
+    }
+
+    if (import.meta.env.DEV) {
+      const mock = await import('./mock')
+      if (projectPath === mock.MOCK_PROJECT.path) {
+        return null
+      }
+    }
+    return requestFromDesktop('claudeListProjectGitBranches', { projectPath })
+  },
+  async switchProjectGitBranch(params: {
+    projectPath: string
+    branch: string
+    create?: boolean
+  }): Promise<RpcGitBranchSwitchResult> {
+    if (!isTauriRuntime()) {
+      return { branch: null, error: 'Switching branches requires the desktop runtime' }
+    }
+
+    return requestFromDesktop('claudeSwitchProjectGitBranch', params)
   },
   async renameSession({
     projectId,

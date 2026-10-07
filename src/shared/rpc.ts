@@ -143,6 +143,18 @@ export interface ClaudeSession {
   tag?: string
 }
 
+export interface GitBranchRef {
+  name: string
+  isCurrent: boolean
+}
+
+export interface GitBranchSwitchResult {
+  /** The checked out branch on success; null when the operation failed. */
+  branch: string | null
+  /** Git's failure detail; null on success. */
+  error: string | null
+}
+
 export interface ClaudeSubagent {
   id: string
   agentType: string
@@ -966,6 +978,14 @@ export type DesktopRPC = {
       claudeGetProjectGitBranch: {
         params: { projectPath: string }
         response: string | null
+      }
+      claudeListProjectGitBranches: {
+        params: { projectPath: string }
+        response: GitBranchRef[] | null
+      }
+      claudeSwitchProjectGitBranch: {
+        params: { projectPath: string; branch: string; create?: boolean }
+        response: GitBranchSwitchResult
       }
       claudeRenameSession: {
         params: { projectId: string; sessionId: string; title: string }

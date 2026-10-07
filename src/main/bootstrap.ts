@@ -264,6 +264,8 @@ export async function bootstrap() {
         claudeDropTrailingTurn: (params) => service.dropTrailingTurn(params),
         claudeSampleContextUsage: (params) => service.sampleContextUsage(params),
         claudeGetProjectGitBranch: (params) => service.getProjectGitBranch(params),
+        claudeListProjectGitBranches: (params) => service.listProjectGitBranches(params),
+        claudeSwitchProjectGitBranch: (params) => service.switchProjectGitBranch(params),
         claudeRenameSession: (params) => service.renameSession(params),
         claudeDeleteSession: (params) => service.deleteSession(params),
         claudeRespondToolRequest: (params) =>

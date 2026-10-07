@@ -18,7 +18,7 @@ import type {
 } from '@/shared/rpc'
 
 import { getAttachmentPreview, snapshotAttachments } from './claude/attachments'
-import { getProjectGitBranch } from './claude/git'
+import { getProjectGitBranch, listProjectGitBranches, switchProjectGitBranch } from './claude/git'
 import { buildModelCatalog } from './claude/model-catalog'
 import { fetchProviderModels } from './claude/model-fetch'
 import type { ModelProxy } from './claude/model-proxy'
@@ -186,6 +186,8 @@ export function createClaudeDesktopService(
       return sampleSessionContextUsage(params, proxy)
     },
     getProjectGitBranch,
+    listProjectGitBranches,
+    switchProjectGitBranch,
     renameSession,
     deleteSession,
     listProviders: () => settingsStore.get().providers,

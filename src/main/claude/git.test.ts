@@ -5,7 +5,7 @@ import path from 'node:path'
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { getProjectRepositoryRoot } from './git'
+import { getProjectRepositoryRoot, listProjectGitBranches, switchProjectGitBranch } from './git'
 
 let tempDir: string | undefined
 
@@ -42,5 +42,86 @@ describe('Git project paths', () => {
     await mkdir(nestedPath, { recursive: true })
 
     await expect(getProjectRepositoryRoot(nestedPath)).resolves.toBeUndefined()
+  })
+})
+
+describe('listProjectGitBranches', () => {
+  it('parses local branches and marks the current one', async () => {
+    const run = (command: string, args: string[]) => {
+      expect(command).toBe('git')
+      expect(args).toEqual([
+        'for-each-ref',
+        'refs/heads',
+        '--format=%(HEAD)%00%(refname:short)',
+        '--sort=-committerdate',
+      ])
+      return { status: 0, stdout: '*\0main\n \0feature/剧本大师\n', stderr: '' }
+    }
+
+    await expect(listProjectGitBranches({ projectPath: '/tmp/repo' }, run)).resolves.toEqual([
+      { name: 'main', isCurrent: true },
+      { name: 'feature/剧本大师', isCurrent: false },
+    ])
+  })
+
+  it('returns null when git fails', async () => {
+    const run = () => ({ status: 128, stdout: '', stderr: 'fatal: not a git repository' })
+
+    await expect(listProjectGitBranches({ projectPath: '/tmp/repo' }, run)).resolves.toBeNull()
+  })
+})
+
+describe('switchProjectGitBranch', () => {
+  it('checks out an existing branch without the create flag', async () => {
+    const run = (_command: string, args: string[]) => {
+      expect(args).toEqual(['checkout', 'feature/剧本大师'])
+      return { status: 0, stdout: 'Switched to branch\n', stderr: '' }
+    }
+
+    await expect(
+      switchProjectGitBranch({ projectPath: '/tmp/repo', branch: ' feature/剧本大师 ' }, run),
+    ).resolves.toEqual({ branch: 'feature/剧本大师', error: null })
+  })
+
+  it('creates and checks out a new branch with the create flag', async () => {
+    const run = (_command: string, args: string[]) => {
+      expect(args).toEqual(['checkout', '-b', 'feature/new'])
+      return { status: 0, stdout: 'Switched to a new branch\n', stderr: '' }
+    }
+
+    await expect(
+      switchProjectGitBranch(
+        { projectPath: '/tmp/repo', branch: 'feature/new', create: true },
+        run,
+      ),
+    ).resolves.toEqual({ branch: 'feature/new', error: null })
+  })
+
+  it('rejects names that git would parse as options without running git', async () => {
+    const run = () => {
+      throw new Error('git must not run for invalid branch names')
+    }
+
+    await expect(
+      switchProjectGitBranch({ projectPath: '/tmp/repo', branch: '--force' }, run),
+    ).resolves.toMatchObject({ branch: null })
+    await expect(
+      switchProjectGitBranch({ projectPath: '/tmp/repo', branch: '   ' }, run),
+    ).resolves.toMatchObject({ branch: null })
+  })
+
+  it('surfaces git stderr when the checkout fails', async () => {
+    const run = () => ({
+      status: 1,
+      stdout: '',
+      stderr: 'error: Your local changes would be overwritten by checkout.\n',
+    })
+
+    await expect(
+      switchProjectGitBranch({ projectPath: '/tmp/repo', branch: 'main' }, run),
+    ).resolves.toEqual({
+      branch: null,
+      error: 'error: Your local changes would be overwritten by checkout.',
+    })
   })
 })
