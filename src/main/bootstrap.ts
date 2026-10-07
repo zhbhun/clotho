@@ -6,16 +6,17 @@ import { BrowserWindow, Menu, app, ipcMain, screen } from 'electron'
 import type { WebContents } from 'electron'
 
 import type { AppLogChannel } from '@/shared/logging'
-import type { DesktopRPC } from '@/shared/rpc'
+import type { AppLanguage, DesktopRPC } from '@/shared/rpc'
 
 import { clothoDir } from './app-data'
-import { applicationMenuItems } from './application-menu'
+import { applicationMenuItems, menuLabels } from './application-menu'
 import { createClaudeDesktopService } from './claude-service'
 import { loadAttachmentFiles } from './claude/attachments'
 import { createModelProxy } from './claude/model-proxy'
 import { ensureWorkProject } from './claude/projects'
 import { projectIdFromPath } from './claude/sessions'
 import { createSettingsStore, defaultSettings, readSettings } from './claude/settings'
+import { textEditMenuItems } from './context-menu'
 import { setDialogOwnerWindow } from './dialogs'
 import { createFatalErrorHandler, installGlobalErrorHandlers } from './logging/global-errors'
 import { wrapRequestHandlers } from './logging/rpc'
@@ -105,7 +106,8 @@ export async function bootstrap() {
         ? MAIN_WINDOW_VITE_DEV_SERVER_URL
         : undefined
     const isDev = devServerUrl !== undefined
-    Menu.setApplicationMenu(Menu.buildFromTemplate(applicationMenuItems('en', isDev)))
+    let menuLanguage: AppLanguage = 'en'
+    Menu.setApplicationMenu(Menu.buildFromTemplate(applicationMenuItems(menuLanguage, isDev)))
 
     let loadedState
     try {
@@ -173,6 +175,15 @@ export async function bootstrap() {
     )
     const mainWindowWebview = mainWindow.webContents
     setDialogOwnerWindow(mainWindow)
+    // Electron never shows a default context menu (it reports every one as
+    // handled), so the text-editing menu is built here; silent areas stay
+    // silent, matching the renderer's context-menu gate.
+    mainWindowWebview.on('context-menu', (_event, params) => {
+      const items = textEditMenuItems(params, menuLabels(menuLanguage))
+      if (items) {
+        Menu.buildFromTemplate(items).popup({ window: mainWindow })
+      }
+    })
 
     const service = createClaudeDesktopService(
       {
@@ -209,6 +220,7 @@ export async function bootstrap() {
     const requestHandlers = wrapRequestHandlers(
       {
         applicationMenuSetLanguage: ({ language }) => {
+          menuLanguage = language
           Menu.setApplicationMenu(Menu.buildFromTemplate(applicationMenuItems(language, isDev)))
         },
         appGetPreferences: () => service.getAppPreferences(),

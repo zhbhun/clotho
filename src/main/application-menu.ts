@@ -2,7 +2,7 @@ import type { MenuItemConstructorOptions } from 'electron'
 
 import type { AppLanguage } from '@/shared/rpc'
 
-type ApplicationMenuLabels = {
+export type ApplicationMenuLabels = {
   about: string
   copy: string
   cut: string
@@ -201,11 +201,15 @@ const MENU_LABELS = {
   },
 } satisfies Record<AppLanguage, ApplicationMenuLabels>
 
+export function menuLabels(language: AppLanguage): ApplicationMenuLabels {
+  return MENU_LABELS[language]
+}
+
 export function applicationMenuItems(
   language: AppLanguage,
   isDev: boolean,
 ): MenuItemConstructorOptions[] {
-  const labels = MENU_LABELS[language]
+  const labels = menuLabels(language)
 
   const items: MenuItemConstructorOptions[] = [
     {
