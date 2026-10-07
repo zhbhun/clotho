@@ -218,7 +218,6 @@ export function ProviderEditorForm({
                 aria-invalid={Boolean(providerIdError)}
                 className="w-full"
                 placeholder={t('settings.provider.idPlaceholder')}
-                spellCheck={false}
               />
               <ComboboxContent glass className="data-empty:hidden">
                 <ComboboxList>
@@ -357,7 +356,6 @@ export function ProviderEditorForm({
                         aria-invalid={hasModelIdError}
                         aria-label={t('settings.provider.modelId', { number: index + 1 })}
                         className="border-transparent bg-transparent!"
-                        spellCheck={false}
                         value={model.id}
                         placeholder={t('settings.provider.modelIdPlaceholder')}
                         onChange={(event) => onUpdateModel(index, { id: event.target.value })}

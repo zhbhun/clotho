@@ -162,7 +162,6 @@ function ColorControl({
         <InputGroupInput
           aria-label={ariaLabel}
           id={inputId}
-          spellCheck={false}
           value={draft}
           onBlur={handleBlur}
           onChange={(event) => setDraft(event.target.value)}
