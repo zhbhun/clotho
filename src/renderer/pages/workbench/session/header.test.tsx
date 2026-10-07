@@ -1,7 +1,7 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { SidebarProvider } from '@/shadcn/sidebar'
+import { SidebarProvider, useSidebar } from '@/shadcn/sidebar'
 import { TooltipProvider } from '@/shadcn/tooltip'
 
 import { appI18n } from '../../../i18n/runtime'
@@ -40,6 +40,18 @@ afterEach(() => {
   Object.defineProperty(window, 'innerWidth', { value: 1200, configurable: true })
 })
 
+function HoverPreviewStateProbe() {
+  const { hoverPreview, setOpen } = useSidebar()
+  return (
+    <>
+      <div data-hover-preview-open={hoverPreview ? 'true' : 'false'} />
+      <button data-testid="collapse-probe" type="button" onClick={() => setOpen(false)}>
+        collapse
+      </button>
+    </>
+  )
+}
+
 function renderHeader(
   {
     activeSessionId = null,
@@ -52,7 +64,7 @@ function renderHeader(
     selectedProject?: WorkbenchProject
     sessions?: WorkbenchSession[]
   } = {},
-  { isMobile = false }: { isMobile?: boolean } = {},
+  { defaultOpen = true, isMobile = false }: { defaultOpen?: boolean; isMobile?: boolean } = {},
 ) {
   const onSelectProject = vi.fn()
   Object.defineProperty(window, 'innerWidth', {
@@ -91,7 +103,8 @@ function renderHeader(
   render(
     <ShortcutRuntimeProvider runtime={runtime}>
       <TooltipProvider delay={0}>
-        <SidebarProvider defaultOpen>
+        <SidebarProvider defaultOpen={defaultOpen}>
+          <HoverPreviewStateProbe />
           <ConversationHeader
             activeSessionId={activeSessionId}
             historyError={null}
@@ -158,5 +171,80 @@ describe('ConversationHeader', () => {
     expect(document.querySelector('[data-window-project-title]')).toBeNull()
     expect(screen.queryByRole('button', { name: appI18n.t('workbench.history.title') })).toBeNull()
     expect(document.querySelector('.session-tab-actions')).toBeNull()
+  })
+
+  it('opens the sidebar hover preview after the pointer rests on the collapsed trigger', () => {
+    vi.useFakeTimers()
+    try {
+      renderHeader({}, { defaultOpen: false })
+      const probe = document.querySelector('[data-hover-preview-open]')
+      if (!probe) throw new Error('hover preview probe not found')
+      expect(probe).toHaveAttribute('data-hover-preview-open', 'false')
+
+      fireEvent.mouseOver(screen.getByRole('button', { name: 'Toggle Sidebar' }))
+      act(() => {
+        vi.advanceTimersByTime(100)
+      })
+      expect(probe).toHaveAttribute('data-hover-preview-open', 'false')
+
+      act(() => {
+        vi.advanceTimersByTime(50)
+      })
+      expect(probe).toHaveAttribute('data-hover-preview-open', 'true')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('keeps the collapsed sidebar hidden when the pointer leaves before the delay', () => {
+    vi.useFakeTimers()
+    try {
+      renderHeader({}, { defaultOpen: false })
+      const probe = document.querySelector('[data-hover-preview-open]')
+      if (!probe) throw new Error('hover preview probe not found')
+
+      fireEvent.mouseOver(screen.getByRole('button', { name: 'Toggle Sidebar' }))
+      act(() => {
+        vi.advanceTimersByTime(100)
+      })
+      fireEvent.mouseOut(screen.getByRole('button', { name: 'Toggle Sidebar' }))
+      act(() => {
+        vi.advanceTimersByTime(200)
+      })
+
+      expect(probe).toHaveAttribute('data-hover-preview-open', 'false')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('holds the hover preview after a collapse until the pointer moves again', () => {
+    vi.useFakeTimers()
+    try {
+      renderHeader()
+      fireEvent.click(screen.getByTestId('collapse-probe'))
+      const trigger = screen.getByRole('button', { name: 'Toggle Sidebar' })
+      const probe = document.querySelector('[data-hover-preview-open]')
+      if (!probe) throw new Error('hover preview probe not found')
+
+      // Collapsing remounts the trigger under the stationary pointer; its
+      // synthesized hover must not reopen the panel.
+      fireEvent.mouseOver(trigger)
+      act(() => {
+        vi.advanceTimersByTime(300)
+      })
+      expect(probe).toHaveAttribute('data-hover-preview-open', 'false')
+
+      // A real move plus a fresh entry onto the trigger arms the preview.
+      fireEvent.mouseMove(document, { clientX: 40, clientY: 40 })
+      fireEvent.mouseOut(trigger)
+      fireEvent.mouseOver(trigger)
+      act(() => {
+        vi.advanceTimersByTime(150)
+      })
+      expect(probe).toHaveAttribute('data-hover-preview-open', 'true')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

@@ -30,6 +30,13 @@
   transition: none;
 }
 
+/* The hover preview overlays the conversation's left edge; slide the outline
+   markers out from under it while it is up, riding the panel's own motion. */
+.session-sidebar-layout:has([data-sidebar-preview='true']) [data-slot='conversation-toc'] {
+  translate: var(--sidebar-width) -50%;
+  transition: translate 200ms ease-linear;
+}
+
 .session-sidebar-layout {
   --sidebar-divider-hover: color-mix(in oklab, var(--border) 89%, var(--foreground) 11%);
 }

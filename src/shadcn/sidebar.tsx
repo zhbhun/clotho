@@ -25,6 +25,10 @@ type SidebarContextProps = {
   openMobile: boolean
   setOpenMobile: (open: boolean) => void
   isMobile: boolean
+  // Transient overlay: while collapsed, hovering the expand trigger slides the
+  // sidebar back in as an overlay without changing the collapsed `open` state.
+  hoverPreview: boolean
+  setHoverPreview: (open: boolean) => void
   toggleSidebar: () => void
 }
 
@@ -54,6 +58,7 @@ function SidebarProvider({
 }) {
   const isMobile = useIsMobile()
   const [openMobile, setOpenMobile] = React.useState(false)
+  const [hoverPreview, setHoverPreview] = React.useState(false)
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
@@ -79,6 +84,11 @@ function SidebarProvider({
     return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open)
   }, [isMobile, setOpen, setOpenMobile])
 
+  // A real expand supersedes the transient hover overlay.
+  React.useEffect(() => {
+    if (open) setHoverPreview(false)
+  }, [open])
+
   // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.
   const state = open ? 'expanded' : 'collapsed'
@@ -91,9 +101,11 @@ function SidebarProvider({
       isMobile,
       openMobile,
       setOpenMobile,
+      hoverPreview,
+      setHoverPreview,
       toggleSidebar,
     }),
-    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar],
+    [state, open, setOpen, isMobile, openMobile, setOpenMobile, hoverPreview, toggleSidebar],
   )
 
   return (
@@ -131,7 +143,7 @@ function Sidebar({
   variant?: 'sidebar' | 'floating' | 'inset'
   collapsible?: 'offcanvas' | 'icon' | 'none'
 }) {
-  const { isMobile, state, openMobile } = useSidebar()
+  const { isMobile, state, openMobile, hoverPreview } = useSidebar()
 
   if (collapsible === 'none') {
     return (
@@ -154,6 +166,9 @@ function Sidebar({
   // transitions the collapse toggle uses carry the motion — identical feel.
   const renderedState = isMobile ? (openMobile ? 'expanded' : 'collapsed') : state
   const isRenderedCollapsed = renderedState === 'collapsed'
+  // Hover preview overlays the collapsed sidebar over the content; the mobile
+  // drawer has its own toggle and hover does not apply on touch.
+  const isPreviewOpen = isRenderedCollapsed && hoverPreview && !isMobile
 
   return (
     <div
@@ -180,16 +195,18 @@ function Sidebar({
       <div
         data-slot="sidebar-container"
         data-side={side}
+        data-sidebar-preview={isPreviewOpen ? 'true' : undefined}
         className={cn(
           'fixed inset-y-0 z-10 flex h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear data-[side=left]:left-0 data-[side=left]:group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)] data-[side=right]:right-0 data-[side=right]:group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]',
           // Adjust the padding for floating and inset variants.
           variant === 'floating' || variant === 'inset'
             ? 'p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]'
             : 'group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l',
+          isPreviewOpen && 'left-0! shadow-lg',
           className,
         )}
         {...props}
-        inert={isRenderedCollapsed ? true : undefined}
+        inert={isRenderedCollapsed && !isPreviewOpen ? true : undefined}
       >
         <div
           data-sidebar="sidebar"

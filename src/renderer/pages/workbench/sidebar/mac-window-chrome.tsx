@@ -17,17 +17,11 @@ export function MacWindowChrome() {
 
   return (
     <div className="app-region-drag flex h-10 items-center gap-1 px-3 pl-[84px] text-foreground-subtlest">
-      <ShortcutTooltip
-        commandId="workbench.sidebar.toggle"
-        label={t('workbench.nav.toggleSidebar')}
-        side="bottom"
-      >
-        <SidebarTrigger
-          className="app-region-no-drag shrink-0"
-          icon={SidebarToggleIcon}
-          size="icon"
-        />
-      </ShortcutTooltip>
+      <SidebarTrigger
+        className="app-region-no-drag shrink-0"
+        icon={SidebarToggleIcon}
+        size="icon"
+      />
       <HistoryNavButton
         commandId="workbench.navigation.back"
         dataSidebar="history-back"

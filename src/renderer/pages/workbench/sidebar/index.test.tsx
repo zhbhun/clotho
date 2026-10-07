@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { SidebarProvider } from '@/shadcn/sidebar'
+import { SidebarProvider, useSidebar } from '@/shadcn/sidebar'
 import { TooltipProvider } from '@/shadcn/tooltip'
 
 import { appI18n } from '../../../i18n/runtime'
@@ -63,18 +63,33 @@ afterEach(() => {
   }
 })
 
+function HoverPreviewProbe() {
+  const { hoverPreview, setHoverPreview } = useSidebar()
+  return (
+    <button
+      data-testid="hover-preview-probe"
+      type="button"
+      onClick={() => setHoverPreview(!hoverPreview)}
+    >
+      toggle hover preview
+    </button>
+  )
+}
+
 function renderSidebar({
   activeTab = 'current',
   defaultOpen = true,
   focusedSessionId = session.id,
   selectedSession = null,
   sessions = [session],
+  withHoverPreviewProbe = false,
 }: {
   activeTab?: 'current' | 'history'
   defaultOpen?: boolean
   focusedSessionId?: string | null
   selectedSession?: WorkbenchSession | null
   sessions?: WorkbenchSession[]
+  withHoverPreviewProbe?: boolean
 } = {}) {
   const runtime = createShortcutRuntime({
     catalog: commandCatalog,
@@ -113,6 +128,7 @@ function renderSidebar({
     <ShortcutRuntimeProvider runtime={runtime}>
       <TooltipProvider delay={0}>
         <SidebarProvider defaultOpen={defaultOpen}>
+          {withHoverPreviewProbe ? <HoverPreviewProbe /> : null}
           <SessionSidebar
             activeTab={activeTab}
             focusNavigationRevision={0}
@@ -138,18 +154,6 @@ function renderSidebar({
 }
 
 describe('SessionSidebar', () => {
-  it('shows the sidebar shortcut when hovering the titlebar trigger', async () => {
-    await appI18n.changeLanguage('zh-CN')
-    const user = userEvent.setup()
-    renderSidebar()
-
-    await user.hover(screen.getByRole('button', { name: 'Toggle Sidebar' }))
-
-    const tooltip = await screen.findByRole('tooltip')
-    expect(tooltip).toHaveTextContent('切换边栏')
-    expect(tooltip).toHaveTextContent('⌘B')
-  })
-
   it('shows the empty conversation state on the history tab when there are no sessions', () => {
     renderSidebar({ activeTab: 'history', sessions: [] })
 
@@ -278,6 +282,63 @@ describe('SessionSidebar', () => {
     renderSidebar({ defaultOpen: false })
 
     expect(document.querySelector('[data-slot="sidebar-container"]')).toHaveAttribute('inert')
+  })
+
+  it('reveals the collapsed sidebar as an interactive hover preview', () => {
+    vi.useFakeTimers()
+    try {
+      renderSidebar({ defaultOpen: false, withHoverPreviewProbe: true })
+      const container = document.querySelector('[data-slot="sidebar-container"]')
+      if (!container) throw new Error('sidebar container not found')
+      expect(container).toHaveAttribute('inert')
+
+      fireEvent.click(screen.getByTestId('hover-preview-probe'))
+
+      expect(container).not.toHaveAttribute('inert')
+      expect(container).toHaveAttribute('data-sidebar-preview', 'true')
+
+      // The mock rect spans (0,0)-(240,500): moves outside it must not close
+      // the preview while the slide-in is still settling.
+      fireEvent.mouseMove(document.body, { clientX: 400, clientY: 10 })
+      expect(container).toHaveAttribute('data-sidebar-preview', 'true')
+
+      act(() => {
+        vi.advanceTimersByTime(300)
+      })
+
+      // Moves landing inside the panel keep it up; outside retracts it.
+      fireEvent.mouseMove(document.body, { clientX: 10, clientY: 10 })
+      expect(container).toHaveAttribute('data-sidebar-preview', 'true')
+
+      fireEvent.mouseMove(document.body, { clientX: 400, clientY: 10 })
+      expect(container).toHaveAttribute('inert')
+      expect(container).not.toHaveAttribute('data-sidebar-preview')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('keeps the hover preview open after a click inside the sidebar', async () => {
+    const user = userEvent.setup()
+    const { onSelectSession } = renderSidebar({
+      defaultOpen: false,
+      selectedSession: session,
+      withHoverPreviewProbe: true,
+    })
+    const container = document.querySelector('[data-slot="sidebar-container"]')
+    const item = document.querySelector<HTMLElement>(
+      `[data-session-item="${session.id}"] [data-sidebar="menu-button"]`,
+    )
+    if (!container || !item) throw new Error('collapsed sidebar session item not found')
+
+    fireEvent.click(screen.getByTestId('hover-preview-probe'))
+    expect(container).not.toHaveAttribute('inert')
+
+    await user.click(item)
+
+    expect(onSelectSession).toHaveBeenCalledWith(session)
+    expect(container).not.toHaveAttribute('inert')
+    expect(container).toHaveAttribute('data-sidebar-preview', 'true')
   })
 
   it('scrolls and focuses the current session when it is outside the virtual window', async () => {

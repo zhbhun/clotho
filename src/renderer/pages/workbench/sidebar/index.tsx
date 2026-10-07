@@ -1,5 +1,5 @@
 import { Settings, SquarePen } from 'lucide-react'
-import { type KeyboardEvent, useMemo, useState } from 'react'
+import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -10,6 +10,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/shadcn/sidebar'
 
 import { TransientScrollArea } from '../../../components/transient-scroll-area'
@@ -21,6 +22,9 @@ import { SessionListTabs } from './session-list-tabs'
 import './session-sidebar.css'
 import { SidebarState } from './sidebar-state'
 import { VirtualSessionList } from './virtual-session-list'
+
+// Covers the container's 200ms slide-in transition, plus slack.
+const SIDEBAR_PREVIEW_SETTLE_MS = 300
 
 export function SessionSidebar({
   activeTab,
@@ -54,6 +58,8 @@ export function SessionSidebar({
   onTogglePinSession: (session: WorkbenchSession) => void
 }) {
   const { t } = useTranslation()
+  const { hoverPreview, setHoverPreview } = useSidebar()
+  const containerRef = useRef<HTMLDivElement | null>(null)
   const [viewport, setViewport] = useState<HTMLDivElement | null>(null)
   const [locateRequestRevision, setLocateRequestRevision] = useState(0)
   const [enterListRevision, setEnterListRevision] = useState(0)
@@ -80,6 +86,38 @@ export function SessionSidebar({
 
   const locateCurrentSession = () => setLocateRequestRevision((revision) => revision + 1)
   const scrollToTop = () => viewport?.scrollTo({ top: 0, behavior: 'smooth' })
+
+  // The preview stays up while the pointer stays over the panel and retracts
+  // once a move lands outside its rect. Checks compare coordinates with the
+  // panel rect instead of event targets or boundary events: the panel overlaps
+  // Electron drag regions, which swallow the events crossing them.
+  useEffect(() => {
+    if (!hoverPreview) return
+    const container = containerRef.current
+    if (!container) return
+    // The panel slides in across the pointer's position, so early moves would
+    // read as "outside"; let the slide settle before moves may close it.
+    let isSettling = true
+    const settleTimer = window.setTimeout(() => {
+      isSettling = false
+    }, SIDEBAR_PREVIEW_SETTLE_MS)
+    const handlePointerMove = (event: MouseEvent) => {
+      if (isSettling) return
+      const rect = container.getBoundingClientRect()
+      const isInside =
+        event.clientX >= rect.left &&
+        event.clientX <= rect.right &&
+        event.clientY >= rect.top &&
+        event.clientY <= rect.bottom
+      if (!isInside) setHoverPreview(false)
+    }
+    document.addEventListener('mousemove', handlePointerMove)
+    return () => {
+      window.clearTimeout(settleTimer)
+      document.removeEventListener('mousemove', handlePointerMove)
+    }
+  }, [hoverPreview, setHoverPreview])
+
   const handleTabIntoSessions = (event: KeyboardEvent<HTMLButtonElement>) => {
     if (event.key !== 'Tab' || event.shiftKey || !isSessionInList(focusedSessionId)) return
     event.preventDefault()
@@ -87,7 +125,7 @@ export function SessionSidebar({
   }
 
   return (
-    <Sidebar collapsible="offcanvas">
+    <Sidebar collapsible="offcanvas" ref={containerRef}>
       <SidebarHeader className="gap-0 p-0">
         <MacWindowChrome />
 
