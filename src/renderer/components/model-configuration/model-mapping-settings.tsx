@@ -112,7 +112,7 @@ function ModelTargetPicker({
           </span>
           {selectedChoice ? (
             <span
-              className="hidden size-5 shrink-0 items-center justify-center rounded-full transition-colors group-hover/button:flex hover:bg-foreground/6"
+              className="-mr-0.75 hidden size-5 shrink-0 items-center justify-center rounded-full transition-colors group-hover/button:flex hover:bg-foreground/6"
               data-icon="inline-end"
               data-slot="mapping-clear"
               onClick={(event) => {
