@@ -25,6 +25,19 @@ function pairToolResult(
   index: number,
   block: ClaudeContentBlock,
 ) {
+  // Results carry their tool_use id; matching on it keeps parallel calls in
+  // one batch from crossing when several rows still await their results.
+  if (block.toolUseId) {
+    for (let itemIndex = timelineItems.length - 1; itemIndex >= 0; itemIndex--) {
+      const item = timelineItems[itemIndex]
+      if (item.kind === 'tool' && !item.result && item.use?.toolUseId === block.toolUseId) {
+        item.result = block
+        if (block.isError) item.isError = true
+        return
+      }
+    }
+  }
+
   for (let itemIndex = timelineItems.length - 1; itemIndex >= 0; itemIndex--) {
     const item = timelineItems[itemIndex]
     if (item.kind === 'tool' && !item.result) {
