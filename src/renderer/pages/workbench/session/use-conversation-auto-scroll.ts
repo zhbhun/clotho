@@ -12,6 +12,9 @@ import type { ConversationScrollAnchor } from './conversation/virtual-conversati
 
 const BOTTOM_DISTANCE_THRESHOLD_PX = 4
 const CONTENT_TOP_THRESHOLD_PX = 2
+// Auto-scroll resumes only after the scroll settles at the bottom, so an
+// ongoing wheel/touch gesture or its momentum is not fought by content growth.
+const RESUME_AUTO_SCROLL_IDLE_MS = 200
 
 function isAtBottom(viewport: HTMLElement) {
   const distanceFromBottom = viewport.scrollHeight - viewport.clientHeight - viewport.scrollTop
@@ -48,6 +51,7 @@ export function useConversationAutoScroll(
   const viewKeyRef = useRef(viewKey)
   const viewportElementRef = useRef<HTMLDivElement | null>(null)
   const removeViewportListenersRef = useRef<(() => void) | null>(null)
+  const resumeTimerRef = useRef<number | null>(null)
 
   const scrollToBottom = useCallback(() => {
     const viewport = viewportElementRef.current
@@ -58,16 +62,34 @@ export function useConversationAutoScroll(
     scrollPositionsRef.current.set(viewKeyRef.current, viewport.scrollTop)
   }, [])
 
+  const cancelAutoScrollResume = useCallback(() => {
+    if (resumeTimerRef.current === null) return
+    window.clearTimeout(resumeTimerRef.current)
+    resumeTimerRef.current = null
+  }, [])
+
+  const scheduleAutoScrollResume = useCallback(() => {
+    if (shouldAutoScrollRef.current) return
+    if (resumeTimerRef.current !== null) window.clearTimeout(resumeTimerRef.current)
+    resumeTimerRef.current = window.setTimeout(() => {
+      resumeTimerRef.current = null
+      shouldAutoScrollRef.current = true
+      autoScrollByViewRef.current.set(viewKeyRef.current, true)
+    }, RESUME_AUTO_SCROLL_IDLE_MS)
+  }, [])
+
   const resetAutoScroll = useCallback(() => {
+    cancelAutoScrollResume()
     shouldAutoScrollRef.current = true
     autoScrollByViewRef.current.set(viewKeyRef.current, true)
     scrollToBottom()
-  }, [scrollToBottom])
+  }, [cancelAutoScrollResume, scrollToBottom])
 
   const pauseAutoScroll = useCallback(() => {
+    cancelAutoScrollResume()
     shouldAutoScrollRef.current = false
     autoScrollByViewRef.current.set(viewKeyRef.current, false)
-  }, [])
+  }, [cancelAutoScrollResume])
 
   const viewportRef = useCallback(
     (viewport: HTMLDivElement | null) => {
@@ -83,19 +105,19 @@ export function useConversationAutoScroll(
 
       const handleScroll = () => {
         updateScrolledState(setIsContentScrolled, viewport)
-        if (!isAtBottom(viewport)) {
-          shouldAutoScrollRef.current = false
-          autoScrollByViewRef.current.set(viewKeyRef.current, false)
-        }
+        if (isAtBottom(viewport)) scheduleAutoScrollResume()
+        else pauseAutoScroll()
         scrollPositionsRef.current.set(viewKeyRef.current, viewport.scrollTop)
         const anchor = scrollAnchorRef?.current?.captureScrollAnchor()
         if (anchor) scrollAnchorsRef.current.set(viewKeyRef.current, anchor)
       }
       const handleWheel = () => {
-        pauseAutoScroll()
+        if (isAtBottom(viewport)) scheduleAutoScrollResume()
+        else pauseAutoScroll()
       }
       const handleTouchMove = () => {
-        pauseAutoScroll()
+        if (isAtBottom(viewport)) scheduleAutoScrollResume()
+        else pauseAutoScroll()
       }
 
       viewport.addEventListener('scroll', handleScroll)
@@ -103,12 +125,13 @@ export function useConversationAutoScroll(
       viewport.addEventListener('touchmove', handleTouchMove, { passive: true })
 
       removeViewportListenersRef.current = () => {
+        cancelAutoScrollResume()
         viewport.removeEventListener('scroll', handleScroll)
         viewport.removeEventListener('wheel', handleWheel)
         viewport.removeEventListener('touchmove', handleTouchMove)
       }
     },
-    [pauseAutoScroll, scrollAnchorRef],
+    [cancelAutoScrollResume, pauseAutoScroll, scheduleAutoScrollResume, scrollAnchorRef],
   )
 
   useLayoutEffect(() => {
@@ -116,6 +139,7 @@ export function useConversationAutoScroll(
     const previousViewKey = viewKeyRef.current
     if (!viewport || previousViewKey === viewKey) return
 
+    cancelAutoScrollResume()
     scrollPositionsRef.current.set(previousViewKey, viewport.scrollTop)
     viewKeyRef.current = viewKey
     const savedPosition = scrollPositionsRef.current.get(viewKey)
@@ -127,7 +151,7 @@ export function useConversationAutoScroll(
     scrollPositionsRef.current.set(viewKey, viewport.scrollTop)
     updateScrolledState(setIsContentScrolled, viewport)
     shouldAutoScrollRef.current = autoScrollByViewRef.current.get(viewKey) ?? false
-  }, [scrollAnchorRef, viewKey])
+  }, [cancelAutoScrollResume, scrollAnchorRef, viewKey])
 
   useEffect(() => {
     scrollToBottom()

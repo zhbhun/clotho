@@ -1,4 +1,4 @@
-import { fireEvent, render } from '@testing-library/react'
+import { act, fireEvent, render } from '@testing-library/react'
 import { type RefObject, useEffect } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -107,6 +107,68 @@ describe('useConversationAutoScroll', () => {
 
     resetAutoScroll()
     expect(viewport.scrollTop).toBe(600)
+  })
+
+  it('resumes following after a manual scroll back to the bottom settles', () => {
+    vi.useFakeTimers()
+    try {
+      const onResetReady = () => {}
+      const { getByTestId, rerender } = render(
+        <AutoScrollHarness contentVersion={0} onResetReady={onResetReady} />,
+      )
+      const viewport = getByTestId('viewport')
+
+      setScrollMetrics(viewport, { clientHeight: 100, scrollHeight: 500 })
+      rerender(<AutoScrollHarness contentVersion={1} onResetReady={onResetReady} />)
+      viewport.scrollTop = 200
+      fireEvent.scroll(viewport)
+
+      setScrollMetrics(viewport, { clientHeight: 100, scrollHeight: 700 })
+      rerender(<AutoScrollHarness contentVersion={2} onResetReady={onResetReady} />)
+      expect(viewport.scrollTop).toBe(200)
+
+      viewport.scrollTop = 600
+      fireEvent.scroll(viewport)
+      act(() => {
+        vi.advanceTimersByTime(200)
+      })
+
+      setScrollMetrics(viewport, { clientHeight: 100, scrollHeight: 900 })
+      rerender(<AutoScrollHarness contentVersion={3} onResetReady={onResetReady} />)
+      expect(viewport.scrollTop).toBe(800)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('keeps auto-scroll paused when the user leaves the bottom before the resume settles', () => {
+    vi.useFakeTimers()
+    try {
+      const onResetReady = () => {}
+      const { getByTestId, rerender } = render(
+        <AutoScrollHarness contentVersion={0} onResetReady={onResetReady} />,
+      )
+      const viewport = getByTestId('viewport')
+
+      setScrollMetrics(viewport, { clientHeight: 100, scrollHeight: 500 })
+      rerender(<AutoScrollHarness contentVersion={1} onResetReady={onResetReady} />)
+      viewport.scrollTop = 200
+      fireEvent.scroll(viewport)
+
+      viewport.scrollTop = 400
+      fireEvent.scroll(viewport)
+      viewport.scrollTop = 150
+      fireEvent.scroll(viewport)
+      act(() => {
+        vi.advanceTimersByTime(200)
+      })
+
+      setScrollMetrics(viewport, { clientHeight: 100, scrollHeight: 700 })
+      rerender(<AutoScrollHarness contentVersion={2} onResetReady={onResetReady} />)
+      expect(viewport.scrollTop).toBe(150)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('tracks manual scrolling when the viewport mounts after the hook', () => {
