@@ -333,6 +333,23 @@ function isModelSwitchReceiptEntry(entry: ClaudeJsonLine): boolean {
   return parseCommandMessage(content)?.commandName === 'model'
 }
 
+/**
+ * A peer-agent frame the harness delivers on the user channel — a finished
+ * subagent's hand-back report, or an inter-agent message. The text addresses
+ * the model, not the user, and the report stays readable in the subagent's own
+ * transcript panel, so the frame must not surface as a user prompt.
+ */
+function isAgentMessageEntry(entry: ClaudeJsonLine): boolean {
+  if (entry.type !== 'user') return false
+  const content = entry.message?.content
+  if (typeof content === 'string') {
+    return content.trimStart().startsWith('<agent-message')
+  }
+  if (!Array.isArray(content)) return false
+  const text = content.find((part) => part.type === 'text')?.text ?? ''
+  return text.trimStart().startsWith('<agent-message')
+}
+
 function shouldSkipEntry(entry: ClaudeJsonLine): boolean {
   const t = entry.type
   return (
@@ -343,6 +360,7 @@ function shouldSkipEntry(entry: ClaudeJsonLine): boolean {
     entry.isCompactSummary === true ||
     isLocalCommandOutputEntry(entry) ||
     isModelSwitchReceiptEntry(entry) ||
+    isAgentMessageEntry(entry) ||
     t === 'attachment' ||
     t === 'file-history-snapshot' ||
     t === 'last-prompt' ||

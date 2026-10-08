@@ -67,6 +67,29 @@ describe('Claude message parsing', () => {
     ).toBeNull()
   })
 
+  it('skips the agent hand-back frame delivered on the user channel', () => {
+    expect(
+      claudeJsonToMessage({
+        type: 'user',
+        uuid: 'synthetic-handback-uuid',
+        message: {
+          role: 'user',
+          content:
+            '<agent-message from="a0c1233576dd5184f">\n[Subagent hand-back] The text below is the final report of a subagent this session delegated to.',
+        },
+      }),
+    ).toBeNull()
+    expect(
+      claudeJsonToMessage({
+        type: 'user',
+        message: {
+          role: 'user',
+          content: 'The transcript shows an <agent-message from="x"> frame; please check it.',
+        },
+      }),
+    ).toMatchObject({ role: 'user' })
+  })
+
   it('renders live local slash-command output as an assistant reply', () => {
     expect(
       claudeJsonToMessage({
