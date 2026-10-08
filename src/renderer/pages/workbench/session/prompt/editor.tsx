@@ -3,6 +3,7 @@ import HardBreak from '@tiptap/extension-hard-break'
 import Paragraph from '@tiptap/extension-paragraph'
 import Placeholder from '@tiptap/extension-placeholder'
 import Text from '@tiptap/extension-text'
+import { UndoRedo } from '@tiptap/extensions'
 import { EditorContent, useEditor } from '@tiptap/react'
 import {
   type KeyboardEvent as ReactKeyboardEvent,
@@ -102,6 +103,7 @@ export function PromptMarkdownEditor({
       PromptAtomNavigation,
       EditorCompletion,
       Placeholder.configure({ placeholder }),
+      UndoRedo,
     ],
     [placeholder],
   )

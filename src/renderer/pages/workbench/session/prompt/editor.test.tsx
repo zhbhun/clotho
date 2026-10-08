@@ -251,6 +251,39 @@ describe('PromptMarkdownEditor', () => {
     })
   })
 
+  it('undoes and redoes typed text with the keyboard shortcut', async () => {
+    const user = userEvent.setup()
+    const changes: string[] = []
+
+    render(
+      <TooltipProvider>
+        <PromptMarkdownEditor
+          value=""
+          onChange={(value) => changes.push(value)}
+          onSubmit={() => {}}
+        />
+      </TooltipProvider>,
+    )
+
+    const editor = screen.getByRole('textbox', { name: 'Prompt' })
+    editor.focus()
+    await user.keyboard('hello')
+    await waitFor(() => {
+      expect(changes.at(-1)).toBe('hello')
+    })
+
+    // jsdom resolves Mod to Ctrl; macOS resolves it to Cmd — same keymap entry.
+    await user.keyboard('{Control>}{z}/{Control}')
+    await waitFor(() => {
+      expect(changes.at(-1)).toBe('')
+    })
+
+    await user.keyboard('{Control>}{y}/{Control}')
+    await waitFor(() => {
+      expect(changes.at(-1)).toBe('hello')
+    })
+  })
+
   it('inserts pending files and emits markdown path mentions', async () => {
     const changes: string[] = []
 
