@@ -727,13 +727,13 @@ describe('workbench shortcuts', () => {
     renderWorkbenchPage()
     await screen.findByRole('tab', { name: 'Shortcut two' })
 
-    fireEvent.keyDown(document, { key: 'ArrowLeft', metaKey: true, shiftKey: true })
+    fireEvent.keyDown(document, { key: 'ArrowLeft', metaKey: true, altKey: true })
     await waitFor(() => expect(useWorkbenchStore.getState().currentSessionId).toBe(sessions[2].id))
 
-    fireEvent.keyDown(document, { key: 'ArrowLeft', metaKey: true, shiftKey: true })
+    fireEvent.keyDown(document, { key: 'ArrowLeft', metaKey: true, altKey: true })
     expect(useWorkbenchStore.getState().currentSessionId).toBe(sessions[2].id)
 
-    fireEvent.keyDown(document, { key: 'ArrowRight', metaKey: true, shiftKey: true })
+    fireEvent.keyDown(document, { key: 'ArrowRight', metaKey: true, altKey: true })
     await waitFor(() => expect(useWorkbenchStore.getState().currentSessionId).toBe(sessions[1].id))
   })
 

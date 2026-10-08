@@ -101,13 +101,13 @@ export const commandCatalog: CommandCatalog = {
     ...WORKBENCH_COMMAND,
     title: 'Previous sidebar chat',
     description: 'Switch to the previous chat in sidebar order.',
-    defaultBindings: [{ modifiers: ['primary', 'shift'], key: 'arrowleft' }],
+    defaultBindings: [{ modifiers: ['alt', 'primary'], key: 'arrowleft' }],
   },
   'workbench.sidebar.session.next': {
     ...WORKBENCH_COMMAND,
     title: 'Next sidebar chat',
     description: 'Switch to the next chat in sidebar order.',
-    defaultBindings: [{ modifiers: ['primary', 'shift'], key: 'arrowright' }],
+    defaultBindings: [{ modifiers: ['alt', 'primary'], key: 'arrowright' }],
   },
   'workbench.settings.open': {
     ...WORKBENCH_COMMAND,
