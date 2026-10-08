@@ -20,17 +20,17 @@ function adjacentSession(
   return sessions[nextIndex] ?? null
 }
 
-function NumberedTabShortcut({
-  position,
+function NumberedSessionShortcut({
+  commandId,
   session,
   onSelectSession,
 }: {
-  position: number
+  commandId: string
   session?: WorkbenchSession
   onSelectSession: (session: WorkbenchSession) => void
 }) {
   useCommandHandler(
-    `workbench.tab.activate.${position}`,
+    commandId,
     () => {
       if (session) onSelectSession(session)
     },
@@ -137,10 +137,18 @@ export function WorkbenchShortcuts({
   return (
     <>
       {Array.from({ length: 9 }, (_, index) => (
-        <NumberedTabShortcut
-          key={index}
-          position={index + 1}
+        <NumberedSessionShortcut
+          key={`tab-${index}`}
+          commandId={`workbench.tab.activate.${index + 1}`}
           session={tabSessions[index]}
+          onSelectSession={onSelectSession}
+        />
+      ))}
+      {Array.from({ length: 9 }, (_, index) => (
+        <NumberedSessionShortcut
+          key={`sidebar-${index}`}
+          commandId={`workbench.sidebar.session.activate.${index + 1}`}
+          session={sidebarSessions[index]}
           onSelectSession={onSelectSession}
         />
       ))}

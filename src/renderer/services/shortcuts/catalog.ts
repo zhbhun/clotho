@@ -101,13 +101,19 @@ export const commandCatalog: CommandCatalog = {
     ...WORKBENCH_COMMAND,
     title: 'Previous sidebar chat',
     description: 'Switch to the previous chat in sidebar order.',
-    defaultBindings: [{ modifiers: ['alt', 'primary'], key: 'arrowleft' }],
+    defaultBindings: [
+      { modifiers: ['alt', 'primary'], key: 'arrowleft' },
+      { modifiers: ['alt', 'primary'], key: 'arrowup' },
+    ],
   },
   'workbench.sidebar.session.next': {
     ...WORKBENCH_COMMAND,
     title: 'Next sidebar chat',
     description: 'Switch to the next chat in sidebar order.',
-    defaultBindings: [{ modifiers: ['alt', 'primary'], key: 'arrowright' }],
+    defaultBindings: [
+      { modifiers: ['alt', 'primary'], key: 'arrowright' },
+      { modifiers: ['alt', 'primary'], key: 'arrowdown' },
+    ],
   },
   'workbench.settings.open': {
     ...WORKBENCH_COMMAND,
@@ -174,6 +180,20 @@ export const commandCatalog: CommandCatalog = {
           title: `Go to chat ${position}`,
           description: `Switch to chat ${position} in the current workspace tab bar.`,
           defaultBindings: [{ modifiers: ['primary'], key: String(position) }],
+        },
+      ]
+    }),
+  ),
+  ...Object.fromEntries(
+    Array.from({ length: 9 }, (_, index) => {
+      const position = index + 1
+      return [
+        `workbench.sidebar.session.activate.${position}`,
+        {
+          ...WORKBENCH_COMMAND,
+          title: `Go to sidebar chat ${position}`,
+          description: `Switch to chat ${position} in the sidebar list.`,
+          defaultBindings: [{ modifiers: ['alt', 'primary'], key: String(position) }],
         },
       ]
     }),

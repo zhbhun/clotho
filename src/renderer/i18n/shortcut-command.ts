@@ -28,11 +28,23 @@ export function localizeCommand(
   definition: CommandDefinition,
   t: TFunction,
 ): CommandDefinition {
-  const position = /^workbench\.tab\.activate\.([1-9])$/.exec(commandId)?.[1]
-  const messageId = position ? 'tabActivate' : COMMAND_MESSAGE_IDS[commandId]
-  if (!messageId) return definition
+  const position =
+    /^workbench\.tab\.activate\.([1-9])$/.exec(commandId)?.[1] ??
+    /^workbench\.sidebar\.session\.activate\.([1-9])$/.exec(commandId)?.[1]
+  if (!position) {
+    const messageId = COMMAND_MESSAGE_IDS[commandId]
+    if (!messageId) return definition
+    return {
+      ...definition,
+      description: String(t(`shortcut.command.${messageId}.description` as never)),
+      title: String(t(`shortcut.command.${messageId}.title` as never)),
+    }
+  }
 
-  const options = position ? { position } : undefined
+  const messageId = commandId.startsWith('workbench.tab.activate')
+    ? 'tabActivate'
+    : 'sidebarSessionActivate'
+  const options = { position }
   return {
     ...definition,
     description: String(t(`shortcut.command.${messageId}.description` as never, options as never)),

@@ -721,6 +721,18 @@ describe('workbench shortcuts', () => {
     await waitFor(() => expect(useWorkbenchStore.getState().currentSessionId).toBe(sessions[2].id))
   })
 
+  it('activates a sidebar conversation by its exact position', async () => {
+    const { sessions } = setupShortcutSessions()
+    renderWorkbenchPage()
+    await screen.findByRole('tab', { name: 'Shortcut one' })
+
+    fireEvent.keyDown(document, { key: '1', metaKey: true, altKey: true })
+    await waitFor(() => expect(useWorkbenchStore.getState().currentSessionId).toBe(sessions[2].id))
+
+    fireEvent.keyDown(document, { key: '3', metaKey: true, altKey: true })
+    await waitFor(() => expect(useWorkbenchStore.getState().currentSessionId).toBe(sessions[0].id))
+  })
+
   it('moves through sidebar conversations without wrapping at the boundary', async () => {
     const { sessions } = setupShortcutSessions()
     useWorkbenchStore.setState({ currentSessionId: sessions[1].id })
@@ -734,6 +746,12 @@ describe('workbench shortcuts', () => {
     expect(useWorkbenchStore.getState().currentSessionId).toBe(sessions[2].id)
 
     fireEvent.keyDown(document, { key: 'ArrowRight', metaKey: true, altKey: true })
+    await waitFor(() => expect(useWorkbenchStore.getState().currentSessionId).toBe(sessions[1].id))
+
+    fireEvent.keyDown(document, { key: 'ArrowDown', metaKey: true, altKey: true })
+    await waitFor(() => expect(useWorkbenchStore.getState().currentSessionId).toBe(sessions[0].id))
+
+    fireEvent.keyDown(document, { key: 'ArrowUp', metaKey: true, altKey: true })
     await waitFor(() => expect(useWorkbenchStore.getState().currentSessionId).toBe(sessions[1].id))
   })
 
