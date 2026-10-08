@@ -546,6 +546,104 @@ describe('buildConversationRows', () => {
     expect(toolRow).toMatchObject({ compactAfter: true, isLast: false })
   })
 
+  it('appends Thinking after a committed text segment while the turn streams', () => {
+    const rows = buildConversationRows({
+      expandedTurns: { 'user-1': true },
+      interruptedTurnIds: new Set(),
+      isStreaming: true,
+      lastSentTurnId: null,
+      streamingElapsed: 2,
+      turns: [
+        turn('user-1', [
+          { id: 'tool-1', kind: 'tool' },
+          { id: 'assistant-1-text-0', kind: 'text', text: 'Now updating the CSS' },
+        ]),
+      ],
+    })
+
+    expect(rows.map((row) => row.kind)).toEqual([
+      'user',
+      'status',
+      'timeline',
+      'timeline',
+      'thinking',
+    ])
+    expect(rows[2]).toMatchObject({ isLast: false })
+    expect(rows.at(-1)).toMatchObject({
+      key: 'turn:user-1:thinking',
+      kind: 'thinking',
+      placement: 'timeline',
+    })
+  })
+
+  it('waits for a stream-placeholder text to commit before showing Thinking', () => {
+    const rows = buildConversationRows({
+      expandedTurns: { 'user-1': true },
+      interruptedTurnIds: new Set(),
+      isStreaming: true,
+      lastSentTurnId: null,
+      streamingElapsed: 2,
+      turns: [
+        turn('user-1', [
+          { id: 'tool-1', kind: 'tool' },
+          { id: 'stream-42-text-0', kind: 'text', text: 'Typing' },
+        ]),
+      ],
+    })
+
+    expect(rows.map((row) => row.kind)).toEqual(['user', 'status', 'timeline', 'timeline'])
+  })
+
+  it('shows Thinking under the collapsed summary text while the turn streams', () => {
+    const rows = buildConversationRows({
+      expandedTurns: {},
+      interruptedTurnIds: new Set(),
+      isStreaming: true,
+      lastSentTurnId: null,
+      streamingElapsed: 2,
+      turns: [
+        turn('user-1', [
+          { id: 'tool-1', kind: 'tool' },
+          { id: 'assistant-1-text-0', kind: 'text', text: 'Now updating the CSS' },
+        ]),
+      ],
+    })
+
+    expect(rows.map((row) => row.kind)).toEqual(['user', 'status', 'timeline', 'thinking'])
+    expect(rows[2]).toMatchObject({
+      isLast: false,
+      item: expect.objectContaining({ id: 'assistant-1-text-0' }),
+      key: 'turn:user-1:summary:assistant-1-text-0',
+    })
+    expect(rows.at(-1)).toMatchObject({ kind: 'thinking', placement: 'timeline' })
+  })
+
+  it('appends Thinking to a text-only turn whose reply committed while still streaming', () => {
+    const rows = buildConversationRows({
+      expandedTurns: {},
+      interruptedTurnIds: new Set(),
+      isStreaming: true,
+      lastSentTurnId: null,
+      streamingElapsed: 2,
+      turns: [turn('user-1', [{ id: 'assistant-1-text-0', kind: 'text', text: 'Partial reply' }])],
+    })
+
+    expect(rows.map((row) => row.kind)).toEqual(['user', 'status', 'text', 'thinking'])
+  })
+
+  it('keeps a text-only turn streaming on its placeholder without Thinking', () => {
+    const rows = buildConversationRows({
+      expandedTurns: {},
+      interruptedTurnIds: new Set(),
+      isStreaming: true,
+      lastSentTurnId: null,
+      streamingElapsed: 2,
+      turns: [turn('user-1', [{ id: 'stream-7-text-0', kind: 'text', text: 'Typing' }])],
+    })
+
+    expect(rows.map((row) => row.kind)).toEqual(['user', 'status', 'text'])
+  })
+
   it('marks a collapsed status as terminal when no child row is visible', () => {
     const rows = buildConversationRows({
       expandedTurns: {},

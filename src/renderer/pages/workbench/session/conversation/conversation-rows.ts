@@ -256,11 +256,13 @@ export function buildConversationRows(options: {
         const lastVisibleItem = visibleItems.at(-1)
         const lastItemInCollapsedRun =
           lastSlice?.kind === 'run' && !options.expandedRuns?.[lastSlice.runId]
-        const showThinkingAfterLatestTool = Boolean(
-          (isExpanded || hasWorkAfterLastText) &&
-          isStreaming &&
-          lastVisibleItem?.kind === 'tool' &&
-          !lastItemInCollapsedRun &&
+        const collapsedSummary =
+          !isExpanded && !hasWorkAfterLastText
+            ? textItems.findLast((item) => Boolean(item.text.trim()))
+            : undefined
+        const isSettledTool = Boolean(
+          lastVisibleItem &&
+          lastVisibleItem.kind === 'tool' &&
           !toolRequestFor(options.pendingRequests, lastVisibleItem) &&
           !isTimelineToolRunning(lastVisibleItem, {
             isStreaming,
@@ -268,10 +270,21 @@ export function buildConversationRows(options: {
             turnTerminalStatus,
           }),
         )
-        const collapsedSummary =
-          !isExpanded && !hasWorkAfterLastText
-            ? textItems.findLast((item) => Boolean(item.text.trim()))
-            : undefined
+        // A stream-placeholder text item (`stream-N` id) is still typing; only a
+        // committed segment means the model has moved on to its next step.
+        const isCommittedText = Boolean(
+          lastVisibleItem?.kind === 'text' && !lastVisibleItem.id.startsWith('stream-'),
+        )
+        // While streaming, a settled tail — finished tool, committed text
+        // segment, or the collapsed summary text — means the model is between
+        // steps; keep the Thinking placeholder visible through that wait.
+        const showTrailingThinking = Boolean(
+          isStreaming &&
+          !turnTerminalStatus &&
+          (isExpanded || hasWorkAfterLastText
+            ? (isSettledTool && !lastItemInCollapsedRun) || isCommittedText
+            : Boolean(collapsedSummary)),
+        )
 
         // A failure ends the turn after its work, so the status row closes the turn instead
         // of heading it; other statuses stay on top as the turn's expandable header.
@@ -280,7 +293,7 @@ export function buildConversationRows(options: {
             canToggle: true,
             duration,
             isExpanded,
-            isLast: visibleItems.length === 0 && !showThinkingAfterLatestTool && !collapsedSummary,
+            isLast: visibleItems.length === 0 && !showTrailingThinking && !collapsedSummary,
             key: `turn:${turnId}:status`,
             kind: 'status',
             status,
@@ -293,14 +306,14 @@ export function buildConversationRows(options: {
           const isLastSlice = sliceIndex === slices.length - 1
           const nextIsWork = nextSlice
             ? nextSlice.kind === 'run' || nextSlice.item.kind !== 'text'
-            : showThinkingAfterLatestTool
+            : showTrailingThinking
 
           if (slice.kind === 'run') {
             rows.push({
               compactAfter: nextIsWork,
               isActive: isStreaming && isLastSlice,
               isExpanded: Boolean(options.expandedRuns?.[slice.runId]),
-              isLast: isLastSlice && !showThinkingAfterLatestTool && !hasFailure,
+              isLast: isLastSlice && !showTrailingThinking && !hasFailure,
               isStreaming,
               items: slice.items,
               key: slice.runId,
@@ -315,7 +328,7 @@ export function buildConversationRows(options: {
           const item = slice.item
           if (item.kind === 'api-retry') {
             rows.push({
-              isLast: isLastSlice && !showThinkingAfterLatestTool && !hasFailure,
+              isLast: isLastSlice && !showTrailingThinking && !hasFailure,
               isStreaming,
               item,
               key: `turn:${turnId}:api-retry:${item.id}`,
@@ -327,7 +340,7 @@ export function buildConversationRows(options: {
           }
           if (item.kind === 'compaction') {
             rows.push({
-              isLast: isLastSlice && !showThinkingAfterLatestTool && !hasFailure,
+              isLast: isLastSlice && !showTrailingThinking && !hasFailure,
               isStreaming,
               item,
               key: `turn:${turnId}:compaction:${item.id}`,
@@ -339,7 +352,7 @@ export function buildConversationRows(options: {
           }
           rows.push({
             compactAfter: item.kind !== 'text' && nextIsWork,
-            isLast: isLastSlice && !showThinkingAfterLatestTool && !hasFailure,
+            isLast: isLastSlice && !showTrailingThinking && !hasFailure,
             isStreaming,
             item,
             key: `turn:${turnId}:timeline:${item.id}`,
@@ -349,24 +362,24 @@ export function buildConversationRows(options: {
           })
         })
 
-        if (showThinkingAfterLatestTool) {
-          rows.push({
-            key: `turn:${turnId}:thinking`,
-            kind: 'thinking',
-            placement: 'timeline',
-            turnId,
-          })
-        }
-
         if (collapsedSummary) {
           rows.push({
             compactAfter: false,
-            isLast: !hasFailure,
+            isLast: !showTrailingThinking && !hasFailure,
             isStreaming,
             item: collapsedSummary,
             key: `turn:${turnId}:summary:${collapsedSummary.id}`,
             kind: 'timeline',
             turnTerminalStatus,
+            turnId,
+          })
+        }
+
+        if (showTrailingThinking) {
+          rows.push({
+            key: `turn:${turnId}:thinking`,
+            kind: 'thinking',
+            placement: 'timeline',
             turnId,
           })
         }
@@ -393,6 +406,24 @@ export function buildConversationRows(options: {
             turnId,
           })
         })
+
+        // Text-only turn still streaming after its text committed: the model
+        // is producing its next segment (e.g. provider-buffered reasoning);
+        // a `stream-N` item is still typing and does not count as committed.
+        const lastTextItem = textItems.at(-1)
+        if (
+          isStreaming &&
+          !turnTerminalStatus &&
+          lastTextItem &&
+          !lastTextItem.id.startsWith('stream-')
+        ) {
+          rows.push({
+            key: `turn:${turnId}:thinking`,
+            kind: 'thinking',
+            placement: 'timeline',
+            turnId,
+          })
+        }
       }
 
       if (!isStreaming && finalTextItem) {
