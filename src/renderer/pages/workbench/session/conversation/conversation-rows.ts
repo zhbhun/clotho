@@ -158,6 +158,7 @@ export function buildConversationRows(options: {
   lastSentTurnId: string | null
   pendingRequests?: Record<string, ClaudeToolRequest>
   streamingElapsed: number
+  streamTextStalled?: boolean
   turnFailures?: Record<string, { elapsed: number; message: string }>
   turns: ConversationTurn[]
   formatDuration?: (seconds: number) => string
@@ -270,19 +271,21 @@ export function buildConversationRows(options: {
             turnTerminalStatus,
           }),
         )
-        // A stream-placeholder text item (`stream-N` id) is still typing; only a
-        // committed segment means the model has moved on to its next step.
-        const isCommittedText = Boolean(
-          lastVisibleItem?.kind === 'text' && !lastVisibleItem.id.startsWith('stream-'),
+        // A stream-placeholder text item (`stream-N` id) is still typing, so it
+        // hides the placeholder — unless it has gone quiet past the stall
+        // threshold, which means the model has moved on to its next step.
+        const isIdleTextTail = Boolean(
+          lastVisibleItem?.kind === 'text' &&
+          (!lastVisibleItem.id.startsWith('stream-') || options.streamTextStalled),
         )
-        // While streaming, a settled tail — finished tool, committed text
+        // While streaming, a settled tail — finished tool, idle text
         // segment, or the collapsed summary text — means the model is between
         // steps; keep the Thinking placeholder visible through that wait.
         const showTrailingThinking = Boolean(
           isStreaming &&
           !turnTerminalStatus &&
           (isExpanded || hasWorkAfterLastText
-            ? (isSettledTool && !lastItemInCollapsedRun) || isCommittedText
+            ? (isSettledTool && !lastItemInCollapsedRun) || isIdleTextTail
             : Boolean(collapsedSummary)),
         )
 
@@ -407,15 +410,15 @@ export function buildConversationRows(options: {
           })
         })
 
-        // Text-only turn still streaming after its text committed: the model
-        // is producing its next segment (e.g. provider-buffered reasoning);
-        // a `stream-N` item is still typing and does not count as committed.
+        // Text-only turn still streaming after its text went quiet: the model
+        // is producing its next segment (e.g. provider-buffered reasoning).
+        // A `stream-N` item counts once it stalls past the threshold.
         const lastTextItem = textItems.at(-1)
         if (
           isStreaming &&
           !turnTerminalStatus &&
           lastTextItem &&
-          !lastTextItem.id.startsWith('stream-')
+          (!lastTextItem.id.startsWith('stream-') || options.streamTextStalled)
         ) {
           rows.push({
             key: `turn:${turnId}:thinking`,

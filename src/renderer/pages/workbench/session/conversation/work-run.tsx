@@ -5,8 +5,8 @@ import { cn } from '@/shadcn/utils'
 
 import { ShinyText } from '../../../../components/shiny-text'
 import type { ClaudeToolRequest, ClaudeToolResult } from '../../../../services/claude/claude'
-import { getToolRenderer, getToolSummary } from '../tools/registry'
-import { ToolIcon } from '../tools/shared/content'
+import { getToolDisplayName, getToolRenderer, getToolSummary } from '../tools/registry'
+import { ToolHeading, ToolIcon } from '../tools/shared/content'
 import { TimelineEntry, TimelineRow } from './timeline'
 import type { TurnTerminalStatus } from './tool-state'
 import type { ConversationTimelineItem } from './types'
@@ -85,9 +85,10 @@ export function WorkRunRow({
           toolUseResult: runningTool.result?.toolUseResult,
         })
       : ''
-  const runningLabel = runningRenderer
-    ? [translate(runningRenderer.label), runningSummary].filter(Boolean).join(' ')
-    : ''
+  const runningDisplayName =
+    runningTool && runningRenderer
+      ? getToolDisplayName(runningTool.use?.name, runningRenderer, t)
+      : ''
   const isThinkingHeader = header.kind === 'thinking'
 
   return (
@@ -101,7 +102,6 @@ export function WorkRunRow({
         >
           {runningTool && runningRenderer ? (
             <ToolIcon
-              className="motion-safe:animate-pulse text-foreground"
               description={translate(runningRenderer.description)}
               icon={
                 runningRenderer.iconFor?.(
@@ -120,10 +120,17 @@ export function WorkRunRow({
             </span>
           )}
           {isThinkingHeader ? (
-            <ShinyText text={t('workbench.conversation.thinking')} />
+            <ShinyText text="Thinking…" />
+          ) : header.kind === 'running' ? (
+            <ToolHeading
+              isRunning
+              name={runningDisplayName}
+              summary={runningSummary}
+              summaryClassName="transition-colors group-hover:text-foreground"
+            />
           ) : (
             <span className="min-w-0 truncate text-foreground-subtlest transition-colors group-hover:text-foreground">
-              {header.kind === 'running' ? runningLabel : capitalizeSummary(parts.join(separator))}
+              {capitalizeSummary(parts.join(separator))}
             </span>
           )}
           <ChevronRight

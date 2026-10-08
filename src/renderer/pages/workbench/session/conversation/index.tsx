@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next'
 import { cn } from '@/shadcn/utils'
 
 import { MarkdownRenderer } from '../../../../components/markdown-renderer'
-import { ShinyText } from '../../../../components/shiny-text'
 import type { ClaudeToolRequest, ClaudeToolResult } from '../../../../services/claude/claude'
 import type { ClaudeMessage } from '../services/message'
 import type { TurnFailure } from '../session-types'
@@ -21,9 +20,11 @@ import { parseFailureMessage } from './failure-info'
 import { HistoricalMessageEditor, type MessageEditConfig } from './historical-message-editor'
 import { AgentMessageActions } from './message-actions'
 import { ModelSwitchDivider } from './model-switch-divider'
+import { ThinkingIndicator } from './thinking-indicator'
 import { TimelineEntry, TimelineRow, UserCard } from './timeline'
 import { computeLastSentTurnId, computeTurns } from './turns'
 import type { ConversationTurn } from './types'
+import { useStreamTextStall } from './use-stream-stall'
 import { type VirtualConversationHandle, VirtualConversationList } from './virtual-conversation'
 import { WorkRunRow } from './work-run'
 
@@ -106,6 +107,9 @@ export function ConversationView({
     () => computeLastSentTurnId(turns, sentTurnIds),
     [turns, sentTurnIds],
   )
+  const lastStreamItem = isStreaming ? turns.at(-1)?.timelineItems.at(-1) : undefined
+  const streamTailText = lastStreamItem?.kind === 'text' ? lastStreamItem.text : undefined
+  const streamTextStalled = useStreamTextStall(streamTailText, isStreaming)
   const visibleEditingMessageId = isStreaming ? undefined : editingMessageId
   const rows = useMemo(
     () =>
@@ -119,6 +123,7 @@ export function ConversationView({
         lastSentTurnId,
         pendingRequests,
         streamingElapsed,
+        streamTextStalled,
         turnFailures,
         turns,
       }),
@@ -131,6 +136,7 @@ export function ConversationView({
       lastSentTurnId,
       pendingRequests,
       streamingElapsed,
+      streamTextStalled,
       t,
       turnFailures,
       turns,
@@ -457,14 +463,12 @@ function ConversationRowContent({
   return row.placement === 'timeline' ? (
     <div className={cn('px-3', hasTopPadding && 'pt-2')}>
       <TimelineRow isLast>
-        <div aria-live="polite" className="leading-6">
-          <ShinyText text={t('workbench.conversation.thinking')} />
-        </div>
+        <ThinkingIndicator />
       </TimelineRow>
     </div>
   ) : (
-    <div className="px-3 pt-4 leading-6" aria-live="polite">
-      <ShinyText text={t('workbench.conversation.thinking')} />
+    <div className="px-3 pt-4">
+      <ThinkingIndicator />
     </div>
   )
 }

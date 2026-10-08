@@ -8,11 +8,11 @@ export const todoRenderer: ToolRenderer = {
   icon: ListTodo,
   label: 'tools.Todo.label',
   description: 'tools.todo.description',
-  summary: (input, _result, _toolUseResult, t) => {
+  summary: (input) => {
     const todos = extractTodoItems(input)
-    if (!todos.length) return t?.('tools.todo.empty') ?? ''
+    if (!todos.length) return ''
     const completed = todos.filter((todo) => todo.status === 'completed').length
-    return t?.('tools.taskList.summary', { total: todos.length, completed }) ?? ''
+    return `${completed}/${todos.length}`
   },
   inputView: () => null,
   hasBody: (input) => extractTodoItems(input).length > 0,

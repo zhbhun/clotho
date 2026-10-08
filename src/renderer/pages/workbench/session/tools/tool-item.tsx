@@ -15,12 +15,13 @@ import type {
 } from '../../../../services/claude/claude'
 import type { ClaudeBackgroundTask, ClaudeTaskItem } from '../conversation/types'
 import { useWorkflowContext } from '../workflow-context'
-import { getToolRenderer, getToolSummary } from './registry'
+import { getToolDisplayName, getToolRenderer, getToolSummary } from './registry'
 import {
   CollapsibleRegion,
   ImageGallery,
   PreText,
   SectionLabel,
+  ToolHeading,
   ToolIcon,
   ToolResultNote,
 } from './shared/content'
@@ -115,7 +116,6 @@ export function ToolItem({
     }
     if (canToggle) toggleOpen()
   }
-  const displayLabel = [translate(renderer.label), summary].filter(Boolean).join(' ')
   const isWorkflow = name === 'Workflow' || name === 'WorkflowTool'
   const workflowRef = isWorkflow
     ? workflows.refs.find((ref) => ref.toolUseId === toolUseId)
@@ -131,12 +131,13 @@ export function ToolItem({
       : isRunning && !isError
     : isRunning
   const hasErrorStyle = Boolean(isError)
+  const toolDisplayName = getToolDisplayName(name, renderer, t)
+  const displayLabel = [toolDisplayName, summary].filter(Boolean).join(' · ')
   const workItemLabelClass = cn(
     !hasErrorStyle && 'text-foreground-subtlest',
     !hasErrorStyle &&
       canInteract &&
       'group-hover:text-foreground group-focus-visible:text-foreground',
-    !hasErrorStyle && isEffectivelyRunning && 'motion-safe:animate-pulse text-foreground',
   )
   const toolIcon = (
     <ToolIcon
@@ -161,16 +162,14 @@ export function ToolItem({
   const headerContent = (
     <>
       {toolIcon}
-      {summary ? (
-        <span
-          className={cn(
-            'truncate font-mono text-foreground-subtlest',
-            canInteract && 'group-hover:text-foreground group-focus-visible:text-foreground',
-          )}
-        >
-          {summary}
-        </span>
-      ) : null}
+      <ToolHeading
+        isRunning={isEffectivelyRunning}
+        name={toolDisplayName}
+        summary={summary}
+        summaryClassName={cn(
+          canInteract && 'group-hover:text-foreground group-focus-visible:text-foreground',
+        )}
+      />
       {canToggle ? (
         <ChevronRight
           className={cn(

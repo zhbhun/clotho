@@ -6,6 +6,7 @@ import { Button } from '@/shadcn/button'
 import { cn } from '@/shadcn/utils'
 
 import { MarkdownRenderer } from '../../../../components/markdown-renderer'
+import { ShinyText } from '../../../../components/shiny-text'
 import type { ClaudeToolRequest, ClaudeToolResult } from '../../../../services/claude/claude'
 import { AttachmentList } from '../components/attachment-list'
 import type { ClaudeMessage } from '../services/message'
@@ -329,11 +330,19 @@ function ThinkingBlock({ isRunning = false, text }: { isRunning?: boolean; text:
         onClick={toggleOpen}
         onKeyDown={handleToggleKeyDown}
       >
-        <span className={cn('inline-flex shrink-0', isRunning && 'motion-safe:animate-pulse')}>
+        <span className="inline-flex shrink-0">
           <Brain
             aria-hidden
             className="size-3.5 text-foreground-subtlest transition-colors group-hover:text-foreground"
           />
+        </span>
+        {isRunning ? (
+          <ShinyText text="Thinking" />
+        ) : (
+          <span className="shrink-0 text-foreground-subtle">Thought</span>
+        )}
+        <span aria-hidden className="shrink-0 text-foreground-subtlest">
+          ·
         </span>
         <span className="text-foreground-subtlest transition-colors group-hover:text-foreground">
           {t('workbench.timeline.tokenCount', { count: tokens })}

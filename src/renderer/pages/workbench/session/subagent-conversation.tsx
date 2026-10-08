@@ -12,12 +12,12 @@ import {
   EmptyTitle,
 } from '@/shadcn/empty'
 
-import { ShinyText } from '../../../components/shiny-text'
 import type { ClaudeToolRequest, ClaudeToolResult } from '../../../services/claude/claude'
 import {
   type ConversationRow,
   buildSubagentConversationRows,
 } from './conversation/conversation-rows'
+import { ThinkingIndicator } from './conversation/thinking-indicator'
 import { TimelineEntry, UserCard } from './conversation/timeline'
 import { computeSubagentTimeline } from './conversation/turns'
 import {
@@ -206,8 +206,8 @@ export function SubagentConversation({
             </EmptyContent>
           </Empty>
         ) : !items.length && isRunning ? (
-          <div className="px-3 py-24 text-center leading-6" aria-live="polite">
-            <ShinyText text={t('workbench.conversation.thinking')} />
+          <div className="flex justify-center px-3 py-24">
+            <ThinkingIndicator />
           </div>
         ) : null}
       </div>

@@ -9,8 +9,9 @@ export const cronListRenderer: ToolRenderer = {
   label: 'tools.CronList.label',
   description: 'tools.cronList.description',
   summary: (_input, _result, toolUseResult, t) => {
+    if (!toolUseResult) return ''
     const count = extractCronJobs(toolUseResult).length
-    return count ? (t?.('tools.cron.jobCount', { count }) ?? '') : 'Cron List'
+    return t?.('tools.cron.jobCount', { count }) ?? ''
   },
   inputView: () => null,
   hasBody: (_input, result) => Boolean(result),

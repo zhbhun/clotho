@@ -6,7 +6,7 @@ export const enterPlanModeRenderer: ToolRenderer = {
   icon: ClipboardCopy,
   label: 'tools.EnterPlanMode.label',
   description: 'tools.enterPlanMode.description',
-  summary: (_input, _result, _toolUseResult, t) => t?.('tools.plan.entered') ?? '',
+  summary: () => '',
   inputView: () => null,
   hasBody: () => false,
 }

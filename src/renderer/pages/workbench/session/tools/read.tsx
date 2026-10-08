@@ -1,7 +1,7 @@
 import { FileScan } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-import { ToolIcon } from './shared/content'
+import { ToolHeading, ToolIcon } from './shared/content'
 import { fileSummary, formatDisplayPath } from './shared/file-path'
 import type { CoalescedRead, ToolRenderer } from './shared/types'
 
@@ -33,7 +33,7 @@ export function ReadCoalescedCard({
         return (
           <div
             key={`${read.file_path}-${index}`}
-            aria-label={[translate(readRenderer.label), summary].filter(Boolean).join(' ')}
+            aria-label={[translate(readRenderer.label), summary].filter(Boolean).join(' · ')}
             className="inline-flex max-w-full items-center gap-1.5"
           >
             <ToolIcon
@@ -41,9 +41,7 @@ export function ReadCoalescedCard({
               description={translate(readRenderer.description)}
               icon={readRenderer.icon}
             />
-            {summary ? (
-              <span className="truncate font-mono text-foreground-subtlest">{summary}</span>
-            ) : null}
+            <ToolHeading name={translate(readRenderer.label)} summary={summary} />
           </div>
         )
       })}

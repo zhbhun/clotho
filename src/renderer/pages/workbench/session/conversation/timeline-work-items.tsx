@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 
 import { cn } from '@/shadcn/utils'
 
-import { ToolIcon } from '../tools/shared/content'
+import { ToolHeading, ToolIcon } from '../tools/shared/content'
 import { TaskSummary } from '../tools/task-summary'
 import type { ClaudeTaskItem } from './types'
 
@@ -30,9 +30,11 @@ export function TaskCardRow({ tasks }: { tasks: ClaudeTaskItem[] }) {
           description={translate('tools.taskCreate.description')}
           icon={ListPlus}
         />
-        <span className="truncate font-mono text-foreground-subtlest transition-colors group-hover:text-foreground">
-          {translate('tools.taskCreate.createdCount', { count: tasks.length })}
-        </span>
+        <ToolHeading
+          name={translate('tools.TaskCreate.label')}
+          summary={translate('tools.taskCreate.createdCount', { count: tasks.length })}
+          summaryClassName="transition-colors group-hover:text-foreground"
+        />
         <ChevronRight
           className={cn(
             'pointer-events-none size-3 shrink-0 text-foreground-subtlest opacity-0 transition-[opacity,transform] group-hover:opacity-100 group-focus-visible:opacity-100',

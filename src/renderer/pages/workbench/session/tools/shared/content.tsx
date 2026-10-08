@@ -14,6 +14,7 @@ import { Button } from '@/shadcn/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip'
 import { cn } from '@/shadcn/utils'
 
+import { ShinyText } from '../../../../../components/shiny-text'
 import type { ClaudeImageSource } from '../../../../../services/claude/claude'
 
 const BODY_COLLAPSE_THRESHOLD_PX = 250
@@ -222,6 +223,45 @@ WorkItemLabel.displayName = 'WorkItemLabel'
 
 export function ToolGlyph({ icon: Icon }: { icon: LucideIcon }) {
   return <Icon aria-hidden className="size-3.5" data-slot="tool-icon" />
+}
+
+/**
+ * Tool name in a row heading; the running state shines on the name instead of
+ * pulsing the icon.
+ */
+export function ToolName({ isRunning = false, text }: { isRunning?: boolean; text: string }) {
+  if (!text) return null
+  if (isRunning) return <ShinyText text={text} />
+  return <span className="shrink-0 text-foreground-subtle">{text}</span>
+}
+
+/** Row heading body: `name · summary`, shining on the name while running. */
+export function ToolHeading({
+  isRunning = false,
+  name,
+  summary,
+  summaryClassName,
+}: {
+  isRunning?: boolean
+  name: string
+  summary?: string
+  summaryClassName?: string
+}) {
+  return (
+    <>
+      <ToolName isRunning={isRunning} text={name} />
+      {name && summary ? (
+        <span aria-hidden className="shrink-0 text-foreground-subtlest">
+          ·
+        </span>
+      ) : null}
+      {summary ? (
+        <span className={cn('truncate font-mono text-foreground-subtlest', summaryClassName)}>
+          {summary}
+        </span>
+      ) : null}
+    </>
+  )
 }
 
 export function ToolIcon({

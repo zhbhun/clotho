@@ -98,6 +98,25 @@ const DEFAULT_RENDERER: ToolRenderer = {
   inputView: (input) => <JsonInput input={input} />,
 }
 
+/**
+ * Untranslated tool name shown in row headings. Built-ins use their registry
+ * label ("Read", "TodoWrite"); MCP tools use the "MCP" label with the
+ * qualified tool name carried by the summary; other unknown tools fall back
+ * to the raw Claude name.
+ */
+export function getToolDisplayName(
+  name: string | undefined,
+  renderer: ToolRenderer,
+  t: TFunction,
+): string {
+  const isRegistered = Boolean(name && RENDERERS[name])
+  const isMcp = Boolean(name?.replace(/Tool$/, '').startsWith('mcp__'))
+  if (isRegistered || isMcp) {
+    return (t as unknown as (key: string) => string)(renderer.label)
+  }
+  return name ? formatToolDisplayName(name) : ''
+}
+
 export function getToolRenderer(name?: string): ToolRenderer {
   if (!name) return DEFAULT_RENDERER
   if (RENDERERS[name]) return RENDERERS[name]
@@ -109,7 +128,10 @@ export function getToolRenderer(name?: string): ToolRenderer {
     icon: isMcp ? Plug : Wrench,
     label: isMcp ? 'tools.default.mcpLabel' : 'tools.default.label',
     description: isMcp ? 'tools.default.mcpDescription' : 'tools.default.description',
-    summary: () => (isMcp ? mcpToolName(trimmedName) : formatToolDisplayName(name)),
+    // MCP rows render as "MCP · server:tool": the qualified tool name belongs
+    // to the summary. For unknown built-ins the raw name is the identity, and
+    // a summary would only repeat it.
+    summary: isMcp ? () => mcpToolName(trimmedName) : () => '',
   }
   return renderer
 }
@@ -136,11 +158,10 @@ export function getToolSummary({
 }
 
 export function formatToolDisplayName(name: string): string {
-  const trimmedName = name.replace(/Tool$/, '')
-  if (trimmedName.startsWith('mcp__')) return `MCP ${mcpToolName(trimmedName)}`
-  return trimmedName
+  return name.replace(/Tool$/, '')
 }
 
+/** `mcp__server__tool_name` → `server:tool_name`; `__` is the separator. */
 function mcpToolName(name: string): string {
-  return name.replace(/^mcp__/, '').replace(/_+/g, ':')
+  return name.replace(/^mcp__/, '').replace(/__+/g, ':')
 }

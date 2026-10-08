@@ -98,7 +98,7 @@ it('renders the approved Chinese turn status wording', async () => {
       onToggle={onToggle}
     />,
   )
-  expect(screen.getByText('思考中…')).toBeInTheDocument()
+  expect(screen.getByText('Thinking…')).toBeInTheDocument()
 
   rerender(
     <ConversationView

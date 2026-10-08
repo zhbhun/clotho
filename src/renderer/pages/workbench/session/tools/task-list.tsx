@@ -11,8 +11,9 @@ export const taskListRenderer: ToolRenderer = {
   label: 'tools.TaskList.label',
   description: 'tools.taskList.description',
   summary: (_input, _result, toolUseResult, t) => {
+    if (!toolUseResult) return ''
     const count = extractTaskList(toolUseResult).length
-    return count ? (t?.('tools.task.count', { count }) ?? '') : (t?.('tools.taskList.empty') ?? '')
+    return t?.('tools.task.count', { count }) ?? ''
   },
   inputView: () => null,
   hasBody: (_input, _result, _images, toolUseResult) => extractTaskList(toolUseResult).length > 0,
