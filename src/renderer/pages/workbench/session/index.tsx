@@ -447,9 +447,13 @@ function SessionAreaContent({
   const [virtualContentSize, setVirtualContentSize] = useState({ size: 0, viewKey: activeViewKey })
   const activeVirtualContentSize =
     virtualContentSize.viewKey === activeViewKey ? virtualContentSize.size : 0
+  // Primitive fields only: the version must keep its identity across streaming
+  // publishes (they rerender without changing any of these), or the auto-scroll
+  // effect rewrites scrollTop per frame and fights the virtualizer's own
+  // at-bottom adjustments. Content growth lands in activeVirtualContentSize.
   const autoScrollVersion = useMemo(
-    () => [activeMessages, activeVirtualContentSize, dockScrollVersion] as const,
-    [activeMessages, activeVirtualContentSize, dockScrollVersion],
+    () => [activeMessages.length, activeVirtualContentSize, dockScrollVersion] as const,
+    [activeMessages.length, activeVirtualContentSize, dockScrollVersion],
   )
   const virtualConversationRef = useRef<VirtualConversationHandle>(null)
   // A quick-open `:` pick scrolls the mounted conversation to that turn; the
