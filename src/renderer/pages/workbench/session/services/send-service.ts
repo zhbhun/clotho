@@ -734,6 +734,10 @@ export class SendService {
     // arrive afterwards, and the loop resolves it in finishTurn.
     const turnEnd = this.waitForTurnEnd()
     try {
+      // This turn's live frames must flow: the recalled-tail guard only
+      // shields the cancelled turn's stragglers, and record() re-arms it if
+      // this turn is itself recalled.
+      this.controller.historyService.clearRecalledTail()
       await stream.push({
         text: prompt,
         ...(attachments.length ? { attachments } : {}),
@@ -764,7 +768,13 @@ export class SendService {
     // Verified stop recipe: interrupt first so the turn ends, then deny every
     // still-pending canUseTool (the CLI silently discards a too-late answer).
     // The turn's result frame drives the recall/stop effect afterwards.
-    await stream.interrupt().catch(() => {})
+    await stream.interrupt().catch((error: unknown) => {
+      // The turn keeps running when the interrupt never lands; the log keeps
+      // that divergence diagnosable instead of silently "stopped" in the UI.
+      this.logger.error('query.interrupt_failed', 'Failed to interrupt the Claude turn', {
+        error,
+      })
+    })
     const pending = Object.keys(this.controller.runtimeStore.getState().pendingToolRequests)
     await Promise.all(
       pending.map((toolUseId) =>

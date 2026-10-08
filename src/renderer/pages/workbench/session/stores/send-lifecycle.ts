@@ -13,6 +13,11 @@ export type SendSnapshot = {
    * stop always marks the resumed turn stopped instead of recalling a prompt.
    */
   isSynthetic?: boolean
+  /**
+   * Wire frames never echo the pushed user line, so turn-output suppression
+   * lifts at the first real content frame instead; set by the turn stream.
+   */
+  realContentSeen?: boolean
 }
 
 export type SendLifecycle =

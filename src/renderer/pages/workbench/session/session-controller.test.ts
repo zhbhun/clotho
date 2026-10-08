@@ -1635,6 +1635,199 @@ describe('SessionController', () => {
     expect(restored.getState().prompt).toBe('hello777')
   })
 
+  it('keeps the resent turn visible after an unanswered recall without a user echo', async () => {
+    const client = createClient()
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
+    const store = trackedStore({ ...createOptions('local:recall-resend-visible'), client })
+    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
+    store.getState().setPrompt('hello')
+    const firstSending = store.getState().sendPrompt()
+    await vi.waitFor(() => expect(store.getState().isStreaming).toBe(true))
+    await store.getState().stopStreaming()
+    await firstSending
+    expect(store.getState().prompt).toBe('hello')
+    expect(Object.values(store.getState().messages)).toEqual([])
+
+    store.getState().setPrompt('hello again')
+    const resend = store.getState().sendPrompt()
+    await vi.waitFor(() => expect(store.getState().isStreaming).toBe(true))
+    // The wire never echoes the pushed user line — only real turn content flows.
+    controlled.emit({
+      type: 'stream_event',
+      uuid: 'delta-uuid',
+      event: {
+        type: 'content_block_delta',
+        index: 0,
+        delta: { type: 'text_delta', text: 'Hi' },
+      },
+    })
+    controlled.emit({
+      type: 'assistant',
+      uuid: 'assistant-uuid',
+      message: {
+        role: 'assistant',
+        model: 'glm-5.2',
+        content: [{ type: 'text', text: 'Hi there' }],
+      },
+    })
+    controlled.emitResult()
+    await resend
+
+    expect(Object.values(store.getState().messages).map((message) => message.content)).toEqual([
+      'hello again',
+      'Hi there',
+    ])
+    expect(store.getState()).toMatchObject({
+      prompt: '',
+      runtimeError: null,
+      runtimeStatus: 'ready',
+    })
+  })
+
+  it('hides synthetic cleanup and keeps the real turn when resending after an interruption', async () => {
+    const client = createClient()
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
+    const store = trackedStore({ ...createOptions('local:interrupted-resend-visible'), client })
+    store.getState().commitUserMessage({ id: 'previous-user', role: 'user', content: 'First' })
+    store.getState().ingestLine(
+      JSON.stringify({
+        type: 'assistant',
+        uuid: 'partial-uuid',
+        message: {
+          role: 'assistant',
+          model: 'glm-5.2',
+          content: [{ type: 'text', text: 'Partial' }],
+        },
+      }),
+    )
+    store.getState().ingestLine(
+      JSON.stringify({
+        type: 'user',
+        uuid: 'interrupt-uuid',
+        message: { role: 'user', content: '[Request interrupted by user]' },
+      }),
+    )
+    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
+    store.getState().setPrompt('Continue')
+
+    const sending = store.getState().sendPrompt()
+    await vi.waitFor(() => expect(store.getState().isStreaming).toBe(true))
+    controlled.emit({
+      type: 'assistant',
+      uuid: 'cleanup-uuid',
+      message: {
+        role: 'assistant',
+        model: '<synthetic>',
+        content: [{ type: 'text', text: 'No response requested.' }],
+      },
+    })
+    controlled.emit({
+      type: 'stream_event',
+      uuid: 'delta-uuid',
+      event: {
+        type: 'content_block_delta',
+        index: 0,
+        delta: { type: 'text_delta', text: 'Real' },
+      },
+    })
+    controlled.emit({
+      type: 'assistant',
+      uuid: 'real-uuid',
+      message: {
+        role: 'assistant',
+        model: 'glm-5.2',
+        content: [{ type: 'text', text: 'Real reply' }],
+      },
+    })
+    controlled.emitResult()
+    await sending
+
+    const contents = Object.values(store.getState().messages).map((message) => message.content)
+    expect(contents).toContain('Continue')
+    expect(contents).toContain('Real reply')
+    expect(contents).not.toContain('No response requested.')
+    expect(store.getState()).toMatchObject({ runtimeError: null })
+  })
+
+  it('keeps the partial reply when content streams after stopping a resent turn', async () => {
+    const client = createClient()
+    const controlled = createManualStream({ finishOnInterrupt: false })
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
+    const store = trackedStore({ ...createOptions('local:resend-stop-partial'), client })
+    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
+    store.getState().setPrompt('hello')
+    const firstSending = store.getState().sendPrompt()
+    await vi.waitFor(() => expect(store.getState().isStreaming).toBe(true))
+    await store.getState().stopStreaming()
+    // The stream's interrupt is a no-op in this harness, so the aborted turn
+    // ends through its own result frame.
+    controlled.emitResult()
+    await firstSending
+
+    store.getState().setPrompt('hello again')
+    const resend = store.getState().sendPrompt()
+    await vi.waitFor(() => expect(store.getState().isStreaming).toBe(true))
+    controlled.emit({
+      type: 'stream_event',
+      uuid: 'delta-uuid',
+      event: {
+        type: 'content_block_delta',
+        index: 0,
+        delta: { type: 'text_delta', text: 'Hi' },
+      },
+    })
+    // A failed interrupt: the reply keeps streaming after the stop request.
+    await store.getState().stopStreaming()
+    controlled.emit({
+      type: 'assistant',
+      uuid: 'assistant-uuid',
+      message: {
+        role: 'assistant',
+        model: 'glm-5.2',
+        content: [{ type: 'text', text: 'Hi there' }],
+      },
+    })
+    controlled.emitResult()
+    await resend
+
+    expect(Object.values(store.getState().messages).map((message) => message.content)).toEqual([
+      'hello again',
+      'Hi there',
+    ])
+    expect(store.getState()).toMatchObject({ prompt: '', runtimeError: null })
+  })
+
+  it('does not flash the interrupted status when recalling an unanswered send', async () => {
+    const client = createClient()
+    const controlled = createManualStream({ finishOnInterrupt: false })
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
+    const store = trackedStore({ ...createOptions('local:recall-no-marker-flash'), client })
+    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
+    store.getState().setPrompt('hello')
+
+    const sending = store.getState().sendPrompt()
+    await vi.waitFor(() => expect(store.getState().isStreaming).toBe(true))
+    await store.getState().stopStreaming()
+    // The CLI's marker arrives before the turn's result frame; the pending
+    // recall must not render it as a momentary "Stopped" turn.
+    controlled.emit({
+      type: 'user',
+      uuid: 'marker-uuid',
+      message: { role: 'user', content: '[Request interrupted by user]' },
+    })
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(
+      Object.values(store.getState().messages).map((message) => message.content),
+    ).not.toContain('[Request interrupted by user]')
+    controlled.emitResult()
+    await sending
+
+    expect(Object.values(store.getState().messages)).toEqual([])
+    expect(store.getState().prompt).toBe('hello')
+  })
+
   it('does not treat the synthetic cleanup frame as a response while stopping', async () => {
     const client = createClient()
     const controlled = createManualStream({ finishOnInterrupt: false })
@@ -1745,7 +1938,11 @@ describe('SessionController', () => {
     controlled.emit({
       type: 'assistant',
       uuid: 'cleanup-uuid',
-      message: { role: 'assistant', content: [{ type: 'text', text: 'SDK cleanup' }] },
+      message: {
+        role: 'assistant',
+        model: '<synthetic>',
+        content: [{ type: 'text', text: 'SDK cleanup' }],
+      },
     })
     controlled.emit({ type: 'system', subtype: 'init', session_id: 'claude-session' })
     await vi.waitFor(() => expect(store.getState().claudeSessionId).toBe('claude-session'))
@@ -1768,7 +1965,11 @@ describe('SessionController', () => {
     controlled.emit({
       type: 'assistant',
       uuid: 'cleanup-after-tool-result-uuid',
-      message: { role: 'assistant', content: [{ type: 'text', text: 'More SDK cleanup' }] },
+      message: {
+        role: 'assistant',
+        model: '<synthetic>',
+        content: [{ type: 'text', text: 'More SDK cleanup' }],
+      },
     })
     controlled.emit({
       type: 'user',
@@ -1858,7 +2059,11 @@ describe('SessionController', () => {
     controlled.emit({
       type: 'assistant',
       uuid: 'cleanup-uuid',
-      message: { role: 'assistant', content: [{ type: 'text', text: 'SDK cleanup' }] },
+      message: {
+        role: 'assistant',
+        model: '<synthetic>',
+        content: [{ type: 'text', text: 'SDK cleanup' }],
+      },
     })
     controlled.emit({ type: 'result', subtype: 'success' })
     await sending

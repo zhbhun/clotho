@@ -8,7 +8,7 @@ import {
   pendingSendSnapshot,
   sendLifecycleStartedAt,
 } from '../stores/send-lifecycle'
-import { type ClaudeMessage, isUserPromptMessage } from './message'
+import { type ClaudeMessage, claudeJsonToMessage, isUserPromptMessage } from './message'
 
 type Transition = (event: SendLifecycleEvent) => SendLifecycleEffect | undefined
 
@@ -20,6 +20,42 @@ function hasUserMessageUuid(line: string, expectedUuid?: string) {
       json.user_message_uuid === expectedUuid ||
       (Array.isArray(json.user_message_uuids) && json.user_message_uuids.includes(expectedUuid))
     )
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Whether a wire frame carries real turn output. The CLI never echoes the
+ * pushed user line back, so suppression gates lift on the first real content
+ * frame instead; synthetic cleanup frames (model `<synthetic>`) never stream
+ * and stay hidden behind the gate.
+ */
+function carriesRealTurnContent(line: string): boolean {
+  try {
+    const json = JSON.parse(line) as ClaudeJsonLine
+    if (json.type === 'assistant') {
+      const model = (json.message as { model?: unknown } | undefined)?.model
+      return model !== '<synthetic>' && Boolean(claudeJsonToMessage(json)?.blocks?.length)
+    }
+    if (json.type === 'result') return json.subtype === 'success' && Boolean(json.result?.trim())
+    if (json.type !== 'stream_event') return false
+    const event = json.event as
+      | {
+          type?: string
+          message?: { model?: unknown }
+          content_block?: { type?: string }
+          delta?: { text?: string; thinking?: string; partial_json?: string }
+        }
+      | undefined
+    if (event?.type === 'message_start') return event.message?.model !== '<synthetic>'
+    if (event?.type === 'content_block_start') return Boolean(event.content_block?.type)
+    if (event?.type === 'content_block_delta') {
+      return Boolean(
+        event.delta && (event.delta.text || event.delta.thinking || event.delta.partial_json),
+      )
+    }
+    return false
   } catch {
     return false
   }
@@ -41,6 +77,17 @@ export function latestTurnWasInterrupted(
     }
   }
   return false
+}
+
+/**
+ * Whether a wire frame is the CLI's interruption marker user entry.
+ */
+function isInterruptionMarkerLine(line: string): boolean {
+  try {
+    return claudeJsonToMessage(JSON.parse(line) as ClaudeJsonLine)?.isInterruption === true
+  } catch {
+    return false
+  }
 }
 
 /** Applies live query output to history and owns the elapsed-time ticker. */
@@ -76,21 +123,26 @@ export class TurnStreamService {
 
   processLine(line: string): boolean {
     const lifecycle = this.getLifecycle()
+    // A recall is already certain at this point: committing the CLI's marker
+    // would only flip the pending turn to "Stopped" for the instant before
+    // the recall wipes it. The kept-stop path (stop-requested) still commits.
+    if (lifecycle.phase === 'recall-requested' && isInterruptionMarkerLine(line)) return false
     const pendingSend = pendingSendSnapshot(lifecycle)
     const isAwaitingHistory =
       lifecycle.phase === 'awaiting-history' || lifecycle.phase === 'recall-requested'
     // Synthetic nudges continue an interrupted turn; there is no new user line
     // to unsuppress on, so their streamed output must display right away.
-    const suppressUntilRootUserHistory = Boolean(
-      pendingSend &&
-      !pendingSend.isSynthetic &&
-      isAwaitingHistory &&
-      latestTurnWasInterrupted(
-        pendingSend.messages,
-        this.controller.conversationStore.getState().interruptedTurnIds,
-      ) &&
-      !hasUserMessageUuid(line, pendingSend.userMessageUuid),
-    )
+    let suppressUntilRootUserHistory = false
+    if (pendingSend && !pendingSend.isSynthetic && isAwaitingHistory) {
+      if (carriesRealTurnContent(line)) pendingSend.realContentSeen = true
+      suppressUntilRootUserHistory =
+        !pendingSend.realContentSeen &&
+        latestTurnWasInterrupted(
+          pendingSend.messages,
+          this.controller.conversationStore.getState().interruptedTurnIds,
+        ) &&
+        !hasUserMessageUuid(line, pendingSend.userMessageUuid)
+    }
     const result = this.controller.historyService.ingestLine(line, {
       shouldDeferRootUserHistory: Boolean(pendingSend),
       suppressUntilRootUserHistory,
