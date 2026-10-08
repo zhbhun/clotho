@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { normalizeTaskItems } from './task-items'
+import { latestTaskItems, normalizeTaskItems } from './task-items'
 import type { ConversationTimelineItem } from './types'
 
 type ToolItem = Extract<ConversationTimelineItem, { kind: 'tool' }>
@@ -111,5 +111,47 @@ describe('normalizeTaskItems', () => {
 
     expect(items).toEqual([items[0]])
     expect(items[0].kind).toBe('tool')
+  })
+})
+
+describe('latestTaskItems', () => {
+  it('replays cards and tracked update snapshots into the newest task state', () => {
+    const items = normalizeTaskItems([
+      taskTool('c1', 'TaskCreate', { subject: 'One' }, { task: { id: '1', subject: 'One' } }),
+      taskTool('c2', 'TaskCreate', { subject: 'Two' }, { task: { id: '2', subject: 'Two' } }),
+      taskTool('u1', 'TaskUpdate', { taskId: '1' }, { statusChange: { to: 'completed' } }),
+      taskTool('u2', 'TaskUpdate', { taskId: '2' }, { statusChange: { to: 'in_progress' } }),
+    ])
+
+    expect(latestTaskItems(items)).toEqual([
+      { id: '1', subject: 'One', status: 'completed' },
+      { id: '2', subject: 'Two', status: 'in_progress' },
+    ])
+  })
+
+  it('appends tasks created after a tracked snapshot', () => {
+    const items = normalizeTaskItems([
+      taskTool('c1', 'TaskCreate', { subject: 'One' }, { task: { id: '1', subject: 'One' } }),
+      taskTool('u1', 'TaskUpdate', { taskId: '1' }, { statusChange: { to: 'completed' } }),
+      taskTool('c2', 'TaskCreate', { subject: 'Two' }, { task: { id: '2', subject: 'Two' } }),
+    ])
+
+    expect(latestTaskItems(items)).toEqual([
+      { id: '1', subject: 'One', status: 'completed' },
+      { id: '2', subject: 'Two', status: 'pending' },
+    ])
+  })
+
+  it('reflects cancellations from stop rows', () => {
+    const items = normalizeTaskItems([
+      taskTool('c1', 'TaskCreate', { subject: 'One' }, { task: { id: '1', subject: 'One' } }),
+      taskTool('s1', 'TaskStop', { taskId: '1' }),
+    ])
+
+    expect(latestTaskItems(items)).toEqual([{ id: '1', subject: 'One', status: 'cancelled' }])
+  })
+
+  it('returns empty without task activity', () => {
+    expect(latestTaskItems([{ id: 't', kind: 'thinking', text: 'hi' }])).toEqual([])
   })
 })

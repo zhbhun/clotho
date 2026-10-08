@@ -27,6 +27,7 @@ import { ConversationView } from './conversation'
 import { ConversationDock } from './conversation-dock'
 import { ConversationHistorySkeleton } from './conversation-history-skeleton'
 import { ConversationToc } from './conversation/conversation-toc'
+import { latestTaskItems } from './conversation/task-items'
 import { computeTurns } from './conversation/turns'
 import type { VirtualConversationHandle } from './conversation/virtual-conversation'
 import { SessionEmptyState } from './empty-state'
@@ -407,8 +408,13 @@ function SessionAreaContent({
     (lastTurn.isInterrupted === true || interruptedTurnIds.has(lastTurn.userMessage.id)) &&
     lastTurn.assistantMessages.length > 0,
   )
+  const taskItems = useMemo(
+    () => latestTaskItems(turns.flatMap((turn) => turn.timelineItems)),
+    [turns],
+  )
   const taskProgress = useTaskProgress({
     messages: activeMessages,
+    taskItems,
     subagents: subagentView.subagents,
     workflowGroups,
   })

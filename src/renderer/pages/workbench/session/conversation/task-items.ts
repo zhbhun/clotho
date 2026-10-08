@@ -79,6 +79,19 @@ function taskIdFromCreateResult(result?: ClaudeContentBlock): string {
   return match?.[1] ?? ''
 }
 
+/**
+ * Replay the card/snapshot trail into the newest task state: cards append their
+ * creation snapshot, tracked update and stop rows replace it wholesale.
+ */
+export function latestTaskItems(items: ConversationTimelineItem[]): ClaudeTaskItem[] {
+  let state: ClaudeTaskItem[] = []
+  for (const item of items) {
+    if (item.kind === 'task') state.push(...item.tasks)
+    else if (item.kind === 'tool' && item.taskItems) state = item.taskItems
+  }
+  return state
+}
+
 type TaskCardState = {
   ids: string[]
   item: Extract<ConversationTimelineItem, { kind: 'task' }>

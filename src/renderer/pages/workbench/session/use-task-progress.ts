@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 
 import { type TodoItem, extractTodoItems, isTodoWriteToolName } from '../../../services/claude/todo'
+import type { ClaudeTaskItem } from './conversation/types'
 import type { ClaudeMessage } from './services/message'
 import {
   type SessionSubagent,
@@ -35,20 +36,36 @@ function findLatestTodos(messages: ClaudeMessage[]): TodoItem[] {
   return latest ?? []
 }
 
+/** Cancelled tasks are dropped so they cannot keep the pill visible forever. */
+function taskTodoItems(tasks: ClaudeTaskItem[]): TodoItem[] {
+  const todos: TodoItem[] = []
+  for (const task of tasks) {
+    if (task.status === 'cancelled') continue
+    todos.push({ content: task.subject, status: task.status, activeForm: task.activeForm })
+  }
+  return todos
+}
+
 /**
  * Aggregate todo, subagent, and workflow progress for the currently viewed message list. Todos
- * and subagents stay separate: todos render their own pill, running subagents theirs.
+ * and subagents stay separate: todos render their own pill, running subagents theirs. Task-tool
+ * state (TaskCreate/TaskUpdate) supersedes the deprecated TodoWrite trail.
  */
 export function useTaskProgress({
   messages,
+  taskItems,
   subagents,
   workflowGroups,
 }: {
   messages: ClaudeMessage[]
+  taskItems: ClaudeTaskItem[]
   subagents: SessionSubagent[]
   workflowGroups: WorkflowSubagentGroup[]
 }): TaskProgress {
-  const latestTodos = useMemo(() => findLatestTodos(messages), [messages])
+  const latestTodos = useMemo(
+    () => (taskItems.length ? taskTodoItems(taskItems) : findLatestTodos(messages)),
+    [taskItems, messages],
+  )
   const runningSubagents = useMemo(
     () => directRunningSubagents(messages, subagents),
     [messages, subagents],
