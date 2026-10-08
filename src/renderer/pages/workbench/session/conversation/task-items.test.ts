@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
+import { claudeJsonToMessage } from '../services/message'
 import { latestTaskItems, normalizeTaskItems } from './task-items'
+import { computeTurns } from './turns'
 import type { ConversationTimelineItem } from './types'
 
 type ToolItem = Extract<ConversationTimelineItem, { kind: 'tool' }>
@@ -153,5 +155,79 @@ describe('latestTaskItems', () => {
 
   it('returns empty without task activity', () => {
     expect(latestTaskItems([{ id: 't', kind: 'thinking', text: 'hi' }])).toEqual([])
+  })
+
+  it('advances statuses for updates that land in later turns than the creates', () => {
+    // Turn boundaries make normalizeTaskItems replay from an empty index, so the
+    // fold must read the update events themselves, not per-turn snapshots.
+    const toolUse = (id: string, name: string, input: Record<string, unknown>) => ({
+      type: 'tool_use' as const,
+      id,
+      name,
+      input,
+    })
+    const entry = (
+      uuid: string,
+      parentUuid: string | undefined,
+      type: 'user' | 'assistant',
+      content: (ReturnType<typeof toolUse> | { type: 'text'; text: string })[],
+    ) =>
+      claudeJsonToMessage({
+        type,
+        uuid,
+        parentUuid,
+        timestamp: '2026-10-08T10:00:00.000Z',
+        message: { role: type, content },
+      })
+    const toolResult = (id: string, toolUseResult: unknown) => ({
+      type: 'user' as const,
+      uuid: `result-${id}`,
+      timestamp: '2026-10-08T10:00:01.000Z',
+      toolUseResult,
+      message: {
+        role: 'user' as const,
+        content: [{ type: 'tool_result' as const, tool_use_id: id, content: 'ok' }],
+      },
+    })
+
+    const messages = [
+      entry('u1', undefined, 'user', [{ type: 'text', text: 'plan the work' }]),
+      entry('a1', 'u1', 'assistant', [toolUse('c1', 'TaskCreate', { subject: 'One' })]),
+      claudeJsonToMessage(toolResult('c1', { task: { id: '1', subject: 'One' } })),
+      entry('a1b', 'a1', 'assistant', [toolUse('c2', 'TaskCreate', { subject: 'Two' })]),
+      claudeJsonToMessage(toolResult('c2', { task: { id: '2', subject: 'Two' } })),
+      entry('a2', 'a1', 'assistant', [
+        toolUse('t1', 'TaskUpdate', { taskId: '1', status: 'in_progress' }),
+      ]),
+      claudeJsonToMessage(
+        toolResult('t1', { taskId: '1', statusChange: { from: 'pending', to: 'in_progress' } }),
+      ),
+      entry('a3', 'a2', 'assistant', [
+        toolUse('t2', 'TaskUpdate', { taskId: '1', status: 'completed' }),
+      ]),
+      claudeJsonToMessage(
+        toolResult('t2', { taskId: '1', statusChange: { from: 'in_progress', to: 'completed' } }),
+      ),
+      // A user reply closes turn one; the remaining updates land in turn two.
+      entry('u2', 'a3', 'user', [{ type: 'text', text: 'go on' }]),
+      entry('a4', 'u2', 'assistant', [
+        toolUse('t3', 'TaskUpdate', { taskId: '2', status: 'in_progress' }),
+      ]),
+      claudeJsonToMessage(
+        toolResult('t3', { taskId: '2', statusChange: { from: 'pending', to: 'in_progress' } }),
+      ),
+      entry('a5', 'a4', 'assistant', [
+        toolUse('t4', 'TaskUpdate', { taskId: '2', status: 'completed' }),
+      ]),
+      claudeJsonToMessage(
+        toolResult('t4', { taskId: '2', statusChange: { from: 'in_progress', to: 'completed' } }),
+      ),
+    ].filter((message): message is NonNullable<typeof message> => Boolean(message))
+
+    const items = computeTurns(messages).flatMap((turn) => turn.timelineItems)
+    expect(latestTaskItems(items)).toEqual([
+      { id: '1', subject: 'One', status: 'completed' },
+      { id: '2', subject: 'Two', status: 'completed' },
+    ])
   })
 })

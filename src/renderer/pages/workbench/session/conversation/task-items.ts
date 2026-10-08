@@ -80,16 +80,43 @@ function taskIdFromCreateResult(result?: ClaudeContentBlock): string {
 }
 
 /**
- * Replay the card/snapshot trail into the newest task state: cards append their
- * creation snapshot, tracked update and stop rows replace it wholesale.
+ * Replay the task events scattered across the timeline into the newest task
+ * state: cards contribute creations, update and stop rows contribute status
+ * changes. Reading the events themselves keeps the fold correct across turns —
+ * per-turn normalization starts from an empty task index, so the snapshots it
+ * attaches to update rows only cover tasks created in the same turn.
  */
 export function latestTaskItems(items: ConversationTimelineItem[]): ClaudeTaskItem[] {
-  let state: ClaudeTaskItem[] = []
+  const index = new Map<string, ClaudeTaskItem>()
+  const order: string[] = []
+
   for (const item of items) {
-    if (item.kind === 'task') state.push(...item.tasks)
-    else if (item.kind === 'tool' && item.taskItems) state = item.taskItems
+    if (item.kind === 'task') {
+      for (const task of item.tasks) {
+        if (!index.has(task.id)) order.push(task.id)
+        index.set(task.id, { ...task, status: index.get(task.id)?.status ?? task.status })
+      }
+      continue
+    }
+    if (item.kind !== 'tool') continue
+
+    const kind = taskToolKind(item.use?.name)
+    const id = taskIdFromUpdateToolUseResult(item.result) || taskIdFromInput(item.use?.input)
+    const existing = id ? index.get(id) : undefined
+    if (!existing) continue
+
+    if (kind === 'stop') {
+      existing.status = 'cancelled'
+      continue
+    }
+    if (kind === 'update') {
+      const status =
+        taskStatusFromUpdateToolUseResult(item.result) || taskInputStatus(item.use?.input)
+      if (status) existing.status = status
+    }
   }
-  return state
+
+  return order.map((id) => ({ ...index.get(id)! }))
 }
 
 type TaskCardState = {
