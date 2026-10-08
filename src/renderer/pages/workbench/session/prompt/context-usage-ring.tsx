@@ -7,7 +7,7 @@ const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS
 const RING_FRAME_CLASS = 'relative inline-flex size-5 items-center justify-center'
 const RING_SVG_CLASS = 'size-4'
 const RING_TRACK_CLASS = 'stroke-border'
-const RING_ARC_CLASS = 'stroke-foreground-subtle'
+const RING_ARC_CLASS = 'stroke-foreground-subtlest'
 
 export function ContextUsageRing({ usage }: { usage: ContextUsage }) {
   const { t } = useTranslation()
@@ -17,7 +17,7 @@ export function ContextUsageRing({ usage }: { usage: ContextUsage }) {
   return (
     <div
       aria-label={label}
-      className={`${RING_FRAME_CLASS} rounded-full text-foreground-subtle`}
+      className={`${RING_FRAME_CLASS} rounded-full text-foreground-subtlest`}
       role="img"
     >
       <svg aria-hidden className={RING_SVG_CLASS} viewBox="0 0 20 20">
