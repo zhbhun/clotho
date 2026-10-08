@@ -192,7 +192,7 @@ export function AttachmentList({
       viewportRef={viewportRef}
     >
       <div
-        className={cn('flex w-max min-w-0 gap-2.5 px-1 pb-2 pt-1', onRemove && 'pt-1.5')}
+        className={cn('flex w-max min-w-0 gap-2 px-1 pb-2 pt-1', onRemove && 'pt-1.5')}
         data-slot="attachment-list"
       >
         {attachments.map((attachment, index) => (
