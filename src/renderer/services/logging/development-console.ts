@@ -25,6 +25,7 @@ const SAFE_ERROR_MESSAGE_PATTERNS = [
   /^Too many re-renders\./,
   /^Invalid hook call\./,
   /^Rendered (more|fewer) hooks than during the previous render\./,
+  /^Minified React error #\d+;/,
   /^Cannot read properties of (?:undefined|null) \(reading '[A-Za-z_$][\w$]*'\)\.?$/,
   /^(?:undefined|null) is not an object \(evaluating '[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*'\)\.?$/,
   /^Cannot destructure property '[A-Za-z_$][\w$]*' of '(?:undefined|null)' as it is undefined\.?$/,
