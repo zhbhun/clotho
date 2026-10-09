@@ -21,6 +21,12 @@ export type SlashCommandMenuPositionInput = {
   viewportSize: Size
 }
 
+export type CompletionMenuPosition = {
+  left: number
+  placement: SlashCommandMenuPlacement
+  top: number
+}
+
 export function calculateSlashCommandMenuPosition({
   anchorRect,
   gap = 8,
@@ -28,7 +34,7 @@ export function calculateSlashCommandMenuPosition({
   placement,
   viewportPadding = 12,
   viewportSize,
-}: SlashCommandMenuPositionInput) {
+}: SlashCommandMenuPositionInput): CompletionMenuPosition {
   const wouldOverflowRight = anchorRect.left + menuSize.width + viewportPadding > viewportSize.width
   const preferredLeft = wouldOverflowRight ? anchorRect.right - menuSize.width : anchorRect.left
   const maxLeft = viewportSize.width - viewportPadding - menuSize.width
@@ -49,5 +55,5 @@ export function calculateSlashCommandMenuPosition({
   const maxTop = viewportSize.height - viewportPadding - menuSize.height
   const top = Math.max(viewportPadding, Math.min(preferredTop, maxTop))
 
-  return { left, top }
+  return { left, placement: effectivePlacement, top }
 }

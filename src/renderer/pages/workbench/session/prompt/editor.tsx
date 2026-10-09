@@ -332,7 +332,6 @@ export function PromptMarkdownEditor({
           menuRef={completion.menuRef}
           message={completion.fileState.message}
           outline={completion.fileState.outline}
-          placement={slashMenuPlacement}
           position={completion.position}
           query={completion.completion.query}
           scrollActiveIntoView={completion.completion.scrollActiveIntoView}

@@ -9,12 +9,7 @@ import type {
   ProjectFileSearchEntry,
   ProjectFileSearchOutlineNode,
 } from '../../../../services/claude/claude'
-import type { SlashCommandMenuPlacement } from './menu-position'
-
-export type FileCompletionMenuPosition = {
-  left: number
-  top: number
-}
+import type { CompletionMenuPosition } from './menu-position'
 
 export function FileCompletionMenu({
   activeIndex,
@@ -23,7 +18,6 @@ export function FileCompletionMenu({
   menuRef,
   message,
   outline,
-  placement,
   position,
   scrollActiveIntoView,
   onActiveIndexChange,
@@ -35,8 +29,7 @@ export function FileCompletionMenu({
   menuRef?: Ref<HTMLDivElement>
   message?: string
   outline?: ProjectFileSearchOutlineNode[]
-  placement: SlashCommandMenuPlacement
-  position: FileCompletionMenuPosition
+  position: CompletionMenuPosition
   query: string
   scrollActiveIntoView: boolean
   onActiveIndexChange: (activeIndex: number) => void
@@ -45,6 +38,8 @@ export function FileCompletionMenu({
   const { t } = useTranslation()
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([])
   const activeItem = activeIndex >= 0 ? items[activeIndex] : undefined
+  // The results column hugs the anchor side; the taller outline stretches away from it.
+  const effectivePlacement = position.placement
 
   useEffect(() => {
     if (!scrollActiveIntoView || activeIndex < 0) return
@@ -54,7 +49,10 @@ export function FileCompletionMenu({
   return createPortal(
     <div
       aria-label={t('workbench.completion.fileCompletions')}
-      className="fixed z-50 flex max-h-80 items-start gap-1 overflow-visible text-popover-foreground"
+      className={cn(
+        'fixed z-50 flex max-h-80 gap-1 overflow-visible text-popover-foreground',
+        effectivePlacement === 'above' ? 'items-end' : 'items-start',
+      )}
       ref={menuRef}
       role="listbox"
       style={{
@@ -62,7 +60,7 @@ export function FileCompletionMenu({
         top: position.top,
         width: 'min(760px, calc(100vw - 24px))',
       }}
-      data-placement={placement}
+      data-placement={effectivePlacement}
       data-message-edit-surface={interactionScope}
       onMouseDown={(event) => {
         event.preventDefault()
@@ -118,7 +116,7 @@ export function FileCompletionMenu({
       </div>
       {activeItem && outline?.length ? (
         <div
-          className="hidden max-h-80 w-72 shrink-0 self-start overflow-y-auto rounded-lg border border-border/70 bg-popover p-1.5 shadow-float md:block"
+          className="hidden max-h-80 w-72 shrink-0 overflow-y-auto rounded-lg border border-border/70 bg-popover p-1.5 shadow-float md:block"
           data-glass="true"
           data-file-completion-outline
         >
