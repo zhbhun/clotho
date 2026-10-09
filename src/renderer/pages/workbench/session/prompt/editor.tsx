@@ -1,3 +1,4 @@
+import { type Editor } from '@tiptap/core'
 import Document from '@tiptap/extension-document'
 import HardBreak from '@tiptap/extension-hard-break'
 import Paragraph from '@tiptap/extension-paragraph'
@@ -22,7 +23,7 @@ import { claude } from '../../../../services/claude/claude'
 import type { ClaudeSlashCommand } from '../../../../services/claude/claude'
 import { PromptAtomNavigation } from './atom-navigation'
 import { EditorCompletion } from './completion-extension'
-import { promptDocToMarkdown, restorePromptDocument } from './content'
+import { promptDocToMarkdown, promptTextToInlineNodes, restorePromptDocument } from './content'
 import { FileCompletionMenu } from './file-menu'
 import { FileMention, type PromptFileReference, fileReferenceToNode } from './files'
 import type { SlashCommandMenuPlacement } from './menu-position'
@@ -91,6 +92,9 @@ export function PromptMarkdownEditor({
   const onPasteFilesRef = useRef(onPasteFiles)
   const onPromptHistoryRef = useRef(onPromptHistory)
   const onSubmitRef = useRef(onSubmit)
+  // The useEditor instance arrives after the first render, so event handlers
+  // read it lazily through this ref instead of the render-scope binding.
+  const editorRef = useRef<Editor | null>(null)
   const promptCommands = useMemo(() => prepareSlashCommands(availableCommands), [availableCommands])
   const extensions = useMemo(
     () => [
@@ -154,12 +158,24 @@ export function PromptMarkdownEditor({
           }
           return false
         },
-        handlePaste(_view, event) {
-          const files = event.clipboardData?.files
+        handlePaste(view, event) {
+          const clipboard = event.clipboardData
+          const files = clipboard?.files
           const onPaste = onPasteFilesRef.current
-          if (!onPaste || !files?.length) return false
+          if (onPaste && files?.length) {
+            event.preventDefault()
+            onPaste(Array.from(files))
+            return true
+          }
+          // Rich pastes keep ProseMirror's HTML handling; plain-text pastes
+          // turn file-like `@path` references into mention chips.
+          if (!clipboard || clipboard.getData('text/html')) return false
+          const nodes = promptTextToInlineNodes(clipboard.getData('text/plain'))
+          const currentEditor = editorRef.current
+          if (!nodes || !currentEditor || currentEditor.isDestroyed) return false
           event.preventDefault()
-          onPaste(Array.from(files))
+          const { from, to } = view.state.selection
+          currentEditor.chain().insertContentAt({ from, to }, nodes).run()
           return true
         },
       },
@@ -181,9 +197,6 @@ export function PromptMarkdownEditor({
   })
   const { close: closeCompletion, completionRef } = completion
 
-  // The useEditor instance arrives after the first render, so the handle reads it
-  // lazily and stays referentially stable instead of capturing a stale editor.
-  const editorRef = useRef(editor)
   useLayoutEffect(() => {
     editorRef.current = editor
   }, [editor])

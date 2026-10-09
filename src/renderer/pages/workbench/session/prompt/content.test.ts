@@ -84,6 +84,32 @@ describe('prompt content persistence', () => {
     })
   })
 
+  it('splits line hints off restored file mentions', () => {
+    const doc = restorePromptDocument('check @src/app.tsx#L5-11 and @src/main.ts:12')
+
+    expect(doc).toMatchObject({
+      content: [
+        {
+          content: [
+            { type: 'text', text: 'check ' },
+            {
+              type: 'fileMention',
+              attrs: { path: 'src/app.tsx', name: 'app.tsx', mimeKind: 'code' },
+            },
+            { type: 'text', text: '#L5-11' },
+            { type: 'text', text: ' and ' },
+            {
+              type: 'fileMention',
+              attrs: { path: 'src/main.ts', name: 'main.ts', mimeKind: 'code' },
+            },
+            { type: 'text', text: ':12' },
+          ],
+        },
+      ],
+    })
+    expect(promptDocToMarkdown(doc)).toBe('check @src/app.tsx#L5-11 and @src/main.ts:12')
+  })
+
   it('treats a missing persisted prompt as an empty document', () => {
     expect(restorePromptDocument(undefined)).toEqual({
       type: 'doc',

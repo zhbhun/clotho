@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -40,6 +40,15 @@ function rectList(rect: DOMRect): DOMRectList {
     item: (index: number) => (index === 0 ? rect : null),
     [Symbol.iterator]: () => rects[Symbol.iterator](),
   }
+}
+
+/** Paste plain text through the editor so ProseMirror applies it like a real paste. */
+function pasteText(editor: HTMLElement, text: string) {
+  fireEvent.paste(editor, {
+    clipboardData: {
+      getData: (type: string) => (type === 'text/plain' ? text : ''),
+    },
+  })
 }
 
 /** Park the caret at a text offset the way a click would, then let ProseMirror read it. */
@@ -1167,6 +1176,67 @@ describe('PromptMarkdownEditor', () => {
     await user.keyboard('abc@')
 
     expect(screen.queryByRole('listbox', { name: 'File completions' })).not.toBeInTheDocument()
+  })
+
+  it('converts pasted file references into mention chips', async () => {
+    const changes: string[] = []
+
+    render(
+      <TooltipProvider>
+        <PromptMarkdownEditor
+          value=""
+          onChange={(value) => changes.push(value)}
+          onSubmit={() => {}}
+        />
+      </TooltipProvider>,
+    )
+
+    const editor = screen.getByRole('textbox', { name: 'Prompt' })
+
+    editor.focus()
+    // Flush the mount-time value-restoration microtask so it cannot race the paste.
+    await act(async () => {})
+    pasteText(editor, 'check @packages/component/src/script/stores/editorStore.ts#11 here')
+
+    expect(
+      await screen.findByLabelText(
+        'editorStore.ts: packages/component/src/script/stores/editorStore.ts',
+      ),
+    ).toBeInTheDocument()
+    expect(editor).toHaveTextContent('#11 here')
+    expect(screen.queryByRole('listbox', { name: 'File completions' })).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(changes.at(-1)).toBe(
+        'check @packages/component/src/script/stores/editorStore.ts#11 here',
+      )
+    })
+  })
+
+  it('keeps pasted non-path mentions as plain text without opening completions', async () => {
+    const changes: string[] = []
+
+    render(
+      <TooltipProvider>
+        <PromptMarkdownEditor
+          value=""
+          onChange={(value) => changes.push(value)}
+          onSubmit={() => {}}
+        />
+      </TooltipProvider>,
+    )
+
+    const editor = screen.getByRole('textbox', { name: 'Prompt' })
+
+    editor.focus()
+    // Flush the mount-time value-restoration microtask so it cannot race the paste.
+    await act(async () => {})
+    pasteText(editor, 'thanks @reviewer for the note')
+
+    expect(screen.queryByLabelText(/reviewer/)).not.toBeInTheDocument()
+    expect(screen.queryByRole('listbox', { name: 'File completions' })).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(changes.at(-1)).toBe('thanks @reviewer for the note')
+    })
   })
 
   it('does not reopen file completions when the cursor moves back into a path', async () => {

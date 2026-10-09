@@ -27,6 +27,22 @@ function parsedFileMention(token: string) {
   }
 }
 
+const LINE_HINT_PATTERN = /(?:[:#]L?\d+(?:[-:]\d+)*)+$/i
+
+/** Split a trailing `#125` / `#L7-11` / `:12:3` line hint off a referenced path. */
+function splitLineHint(path: string) {
+  const match = path.match(LINE_HINT_PATTERN)
+  if (!match) return { filePath: path, lineHint: '' }
+  const filePath = path.slice(0, path.length - match[0].length)
+  // A bare hint (`@#11`) is not a file reference; keep it inside the path.
+  if (!filePath) return { filePath: path, lineHint: '' }
+  return { filePath, lineHint: match[0] }
+}
+
+function looksLikeFilePath(path: string) {
+  return /[\\/]/.test(path) || /\.[A-Za-z0-9]+$/.test(path)
+}
+
 function lineNodes(line: string, commands: ClaudeSlashCommand[]) {
   if (!line || commands.length === 0) {
     const node = textNode(line)
@@ -83,7 +99,11 @@ export function markdownTextToDoc(
   }
 }
 
-function lineNodesWithMentions(line: string, commands: ClaudeSlashCommand[]) {
+function lineNodesWithMentions(
+  line: string,
+  commands: ClaudeSlashCommand[],
+  referenceFilter?: (path: string) => boolean,
+) {
   // Reconstruct file chips from their markdown form. Simple paths stay @path;
   // quoted JSON strings preserve every character in less common paths.
   const parts: JSONContent[] = []
@@ -94,9 +114,12 @@ function lineNodesWithMentions(line: string, commands: ClaudeSlashCommand[]) {
     if (index > 0 && !/[\s([{]/.test(line[index - 1] ?? '')) continue
     const path = parsedFileMention(match[0])
     if (path === null) continue
+    const { filePath, lineHint } = splitLineHint(path)
+    if (referenceFilter && !referenceFilter(filePath)) continue
     const before = lineNodes(line.slice(start, index), commands)
     parts.push(...before)
-    parts.push({ type: 'fileMention', attrs: fileReferenceFromPath(path) })
+    parts.push({ type: 'fileMention', attrs: fileReferenceFromPath(filePath) })
+    if (lineHint) parts.push({ type: 'text', text: lineHint })
     start = index + match[0].length
   }
   parts.push(...lineNodes(line.slice(start), commands))
@@ -128,6 +151,23 @@ export function restorePromptDocument(
   commands: ClaudeSlashCommand[] = [],
 ) {
   return markdownTextToDoc(value, commands)
+}
+
+/**
+ * Inline nodes for pasted prompt text, or null when the text references no
+ * file-like path so the caller can keep the default paste behavior. Only
+ * path-shaped `@` references (a separator or an extension) become chips, so
+ * ordinary mentions like `@reviewer` survive pasting untouched.
+ */
+export function promptTextToInlineNodes(text: string): JSONContent[] | null {
+  if (!text.includes('@')) return null
+  const lines = text.split('\n')
+  const nodes: JSONContent[] = []
+  lines.forEach((line, index) => {
+    nodes.push(...lineNodesWithMentions(line, [], looksLikeFilePath))
+    if (index < lines.length - 1) nodes.push({ type: 'hardBreak' })
+  })
+  return nodes.some((node) => node.type === 'fileMention') ? nodes : null
 }
 
 export function hasPromptAtoms(doc: JSONContent): boolean {
