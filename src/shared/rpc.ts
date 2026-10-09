@@ -319,6 +319,11 @@ export interface ClaudeDropTrailingTurnParams {
   sessionId?: string
   /** Uuid of the recalled user message whose trailing turn should be removed. */
   userMessageUuid: string
+  /**
+   * A historical edit intentionally discards every later turn, so the
+   * newer-conversation refusal is skipped; a recall keeps it.
+   */
+  allowLaterConversation?: boolean
 }
 
 export interface ClaudeDropTrailingTurnResult {

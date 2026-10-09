@@ -104,6 +104,28 @@ describe('recalled transcript tail', () => {
     expect(fs.rm).not.toHaveBeenCalled()
     expect(fs.writeFile).not.toHaveBeenCalled()
   })
+
+  it('drops later turns when the caller is a historical edit', async () => {
+    vi.mocked(fs.readFile).mockResolvedValue(
+      jsonl([
+        ...previous,
+        ...cancelled,
+        { type: 'user', uuid: 'newer', message: { content: 'hello33?' } },
+        {
+          type: 'assistant',
+          uuid: 'newer-reply',
+          message: { model: 'claude-sonnet', content: 'hi' },
+        },
+      ]),
+    )
+
+    await expect(dropTrailingTurn({ ...params, allowLaterConversation: true })).resolves.toEqual({
+      dropped: true,
+      removedSession: false,
+    })
+    expect(fs.writeFile).toHaveBeenCalledWith(expect.any(String), jsonl(previous), 'utf8')
+    expect(fs.rm).not.toHaveBeenCalled()
+  })
 })
 
 const turn = (n: number) => [

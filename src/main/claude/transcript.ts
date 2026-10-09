@@ -94,6 +94,7 @@ export async function dropTrailingTurn({
   projectId,
   sessionId,
   userMessageUuid,
+  allowLaterConversation = false,
 }: ClaudeDropTrailingTurnParams): Promise<ClaudeDropTrailingTurnResult> {
   assertPathSegment(projectId, 'project id')
   if (sessionId) assertPathSegment(sessionId, 'session id')
@@ -142,11 +143,13 @@ export async function dropTrailingTurn({
 
     // A cancellation marker closes the pending turn. Any assistant bookkeeping
     // written after it belongs to that turn and is removed with the recalled
-    // prompt; only a later real user prompt means another client continued.
+    // prompt; only a later real user prompt means another client continued —
+    // unless the caller is a historical edit, which discards later turns on
+    // purpose (the resend restarts from the edited message).
     const hasLaterUserPrompt = entries
       .slice(targetIndex + 1)
       .some((entry) => entry !== null && isUserPromptEntry(entry))
-    if (hasLaterUserPrompt) {
+    if (hasLaterUserPrompt && !allowLaterConversation) {
       logger.info('transcript.drop_refused', 'The transcript has newer conversation', {
         context: { userMessageUuid },
       })

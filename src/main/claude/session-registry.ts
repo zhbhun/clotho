@@ -345,6 +345,7 @@ export function createSessionQueryRegistry(
     sessionId,
     claudeSessionId,
     options,
+    reason,
     dropFromMessageUuid,
     projectId,
   }: ClaudeSessionQueryRebuildParams): Promise<ClaudeSessionQueryEnsureResult> {
@@ -369,6 +370,10 @@ export function createSessionQueryRegistry(
         projectId,
         sessionId: resume,
         userMessageUuid: dropFromMessageUuid,
+        // The edit restarts from the edited message, so later turns are
+        // deliberately discarded; a recall would refuse them as newer
+        // conversation another client may have added.
+        allowLaterConversation: reason === 'edit',
       })
       if (!dropped.dropped) {
         throw new Error('Failed to clear the historical message before resending')
