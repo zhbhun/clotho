@@ -120,18 +120,37 @@ export function useConversationAutoScroll(
         else pauseAutoScroll()
       }
 
-      viewport.addEventListener('scroll', handleScroll)
-      viewport.addEventListener('wheel', handleWheel, { passive: true })
-      viewport.addEventListener('touchmove', handleTouchMove, { passive: true })
+      // Follow content growth in the frame it lays out: the observer callback
+      // runs after layout and before paint, so the correction lands in the
+      // same paint as the growth instead of trailing it by a visible frame.
+      let contentObserver: ResizeObserver | null = null
+      const content = viewport.firstElementChild
+      if (content && typeof ResizeObserver === 'function') {
+        contentObserver = new ResizeObserver(() => scrollToBottom())
+        contentObserver.observe(content)
+      }
 
-      removeViewportListenersRef.current = () => {
+      const removeViewport = () => {
         cancelAutoScrollResume()
         viewport.removeEventListener('scroll', handleScroll)
         viewport.removeEventListener('wheel', handleWheel)
         viewport.removeEventListener('touchmove', handleTouchMove)
+        contentObserver?.disconnect()
       }
+
+      viewport.addEventListener('scroll', handleScroll)
+      viewport.addEventListener('wheel', handleWheel, { passive: true })
+      viewport.addEventListener('touchmove', handleTouchMove, { passive: true })
+
+      removeViewportListenersRef.current = removeViewport
     },
-    [cancelAutoScrollResume, pauseAutoScroll, scheduleAutoScrollResume, scrollAnchorRef],
+    [
+      cancelAutoScrollResume,
+      pauseAutoScroll,
+      scheduleAutoScrollResume,
+      scrollToBottom,
+      scrollAnchorRef,
+    ],
   )
 
   useLayoutEffect(() => {
@@ -153,7 +172,9 @@ export function useConversationAutoScroll(
     shouldAutoScrollRef.current = autoScrollByViewRef.current.get(viewKey) ?? false
   }, [cancelAutoScrollResume, scrollAnchorRef, viewKey])
 
-  useEffect(() => {
+  // Before paint: a correction that lands after paint is visible as a jump —
+  // the user sees the unscrolled content first, then the whole list shift.
+  useLayoutEffect(() => {
     scrollToBottom()
   }, [contentVersion, scrollToBottom])
 

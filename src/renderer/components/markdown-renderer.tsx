@@ -1,7 +1,7 @@
 import DOMPurify from 'dompurify'
 import { marked } from 'marked'
 import morphdom from 'morphdom'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { bundledLanguagesInfo, codeToHtml } from 'shiki/bundle/web'
 
 // Dual-theme output: token colors are written to --shiki-light / --shiki-dark variables and switched by CSS.
@@ -85,6 +85,19 @@ function renderMarkdown(content: string, isStreaming?: boolean) {
   return DOMPurify.sanitize(rawHtml)
 }
 
+// Streamed text arrives in paragraph-sized bursts. Revealing the growth at a
+// pace proportional to the backlog turns each burst into visible progress
+// instead of a multi-line flash; text present at mount renders immediately.
+const REVEAL_CATCH_UP_MS = 400
+const REVEAL_MIN_STEP_CHARS = 2
+
+function prefersReducedMotion() {
+  return (
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  )
+}
+
 export function MarkdownRenderer({
   content,
   isStreaming,
@@ -95,6 +108,55 @@ export function MarkdownRenderer({
   const containerRef = useRef<HTMLDivElement>(null)
   const [initialHtml] = useState(() => renderMarkdown(content, isStreaming))
   const [ready, setReady] = useState(false)
+  const [revealedLength, setRevealedLength] = useState(content.length)
+  const revealedRef = useRef(content.length)
+  const contentRef = useRef(content)
+  const frameRef = useRef<number | null>(null)
+  const lastTickRef = useRef(0)
+
+  const stopReveal = useCallback(() => {
+    if (frameRef.current === null) return
+    cancelAnimationFrame(frameRef.current)
+    frameRef.current = null
+  }, [])
+
+  useEffect(() => {
+    if (!isStreaming || prefersReducedMotion() || content.length <= revealedRef.current) {
+      // Stream ended, motion is reduced, or the tail was replaced (block
+      // split): show everything immediately instead of animating stale text.
+      stopReveal()
+      if (revealedRef.current !== content.length) {
+        revealedRef.current = content.length
+        setRevealedLength(content.length)
+      }
+      return
+    }
+    contentRef.current = content
+    if (frameRef.current !== null) return
+    lastTickRef.current = performance.now()
+    // Advance the revealed frontier toward the backlog, stepping proportional
+    // to how much is pending so any burst size catches up in ~REVEAL_CATCH_UP_MS.
+    const tick = (now: number) => {
+      frameRef.current = null
+      const target = contentRef.current
+      const elapsed = Math.max(0, now - lastTickRef.current)
+      lastTickRef.current = now
+      const backlog = target.length - revealedRef.current
+      if (backlog <= 0) return
+      const step = Math.min(
+        backlog,
+        Math.max(REVEAL_MIN_STEP_CHARS, Math.ceil((backlog * elapsed) / REVEAL_CATCH_UP_MS)),
+      )
+      revealedRef.current += step
+      setRevealedLength(revealedRef.current)
+      if (revealedRef.current < target.length) {
+        frameRef.current = requestAnimationFrame(tick)
+      }
+    }
+    frameRef.current = requestAnimationFrame(tick)
+  }, [content, isStreaming, stopReveal])
+
+  useEffect(() => stopReveal, [stopReveal])
 
   useEffect(() => {
     let isCancelled = false
@@ -119,11 +181,15 @@ export function MarkdownRenderer({
     })
   }, [ready])
 
-  useEffect(() => {
+  const displayedContent = content.slice(0, revealedLength)
+
+  // Patch before paint: the ResizeObserver-driven scroll correction in the
+  // conversation must land in the same frame as the content growth it follows.
+  useLayoutEffect(() => {
     if (!containerRef.current) return
-    patchDom(containerRef.current, renderMarkdown(content, isStreaming))
+    patchDom(containerRef.current, renderMarkdown(displayedContent, isStreaming))
     highlightPending()
-  }, [content, isStreaming, highlightPending])
+  }, [displayedContent, isStreaming, highlightPending])
 
   return (
     <div

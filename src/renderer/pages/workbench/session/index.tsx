@@ -694,7 +694,9 @@ function SessionAreaContent({
             <TransientScrollArea
               className="size-full select-text"
               viewportRef={handleViewportRef}
-              viewportProps={{ tabIndex: -1 }}
+              // The hook pins the scroll position itself; native anchoring
+              // would fight it by adjusting scrollTop on layout changes.
+              viewportProps={{ tabIndex: -1, style: { overflowAnchor: 'none' } }}
             >
               <div
                 className={cn(

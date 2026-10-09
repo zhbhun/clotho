@@ -1,6 +1,8 @@
 import { type RefCallback, useCallback, useLayoutEffect, useState } from 'react'
 
-const DEFAULT_BOTTOM_PADDING = 288
+// Floor only covers the pre-measure frame and a bare composer; the measured
+// dock height + gap keeps the pinned view snug against the input otherwise.
+const DEFAULT_BOTTOM_PADDING = 160
 const DOCK_GAP = 12
 
 export function useConversationDock(mode: 'ask' | 'prompt'): {

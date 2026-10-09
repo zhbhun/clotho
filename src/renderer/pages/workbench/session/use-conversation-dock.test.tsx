@@ -88,7 +88,7 @@ describe('useConversationDock', () => {
     render(<DockHarness mode="prompt" />)
     const dock = screen.getByTestId('dock')
 
-    expect(screen.getByTestId('padding')).toHaveTextContent('288')
+    expect(screen.getByTestId('padding')).toHaveTextContent('160')
 
     dockHeight = 420
     act(() => resizeObservers.forEach((observer) => observer.resize(dock)))

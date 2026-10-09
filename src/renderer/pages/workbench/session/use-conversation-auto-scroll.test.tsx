@@ -51,6 +51,25 @@ function setScrollMetrics(
   })
 }
 
+class ContentObserverRecorder {
+  static instances: ContentObserverRecorder[] = []
+
+  private callback: ResizeObserverCallback
+
+  constructor(callback: ResizeObserverCallback) {
+    this.callback = callback
+    ContentObserverRecorder.instances.push(this)
+  }
+
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+
+  trigger() {
+    this.callback([] as ResizeObserverEntry[], this as unknown as ResizeObserver)
+  }
+}
+
 describe('useConversationAutoScroll', () => {
   it('reports whether the content has left the top edge', () => {
     const onResetReady = () => {}
@@ -187,6 +206,36 @@ describe('useConversationAutoScroll', () => {
     setScrollMetrics(viewport, { clientHeight: 100, scrollHeight: 700 })
     rerender(<AutoScrollHarness contentVersion={3} onResetReady={onResetReady} />)
     expect(viewport.scrollTop).toBe(200)
+  })
+
+  it('follows content growth in the resize-observer frame and stays paused after manual scroll', () => {
+    const OriginalResizeObserver = globalThis.ResizeObserver
+    globalThis.ResizeObserver = ContentObserverRecorder as unknown as typeof ResizeObserver
+    try {
+      const onResetReady = () => {}
+      const { getByTestId } = render(
+        <AutoScrollHarness contentVersion={0} onResetReady={onResetReady} />,
+      )
+      const viewport = getByTestId('viewport')
+      setScrollMetrics(viewport, { clientHeight: 100, scrollHeight: 500 })
+      const observer = ContentObserverRecorder.instances.at(-1)
+
+      act(() => {
+        observer?.trigger()
+      })
+      expect(viewport.scrollTop).toBe(400)
+
+      viewport.scrollTop = 200
+      fireEvent.scroll(viewport)
+      setScrollMetrics(viewport, { clientHeight: 100, scrollHeight: 700 })
+
+      act(() => {
+        observer?.trigger()
+      })
+      expect(viewport.scrollTop).toBe(200)
+    } finally {
+      globalThis.ResizeObserver = OriginalResizeObserver
+    }
   })
 
   it('restores an independent scroll position for the root and each subagent', () => {

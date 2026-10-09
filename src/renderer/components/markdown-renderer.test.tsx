@@ -1,4 +1,4 @@
-import { render, waitFor } from '@testing-library/react'
+import { act, render, waitFor } from '@testing-library/react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -15,6 +15,25 @@ vi.mock('shiki/bundle/web', () => ({
   bundledLanguagesInfo: [{ id: 'bash' }, { id: 'text' }],
   codeToHtml: shikiMocks.codeToHtml,
 }))
+
+function stubAnimationFrames() {
+  const queue: Array<() => void> = []
+  let now = performance.now()
+  vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+    queue.push(() => callback(now))
+    return queue.length
+  })
+  vi.stubGlobal('cancelAnimationFrame', () => {})
+  return {
+    flushFrame() {
+      now += 16
+      const pending = queue.splice(0)
+      act(() => {
+        pending.forEach((run) => run())
+      })
+    },
+  }
+}
 
 describe('MarkdownRenderer', () => {
   it('includes markdown content in the initial markup', () => {
@@ -37,5 +56,42 @@ describe('MarkdownRenderer', () => {
 
     expect(container.querySelector('pre pre')).toBeNull()
     expect(container.querySelector('pre')?.textContent).toBe('echo "# test" >> README.md')
+  })
+
+  it('reveals streamed growth at a backlog-paced rate and snaps when the stream ends', () => {
+    const frames = stubAnimationFrames()
+    const tail = 'C'.repeat(120)
+    const { container, rerender } = render(<MarkdownRenderer content="One." isStreaming />)
+
+    // Text present at mount renders immediately.
+    expect(container.textContent).toContain('One.')
+
+    rerender(<MarkdownRenderer content={`One.\n\nTwo.\n\n${tail}`} isStreaming />)
+
+    frames.flushFrame()
+    expect(container.textContent).toContain('One.')
+    expect(container.textContent).not.toContain('Two.')
+
+    frames.flushFrame()
+    expect(container.textContent).toContain('Two.')
+    expect(container.textContent).not.toContain(tail)
+
+    rerender(<MarkdownRenderer content={`One.\n\nTwo.\n\n${tail}`} isStreaming={false} />)
+    expect(container.textContent).toContain(tail)
+    vi.unstubAllGlobals()
+  })
+
+  it('shows replaced tail content immediately instead of animating stale text', () => {
+    const frames = stubAnimationFrames()
+    const { container, rerender } = render(<MarkdownRenderer content="One." isStreaming />)
+
+    rerender(<MarkdownRenderer content="One.\n\nTwo." isStreaming />)
+    rerender(<MarkdownRenderer content="One." isStreaming />)
+    frames.flushFrame()
+    frames.flushFrame()
+
+    expect(container.textContent).toContain('One.')
+    expect(container.textContent).not.toContain('Two.')
+    vi.unstubAllGlobals()
   })
 })
