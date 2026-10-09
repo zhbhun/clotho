@@ -22,7 +22,6 @@ export function FileCompletionMenu({
   message,
   outline,
   position,
-  scrollActiveIntoView,
   onActiveIndexChange,
   onSelect,
 }: {
@@ -34,38 +33,56 @@ export function FileCompletionMenu({
   outline?: ProjectFileSearchOutlineNode[]
   position: CompletionMenuPosition
   query: string
-  scrollActiveIntoView: boolean
   onActiveIndexChange: (activeIndex: number) => void
   onSelect: (item: ProjectFileSearchEntry) => void
 }) {
   const { t } = useTranslation()
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([])
   const outlineRef = useRef<HTMLDivElement | null>(null)
+  const resultsViewportRef = useRef<HTMLDivElement | null>(null)
   const [outlineTop, setOutlineTop] = useState(0)
   const activeItem = activeIndex >= 0 ? items[activeIndex] : undefined
 
-  // Scroll first so the outline below aligns with the row's post-scroll position.
+  // Keep the active row inside the results viewport (nearest-edge scroll, done
+  // manually because scrollIntoView is unreliable across the Base UI viewport),
+  // then align the outline with the row's post-scroll position.
   useLayoutEffect(() => {
-    if (!scrollActiveIntoView || activeIndex < 0) return
-    optionRefs.current[activeIndex]?.scrollIntoView({ block: 'nearest' })
-  }, [activeIndex, scrollActiveIntoView])
+    if (activeIndex < 0) return
+    const row = optionRefs.current[activeIndex]
+    const viewport = resultsViewportRef.current
+    if (!row || !viewport) return
+    const viewportRect = viewport.getBoundingClientRect()
+    const rowRect = row.getBoundingClientRect()
+    if (rowRect.top < viewportRect.top) {
+      viewport.scrollTop -= viewportRect.top - rowRect.top
+    } else if (rowRect.bottom > viewportRect.bottom) {
+      viewport.scrollTop += rowRect.bottom - viewportRect.bottom
+    }
+  }, [activeIndex, items])
 
-  // Top-align the outline with the active result row; when the tree would pass the
-  // window bottom, avoid it by lifting the panel whole instead of shrinking it.
+  // Top-align the outline with the active result row, kept within the results
+  // panel's vertical range; when the tree would pass the window bottom, avoid it
+  // by lifting the panel whole instead of shrinking it.
   const updateOutlineTop = useCallback(() => {
     if (activeIndex < 0) return
     const activeRow = optionRefs.current[activeIndex]
     const panel = outlineRef.current
-    if (!activeRow || !panel) return
-    const rowTop = activeRow.getBoundingClientRect().top
+    const resultsViewport = resultsViewportRef.current
+    if (!activeRow || !panel || !resultsViewport) return
+    const resultsRect = resultsViewport.getBoundingClientRect()
+    const rowRect = activeRow.getBoundingClientRect()
+    const outlineHeight = panel.offsetHeight
+    let top = rowRect.top - resultsRect.top
+    if (outlineHeight <= resultsRect.height) {
+      top = Math.max(0, Math.min(top, resultsRect.height - outlineHeight))
+    }
     const bottomLimit = window.innerHeight - OUTLINE_VIEWPORT_PADDING
-    let top = rowTop - position.top
-    const overflow = rowTop + panel.offsetHeight - bottomLimit
+    const overflow = resultsRect.top + top + outlineHeight - bottomLimit
     if (overflow > 0) {
-      top = Math.max(OUTLINE_VIEWPORT_PADDING - position.top, top - overflow)
+      top = Math.max(OUTLINE_VIEWPORT_PADDING - resultsRect.top, top - overflow)
     }
     setOutlineTop((prev) => (prev === top ? prev : top))
-  }, [activeIndex, position.top])
+  }, [activeIndex])
 
   useLayoutEffect(() => {
     updateOutlineTop()
@@ -99,6 +116,7 @@ export function FileCompletionMenu({
         className="w-[31rem] max-w-[calc(100vw-24px)] min-w-0 shrink-0 rounded-lg border border-border/70 bg-popover p-1 shadow-float"
         data-glass="true"
         data-file-completion-results
+        viewportRef={resultsViewportRef}
         viewportProps={{ className: 'max-h-80', onScroll: updateOutlineTop }}
       >
         {items.length > 0 ? (

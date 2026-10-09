@@ -334,7 +334,6 @@ export function PromptMarkdownEditor({
           outline={completion.fileState.outline}
           position={completion.position}
           query={completion.completion.query}
-          scrollActiveIntoView={completion.completion.scrollActiveIntoView}
           onActiveIndexChange={(activeIndex) =>
             completion.setCompletion((current) =>
               current?.kind === 'file'
