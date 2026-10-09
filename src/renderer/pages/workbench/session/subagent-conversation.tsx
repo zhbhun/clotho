@@ -207,7 +207,7 @@ export function SubagentConversation({
           </Empty>
         ) : !items.length && isRunning ? (
           <div className="flex justify-center px-3 py-24">
-            <ThinkingIndicator />
+            <ThinkingIndicator hasIcon={false} />
           </div>
         ) : null}
       </div>

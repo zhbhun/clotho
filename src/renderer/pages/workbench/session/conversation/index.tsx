@@ -468,7 +468,7 @@ function ConversationRowContent({
     </div>
   ) : (
     <div className="px-3 pt-4">
-      <ThinkingIndicator />
+      <ThinkingIndicator hasIcon={false} />
     </div>
   )
 }
