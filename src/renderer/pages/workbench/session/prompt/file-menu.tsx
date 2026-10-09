@@ -60,29 +60,23 @@ export function FileCompletionMenu({
     }
   }, [activeIndex, items])
 
-  // Top-align the outline with the active result row, kept within the results
-  // panel's vertical range; when the tree would pass the window bottom, avoid it
-  // by lifting the panel whole instead of shrinking it.
+  // Top-align the outline with the active result row, never above the results
+  // panel's top; when the tree would pass the window bottom, avoid it by lifting
+  // the panel whole instead of shrinking it.
   const updateOutlineTop = useCallback(() => {
     if (activeIndex < 0) return
     const activeRow = optionRefs.current[activeIndex]
     const panel = outlineRef.current
-    const resultsViewport = resultsViewportRef.current
-    if (!activeRow || !panel || !resultsViewport) return
-    const resultsRect = resultsViewport.getBoundingClientRect()
+    if (!activeRow || !panel) return
     const rowRect = activeRow.getBoundingClientRect()
-    const outlineHeight = panel.offsetHeight
-    let top = rowRect.top - resultsRect.top
-    if (outlineHeight <= resultsRect.height) {
-      top = Math.max(0, Math.min(top, resultsRect.height - outlineHeight))
-    }
+    let top = Math.max(0, rowRect.top - position.top)
     const bottomLimit = window.innerHeight - OUTLINE_VIEWPORT_PADDING
-    const overflow = resultsRect.top + top + outlineHeight - bottomLimit
+    const overflow = position.top + top + panel.offsetHeight - bottomLimit
     if (overflow > 0) {
-      top = Math.max(OUTLINE_VIEWPORT_PADDING - resultsRect.top, top - overflow)
+      top = Math.max(OUTLINE_VIEWPORT_PADDING - position.top, top - overflow)
     }
     setOutlineTop((prev) => (prev === top ? prev : top))
-  }, [activeIndex])
+  }, [activeIndex, position.top])
 
   useLayoutEffect(() => {
     updateOutlineTop()
