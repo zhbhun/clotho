@@ -350,6 +350,34 @@ function isAgentMessageEntry(entry: ClaudeJsonLine): boolean {
   return text.trimStart().startsWith('<agent-message')
 }
 
+/**
+ * The coordinate-mapping annotation the CLI generates for an image that entered
+ * the conversation (a pasted attachment or a tool-result image). The transcript
+ * marks the companion entry isMeta, but the live wire frame carries no such
+ * flag, so the generated text itself is the only marker — it must never surface
+ * as a user prompt.
+ */
+const IMAGE_ANNOTATION_TEXT_PATTERNS = [
+  /^\[Image: source: .+\]$/,
+  /^\[Image source: .+\]$/,
+  /^\[Image: (?:source: .+, )?original \d+x\d+, displayed at \d+x\d+\. Multiply coordinates by \d+(?:\.\d+)? to map to original image\.\]$/,
+]
+
+function isImageAnnotationText(text: string): boolean {
+  return IMAGE_ANNOTATION_TEXT_PATTERNS.some((pattern) => pattern.test(text.trim()))
+}
+
+function isImageAnnotationEntry(entry: ClaudeJsonLine): boolean {
+  if (entry.type !== 'user') return false
+  const content = entry.message?.content
+  if (typeof content === 'string') return isImageAnnotationText(content)
+  if (!Array.isArray(content) || content.length === 0) return false
+  return content.every(
+    (part) =>
+      part.type === 'text' && typeof part.text === 'string' && isImageAnnotationText(part.text),
+  )
+}
+
 function shouldSkipEntry(entry: ClaudeJsonLine): boolean {
   const t = entry.type
   return (
@@ -361,6 +389,7 @@ function shouldSkipEntry(entry: ClaudeJsonLine): boolean {
     isLocalCommandOutputEntry(entry) ||
     isModelSwitchReceiptEntry(entry) ||
     isAgentMessageEntry(entry) ||
+    isImageAnnotationEntry(entry) ||
     t === 'attachment' ||
     t === 'file-history-snapshot' ||
     t === 'last-prompt' ||

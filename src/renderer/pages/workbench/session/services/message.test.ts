@@ -140,6 +140,71 @@ describe('Claude message parsing', () => {
   })
 })
 
+describe('image annotation companion frames', () => {
+  const dimensionOnly =
+    '[Image: original 2560x1289, displayed at 2000x1007. Multiply coordinates by 1.28 to map to original image.]'
+  const sourceOnly = '[Image: source: /tmp/claude-501/session/images/1.png]'
+  const sourceWithDimensions =
+    '[Image: source: /tmp/claude-501/session/images/1.png, original 2478x952, displayed at 2000x768. Multiply coordinates by 1.24 to map to original image.]'
+  const legacySourceOnly = '[Image source: /tmp/claude-501/session/images/1.png]'
+
+  it('skips the generated annotation whether it arrives as a bare string or text blocks', () => {
+    for (const text of [dimensionOnly, sourceOnly, sourceWithDimensions, legacySourceOnly]) {
+      expect(
+        claudeJsonToMessage({ type: 'user', message: { role: 'user', content: text } }),
+      ).toBeNull()
+      expect(
+        claudeJsonToMessage({
+          type: 'user',
+          message: { role: 'user', content: [{ type: 'text', text }] },
+        }),
+      ).toBeNull()
+    }
+  })
+
+  it('skips the multi-image frame holding one annotation per image', () => {
+    expect(
+      claudeJsonToMessage({
+        type: 'user',
+        message: {
+          role: 'user',
+          content: [
+            { type: 'text', text: sourceOnly },
+            { type: 'text', text: dimensionOnly },
+          ],
+        },
+      }),
+    ).toBeNull()
+  })
+
+  it('keeps a real prompt that only quotes or embeds the annotation', () => {
+    expect(
+      claudeJsonToMessage({
+        type: 'user',
+        message: { role: 'user', content: `What does "${dimensionOnly}" mean?` },
+      }),
+    ).toMatchObject({ role: 'user' })
+  })
+
+  it('keeps a pasted-image turn whose content mixes blocks beyond the annotation', () => {
+    expect(
+      claudeJsonToMessage({
+        type: 'user',
+        message: {
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: { type: 'base64', media_type: 'image/png', data: 'aW1hZ2U=' },
+            },
+            { type: 'text', text: dimensionOnly },
+          ],
+        },
+      }),
+    ).toMatchObject({ role: 'user' })
+  })
+})
+
 describe('API retry parsing', () => {
   it('parses a live wire api_retry event into an apiRetry message', () => {
     expect(
