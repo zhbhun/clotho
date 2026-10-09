@@ -57,12 +57,12 @@ function createStore(settings: ClaudeskSettings) {
 }
 
 function completeSettings(
-  settings: Pick<ClaudeskSettings, 'models' | 'providers'>,
+  settings: Pick<ClaudeskSettings, 'defaultModel' | 'providers'>,
 ): ClaudeskSettings {
   return { ...settings, ...DEFAULT_APP_PREFERENCES }
 }
 
-function createService(settings: Pick<ClaudeskSettings, 'models' | 'providers'>) {
+function createService(settings: Pick<ClaudeskSettings, 'defaultModel' | 'providers'>) {
   const proxy = createProxy()
   const { persist, store } = createStore(completeSettings(settings))
   const service = createClaudeDesktopService(createEvents(), proxy, store)
@@ -71,7 +71,7 @@ function createService(settings: Pick<ClaudeskSettings, 'models' | 'providers'>)
 
 describe('Claude desktop service settings', () => {
   test('normalizes unsupported model reasoning levels before saving', async () => {
-    const { service, store } = createService({ providers: [], models: {} })
+    const { service, store } = createService({ providers: [] })
     const provider = {
       ...newProvider,
       models: [{ ...newProvider.models[0]!, reasoning: 'turbo' }],
@@ -83,7 +83,7 @@ describe('Claude desktop service settings', () => {
   })
 
   test('reserves the Claude provider ID for authenticated first-party models', async () => {
-    const { service } = createService({ providers: [], models: {} })
+    const { service } = createService({ providers: [] })
 
     await expect(
       service.createProvider({
@@ -95,7 +95,7 @@ describe('Claude desktop service settings', () => {
   test('does not refresh proxy settings when persistence fails', async () => {
     const { persist, proxy, service, store } = createService({
       providers: [existingProvider],
-      models: { sonnet: 'zhipu/glm-5.2' },
+      defaultModel: 'zhipu/glm-5.2',
     })
     persist.mockRejectedValueOnce(new Error('disk full'))
 
@@ -104,64 +104,63 @@ describe('Claude desktop service settings', () => {
     expect(proxy.replaceSettings).not.toHaveBeenCalled()
     expect(store.get()).toEqual({
       providers: [existingProvider],
-      models: { sonnet: 'zhipu/glm-5.2' },
+      defaultModel: 'zhipu/glm-5.2',
       ...DEFAULT_APP_PREFERENCES,
     })
   })
 
-  test('clears mappings that reference a deleted provider', async () => {
+  test('clears the default model that references a deleted provider', async () => {
     const { persist, proxy, service } = createService({
       providers: [existingProvider, newProvider],
-      models: {
-        sonnet: 'zhipu/glm-5.2',
-        haiku: 'minimax/MiniMax-M2.7',
-      },
+      defaultModel: 'zhipu/glm-5.2',
     })
 
     await service.deleteProvider({ id: existingProvider.id })
 
     const expected = {
       providers: [newProvider],
-      models: { haiku: 'minimax/MiniMax-M2.7' },
+      defaultModel: undefined,
       ...DEFAULT_APP_PREFERENCES,
     }
     expect(persist).toHaveBeenCalledWith(expected)
-    expect(proxy.replaceSettings).toHaveBeenCalledWith(expected)
+    expect(proxy.replaceSettings).toHaveBeenCalledWith(expected.providers)
   })
 
-  test('clears mappings when an edited provider removes their model', async () => {
+  test('clears the default model when an edited provider removes its model', async () => {
     const { service, store } = createService({
       providers: [existingProvider],
-      models: {
-        sonnet: 'zhipu/glm-5.2',
-        haiku: 'zhipu/glm-4.7',
-      },
+      defaultModel: 'zhipu/glm-4.7',
     })
 
     await service.updateProvider({
       provider: { ...existingProvider, models: [existingProvider.models[0]!] },
     })
 
-    expect(store.get().models).toEqual({ sonnet: 'zhipu/glm-5.2' })
+    expect(store.get().defaultModel).toBeUndefined()
   })
 
-  test('rejects a model mapping that is not in the provider catalog', async () => {
-    const { persist, service } = createService({
-      providers: [existingProvider],
-      models: {},
-    })
+  test('rejects a default model that is not in the provider catalog', async () => {
+    const { persist, service } = createService({ providers: [existingProvider] })
 
-    await expect(service.saveModelMappings({ models: { opus: 'zhipu/missing' } })).rejects.toThrow(
-      'Invalid model mapping',
+    await expect(service.saveDefaultModel({ defaultModel: 'zhipu/missing' })).rejects.toThrow(
+      'Invalid default model',
     )
     expect(persist).not.toHaveBeenCalled()
   })
 
+  test('saves a default model from the provider catalog', async () => {
+    const { proxy, service, store } = createService({ providers: [existingProvider] })
+
+    await expect(service.saveDefaultModel({ defaultModel: 'zhipu/glm-4.7' })).resolves.toBe(
+      'zhipu/glm-4.7',
+    )
+
+    expect(store.get().defaultModel).toBe('zhipu/glm-4.7')
+    expect(proxy.replaceSettings).toHaveBeenCalledWith([existingProvider])
+  })
+
   test('rejects creating a provider with an existing id instead of overwriting it', async () => {
-    const { persist, proxy, service, store } = createService({
-      providers: [existingProvider],
-      models: {},
-    })
+    const { persist, proxy, service, store } = createService({ providers: [existingProvider] })
 
     await expect(
       service.createProvider({
@@ -177,7 +176,7 @@ describe('Claude desktop service settings', () => {
   test('persists application preferences without changing model proxy settings', async () => {
     const { persist, proxy, service } = createService({
       providers: [existingProvider],
-      models: { sonnet: 'zhipu/glm-5.2' },
+      defaultModel: 'zhipu/glm-5.2',
     })
     const preferences: AppPreferences = {
       ...DEFAULT_APP_PREFERENCES,
@@ -189,7 +188,7 @@ describe('Claude desktop service settings', () => {
 
     expect(persist).toHaveBeenCalledWith({
       providers: [existingProvider],
-      models: { sonnet: 'zhipu/glm-5.2' },
+      defaultModel: 'zhipu/glm-5.2',
       ...preferences,
     })
     expect(proxy.replaceSettings).not.toHaveBeenCalled()

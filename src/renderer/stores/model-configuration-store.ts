@@ -3,23 +3,23 @@ import { createStore } from 'zustand/vanilla'
 import type {
   ClaudeInitializationResult,
   ClaudeModelInfo,
-  ClaudeModelMappings,
   ModelProvider,
 } from '../services/claude/claude'
 
 export type ModelConfigurationState = {
   availableModels: ClaudeModelInfo[]
   claudeModels: ClaudeModelInfo[]
+  /** App-level default model as a qualified `providerId/modelId` string. */
+  defaultModel: string | null
   hasClaudeAuthentication: boolean
   hasConfiguredProviders: boolean
   isModelAccessResolved: boolean
   isModelCatalogLoaded: boolean
   isSdkInitializationComplete: boolean
   isSettingsLoaded: boolean
-  modelMappings: ClaudeModelMappings
   providers: ModelProvider[]
   initialize: (initialization: ClaudeInitializationResult) => void
-  replaceSettings: (providers: ModelProvider[], mappings: ClaudeModelMappings) => void
+  replaceSettings: (providers: ModelProvider[], defaultModel: string | null) => void
 }
 
 export function providersToModelInfos(providers: ModelProvider[]): ClaudeModelInfo[] {
@@ -40,13 +40,13 @@ export function createModelConfigurationStore() {
   return createStore<ModelConfigurationState>((set) => ({
     availableModels: [],
     claudeModels: [],
+    defaultModel: null,
     hasClaudeAuthentication: false,
     hasConfiguredProviders: false,
     isModelAccessResolved: false,
     isModelCatalogLoaded: false,
     isSdkInitializationComplete: false,
     isSettingsLoaded: false,
-    modelMappings: {},
     providers: [],
     initialize: (initialization) =>
       set((state) => {
@@ -80,17 +80,17 @@ export function createModelConfigurationStore() {
           isModelCatalogLoaded: true,
           isSdkInitializationComplete: true,
           isSettingsLoaded: state.isSettingsLoaded || initialization.providers !== undefined,
-          modelMappings: initialization.modelMappings ?? state.modelMappings,
+          defaultModel: initialization.defaultModel ?? state.defaultModel,
           providers,
         }
       }),
-    replaceSettings: (providers, modelMappings) =>
+    replaceSettings: (providers, defaultModel) =>
       set((state) => ({
         availableModels: [...state.claudeModels, ...providersToModelInfos(providers)],
         hasConfiguredProviders: providers.length > 0,
         isModelCatalogLoaded: true,
         isSettingsLoaded: true,
-        modelMappings,
+        defaultModel,
         providers,
       })),
   }))

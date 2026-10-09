@@ -1,7 +1,6 @@
 import type {
   AppPreferences,
   ClaudeInitializationResult,
-  ClaudeModelMappings,
   ClaudePurgeDeadPairsParams,
   ClaudeRewindSessionFilesParams,
   ClaudeSampleContextUsageParams,
@@ -43,11 +42,7 @@ import {
   resolveSessionEditAnchor,
 } from './claude/session'
 import { createSessionQueryRegistry } from './claude/session-registry'
-import {
-  type SettingsStore,
-  sanitizeAppPreferences,
-  sanitizeModelMappings,
-} from './claude/settings'
+import { type SettingsStore, sanitizeAppPreferences, sanitizeDefaultModel } from './claude/settings'
 import { dropTrailingTurn, purgeDeadPairs } from './claude/transcript'
 import {
   addProjectFromFolder,
@@ -86,7 +81,7 @@ async function startupWithProviders(
     ...result,
     ...catalog,
     providers: settings.providers,
-    modelMappings: settings.models,
+    defaultModel: settings.defaultModel,
   }
 }
 
@@ -132,10 +127,10 @@ export function createClaudeDesktopService(
       return {
         ...settings,
         providers,
-        models: sanitizeModelMappings(settings.models, providers),
+        defaultModel: sanitizeDefaultModel(settings.defaultModel, providers),
       }
     })
-    proxy.replaceSettings(next)
+    proxy.replaceSettings(next.providers)
     return normalizedProvider
   }
 
@@ -191,7 +186,7 @@ export function createClaudeDesktopService(
     renameSession,
     deleteSession,
     listProviders: () => settingsStore.get().providers,
-    listModelMappings: () => settingsStore.get().models,
+    getDefaultModel: () => settingsStore.get().defaultModel ?? null,
     fetchProviderModels: (params: FetchProviderModelsParams) => fetchProviderModels(params),
     getProviderUsage: (params: GetProviderUsageParams) => getProviderUsage(params),
     createProvider: ({ provider }: { provider: ModelProvider }) =>
@@ -204,23 +199,21 @@ export function createClaudeDesktopService(
         return {
           ...settings,
           providers,
-          models: sanitizeModelMappings(settings.models, providers),
+          defaultModel: sanitizeDefaultModel(settings.defaultModel, providers),
         }
       })
-      proxy.replaceSettings(next)
+      proxy.replaceSettings(next.providers)
     },
-    saveModelMappings: async ({ models }: { models: ClaudeModelMappings }) => {
+    saveDefaultModel: async ({ defaultModel }: { defaultModel: string | null }) => {
       const next = await settingsStore.update((settings) => {
-        const sanitized = sanitizeModelMappings(models, settings.providers)
-        for (const [role, value] of Object.entries(models)) {
-          if (value?.trim() && sanitized[role as keyof ClaudeModelMappings] !== value) {
-            throw new Error(`Invalid model mapping: ${role}`)
-          }
+        const sanitized = sanitizeDefaultModel(defaultModel, settings.providers)
+        if (typeof defaultModel === 'string' && defaultModel.trim() && !sanitized) {
+          throw new Error(`Invalid default model: ${defaultModel}`)
         }
-        return { ...settings, models: sanitized }
+        return { ...settings, defaultModel: sanitized }
       })
-      proxy.replaceSettings(next)
-      return next.models
+      proxy.replaceSettings(next.providers)
+      return next.defaultModel ?? null
     },
     getAppPreferences: () => {
       const { language, defaultPermissionMode, appearance } = settingsStore.get()

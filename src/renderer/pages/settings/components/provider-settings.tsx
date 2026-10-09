@@ -29,7 +29,7 @@ import {
 } from '@/shadcn/empty'
 import { Spinner } from '@/shadcn/spinner'
 
-import { ModelMappingSettings } from '../../../components/model-configuration/model-mapping-settings'
+import { DefaultModelSettings } from '../../../components/model-configuration/default-model-settings'
 import { ProviderEditorForm } from '../../../components/model-configuration/provider-editor-form'
 import { SettingsSection } from '../../../components/settings-section'
 import { ShortcutAlertDialog, ShortcutDialog } from '../../../components/shortcut-dialog'
@@ -67,10 +67,10 @@ export function ProviderSettings() {
 
   return (
     <div className="flex flex-col gap-8">
-      <ModelMappingSettings
+      <DefaultModelSettings
         providers={settings.providers}
-        models={settings.modelMappings}
-        onSave={settings.saveModelMappings}
+        model={settings.defaultModel}
+        onSave={settings.saveDefaultModel}
       />
 
       <SettingsSection

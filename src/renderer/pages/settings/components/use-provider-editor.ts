@@ -14,17 +14,17 @@ import {
 } from '../../../components/model-configuration/provider-draft'
 import type { ProviderPreset } from '../../../components/model-configuration/provider-presets'
 import { useProviderDraft } from '../../../components/model-configuration/use-provider-draft'
-import type { ClaudeModelMappings, ModelProvider } from '../../../services/claude/claude'
+import type { ModelProvider } from '../../../services/claude/claude'
 import { claude } from '../../../services/claude/claude'
 
 export function useProviderEditor({
-  modelMappings,
+  defaultModel,
   providers,
   replaceSettings,
 }: {
-  modelMappings: ClaudeModelMappings
+  defaultModel: string | null
   providers: ModelProvider[]
-  replaceSettings: (providers: ModelProvider[], modelMappings: ClaudeModelMappings) => void
+  replaceSettings: (providers: ModelProvider[], defaultModel: string | null) => void
 }) {
   const { t } = useTranslation()
   const [editingMode, setEditingMode] = useState<'create' | 'update' | null>(null)
@@ -113,11 +113,11 @@ export function useProviderEditor({
     }
 
     const nextProviders = upsertProvider(providers, saved)
-    replaceSettings(nextProviders, modelMappings)
+    replaceSettings(nextProviders, defaultModel)
     setEditingMode(null)
 
     try {
-      replaceSettings(nextProviders, await claude.listModelMappings())
+      replaceSettings(nextProviders, await claude.getDefaultModel())
     } catch {
       toast.add({
         id: 'settings-provider-refresh-after-save-error',

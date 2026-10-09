@@ -40,7 +40,6 @@ const provider: ModelProvider = {
 function settings(overrides: Partial<ClaudeskSettings> = {}): ClaudeskSettings {
   return {
     providers: [],
-    models: {},
     ...DEFAULT_APP_PREFERENCES,
     ...overrides,
   }
@@ -73,7 +72,6 @@ describe('Clotho settings store', () => {
             ],
           },
         ],
-        models: {},
       }),
     )
 
@@ -82,50 +80,45 @@ describe('Clotho settings store', () => {
     })
   })
 
-  test('ignores mappings that do not resolve to a configured provider model', async () => {
+  test('keeps a default model that resolves to a configured provider model', async () => {
+    fsMock.readFile.mockResolvedValue(
+      JSON.stringify({
+        providers: [provider],
+        defaultModel: 'zhipu/glm-5.2/fast',
+      }),
+    )
+
+    await expect(readSettings('/test/settings.json')).resolves.toMatchObject({
+      defaultModel: 'zhipu/glm-5.2/fast',
+    })
+  })
+
+  test('drops a default model that does not resolve to a configured provider model', async () => {
+    fsMock.readFile.mockResolvedValue(
+      JSON.stringify({
+        providers: [provider],
+        defaultModel: 'zhipu/missing',
+      }),
+    )
+
+    await expect(readSettings('/test/settings.json')).resolves.toMatchObject({
+      defaultModel: undefined,
+    })
+  })
+
+  test('migrates the legacy fallback model mapping to the default model', async () => {
     fsMock.readFile.mockResolvedValue(
       JSON.stringify({
         providers: [provider],
         models: {
-          sonnet: 'zhipu/glm-5.2/fast',
-          opus: 'zhipu/missing',
-          haiku: 'missing/glm-5.2/fast',
-          subagent: '',
-          unknown: 'zhipu/glm-5.2/fast',
+          fallback: 'zhipu/glm-5.2/fast',
+          sonnet: 'zhipu/missing',
         },
       }),
     )
 
-    await expect(readSettings('/test/settings.json')).resolves.toEqual({
-      providers: [
-        {
-          ...provider,
-          apiType: 'anthropic-messages',
-          models: [{ ...provider.models[0], thinkingLevel: 'on' }],
-        },
-      ],
-      models: { sonnet: 'zhipu/glm-5.2/fast' },
-      language: 'system',
-      defaultPermissionMode: 'default',
-      appearance: {
-        theme: 'system',
-        pointerCursor: false,
-        reducedMotion: 'system',
-        themePalettes: {
-          dark: {
-            accent: '#f5f5f5',
-            background: '#0a0a0a',
-            foreground: '#f5f5f5',
-            preset: 'clotho',
-          },
-          light: {
-            accent: '#171717',
-            background: '#ffffff',
-            foreground: '#171717',
-            preset: 'clotho',
-          },
-        },
-      },
+    await expect(readSettings('/test/settings.json')).resolves.toMatchObject({
+      defaultModel: 'zhipu/glm-5.2/fast',
     })
   })
 
@@ -133,7 +126,6 @@ describe('Clotho settings store', () => {
     fsMock.readFile.mockResolvedValue(
       JSON.stringify({
         providers: [],
-        models: {},
         language: 'zh-CN',
         defaultPermissionMode: 'default',
         appearance: {
@@ -197,7 +189,7 @@ describe('Clotho settings store', () => {
     const file = '/test/.clotho/settings.json'
     const value: ClaudeskSettings = settings({
       providers: [provider],
-      models: { haiku: 'zhipu/glm-5.2/fast' },
+      defaultModel: 'zhipu/glm-5.2/fast',
     })
 
     await writeSettings(value, file)
@@ -219,19 +211,19 @@ describe('Clotho settings store', () => {
       store.update((current) => ({ ...current, providers: [provider] })),
       store.update((current) => ({
         ...current,
-        models: { sonnet: 'zhipu/glm-5.2/fast' },
+        defaultModel: 'zhipu/glm-5.2/fast',
       })),
     ])
 
     expect(store.get()).toEqual({
       providers: [provider],
-      models: { sonnet: 'zhipu/glm-5.2/fast' },
+      defaultModel: 'zhipu/glm-5.2/fast',
       ...DEFAULT_APP_PREFERENCES,
     })
     expect(persist).toHaveBeenCalledTimes(2)
     expect(persist).toHaveBeenLastCalledWith({
       providers: [provider],
-      models: { sonnet: 'zhipu/glm-5.2/fast' },
+      defaultModel: 'zhipu/glm-5.2/fast',
       ...DEFAULT_APP_PREFERENCES,
     })
   })
@@ -245,19 +237,19 @@ describe('Clotho settings store', () => {
 
     const rejected = store.update((current) => ({
       ...current,
-      models: { sonnet: 'zhipu/glm-5.2/fast' },
+      defaultModel: 'zhipu/glm-5.2/fast',
     }))
     const queued = store.update((current) => ({ ...current, providers: [provider] }))
 
     await expect(rejected).rejects.toThrow('disk full')
-    await expect(queued).resolves.toEqual(settings({ providers: [provider], models: {} }))
-    expect(store.get()).toEqual(settings({ providers: [provider], models: {} }))
+    await expect(queued).resolves.toEqual(settings({ providers: [provider] }))
+    expect(store.get()).toEqual(settings({ providers: [provider] }))
   })
 
   test('rebases the first update onto recovered settings after a startup read failure', async () => {
     const recovered = settings({
       providers: [provider],
-      models: { sonnet: 'zhipu/glm-5.2/fast' },
+      defaultModel: 'zhipu/glm-5.2/fast',
       language: 'zh-CN',
     })
     const persist = vi.fn(async () => {})

@@ -5,7 +5,6 @@ import type { ClaudeAttachment } from '@/shared/rpc'
 import type {
   ClaudeContextUsageSnapshot,
   ClaudeInitializationResult,
-  ClaudeModelMappings,
   ClaudePermissionMode,
   ClaudeRewindFilesResult,
   ClaudeSdkMessage,
@@ -54,7 +53,7 @@ function createClient() {
       agents: [{ name: 'reviewer', description: 'Review code' }],
       models: [{ value: 'sonnet', displayName: 'Sonnet', description: 'Balanced' }],
     })),
-    listModelMappings: vi.fn(async (): Promise<ClaudeModelMappings> => ({})),
+    getDefaultModel: vi.fn(async (): Promise<string | null> => null),
     openSessionStream: vi.fn(() => {
       throw new Error('openSessionStream is not expected in this test')
     }),
@@ -628,7 +627,7 @@ describe('SessionController', () => {
           ],
         },
       ],
-      {},
+      null,
     )
     const store = trackedStore({
       ...createOptions('local:no-multimodal'),
@@ -3012,7 +3011,7 @@ describe('SessionController', () => {
           contextWindow: 200_000,
         },
       ],
-      modelMappings: { fallback: 'fallback/model-b' },
+      defaultModel: 'fallback/model-b',
     } as never)
     const successful = createSuccessfulStream()
     client.openSessionStream.mockReturnValue(successful.stream as never)
@@ -3040,7 +3039,6 @@ describe('SessionController', () => {
       commands: [],
       agents: [],
       models: [],
-      modelMappings: {},
     })
     client.listProviders.mockResolvedValue([
       {
@@ -3070,7 +3068,7 @@ describe('SessionController', () => {
         ],
       },
     ])
-    client.listModelMappings.mockResolvedValue({ fallback: 'fallback/model-b' })
+    client.getDefaultModel.mockResolvedValue('fallback/model-b')
     const successful = createSuccessfulStream()
     client.openSessionStream.mockReturnValue(successful.stream as never)
     const store = trackedStore({
@@ -3107,7 +3105,6 @@ describe('SessionController', () => {
           contextWindow: 200_000,
         },
       ],
-      modelMappings: {},
     })
     client.listProviders.mockRejectedValueOnce(new Error('RPC unavailable')).mockResolvedValue([
       {
@@ -3124,7 +3121,7 @@ describe('SessionController', () => {
         ],
       },
     ])
-    client.listModelMappings.mockResolvedValue({ fallback: 'fallback/model-b' })
+    client.getDefaultModel.mockResolvedValue('fallback/model-b')
     const successful = createSuccessfulStream()
     client.openSessionStream.mockReturnValue(successful.stream as never)
     const store = trackedStore({
@@ -3168,7 +3165,6 @@ describe('SessionController', () => {
           contextWindow: 200_000,
         },
       ],
-      modelMappings: {},
     })
 
     let resolveOlderProviders!: (providers: ModelProvider[]) => void
@@ -3191,7 +3187,7 @@ describe('SessionController', () => {
       },
     ]
     client.listProviders.mockReturnValueOnce(olderProviders).mockResolvedValueOnce(currentProviders)
-    client.listModelMappings.mockResolvedValue({})
+    client.getDefaultModel.mockResolvedValue(null)
     const store = trackedStore({
       ...createOptions('local:concurrent-model-refresh'),
       client,

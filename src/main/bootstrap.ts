@@ -190,10 +190,7 @@ export async function bootstrap() {
     const proxySettings = settingsStore.get()
     let modelProxy
     try {
-      modelProxy = await createModelProxy({
-        providers: proxySettings.providers,
-        models: proxySettings.models,
-      })
+      modelProxy = await createModelProxy({ providers: proxySettings.providers })
     } catch (caught) {
       modelProxyLogger.error('model_proxy.failed', 'The local model proxy failed to start', {
         error: caught,
@@ -326,11 +323,11 @@ export async function bootstrap() {
         claudeRespondToolRequest: (params) =>
           service.respondToolRequest(params.streamId, params.toolUseId, params.result),
         claudeListProviders: () => service.listProviders(),
-        claudeListModelMappings: () => service.listModelMappings(),
+        claudeGetDefaultModel: () => service.getDefaultModel(),
         claudeCreateProvider: (params) => service.createProvider(params),
         claudeUpdateProvider: (params) => service.updateProvider(params),
         claudeDeleteProvider: (params) => service.deleteProvider(params),
-        claudeSaveModelMappings: (params) => service.saveModelMappings(params),
+        claudeSaveDefaultModel: (params) => service.saveDefaultModel(params),
         claudeSetProjectModel: (params) => service.setProjectModel(params),
         claudeFetchProviderModels: (params) => service.fetchProviderModels(params),
         claudeGetProviderUsage: (params) => service.getProviderUsage(params),

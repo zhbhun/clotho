@@ -36,7 +36,7 @@ function initialization(
       },
     ],
     providers: [PROVIDER],
-    modelMappings: { fallback: 'zhipu/glm-5.2' },
+    defaultModel: 'zhipu/glm-5.2',
     hasClaudeAuthentication: true,
     hasConfiguredProviders: true,
     ...overrides,
@@ -54,11 +54,11 @@ describe('model configuration store', () => {
       name: 'OpenAI',
       models: [{ id: 'gpt-5', displayName: 'GPT-5', contextWindow: 128_000 }],
     }
-    store.getState().replaceSettings([nextProvider], { fallback: 'openai/gpt-5' })
+    store.getState().replaceSettings([nextProvider], 'openai/gpt-5')
 
     expect(store.getState()).toMatchObject({
       providers: [nextProvider],
-      modelMappings: { fallback: 'openai/gpt-5' },
+      defaultModel: 'openai/gpt-5',
       hasClaudeAuthentication: true,
       hasConfiguredProviders: true,
       availableModels: [
@@ -76,7 +76,6 @@ describe('model configuration store', () => {
       initialization({
         models: [],
         providers: [],
-        modelMappings: {},
         hasClaudeAuthentication: false,
         hasConfiguredProviders: false,
       }),
@@ -85,7 +84,7 @@ describe('model configuration store', () => {
     expect(store.getState()).toMatchObject({
       hasClaudeAuthentication: true,
       hasConfiguredProviders: true,
-      modelMappings: { fallback: 'zhipu/glm-5.2' },
+      defaultModel: 'zhipu/glm-5.2',
     })
     expect(store.getState().availableModels).toEqual([
       expect.objectContaining({ providerId: 'claude', value: 'sonnet' }),
@@ -95,7 +94,7 @@ describe('model configuration store', () => {
 
   it('merges SDK access state after local provider settings load first', () => {
     const store = createModelConfigurationStore()
-    store.getState().replaceSettings([PROVIDER], { fallback: 'zhipu/glm-5.2' })
+    store.getState().replaceSettings([PROVIDER], 'zhipu/glm-5.2')
 
     store.getState().initialize(initialization())
 
@@ -104,7 +103,7 @@ describe('model configuration store', () => {
       hasConfiguredProviders: true,
       isModelAccessResolved: true,
       isSdkInitializationComplete: true,
-      modelMappings: { fallback: 'zhipu/glm-5.2' },
+      defaultModel: 'zhipu/glm-5.2',
     })
     expect(store.getState().availableModels).toEqual([
       expect.objectContaining({ providerId: 'claude', value: 'sonnet' }),
@@ -114,7 +113,7 @@ describe('model configuration store', () => {
 
   it('keeps loaded provider settings when an older SDK response omits them', () => {
     const store = createModelConfigurationStore()
-    store.getState().replaceSettings([], {})
+    store.getState().replaceSettings([], null)
 
     store.getState().initialize(
       initialization({
@@ -128,7 +127,7 @@ describe('model configuration store', () => {
           },
         ],
         providers: undefined,
-        modelMappings: undefined,
+        defaultModel: undefined,
         hasClaudeAuthentication: undefined,
         hasConfiguredProviders: undefined,
       }),
@@ -136,7 +135,7 @@ describe('model configuration store', () => {
 
     expect(store.getState()).toMatchObject({
       isSettingsLoaded: true,
-      modelMappings: {},
+      defaultModel: null,
       providers: [],
     })
     expect(store.getState().availableModels).toEqual([

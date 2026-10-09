@@ -1,12 +1,13 @@
-import type { ClaudeModelInfo, ClaudeModelMappings } from '../../../../services/claude/claude'
+import type { ClaudeModelInfo } from '../../../../services/claude/claude'
 
 export type ModelSelectionState = {
   availableModels: ClaudeModelInfo[]
   defaultModelId?: string
   defaultProviderId?: string
+  /** App-level default model as a qualified `providerId/modelId` string. */
+  defaultModel?: string | null
   isModelCatalogLoaded: boolean
   isSdkInitializationComplete: boolean
-  modelMappings: ClaudeModelMappings
   selectedModelId: string | null
   selectedProviderId: string | null
 }
@@ -68,7 +69,7 @@ export function resolveSessionModel(state: ModelSelectionState) {
     selectedModelId: state.selectedModelId,
     defaultProviderId: state.defaultProviderId,
     defaultModelId: state.defaultModelId,
-    fallbackModel: state.modelMappings?.fallback,
+    fallbackModel: state.defaultModel ?? undefined,
     isModelCatalogLoaded: state.isModelCatalogLoaded,
     isSdkInitializationComplete: state.isSdkInitializationComplete,
     models: state.availableModels,

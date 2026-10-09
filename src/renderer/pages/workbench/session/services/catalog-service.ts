@@ -38,10 +38,10 @@ export class CatalogService {
     const revision = ++this.refreshRevision
     for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
-        const { modelMappings, providers } = await fetchModelSettings(this.controller.claudeService)
+        const { defaultModel, providers } = await fetchModelSettings(this.controller.claudeService)
         if (this.controller.isDisposed || revision !== this.refreshRevision) return
 
-        this.controller.modelConfigurationStore.getState().replaceSettings(providers, modelMappings)
+        this.controller.modelConfigurationStore.getState().replaceSettings(providers, defaultModel)
 
         const { availableModels } = this.controller.modelConfigurationStore.getState()
         const { selectedModelId, selectedProviderId } = this.controller.composerStore.getState()

@@ -2,7 +2,6 @@ import { randomUUID } from 'node:crypto'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
-import { CLAUDE_MODEL_MAPPING_ROLES } from '@/shared/provider'
 import type {
   AppAppearancePreferences,
   AppDefaultPermissionMode,
@@ -11,7 +10,6 @@ import type {
   AppReducedMotionPreference,
   AppTheme,
   AppThemePalette,
-  ClaudeModelMappings,
   ModelProvider,
 } from '@/shared/rpc'
 
@@ -24,7 +22,8 @@ const logger = getLogger('settings')
 /** Main-process persisted shape for `~/.clotho/settings.json`. */
 export interface ClaudeskSettings {
   providers: ModelProvider[]
-  models: ClaudeModelMappings
+  /** App-level default model as a qualified `providerId/modelId` string. */
+  defaultModel?: string
   language: AppLanguagePreference
   defaultPermissionMode: AppDefaultPermissionMode
   appearance: AppAppearancePreferences
@@ -87,32 +86,23 @@ export const DEFAULT_APP_PREFERENCES: AppPreferences = {
 }
 
 export function defaultSettings(): ClaudeskSettings {
-  return { providers: [], models: {}, ...sanitizeAppPreferences({}) }
+  return { providers: [], ...sanitizeAppPreferences({}) }
 }
 
 export function settingsJsonPath() {
   return path.join(clothoDir(), 'settings.json')
 }
 
-export function sanitizeModelMappings(
+export function sanitizeDefaultModel(
   value: unknown,
   providers: ModelProvider[],
-): ClaudeModelMappings {
-  const candidate =
-    value && typeof value === 'object' && !Array.isArray(value)
-      ? (value as Record<string, unknown>)
-      : {}
-  const availableModels = new Set(
-    providers.flatMap((provider) => provider.models.map((model) => `${provider.id}/${model.id}`)),
+): string | undefined {
+  if (typeof value !== 'string' || !value.trim()) return undefined
+  return providers.some((provider) =>
+    provider.models.some((model) => `${provider.id}/${model.id}` === value),
   )
-  const models: ClaudeModelMappings = {}
-  for (const role of CLAUDE_MODEL_MAPPING_ROLES) {
-    const mapping = candidate[role]
-    if (typeof mapping === 'string' && mapping.trim() && availableModels.has(mapping)) {
-      models[role] = mapping
-    }
-  }
-  return models
+    ? value
+    : undefined
 }
 
 function sanitizeThemePalette(value: unknown, fallback: AppThemePalette): AppThemePalette {
@@ -205,9 +195,15 @@ export async function readSettings(filePath = settingsJsonPath()): Promise<Claud
           return normalized ? [normalized] : []
         })
       : []
+    // Settings written before the default model existed stored role mappings
+    // under `models`; the old fallback role carries over as the default model.
+    const legacyFallback = candidate.models as Record<string, unknown> | undefined
     return {
       providers,
-      models: sanitizeModelMappings(candidate.models, providers),
+      defaultModel: sanitizeDefaultModel(
+        candidate.defaultModel ?? legacyFallback?.fallback,
+        providers,
+      ),
       ...sanitizeAppPreferences(candidate),
     }
   } catch (caught) {
@@ -252,7 +248,7 @@ function cloneSettings(settings: ClaudeskSettings): ClaudeskSettings {
       ...provider,
       models: provider.models.map((model) => ({ ...model })),
     })),
-    models: { ...settings.models },
+    defaultModel: settings.defaultModel,
     language: settings.language,
     defaultPermissionMode: settings.defaultPermissionMode,
     appearance: {

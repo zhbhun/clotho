@@ -20,8 +20,8 @@ vi.mock('./services/desktop/client', () => ({
     if (command === 'claudeListProviders') {
       return []
     }
-    if (command === 'claudeListModelMappings') {
-      return {}
+    if (command === 'claudeGetDefaultModel') {
+      return null
     }
     return null
   }),

@@ -17,15 +17,14 @@ import { useProviderEditor } from './use-provider-editor'
 export function useProviderSettings() {
   const { t } = useTranslation()
   const modelStore = useModelConfigurationStoreApi()
-  const { isSettingsLoaded, modelMappings, providers, replaceSettings } =
-    useModelConfigurationStore(
-      useShallow((state) => ({
-        isSettingsLoaded: state.isSettingsLoaded,
-        modelMappings: state.modelMappings,
-        providers: state.providers,
-        replaceSettings: state.replaceSettings,
-      })),
-    )
+  const { defaultModel, isSettingsLoaded, providers, replaceSettings } = useModelConfigurationStore(
+    useShallow((state) => ({
+      defaultModel: state.defaultModel,
+      isSettingsLoaded: state.isSettingsLoaded,
+      providers: state.providers,
+      replaceSettings: state.replaceSettings,
+    })),
+  )
   const usageByProviderId = useProviderUsageStore((state) => state.usage)
   const usagePendingIds = useProviderUsageStore((state) => state.pendingIds)
   const refreshProviderUsage = useProviderUsageStore((state) => state.refreshAll)
@@ -34,7 +33,7 @@ export function useProviderSettings() {
   const [hasLoadError, setHasLoadError] = useState(false)
   const [deletingProviderId, setDeletingProviderId] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<ModelProvider | null>(null)
-  const editor = useProviderEditor({ modelMappings, providers, replaceSettings })
+  const editor = useProviderEditor({ defaultModel, providers, replaceSettings })
 
   const loadModelConfiguration = useCallback(async () => {
     setIsLoading(true)
@@ -82,12 +81,12 @@ export function useProviderSettings() {
 
     setDeleteTarget(null)
     const nextProviders = providers.filter((item) => item.id !== id)
-    replaceSettings(nextProviders, modelMappings)
+    replaceSettings(nextProviders, defaultModel)
     dropProviderUsage(id)
     if (editor.editingProvider?.id === id) editor.closeEditor()
 
     try {
-      replaceSettings(nextProviders, await claude.listModelMappings())
+      replaceSettings(nextProviders, await claude.getDefaultModel())
     } catch {
       toast.add({
         id: 'settings-provider-refresh-after-delete-error',
@@ -99,23 +98,23 @@ export function useProviderSettings() {
     setDeletingProviderId(null)
   }
 
-  async function saveModelMappings(models: typeof modelMappings) {
-    const saved = await claude.saveModelMappings(models)
+  async function saveDefaultModel(model: string | null) {
+    const saved = await claude.saveDefaultModel(model)
     replaceSettings(providers, saved)
     return saved
   }
 
   return {
+    defaultModel,
     deleteProvider,
     deleteTarget,
     deletingProviderId,
     hasLoadError,
     isLoading,
     loadModelConfiguration,
-    modelMappings,
     providers,
     refreshProviderUsage,
-    saveModelMappings,
+    saveDefaultModel,
     setDeleteTarget,
     usageByProviderId,
     usagePendingIds,

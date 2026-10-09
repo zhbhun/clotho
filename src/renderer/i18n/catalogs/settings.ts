@@ -41,55 +41,31 @@ export const settingsCatalog = {
   'settings.common.delete': setting('Delete', '删除', '刪除'),
   'settings.common.edit': setting('Edit', '编辑', '編輯'),
   'settings.common.save': setting('Save', '保存', '儲存'),
-  'settings.modelMapping.empty': setting('No matching models', '没有匹配的模型', '沒有匹配的模型'),
-  'settings.modelMapping.fallback': setting('Fallback', '兜底模型', '備援模型'),
-  'settings.modelMapping.fallbackDescription': setting(
-    'Used when no role is explicitly specified',
-    '未明确指定角色时使用',
-    '未明確指定角色時使用',
+  'settings.defaultModel.description': setting(
+    'Model used for new conversations before another model is selected.',
+    '新对话未手动选择模型时使用的模型。',
+    '新對話未手動選擇模型時使用的模型。',
   ),
-  'settings.modelMapping.fillAll': setting('Set all', '一键设置', '一鍵設定'),
-  'settings.modelMapping.fillAllAria': setting(
-    'Set all models',
-    '一键设置所有模型',
-    '一鍵設定所有模型',
+  'settings.defaultModel.empty': setting('No matching models', '没有匹配的模型', '沒有匹配的模型'),
+  'settings.defaultModel.label': setting('Default model', '默认模型', '預設模型'),
+  'settings.defaultModel.noModels': setting(
+    'Add at least one provider model before choosing a default model.',
+    '先添加至少一个供应商模型后再选择默认模型。',
+    '請先新增至少一個供應商模型後再選擇預設模型。',
   ),
-  'settings.modelMapping.noModels': setting(
-    'Add at least one provider model before configuring mappings.',
-    '先添加至少一个供应商模型后再配置映射。',
-    '請先新增至少一個供應商模型再設定對應。',
+  'settings.defaultModel.notConfigured': setting('Not configured', '未配置', '未設定'),
+  'settings.defaultModel.saveError': setting(
+    'The default model could not be saved. Please try again.',
+    '默认模型保存失败，请重试',
+    '預設模型儲存失敗，請重試',
   ),
-  'settings.modelMapping.notConfigured': setting('Not configured', '未配置', '未設定'),
-  'settings.modelMapping.role.haiku.description': setting(
-    'Fast model for Claude Code',
-    'Claude Code 的快速模型',
+  'settings.defaultModel.saving': setting(
+    'Saving the default model',
+    '正在保存默认模型',
+    '正在儲存預設模型',
   ),
-  'settings.modelMapping.role.opus.description': setting(
-    'High-capability model for Claude Code',
-    'Claude Code 的高能力模型',
-  ),
-  'settings.modelMapping.role.sonnet.description': setting(
-    'Default balanced model for Claude Code',
-    'Claude Code 的默认均衡模型',
-    'Claude Code 的預設平衡模型',
-  ),
-  'settings.modelMapping.role.subagent.description': setting(
-    'Model used for subagent tasks',
-    '子代理任务使用的模型',
-    '子代理任務使用的模型',
-  ),
-  'settings.modelMapping.saveError': setting(
-    'Model mappings could not be saved. Please try again.',
-    '模型映射保存失败，请重试',
-    '模型對應儲存失敗，請重試',
-  ),
-  'settings.modelMapping.saving': setting(
-    'Saving model mappings',
-    '正在保存模型映射',
-    '正在儲存模型對應',
-  ),
-  'settings.modelMapping.search': setting('Search models...', '搜索模型...', '搜尋模型...'),
-  'settings.modelMapping.title': setting('Model mapping', '映射', '對應'),
+  'settings.defaultModel.search': setting('Search models...', '搜索模型...', '搜尋模型...'),
+  'settings.defaultModel.title': setting('Default model', '默认模型', '預設模型'),
   'settings.project.add': setting('Add project', '添加项目', '新增專案'),
   'settings.project.confirmDescription': setting(
     'Remove “{{name}}” from the Clotho project list.',

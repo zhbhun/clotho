@@ -491,7 +491,7 @@ describe('resizable sidebar', () => {
         return { cwd: '/Users/test', commands: [], agents: [], models: [] }
       }
       if (command === 'claudeListProviders') return []
-      if (command === 'claudeListModelMappings') return {}
+      if (command === 'claudeGetDefaultModel') return null
       return null
     })
     renderWorkbenchPage()
@@ -1167,7 +1167,7 @@ describe('prompt composer surface', () => {
             commands: [],
             agents: [],
             models: TEST_MODELS,
-            modelMappings: { fallback: 'glm/glm-5.2' },
+            defaultModel: 'glm/glm-5.2',
           }
         case 'claudeSelectFiles':
           return ['/Users/test/review-the-api-migration.md']
@@ -1730,15 +1730,15 @@ describe('prompt composer surface', () => {
           return null
         case 'claudeListProviders':
           return providersFromModels(models)
-        case 'claudeListModelMappings':
-          return { fallback: 'fallback/model-b' }
+        case 'claudeGetDefaultModel':
+          return 'fallback/model-b'
         case 'claudeStartup':
           return {
             cwd: '/Users/test/project',
             commands: [],
             agents: [],
             models,
-            modelMappings: { fallback: 'fallback/model-b' },
+            defaultModel: 'fallback/model-b',
           }
         case 'claudeSelectFiles':
           return ['/Users/test/use-fallback.md']
@@ -3644,15 +3644,15 @@ describe('Claude runtime claudeStartup', () => {
           return []
         case 'claudeListProviders':
           return providersFromModels(models)
-        case 'claudeListModelMappings':
-          return { fallback: fallbackModel }
+        case 'claudeGetDefaultModel':
+          return fallbackModel
         case 'claudeStartup':
           return {
             cwd: '/Users/test/project',
             commands: [],
             agents: [],
             models,
-            modelMappings: { fallback: fallbackModel },
+            defaultModel: fallbackModel,
           }
         default:
           return null

@@ -4,7 +4,6 @@ import { describe, expect, test, vi } from 'vitest'
 import type { ModelProvider } from '@/shared/rpc'
 
 import { type ModelProxyServe, type ModelProxyServeOptions, createModelProxy } from './model-proxy'
-import { DEFAULT_APP_PREFERENCES } from './settings'
 
 const provider: ModelProvider = {
   id: 'zhipu',
@@ -484,17 +483,13 @@ describe('model proxy', () => {
       providers: [provider],
       serve: harness.serve,
     })
-    proxy.replaceSettings({
-      ...DEFAULT_APP_PREFERENCES,
-      models: {},
-      providers: [
-        {
-          ...provider,
-          baseURL: 'https://replacement.example/anthropic',
-          authToken: 'replacement-secret',
-        },
-      ],
-    })
+    proxy.replaceSettings([
+      {
+        ...provider,
+        baseURL: 'https://replacement.example/anthropic',
+        authToken: 'replacement-secret',
+      },
+    ])
 
     await harness.request(
       new Request(`${proxy.baseURL}/v1/messages`, {
@@ -510,46 +505,39 @@ describe('model proxy', () => {
     expect(upstreamURL).toBe('https://replacement.example/anthropic/v1/messages')
   })
 
-  test('replaces providers and model mappings as one settings snapshot', async () => {
+  test('pins the session model as both the default and subagent model in the env', async () => {
     const harness = createServeHarness()
     const proxy = await createModelProxy({
       authToken: 'local-secret',
       fetch: vi.fn(async () => Response.json({ ok: true })),
-      models: { opus: 'zhipu/glm-5.2/fast' },
       providers: [provider],
       serve: harness.serve,
     })
 
-    proxy.replaceSettings({
-      ...DEFAULT_APP_PREFERENCES,
-      providers: [kimiProvider],
-      models: { sonnet: 'kimi/k3/long' },
-    })
+    proxy.replaceSettings([kimiProvider])
 
     expect(proxy.settingsEnv('kimi/k3/long')).toMatchObject({
-      ANTHROPIC_DEFAULT_SONNET_MODEL: 'kimi/k3/long',
+      ANTHROPIC_MODEL: 'kimi/k3/long',
+      CLAUDE_CODE_SUBAGENT_MODEL: 'kimi/k3/long',
       CLAUDE_CODE_AUTO_COMPACT_WINDOW: '1048576',
       CLAUDE_CODE_MAX_CONTEXT_TOKENS: '1048576',
     })
-    expect(proxy.settingsEnv('kimi/k3/long')).not.toHaveProperty('ANTHROPIC_DEFAULT_OPUS_MODEL')
   })
 
-  test('always shadows ANTHROPIC_DEFAULT_FABLE_MODEL to block the Fable identity paragraph', async () => {
+  test('never configures the role-based ANTHROPIC_DEFAULT model env vars', async () => {
     const harness = createServeHarness()
     const proxy = await createModelProxy({
       authToken: 'local-secret',
       fetch: vi.fn(async () => Response.json({ ok: true })),
-      models: { haiku: 'zhipu/glm-5.2/fast' },
       providers: [provider],
       serve: harness.serve,
     })
 
-    // An empty value must reach the CLI: if a user-level CLI setting survives
-    // the env merge and equals the session model, the CLI adds a "Claude Fable
-    // 5" identity paragraph to the system prompt.
-    expect(proxy.settingsEnv('zhipu/glm-5.2/fast')).toMatchObject({
-      ANTHROPIC_DEFAULT_FABLE_MODEL: '',
-    })
+    const env = proxy.settingsEnv('zhipu/glm-5.2/fast')
+    for (const name of Object.keys(env)) {
+      expect(name).not.toMatch(/^ANTHROPIC_DEFAULT_/)
+    }
+    expect(env.ANTHROPIC_MODEL).toBe('zhipu/glm-5.2/fast')
   })
 
   test('keeps an immutable snapshot of provider configuration', async () => {

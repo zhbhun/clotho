@@ -5,12 +5,11 @@ import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import type { ReadableStream as NodeWebReadableStream } from 'node:stream/web'
 
-import type { ClaudeModelMappings, ModelProvider, ProviderModel } from '@/shared/rpc'
+import type { ModelProvider, ProviderModel } from '@/shared/rpc'
 
 import { anthropicToChatCompletions } from './chat-completions-request'
 import { chatCompletionsToAnthropic, chatErrorToAnthropic } from './chat-completions-response'
 import { createChatCompletionsStream } from './chat-completions-stream'
-import type { ClaudeskSettings } from './settings'
 import {
   type SessionThinking,
   applyThinking,
@@ -42,16 +41,19 @@ export type ModelProxyServe = (
 export interface ModelProxy {
   baseURL: string
   authToken: string
-  replaceSettings: (settings: ClaudeskSettings) => void
-  settingsEnv: (model?: string) => Record<string, string>
+  replaceSettings: (providers: ModelProvider[]) => void
   /** Forward mapping: the claude effort/thinking for a session on this model. */
   sessionThinking: (model?: string) => SessionThinking | undefined
+  /**
+   * Environment for a session pinned to the given qualified model: the proxy
+   * connection plus the model itself as both the default and subagent model.
+   */
+  settingsEnv: (model?: string) => Record<string, string>
   stop: () => Promise<void>
 }
 
 export interface CreateModelProxyOptions {
   providers: ModelProvider[]
-  models?: ClaudeModelMappings
   authToken?: string
   fetch?: ModelProxyFetch
   serve?: ModelProxyServe
@@ -68,14 +70,6 @@ function providerMap(providers: ModelProvider[]) {
     ]),
   )
 }
-
-const MODEL_MAPPING_ENV = {
-  sonnet: 'ANTHROPIC_DEFAULT_SONNET_MODEL',
-  opus: 'ANTHROPIC_DEFAULT_OPUS_MODEL',
-  haiku: 'ANTHROPIC_DEFAULT_HAIKU_MODEL',
-  subagent: 'CLAUDE_CODE_SUBAGENT_MODEL',
-  fallback: 'ANTHROPIC_MODEL',
-} as const
 
 function resolveModel(routes: ReturnType<typeof providerMap>, qualifiedModel: string | undefined) {
   if (!qualifiedModel) return undefined
@@ -319,13 +313,11 @@ async function handleProxyRequest(
 
 export async function createModelProxy({
   providers,
-  models = {},
   authToken = randomBytes(32).toString('base64url'),
   fetch: fetchUpstream = (request) => fetch(request),
   serve = serveWithNode,
 }: CreateModelProxyOptions): Promise<ModelProxy> {
   let routes = providerMap(providers)
-  let modelMappings = { ...models }
   const server = await serve({
     hostname: '127.0.0.1',
     idleTimeout: 0,
@@ -413,9 +405,8 @@ export async function createModelProxy({
   return {
     baseURL: `http://127.0.0.1:${server.port}`,
     authToken,
-    replaceSettings(settings) {
-      routes = providerMap(settings.providers)
-      modelMappings = { ...settings.models }
+    replaceSettings(providers) {
+      routes = providerMap(providers)
     },
     sessionThinking(model) {
       return sessionThinkingFor(resolveModel(routes, model)?.model)
@@ -426,20 +417,13 @@ export async function createModelProxy({
         ANTHROPIC_AUTH_TOKEN: authToken,
         ANTHROPIC_BASE_URL: `http://127.0.0.1:${server.port}`,
       }
-      for (const [role, name] of Object.entries(MODEL_MAPPING_ENV)) {
-        const mapping = modelMappings[role as keyof ClaudeModelMappings]
-        if (mapping && resolveModel(routes, mapping)) {
-          env[name] = mapping
-        }
-      }
-      // clotho never maps the fable slot: when ANTHROPIC_DEFAULT_FABLE_MODEL
-      // equals the session model, the CLI adds a "Claude Fable 5" identity
-      // paragraph to the system prompt. Shadow the env so a user-level CLI
-      // setting cannot leak through the env merge and re-enable it.
-      if (!env.ANTHROPIC_DEFAULT_FABLE_MODEL) {
-        env.ANTHROPIC_DEFAULT_FABLE_MODEL = ''
-      }
       const current = resolveModel(routes, model)
+      if (current && model) {
+        // Every role runs on the model picked for the session; the CLI fills
+        // any role it needs from ANTHROPIC_MODEL and CLAUDE_CODE_SUBAGENT_MODEL.
+        env.ANTHROPIC_MODEL = model
+        env.CLAUDE_CODE_SUBAGENT_MODEL = model
+      }
       if (current && current.model.contextWindow > 0) {
         const contextWindow = String(current.model.contextWindow)
         env.CLAUDE_CODE_AUTO_COMPACT_WINDOW = contextWindow

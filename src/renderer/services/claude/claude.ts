@@ -16,7 +16,6 @@ import type {
   ClaudeInitializationResult as RpcClaudeInitializationResult,
   ClaudeJsonLine as RpcClaudeJsonLine,
   ClaudeModelInfo as RpcClaudeModelInfo,
-  ClaudeModelMappings as RpcClaudeModelMappings,
   ClaudeOptions as RpcClaudeOptions,
   ClaudePermissionMode as RpcClaudePermissionMode,
   ClaudePrepareAttachmentsParams as RpcClaudePrepareAttachmentsParams,
@@ -87,7 +86,6 @@ export type ClaudeDropTrailingTurnParams = RpcClaudeDropTrailingTurnParams
 export type ClaudeDropTrailingTurnResult = RpcClaudeDropTrailingTurnResult
 export type ClaudeJsonLine = RpcClaudeJsonLine
 export type ClaudeContextUsageSnapshot = RpcClaudeContextUsageSnapshot
-export type ClaudeModelMappings = RpcClaudeModelMappings
 export type ClaudeModelInfo = RpcClaudeModelInfo
 export type ClaudeOptions = RpcClaudeOptions
 export type ClaudePermissionMode = RpcClaudePermissionMode
@@ -525,13 +523,13 @@ export const claude = {
     const providers = await requestFromDesktop('claudeListProviders', {})
     return Array.isArray(providers) ? providers : []
   },
-  async listModelMappings() {
+  async getDefaultModel() {
     if (!isTauriRuntime()) {
-      return {}
+      return null
     }
 
-    const mappings = await requestFromDesktop('claudeListModelMappings', {})
-    return mappings && typeof mappings === 'object' ? mappings : {}
+    const defaultModel = await requestFromDesktop('claudeGetDefaultModel', {})
+    return typeof defaultModel === 'string' && defaultModel ? defaultModel : null
   },
   async fetchProviderModels(params: FetchProviderModelsParams) {
     if (!isTauriRuntime()) {
@@ -568,12 +566,12 @@ export const claude = {
 
     return requestFromDesktop('claudeDeleteProvider', { id })
   },
-  async saveModelMappings(models: ClaudeModelMappings) {
+  async saveDefaultModel(defaultModel: string | null) {
     if (!isTauriRuntime()) {
-      return models
+      return defaultModel
     }
 
-    return requestFromDesktop('claudeSaveModelMappings', { models })
+    return requestFromDesktop('claudeSaveDefaultModel', { defaultModel })
   },
   async setProjectModel(params: ProviderModelSelection & { projectId: string }) {
     if (!isTauriRuntime()) {

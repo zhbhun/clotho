@@ -8,9 +8,9 @@ import { Card } from '@/shadcn/card'
 import { Spinner } from '@/shadcn/spinner'
 import { toast } from '@/shadcn/toast'
 import { cn } from '@/shadcn/utils'
-import { CLAUDE_MODEL_MAPPING_ROLES, PROVIDER_ID_PATTERN } from '@/shared/provider'
+import { PROVIDER_ID_PATTERN } from '@/shared/provider'
 
-import { ModelMappingSettings } from '../../../components/model-configuration/model-mapping-settings'
+import { DefaultModelSettings } from '../../../components/model-configuration/default-model-settings'
 import {
   createProviderDraft,
   getInvalidModelIndexes,
@@ -20,7 +20,7 @@ import {
 import { ProviderEditorForm } from '../../../components/model-configuration/provider-editor-form'
 import { providerPresets } from '../../../components/model-configuration/provider-presets'
 import { useProviderDraft } from '../../../components/model-configuration/use-provider-draft'
-import type { ClaudeModelMappings, ModelProvider } from '../../../services/claude/claude'
+import type { ModelProvider } from '../../../services/claude/claude'
 import { claude } from '../../../services/claude/claude'
 import { useModelConfigurationStore } from '../../../stores/model-configuration-context'
 
@@ -80,20 +80,24 @@ export function ModelOnboarding({
   onSkip: () => void
 }) {
   const { t } = useTranslation()
-  const { modelMappings, providers, replaceSettings } = useModelConfigurationStore(
+  const {
+    defaultModel: savedDefaultModel,
+    providers,
+    replaceSettings,
+  } = useModelConfigurationStore(
     useShallow((state) => ({
-      modelMappings: state.modelMappings,
+      defaultModel: state.defaultModel,
       providers: state.providers,
       replaceSettings: state.replaceSettings,
     })),
   )
   const [step, setStep] = useState<1 | 2>(1)
   const [savedProvider, setSavedProvider] = useState<ModelProvider | null>(null)
-  const [mappings, setMappings] = useState<ClaudeModelMappings>({})
+  const [defaultModel, setDefaultModel] = useState<string | null>(null)
   const [isSaving, setSaving] = useState(false)
-  const [isMappingSaving, setMappingSaving] = useState(false)
+  const [isModelSaving, setModelSaving] = useState(false)
   const [isCompleting, setCompleting] = useState(false)
-  const pendingMappingSaveRef = useRef<Promise<ClaudeModelMappings> | null>(null)
+  const pendingModelSaveRef = useRef<Promise<string | null> | null>(null)
   const draft = useProviderDraft({
     initial: initialProvider,
     fetchErrorToast: {
@@ -137,14 +141,11 @@ export function ModelOnboarding({
         : await claude.createProvider(provider)
       setSavedProvider(saved)
       const nextProviders = upsertProvider(providers, saved)
-      replaceSettings(nextProviders, modelMappings)
-      const defaultModel = `${saved.id}/${saved.models[0].id}`
-      const defaults = Object.fromEntries(
-        CLAUDE_MODEL_MAPPING_ROLES.map((role) => [role, defaultModel]),
-      ) as ClaudeModelMappings
-      const savedMappings = await claude.saveModelMappings(defaults)
-      setMappings(savedMappings)
-      replaceSettings(nextProviders, savedMappings)
+      replaceSettings(nextProviders, savedDefaultModel)
+      const nextDefaultModel = `${saved.id}/${saved.models[0].id}`
+      const savedDefault = await claude.saveDefaultModel(nextDefaultModel)
+      setDefaultModel(savedDefault)
+      replaceSettings(nextProviders, savedDefault)
       setStep(2)
     } catch (caught) {
       toast.add({
@@ -156,20 +157,20 @@ export function ModelOnboarding({
     }
   }
 
-  async function saveMappings(next: ClaudeModelMappings) {
-    setMappingSaving(true)
-    const save = claude.saveModelMappings(next).then((saved) => {
-      setMappings(saved)
+  async function saveDefaultModel(next: string | null) {
+    setModelSaving(true)
+    const save = claude.saveDefaultModel(next).then((saved) => {
+      setDefaultModel(saved)
       if (savedProvider) replaceSettings(upsertProvider(providers, savedProvider), saved)
       return saved
     })
-    pendingMappingSaveRef.current = save
+    pendingModelSaveRef.current = save
     try {
       return await save
     } finally {
-      if (pendingMappingSaveRef.current === save) {
-        pendingMappingSaveRef.current = null
-        setMappingSaving(false)
+      if (pendingModelSaveRef.current === save) {
+        pendingModelSaveRef.current = null
+        setModelSaving(false)
       }
     }
   }
@@ -177,11 +178,11 @@ export function ModelOnboarding({
   async function handleComplete() {
     setCompleting(true)
     try {
-      await pendingMappingSaveRef.current
+      await pendingModelSaveRef.current
       if (!savedProvider) return
       await onComplete()
     } catch {
-      // ModelMappingSettings owns the save error toast and restores its confirmed value.
+      // DefaultModelSettings owns the save error toast and restores its confirmed value.
     } finally {
       setCompleting(false)
     }
@@ -221,10 +222,10 @@ export function ModelOnboarding({
               </Card>
             </section>
           ) : (
-            <ModelMappingSettings
-              models={mappings}
+            <DefaultModelSettings
+              model={defaultModel}
               providers={mappingProviders}
-              onSave={saveMappings}
+              onSave={saveDefaultModel}
             />
           )}
         </div>
@@ -244,16 +245,13 @@ export function ModelOnboarding({
         ) : (
           <>
             <Button
-              disabled={isCompleting || isMappingSaving}
+              disabled={isCompleting || isModelSaving}
               variant="ghost"
               onClick={() => setStep(1)}
             >
               {t('workbench.onboarding.back')}
             </Button>
-            <Button
-              disabled={isCompleting || isMappingSaving}
-              onClick={() => void handleComplete()}
-            >
+            <Button disabled={isCompleting || isModelSaving} onClick={() => void handleComplete()}>
               {isCompleting ? <Spinner data-icon="inline-start" /> : null}
               {t('workbench.onboarding.finish')}
             </Button>

@@ -1,7 +1,7 @@
 import type { SDKMessage } from '@anthropic-ai/claude-agent-sdk'
 
 import type { WebviewLogBatch } from './logging'
-import type { ClaudeModelMappingRole, ProviderApiType } from './provider'
+import type { ProviderApiType } from './provider'
 import type { DraftSession, DraftSessionIndex, LocalSession } from './session'
 import type { ShortcutBinding, ShortcutOverrides } from './shortcuts'
 
@@ -10,7 +10,7 @@ export type MenuSettingsCategory = 'shortcuts'
 
 export type { DraftSession, DraftSessionIndex, LocalSession, SessionInput } from './session'
 
-export type { ClaudeModelMappingRole, ProviderModelReasoning } from './provider'
+export type { ProviderModelReasoning } from './provider'
 
 /** Shape of one side of the desktop RPC contract (requests + push messages). */
 export type RPCSchemaSide<Config extends RPCSchemaSideConfig> = Config
@@ -716,9 +716,6 @@ export interface ModelProvider {
   modelsUrl?: string
 }
 
-/** Global mapping from Claude built-in roles to local proxy qualified models (providerId/modelId). */
-export type ClaudeModelMappings = Partial<Record<ClaudeModelMappingRole, string>>
-
 /** The selected provider and model for a session or project. */
 export interface ProviderModelSelection {
   providerId: string
@@ -796,8 +793,12 @@ export interface ClaudeInitializationResult {
   models: ClaudeModelInfo[]
   /** Clotho desktop startup includes this; SDK control responses may omit it. */
   providers?: ModelProvider[]
-  /** Clotho desktop startup includes this; SDK control responses may omit it. */
-  modelMappings?: ClaudeModelMappings
+  /**
+   * App-level default model as a qualified `providerId/modelId` string, used
+   * when a session has no explicit model selection. Clotho desktop startup
+   * includes this; SDK control responses may omit it.
+   */
+  defaultModel?: string
   hasClaudeAuthentication?: boolean
   hasConfiguredProviders?: boolean
   account?: ClaudeAccountInfo
@@ -1015,9 +1016,9 @@ export type DesktopRPC = {
         params: Record<string, never>
         response: ModelProvider[]
       }
-      claudeListModelMappings: {
+      claudeGetDefaultModel: {
         params: Record<string, never>
-        response: ClaudeModelMappings
+        response: string | null
       }
       claudeCreateProvider: {
         params: { provider: ModelProvider }
@@ -1031,9 +1032,9 @@ export type DesktopRPC = {
         params: { id: string }
         response: void
       }
-      claudeSaveModelMappings: {
-        params: { models: ClaudeModelMappings }
-        response: ClaudeModelMappings
+      claudeSaveDefaultModel: {
+        params: { defaultModel: string | null }
+        response: string | null
       }
       claudeSetProjectModel: {
         params: { projectId: string; providerId: string; modelId: string }

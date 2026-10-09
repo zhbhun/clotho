@@ -10,7 +10,8 @@ import { ModelOnboarding } from './model-onboarding'
 const claudeMock = vi.hoisted(() => ({
   createProvider: vi.fn(),
   fetchProviderModels: vi.fn(),
-  saveModelMappings: vi.fn(),
+  getDefaultModel: vi.fn(),
+  saveDefaultModel: vi.fn(),
   updateProvider: vi.fn(),
 }))
 
@@ -24,10 +25,10 @@ describe('ModelOnboarding', () => {
     await appI18n.changeLanguage('zh-CN')
     vi.clearAllMocks()
     claudeMock.createProvider.mockImplementation(async (provider) => provider)
-    claudeMock.saveModelMappings.mockImplementation(async (models) => models)
+    claudeMock.saveDefaultModel.mockImplementation(async (model) => model)
   })
 
-  it('saves the provider and maps every role to its first model before step two', async () => {
+  it('saves the provider and its first model as the default model before step two', async () => {
     const user = userEvent.setup()
 
     render(
@@ -50,14 +51,11 @@ describe('ModelOnboarding', () => {
         }),
       ),
     )
-    expect(claudeMock.saveModelMappings).toHaveBeenCalledWith({
-      sonnet: 'zhipu-glm/glm-5.2[1M]',
-      opus: 'zhipu-glm/glm-5.2[1M]',
-      haiku: 'zhipu-glm/glm-5.2[1M]',
-      subagent: 'zhipu-glm/glm-5.2[1M]',
-      fallback: 'zhipu-glm/glm-5.2[1M]',
-    })
-    expect(await screen.findByRole('heading', { level: 2, name: '映射' })).toBeInTheDocument()
+    expect(claudeMock.saveDefaultModel).toHaveBeenCalledWith('zhipu-glm/glm-5.2[1M]')
+    expect(await screen.findByRole('heading', { level: 2, name: '默认模型' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '默认模型' })).toHaveTextContent(
+      'Zhipu GLM · GLM-5.2 1M',
+    )
     expect(screen.getByRole('button', { name: '上一步' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '完成' })).toBeInTheDocument()
   })

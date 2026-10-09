@@ -20,13 +20,13 @@ export interface SessionModel {
 /** Resolve the session's effective model and its display label from the catalog, project defaults, and composer selection. */
 export function useSessionModel(): SessionModel {
   const { t } = useTranslation()
-  const { availableModels, isModelCatalogLoaded, isSdkInitializationComplete, modelMappings } =
+  const { availableModels, defaultModel, isModelCatalogLoaded, isSdkInitializationComplete } =
     useModelConfigurationStore(
       useShallow((state) => ({
         availableModels: state.availableModels,
+        defaultModel: state.defaultModel,
         isModelCatalogLoaded: state.isModelCatalogLoaded,
         isSdkInitializationComplete: state.isSdkInitializationComplete,
-        modelMappings: state.modelMappings,
       })),
     )
   const { defaultModelId, defaultProviderId } = useSessionContextStore(
@@ -43,11 +43,11 @@ export function useSessionModel(): SessionModel {
   )
   const selection = resolveSessionModel({
     availableModels,
+    defaultModel,
     defaultModelId,
     defaultProviderId,
     isModelCatalogLoaded,
     isSdkInitializationComplete,
-    modelMappings,
     selectedModelId,
     selectedProviderId,
   })

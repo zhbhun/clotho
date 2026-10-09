@@ -1,27 +1,27 @@
 import type { ModelConfigurationStore } from '../../stores/model-configuration-store'
-import { type ClaudeModelMappings, type ModelProvider, claude } from './claude'
+import { type ModelProvider, claude } from './claude'
 
-export type ModelSettingsClient = Pick<typeof claude, 'listModelMappings' | 'listProviders'>
+export type ModelSettingsClient = Pick<typeof claude, 'getDefaultModel' | 'listProviders'>
 
 export type ModelSettings = {
-  modelMappings: ClaudeModelMappings
+  defaultModel: string | null
   providers: ModelProvider[]
 }
 
 export async function fetchModelSettings(
   client: ModelSettingsClient = claude,
 ): Promise<ModelSettings> {
-  const [providers, modelMappings] = await Promise.all([
+  const [providers, defaultModel] = await Promise.all([
     client.listProviders(),
-    client.listModelMappings(),
+    client.getDefaultModel(),
   ])
-  return { modelMappings, providers }
+  return { defaultModel, providers }
 }
 
 export async function loadModelSettings(
   store: ModelConfigurationStore,
   client: ModelSettingsClient = claude,
 ): Promise<void> {
-  const { modelMappings, providers } = await fetchModelSettings(client)
-  store.getState().replaceSettings(providers, modelMappings)
+  const { defaultModel, providers } = await fetchModelSettings(client)
+  store.getState().replaceSettings(providers, defaultModel)
 }

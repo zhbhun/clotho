@@ -65,7 +65,7 @@ export function useModelStartup(isProjectCatalogLoaded: boolean, isSdkWaitBypass
 
     let isCancelled = false
     void loadModelSettings(modelStore).catch(() => {
-      if (!isCancelled) modelStore.getState().replaceSettings([], {})
+      if (!isCancelled) modelStore.getState().replaceSettings([], null)
     })
 
     return () => {

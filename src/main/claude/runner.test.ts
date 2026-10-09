@@ -155,7 +155,7 @@ const proxy = {
     ANTHROPIC_API_KEY: '',
     ANTHROPIC_AUTH_TOKEN: 'local-proxy-secret',
     ANTHROPIC_BASE_URL: 'http://127.0.0.1:43123',
-    ANTHROPIC_DEFAULT_SONNET_MODEL: 'zhipu/glm-5.2/fast',
+    ...(model ? { ANTHROPIC_MODEL: model, CLAUDE_CODE_SUBAGENT_MODEL: model } : {}),
     ...(model === 'zhipu/glm-5.2/fast'
       ? {
           CLAUDE_CODE_AUTO_COMPACT_WINDOW: '200000',

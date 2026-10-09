@@ -63,7 +63,7 @@ export type SessionClient = Pick<
   | 'deleteSession'
   | 'dropTrailingTurn'
   | 'getSessionEditAnchor'
-  | 'listModelMappings'
+  | 'getDefaultModel'
   | 'listProviders'
   | 'loadSessionHistory'
   | 'openSessionStream'
