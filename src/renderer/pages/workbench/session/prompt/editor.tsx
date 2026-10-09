@@ -167,10 +167,11 @@ export function PromptMarkdownEditor({
             onPaste(Array.from(files))
             return true
           }
-          // Rich pastes keep ProseMirror's HTML handling; plain-text pastes
-          // turn file-like `@path` references into mention chips.
-          if (!clipboard || clipboard.getData('text/html')) return false
-          const nodes = promptTextToInlineNodes(clipboard.getData('text/plain'))
+          // Real clipboards usually carry an HTML flavor alongside the text;
+          // the schema flattens it to text anyway, so convert whenever the
+          // plain text references files and leave everything else to
+          // ProseMirror's clipboard handling.
+          const nodes = promptTextToInlineNodes(clipboard?.getData('text/plain') ?? '')
           const currentEditor = editorRef.current
           if (!nodes || !currentEditor || currentEditor.isDestroyed) return false
           event.preventDefault()

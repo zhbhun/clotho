@@ -1239,6 +1239,40 @@ describe('PromptMarkdownEditor', () => {
     })
   })
 
+  it('converts pasted references even when the clipboard carries HTML', async () => {
+    const changes: string[] = []
+    const text = '@src/renderer/styles/sidebar.css#1-24'
+
+    render(
+      <TooltipProvider>
+        <PromptMarkdownEditor
+          value=""
+          onChange={(value) => changes.push(value)}
+          onSubmit={() => {}}
+        />
+      </TooltipProvider>,
+    )
+
+    const editor = screen.getByRole('textbox', { name: 'Prompt' })
+
+    editor.focus()
+    // Flush the mount-time value-restoration microtask so it cannot race the paste.
+    await act(async () => {})
+    fireEvent.paste(editor, {
+      clipboardData: {
+        getData: (type: string) => (type === 'text/html' ? `<span>${text}</span>` : text),
+      },
+    })
+
+    expect(
+      await screen.findByLabelText('sidebar.css: src/renderer/styles/sidebar.css'),
+    ).toBeInTheDocument()
+    expect(editor).toHaveTextContent('#1-24')
+    await waitFor(() => {
+      expect(changes.at(-1)).toBe(text)
+    })
+  })
+
   it('does not reopen file completions when the cursor moves back into a path', async () => {
     const user = userEvent.setup()
 
