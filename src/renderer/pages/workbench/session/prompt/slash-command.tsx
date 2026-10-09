@@ -307,8 +307,10 @@ export function SlashCommandMenu({
   scrollActiveIntoView: boolean
 }) {
   const { t } = useTranslation()
+  // ScrollAreaRoot forces inline `position: relative`, so the positioned panel must
+  // stay a plain wrapper with the scroll area inside it.
   return createPortal(
-    <TransientScrollArea
+    <div
       aria-label={t('workbench.completion.slashCommands')}
       className="fixed z-50 rounded-lg border border-border/70 bg-popover p-1 text-popover-foreground shadow-float"
       data-glass="true"
@@ -325,32 +327,33 @@ export function SlashCommandMenu({
         event.preventDefault()
         event.stopPropagation()
       }}
-      viewportProps={{ className: 'max-h-72' }}
     >
-      {commands.length ? (
-        commands.map((command, index) => {
-          const active = index === activeIndex
+      <TransientScrollArea viewportProps={{ className: 'max-h-72' }}>
+        {commands.length ? (
+          commands.map((command, index) => {
+            const active = index === activeIndex
 
-          return (
-            <SlashCommandOption
-              key={command.name}
-              active={active}
-              command={command}
-              query={query}
-              scrollActiveIntoView={scrollActiveIntoView}
-              onActive={() => onActiveIndexChange(index)}
-              onSelect={() => onSelect(command)}
-            />
-          )
-        })
-      ) : (
-        <div className="px-2 py-1.5 text-sm text-foreground-subtlest" role="option" aria-disabled>
-          {availableCommandCount
-            ? t('workbench.completion.noCommandsMatch', { query })
-            : t('workbench.completion.noCommands')}
-        </div>
-      )}
-    </TransientScrollArea>,
+            return (
+              <SlashCommandOption
+                key={command.name}
+                active={active}
+                command={command}
+                query={query}
+                scrollActiveIntoView={scrollActiveIntoView}
+                onActive={() => onActiveIndexChange(index)}
+                onSelect={() => onSelect(command)}
+              />
+            )
+          })
+        ) : (
+          <div className="px-2 py-1.5 text-sm text-foreground-subtlest" role="option" aria-disabled>
+            {availableCommandCount
+              ? t('workbench.completion.noCommandsMatch', { query })
+              : t('workbench.completion.noCommands')}
+          </div>
+        )}
+      </TransientScrollArea>
+    </div>,
     document.body,
   )
 }

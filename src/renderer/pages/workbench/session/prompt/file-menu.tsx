@@ -144,32 +144,35 @@ export function FileCompletionMenu({
         )}
       </TransientScrollArea>
       {activeItem && outline?.length ? (
-        <TransientScrollArea
+        // ScrollAreaRoot forces inline `position: relative`, so the positioned panel
+        // must stay a plain wrapper with the scroll area inside it.
+        <div
           className="absolute left-full ml-1 hidden w-72 shrink-0 rounded-lg border border-border/70 bg-popover p-1.5 shadow-float md:block"
           ref={outlineRef}
           style={{ top: outlineTop }}
           data-glass="true"
           data-file-completion-outline
-          viewportProps={{ className: 'max-h-80' }}
         >
-          <div className="flex flex-col gap-0.5">
-            {outline.map((node, index) => (
-              <div
-                className="flex h-6 min-w-0 items-center gap-1 rounded px-1 text-xs text-foreground-subtlest"
-                key={`${node.kind}:${node.relativePath}`}
-                style={{ paddingLeft: 4 + index * 16 }}
-                data-file-completion-outline-row
-              >
-                {node.kind === 'directory' ? (
-                  <Folder aria-hidden className="size-3.5 shrink-0" />
-                ) : (
-                  <FileCompletionIcon item={activeItem} />
-                )}
-                <span className="truncate">{node.name}</span>
-              </div>
-            ))}
-          </div>
-        </TransientScrollArea>
+          <TransientScrollArea viewportProps={{ className: 'max-h-80' }}>
+            <div className="flex flex-col gap-0.5">
+              {outline.map((node, index) => (
+                <div
+                  className="flex h-6 min-w-0 items-center gap-1 rounded px-1 text-xs text-foreground-subtlest"
+                  key={`${node.kind}:${node.relativePath}`}
+                  style={{ paddingLeft: 4 + index * 16 }}
+                  data-file-completion-outline-row
+                >
+                  {node.kind === 'directory' ? (
+                    <Folder aria-hidden className="size-3.5 shrink-0" />
+                  ) : (
+                    <FileCompletionIcon item={activeItem} />
+                  )}
+                  <span className="truncate">{node.name}</span>
+                </div>
+              ))}
+            </div>
+          </TransientScrollArea>
+        </div>
       ) : null}
     </div>,
     document.body,
