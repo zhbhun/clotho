@@ -1,5 +1,5 @@
 import { File, FileCode, FileText, Folder, ImageIcon } from 'lucide-react'
-import { type Ref, useEffect, useRef } from 'react'
+import { type Ref, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 
@@ -10,6 +10,8 @@ import type {
   ProjectFileSearchOutlineNode,
 } from '../../../../services/claude/claude'
 import type { CompletionMenuPosition } from './menu-position'
+
+const OUTLINE_VIEWPORT_PADDING = 12
 
 export function FileCompletionMenu({
   activeIndex,
@@ -37,30 +39,40 @@ export function FileCompletionMenu({
 }) {
   const { t } = useTranslation()
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([])
+  const outlineRef = useRef<HTMLDivElement | null>(null)
+  const [outlineTop, setOutlineTop] = useState(0)
   const activeItem = activeIndex >= 0 ? items[activeIndex] : undefined
-  // The results column hugs the anchor side; the taller outline stretches away from it.
-  const effectivePlacement = position.placement
+  const hasOutline = Boolean(activeItem && outline?.length)
 
-  useEffect(() => {
+  // Scroll first so the outline below aligns with the row's post-scroll position.
+  useLayoutEffect(() => {
     if (!scrollActiveIntoView || activeIndex < 0) return
     optionRefs.current[activeIndex]?.scrollIntoView({ block: 'nearest' })
   }, [activeIndex, scrollActiveIntoView])
 
+  // Top-align the outline with the active result row; when the bottom runs out of
+  // viewport, shift it up instead of following the row down.
+  useLayoutEffect(() => {
+    if (!hasOutline || activeIndex < 0) return
+    const activeRow = optionRefs.current[activeIndex]
+    const outlineHeight = outlineRef.current?.offsetHeight ?? 0
+    if (!activeRow) return
+    const desiredTop = activeRow.getBoundingClientRect().top - position.top
+    const maxTop = window.innerHeight - OUTLINE_VIEWPORT_PADDING - outlineHeight
+    setOutlineTop(Math.max(0, Math.min(desiredTop, maxTop)))
+  }, [activeIndex, hasOutline, items, outline, position.top, scrollActiveIntoView])
+
   return createPortal(
     <div
       aria-label={t('workbench.completion.fileCompletions')}
-      className={cn(
-        'fixed z-50 flex max-h-80 gap-1 overflow-visible text-popover-foreground',
-        effectivePlacement === 'above' ? 'items-end' : 'items-start',
-      )}
+      className="fixed z-50 flex max-h-80 overflow-visible text-popover-foreground"
       ref={menuRef}
       role="listbox"
       style={{
         left: position.left,
         top: position.top,
-        width: 'min(760px, calc(100vw - 24px))',
       }}
-      data-placement={effectivePlacement}
+      data-placement={position.placement}
       data-message-edit-surface={interactionScope}
       onMouseDown={(event) => {
         event.preventDefault()
@@ -116,7 +128,9 @@ export function FileCompletionMenu({
       </div>
       {activeItem && outline?.length ? (
         <div
-          className="hidden max-h-80 w-72 shrink-0 overflow-y-auto rounded-lg border border-border/70 bg-popover p-1.5 shadow-float md:block"
+          className="absolute left-full ml-1 hidden max-h-80 w-72 shrink-0 overflow-y-auto rounded-lg border border-border/70 bg-popover p-1.5 shadow-float md:block"
+          ref={outlineRef}
+          style={{ top: outlineTop }}
           data-glass="true"
           data-file-completion-outline
         >
