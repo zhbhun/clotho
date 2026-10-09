@@ -327,7 +327,7 @@ function AskQuestionCard({
         </RadioGroup>
       )}
       {customAnswer ? (
-        <div className="whitespace-pre-wrap break-words pl-5 text-foreground-subtle">
+        <div className="whitespace-pre-wrap break-words pl-5 text-xs leading-5 text-foreground-subtle">
           {customAnswer}
         </div>
       ) : null}
