@@ -20,7 +20,6 @@ import { cn } from '@/shadcn/utils'
 interface AskOption {
   label?: string
   description?: string
-  preview?: string
 }
 
 export interface AskQuestion {
@@ -62,8 +61,6 @@ export function QuestionRow({
   const selectedIndices = new Set(answer?.indices ?? [])
   const otherText = answer?.otherText ?? ''
   const usingOther = answer?.isOtherSelected ?? false
-  const activePreviewIndex =
-    !usingOther && selectedIndices.size === 1 ? [...selectedIndices][0] : -1
   const hasQuestionDescription = isMultiple && Boolean(question.question)
 
   return (
@@ -85,7 +82,6 @@ export function QuestionRow({
               key={optionIndex}
               option={option}
               optionIndex={optionIndex}
-              showPreview={activePreviewIndex === optionIndex}
               onToggle={onToggleOption}
             />
           ))}
@@ -118,7 +114,6 @@ export function QuestionRow({
               key={optionIndex}
               option={option}
               optionIndex={optionIndex}
-              showPreview={activePreviewIndex === optionIndex}
               onToggle={onToggleOption}
             />
           ))}
@@ -143,7 +138,6 @@ function OptionField({
   fieldId,
   checked,
   control,
-  showPreview,
   onToggle,
 }: {
   option: AskOption
@@ -151,46 +145,38 @@ function OptionField({
   fieldId: string
   checked: boolean
   control: 'radio' | 'checkbox'
-  showPreview: boolean
   onToggle: (optionIndex: number) => void
 }) {
   const id = `${fieldId}-option-${optionIndex}`
   return (
-    <div className="flex flex-col gap-1">
-      <FieldLabel
-        className={cn(
-          'cursor-pointer border-0! transition-colors',
-          checked ? 'bg-muted' : 'hover:bg-muted/60',
+    <FieldLabel
+      className={cn(
+        'cursor-pointer border-0! transition-colors',
+        checked ? 'bg-muted' : 'hover:bg-muted/60',
+      )}
+      htmlFor={id}
+    >
+      <Field className="items-center! px-2! py-1.5!" orientation="horizontal">
+        {control === 'radio' ? (
+          <RadioGroupItem
+            className={cn('cursor-pointer', CONTROL_CHECKED)}
+            id={id}
+            value={`option-${optionIndex}`}
+          />
+        ) : (
+          <Checkbox
+            checked={checked}
+            className={cn('cursor-pointer', CONTROL_CHECKED)}
+            id={id}
+            onCheckedChange={() => onToggle(optionIndex)}
+          />
         )}
-        htmlFor={id}
-      >
-        <Field className="items-center! px-2! py-1.5!" orientation="horizontal">
-          {control === 'radio' ? (
-            <RadioGroupItem
-              className={cn('cursor-pointer', CONTROL_CHECKED)}
-              id={id}
-              value={`option-${optionIndex}`}
-            />
-          ) : (
-            <Checkbox
-              checked={checked}
-              className={cn('cursor-pointer', CONTROL_CHECKED)}
-              id={id}
-              onCheckedChange={() => onToggle(optionIndex)}
-            />
-          )}
-          <FieldContent>
-            <FieldTitle>{option.label}</FieldTitle>
-            {option.description ? <FieldDescription>{option.description}</FieldDescription> : null}
-          </FieldContent>
-        </Field>
-      </FieldLabel>
-      {showPreview && option.preview ? (
-        <pre className="max-h-48 overflow-auto rounded-md border border-border/50 bg-muted/40 p-2 text-xs leading-4 text-foreground-subtle">
-          {option.preview}
-        </pre>
-      ) : null}
-    </div>
+        <FieldContent>
+          <FieldTitle>{option.label}</FieldTitle>
+          {option.description ? <FieldDescription>{option.description}</FieldDescription> : null}
+        </FieldContent>
+      </Field>
+    </FieldLabel>
   )
 }
 
