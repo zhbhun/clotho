@@ -42,6 +42,19 @@ function rectList(rect: DOMRect): DOMRectList {
   }
 }
 
+/** Park the caret at a text offset the way a click would, then let ProseMirror read it. */
+function placeCaretAtCharacter(editor: HTMLElement, characterOffset: number) {
+  const textNode = editor.querySelector('p')?.firstChild
+  if (!textNode) return
+  const range = document.createRange()
+  range.setStart(textNode, characterOffset)
+  range.collapse(true)
+  const selection = document.getSelection()
+  selection?.removeAllRanges()
+  selection?.addRange(range)
+  fireEvent(document, new Event('selectionchange'))
+}
+
 beforeAll(() => {
   const rect = new DOMRect(0, 0, 120, 24)
   Element.prototype.getBoundingClientRect = () => rect
@@ -1154,6 +1167,42 @@ describe('PromptMarkdownEditor', () => {
     await user.keyboard('abc@')
 
     expect(screen.queryByRole('listbox', { name: 'File completions' })).not.toBeInTheDocument()
+  })
+
+  it('does not reopen file completions when the cursor moves back into a path', async () => {
+    const user = userEvent.setup()
+
+    render(
+      <TooltipProvider>
+        <PromptMarkdownEditor value="" onChange={() => {}} onSubmit={() => {}} />
+      </TooltipProvider>,
+    )
+
+    const editor = screen.getByRole('textbox', { name: 'Prompt' })
+
+    editor.focus()
+    await user.keyboard('@src/server.ts ')
+    placeCaretAtCharacter(editor, 14)
+
+    expect(screen.queryByRole('listbox', { name: 'File completions' })).not.toBeInTheDocument()
+  })
+
+  it('opens file completions when the cursor moves behind a trailing path separator', async () => {
+    const user = userEvent.setup()
+
+    render(
+      <TooltipProvider>
+        <PromptMarkdownEditor value="" onChange={() => {}} onSubmit={() => {}} />
+      </TooltipProvider>,
+    )
+
+    const editor = screen.getByRole('textbox', { name: 'Prompt' })
+
+    editor.focus()
+    await user.keyboard('@src/ ')
+    placeCaretAtCharacter(editor, 5)
+
+    expect(await screen.findByRole('listbox', { name: 'File completions' })).toBeInTheDocument()
   })
 
   it('opens after whitespace and selects commands with ArrowDown and Tab', async () => {

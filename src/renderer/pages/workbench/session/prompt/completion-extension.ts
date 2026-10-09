@@ -1,5 +1,6 @@
 import { type Editor, Extension, type Range } from '@tiptap/core'
-import { PluginKey } from '@tiptap/pm/state'
+import type { Node as ProseMirrorNode } from '@tiptap/pm/model'
+import { PluginKey, type Transaction } from '@tiptap/pm/state'
 import Suggestion, {
   type SuggestionKeyDownProps,
   type SuggestionProps,
@@ -43,6 +44,37 @@ export type EditorCompletionBridge = {
 }
 
 const allowedCompletionPrefixes = [' ', '\n', '\t']
+
+const COMPLETION_WHITESPACE_PATTERN = /[\s\u200b]/
+
+function characterAt(doc: ProseMirrorNode, pos: number) {
+  if (pos < 0) return ''
+  return doc.textBetween(pos, pos + 1, '\n', '\u0000')
+}
+
+/**
+ * A fresh activation only opens the file menu when the trigger itself was just
+ * typed or inserted, or when the cursor sits right after a path separator with
+ * nothing but whitespace (or the end) ahead — pasted paths and cursor moves
+ * into an existing `@path` must stay quiet.
+ */
+function shouldShowFileCompletion({
+  editor,
+  transaction,
+}: {
+  editor: Editor
+  transaction: Transaction
+}) {
+  // Plugin apply runs while editor.state still is the pre-transaction state,
+  // so this reads whether the menu was already open before this change.
+  if (fileCompletionPluginKey.getState(editor.state)?.active) return true
+  const { selection } = transaction
+  if (!selection.empty) return false
+  const charBefore = characterAt(transaction.doc, selection.from - 1)
+  if (transaction.docChanged) return charBefore === '@'
+  const charAfter = characterAt(transaction.doc, selection.from)
+  return charBefore === '/' && (charAfter === '' || COMPLETION_WHITESPACE_PATTERN.test(charAfter))
+}
 
 export const slashCompletionPluginKey = new PluginKey('slashCompletion')
 export const fileCompletionPluginKey = new PluginKey('fileCompletion')
@@ -135,6 +167,7 @@ export const EditorCompletion = Extension.create({
         pluginKey: fileCompletionPluginKey,
         items: ({ query }) => bridge().fileItems(query),
         command: ({ editor, range, props }) => bridge().selectFile(editor, range, props),
+        shouldShow: ({ editor, transaction }) => shouldShowFileCompletion({ editor, transaction }),
         render: () => ({
           onStart: (props) => bridge().onChange(fileSnapshot(props)),
           onUpdate: (props) => bridge().onChange(fileSnapshot(props)),
