@@ -1241,6 +1241,35 @@ describe('SessionController', () => {
     expect(client.openSessionStream).toHaveBeenCalledOnce()
   })
 
+  it('stamps the optimistic user message with the pushed transcript uuid', async () => {
+    const controlled = createManualStream()
+    const client = createClient()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
+    const store = trackedStore({
+      ...createOptions('local:optimistic-user-uuid'),
+      claudeSessionId: 'claude-existing-id',
+      client,
+    })
+    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
+    store.getState().setPrompt('edit me later')
+
+    const sending = store.getState().sendPrompt()
+    await vi.waitFor(() => expect(store.getState().isStreaming).toBe(true))
+
+    // The wire never echoes the user line, so this card stays optimistic for
+    // the whole live session; its uuid is the one the JSONL will carry.
+    const pushed = controlled.pushes[0]
+    expect(pushed?.userMessageUuid).toBeTruthy()
+    const messageId = store.getState().messageIds[0]!
+    expect(store.getState().messages[messageId]).toMatchObject({
+      role: 'user',
+      uuid: pushed?.userMessageUuid,
+    })
+
+    controlled.emitResult()
+    await sending
+  })
+
   it('preserves the prompt and skips the query when history loading fails', async () => {
     const client = createClient()
     client.loadSessionHistory.mockRejectedValue(new Error('History unavailable'))

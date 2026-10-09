@@ -727,12 +727,16 @@ export class SendService {
     const isAutoContinue = kind === 'auto-continue'
     const userMessageUuid = preparedUserMessage?.uuid ?? createUuid()
     if (!preparedUserMessage) {
+      // Carrying the pushed uuid keeps the card editable in the live session:
+      // the CLI never echoes the user line back, so without it no transcript
+      // uuid arrives until the history is reloaded from disk.
       const userMessage: ClaudeMessage = {
         id: isAutoContinue ? `local-nudge-${Date.now()}` : `local-user-${Date.now()}`,
         role: 'user',
         content: prompt,
         ...(attachments.length ? { attachments } : {}),
         timestamp: new Date().toISOString(),
+        uuid: userMessageUuid,
       }
       this.transition({
         type: 'begin',
