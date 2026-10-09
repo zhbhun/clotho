@@ -37,6 +37,15 @@
   transition: translate 200ms ease-linear;
 }
 
+/* The preview spans the full window height, so it would otherwise cover the
+   conversation's tab row; raise the row to the same elevation as the scrolled
+   state. Scope it to the collapsed state rather than the preview flag: the
+   flag drops the moment the pointer leaves while the panel is still mid
+   slide-out, and the same flash happens when a real collapse slides home. */
+.session-sidebar-layout:has([data-slot='sidebar'][data-state='collapsed']) .session-tabs {
+  z-index: 10;
+}
+
 .session-sidebar-layout {
   --sidebar-divider-hover: color-mix(in oklab, var(--border) 89%, var(--foreground) 11%);
 }
