@@ -93,7 +93,8 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: color-mix(in oklab, var(--background), var(--foreground) 9.8113%);
   --input: var(--border);
-  --ring: var(--primary);
+  /* Keep the focus ring neutral; primary (accent) is reserved for opt-in highlights. */
+  --ring: var(--foreground);
   --chart-1: color-mix(in oklab, var(--background), var(--foreground) 16.3522%);
   --chart-2: color-mix(in oklab, var(--background), var(--foreground) 55.8491%);
   --chart-3: color-mix(in oklab, var(--background), var(--foreground) 70.566%);
@@ -165,7 +166,7 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: var(--secondary);
   --input: color-mix(in srgb, var(--background), var(--color-white) 22.0408%);
-  --ring: var(--primary);
+  --ring: var(--foreground);
   --chart-1: color-mix(in oklab, var(--background), var(--foreground) 87.8788%);
   --chart-2: color-mix(in oklab, var(--background), var(--foreground) 49.8182%);
   --chart-3: color-mix(in oklab, var(--background), var(--foreground) 35.6364%);
