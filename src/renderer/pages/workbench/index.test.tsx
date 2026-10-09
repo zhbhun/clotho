@@ -87,9 +87,10 @@ beforeEach(async () => {
       unobserve = vi.fn()
     },
   )
-  vi.mocked(requestFromDesktop).mockImplementation(async (command) => {
+  vi.mocked(requestFromDesktop).mockImplementation(async (command, params) => {
     if (command === 'claudeListProjects' || command === 'claudeListSessions') return []
     if (command === 'claudeGetProjectGitBranch') return null
+    if (command === 'attachmentRead') return readAttachmentsForTest(params)
     if (command === 'claudeStartup') {
       return { cwd: '/Users/test', commands: [], agents: [], models: [] }
     }
@@ -116,6 +117,31 @@ afterEach(() => {
   useWorkbenchStore.getState().reset()
 })
 
+type TestPickedFile = { name: string; sourcePath?: string }
+
+/** The attachmentRead result for picked files: one plain-text document block per file. */
+function readAttachmentsForTest(params: unknown) {
+  const files =
+    (params as { files?: TestPickedFile[] } | null | undefined)?.files ?? ([] as TestPickedFile[])
+  return {
+    attachments: files.map((file) => ({
+      name: file.name,
+      path: file.sourcePath ?? null,
+      content: {
+        type: 'document',
+        title: file.name,
+        source: {
+          type: 'text',
+          media_type: 'text/plain',
+          data: '',
+          path: file.sourcePath ?? null,
+        },
+      },
+    })),
+    rejected: [],
+  }
+}
+
 /** Adds an attachment through the composer "+" menu; labels cover the en and zh catalogs. */
 async function addComposerAttachment() {
   const trigger = await screen.findByLabelText(/^(Add|添加)$/, undefined, SDK_STARTUP_WAIT_OPTIONS)
@@ -123,6 +149,30 @@ async function addComposerAttachment() {
   fireEvent.click(
     await screen.findByRole('menuitem', { name: /^(Attachment|附件)$/ }, SDK_STARTUP_WAIT_OPTIONS),
   )
+}
+
+/** Types into the ProseMirror prompt; jsdom lacks the caret geometry ProseMirror reads. */
+async function typePrompt(text: string) {
+  const rect = new DOMRect(0, 0, 120, 24)
+  const rectList = {
+    0: rect,
+    length: 1,
+    item: () => rect,
+    [Symbol.iterator]: function* () {
+      yield rect
+    },
+  } as unknown as DOMRectList
+  const originalElementRects = Element.prototype.getClientRects
+  const originalRangeRects = Range.prototype.getClientRects
+  Element.prototype.getClientRects = () => rectList
+  Range.prototype.getClientRects = () => rectList
+  try {
+    screen.getByLabelText('Prompt').focus()
+    await userEvent.setup().keyboard(text)
+  } finally {
+    Element.prototype.getClientRects = originalElementRects
+    Range.prototype.getClientRects = originalRangeRects
+  }
 }
 
 function renderWorkbenchPage(shortcutOverrides: ShortcutOverrides = {}) {
@@ -1157,7 +1207,7 @@ describe('prompt composer surface', () => {
   it('saves meaningful draft input when starting another chat', async () => {
     await initializeAppI18n('en', ['en-US'])
     useWorkbenchStore.setState({ projectMode: 'home' })
-    vi.mocked(requestFromDesktop).mockImplementation(async (command) => {
+    vi.mocked(requestFromDesktop).mockImplementation(async (command, params) => {
       switch (command) {
         case 'claudeListProjects':
           return []
@@ -1171,6 +1221,8 @@ describe('prompt composer surface', () => {
           }
         case 'claudeSelectFiles':
           return ['/Users/test/review-the-api-migration.md']
+        case 'attachmentRead':
+          return readAttachmentsForTest(params)
         default:
           return null
       }
@@ -1182,6 +1234,7 @@ describe('prompt composer surface', () => {
     await screen.findByLabelText('Prompt')
     await addComposerAttachment()
     await waitFor(() => expect(screen.getByLabelText('Send')).not.toBeDisabled())
+    await typePrompt('Review the API migration')
     await startAnotherChat()
 
     await waitFor(() => {
@@ -1190,7 +1243,7 @@ describe('prompt composer surface', () => {
       )
       expect(drafts).toHaveLength(2)
       expect(drafts.map((draft) => draft.title)).toEqual(
-        expect.arrayContaining(['review-the-api-migration.md', 'New Chat']),
+        expect.arrayContaining(['Review the API migration', 'New Chat']),
       )
       expect(useWorkbenchStore.getState().tabsByWorkspace.claude).toEqual(
         expect.arrayContaining(drafts.map((draft) => draft.id)),
@@ -1201,13 +1254,13 @@ describe('prompt composer surface', () => {
     })
     // The materialized draft shows both as an inactive tab and in the sidebar
     // history (see 'refreshes a draft last-edited time when its prompt changes').
-    expect(screen.getAllByText('review-the-api-migration.md')).toHaveLength(2)
+    expect(screen.getAllByText('Review the API migration')).toHaveLength(2)
     expect(screen.getByLabelText('Prompt')).toHaveTextContent('')
     // The composer record lands on the materialized draft (the one that gained
     // content); the blank new chat stays in memory by design. The write goes
     // through an async queue, so wait for it.
     const materializedDraft = Object.values(useWorkbenchStore.getState().sessions).find(
-      (session) => session.isDraft && session.title === 'review-the-api-migration.md',
+      (session) => session.isDraft && session.title === 'Review the API migration',
     )
     await waitFor(() => {
       expect(sessionPersistence.get(materializedDraft!.id)?.composer).toMatchObject({
@@ -1219,7 +1272,7 @@ describe('prompt composer surface', () => {
       (session) => session.isDraft && session.title === 'New Chat',
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Close chat: review-the-api-migration.md' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Close chat: Review the API migration' }))
     await waitFor(() => {
       expect(useWorkbenchStore.getState().sessions[savedDraft!.id]).toBeDefined()
       expect(useWorkbenchStore.getState().sessions[savedDraft!.id]?.isDraft).toBe(true)
@@ -1260,7 +1313,7 @@ describe('prompt composer surface', () => {
       projects: { [project.id]: project },
       sessions: { [firstSession.id]: firstSession, [secondSession.id]: secondSession },
     })
-    vi.mocked(requestFromDesktop).mockImplementation(async (command) => {
+    vi.mocked(requestFromDesktop).mockImplementation(async (command, params) => {
       switch (command) {
         case 'claudeListProjects':
           return [project]
@@ -1274,6 +1327,8 @@ describe('prompt composer surface', () => {
           return ['/Users/test/review-the-api-migration.md']
         case 'claudeStartup':
           return { cwd: project.path, commands: [], agents: [], models: TEST_MODELS }
+        case 'attachmentRead':
+          return readAttachmentsForTest(params)
         default:
           return null
       }
@@ -1287,6 +1342,7 @@ describe('prompt composer surface', () => {
     expect(screen.queryByRole('tab', { name: '新会话' })).not.toBeInTheDocument()
     await addComposerAttachment()
     await waitFor(() => expect(screen.getByLabelText('Send')).not.toBeDisabled())
+    await typePrompt('Review the API migration')
     await user.click(await screen.findByRole('tab', { name: 'Second session' }))
 
     await waitFor(() => {
@@ -1297,17 +1353,17 @@ describe('prompt composer surface', () => {
     )
     expect(drafts).toHaveLength(1)
     expect(drafts[0]).toMatchObject({
-      title: 'review-the-api-migration.md',
+      title: 'Review the API migration',
       project_id: project.id,
     })
-    expect(screen.getByRole('tab', { name: 'review-the-api-migration.md' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Review the API migration' })).toBeInTheDocument()
   })
 
   it('refreshes a draft last-edited time when its prompt changes', async () => {
     await initializeAppI18n('en', ['en-US'])
     useWorkbenchStore.setState({ projectMode: 'home' })
     let selectedFile = 0
-    vi.mocked(requestFromDesktop).mockImplementation(async (command) => {
+    vi.mocked(requestFromDesktop).mockImplementation(async (command, params) => {
       switch (command) {
         case 'claudeListProjects':
           return []
@@ -1316,6 +1372,8 @@ describe('prompt composer surface', () => {
         case 'claudeSelectFiles':
           selectedFile += 1
           return [selectedFile === 1 ? '/Users/test/first.md' : '/Users/test/second.md']
+        case 'attachmentRead':
+          return readAttachmentsForTest(params)
         default:
           return null
       }
@@ -1327,9 +1385,10 @@ describe('prompt composer surface', () => {
     await screen.findByLabelText('Prompt')
     await addComposerAttachment()
     await waitFor(() => expect(screen.getByLabelText('Send')).not.toBeDisabled())
+    await typePrompt('first note')
     await startAnotherChat()
 
-    const draftItem = (await screen.findAllByText('first.md'))
+    const draftItem = (await screen.findAllByText('first note'))
       .find((element) => element.closest('[data-sidebar="menu-button"]'))
       ?.closest('[data-sidebar="menu-button"]')
     expect(draftItem).not.toBeNull()
@@ -1442,7 +1501,7 @@ describe('prompt composer surface', () => {
     }>((resolve) => {
       resolveStartup = resolve
     })
-    vi.mocked(requestFromDesktop).mockImplementation(async (command) => {
+    vi.mocked(requestFromDesktop).mockImplementation(async (command, params) => {
       switch (command) {
         case 'claudeListProjects':
           return []
@@ -1462,6 +1521,8 @@ describe('prompt composer surface', () => {
             },
             replay: [],
           }
+        case 'attachmentRead':
+          return readAttachmentsForTest(params)
         default:
           return null
       }
@@ -1518,7 +1579,7 @@ describe('prompt composer surface', () => {
     }>((resolve) => {
       resolveStartup = resolve
     })
-    vi.mocked(requestFromDesktop).mockImplementation(async (command) => {
+    vi.mocked(requestFromDesktop).mockImplementation(async (command, params) => {
       switch (command) {
         case 'claudeListProjects':
           return []
@@ -1540,6 +1601,8 @@ describe('prompt composer surface', () => {
             },
             replay: [],
           }
+        case 'attachmentRead':
+          return readAttachmentsForTest(params)
         default:
           return null
       }
@@ -1585,7 +1648,7 @@ describe('prompt composer surface', () => {
     }>((resolve) => {
       resolveStartup = resolve
     })
-    vi.mocked(requestFromDesktop).mockImplementation(async (command) => {
+    vi.mocked(requestFromDesktop).mockImplementation(async (command, params) => {
       switch (command) {
         case 'claudeListProjects':
           return []
@@ -1605,6 +1668,8 @@ describe('prompt composer surface', () => {
             },
             replay: [],
           }
+        case 'attachmentRead':
+          return readAttachmentsForTest(params)
         default:
           return null
       }
@@ -1649,7 +1714,7 @@ describe('prompt composer surface', () => {
   it('keeps catalog startup failures from blocking a configured provider send', async () => {
     await initializeAppI18n('en', ['en-US'])
     useWorkbenchStore.setState({ projectMode: 'home' })
-    vi.mocked(requestFromDesktop).mockImplementation(async (command) => {
+    vi.mocked(requestFromDesktop).mockImplementation(async (command, params) => {
       switch (command) {
         case 'claudeListProjects':
           return []
@@ -1671,6 +1736,8 @@ describe('prompt composer surface', () => {
             },
             replay: [],
           }
+        case 'attachmentRead':
+          return readAttachmentsForTest(params)
         default:
           return null
       }
@@ -1713,7 +1780,7 @@ describe('prompt composer surface', () => {
         contextWindow: 200_000,
       },
     ]
-    vi.mocked(requestFromDesktop).mockImplementation(async (command) => {
+    vi.mocked(requestFromDesktop).mockImplementation(async (command, params) => {
       switch (command) {
         case 'claudeListProjects':
           return [
@@ -1754,6 +1821,8 @@ describe('prompt composer surface', () => {
             },
             replay: [],
           }
+        case 'attachmentRead':
+          return readAttachmentsForTest(params)
         default:
           return null
       }
@@ -2189,7 +2258,7 @@ describe('prompt composer surface', () => {
       currentProjectId: null,
       currentSessionId: null,
     })
-    vi.mocked(requestFromDesktop).mockImplementation(async (command) => {
+    vi.mocked(requestFromDesktop).mockImplementation(async (command, params) => {
       switch (command) {
         case 'claudeListProjects':
           return []
@@ -2211,6 +2280,8 @@ describe('prompt composer surface', () => {
             },
             replay: [],
           }
+        case 'attachmentRead':
+          return readAttachmentsForTest(params)
         default:
           return null
       }
@@ -2245,7 +2316,7 @@ describe('prompt composer surface', () => {
       currentProjectId: null,
       currentSessionId: null,
     })
-    vi.mocked(requestFromDesktop).mockImplementation(async (command) => {
+    vi.mocked(requestFromDesktop).mockImplementation(async (command, params) => {
       switch (command) {
         case 'claudeListProjects':
           return []
@@ -2267,6 +2338,8 @@ describe('prompt composer surface', () => {
             },
             replay: [],
           }
+        case 'attachmentRead':
+          return readAttachmentsForTest(params)
         default:
           return null
       }
@@ -2286,7 +2359,7 @@ describe('prompt composer surface', () => {
   })
 
   it('adds selected files as attachments and sends them alongside the prompt', async () => {
-    vi.mocked(requestFromDesktop).mockImplementation(async (command) => {
+    vi.mocked(requestFromDesktop).mockImplementation(async (command, params) => {
       switch (command) {
         case 'claudeListProjects':
           return [
@@ -2319,6 +2392,8 @@ describe('prompt composer surface', () => {
             },
             replay: [],
           }
+        case 'attachmentRead':
+          return readAttachmentsForTest(params)
         default:
           return null
       }
@@ -3159,8 +3234,10 @@ describe('mock project history', () => {
 
     expect(await screen.findAllByLabelText(/^WebSearch /)).toHaveLength(2)
     expect(await screen.findAllByLabelText(/^WebFetch /)).toHaveLength(2)
-    // Run tools stay collapsed until clicked; the two standalone tools keep their open bodies.
-    expect(screen.getAllByTestId('tool-item-body')).toHaveLength(2)
+    // Every tool card stays collapsed until clicked; open the two standalone tools.
+    fireEvent.click(screen.getAllByLabelText(/^WebSearch /)[0])
+    fireEvent.click(screen.getAllByLabelText(/^WebFetch /)[0])
+    expect(await screen.findAllByTestId('tool-item-body')).toHaveLength(2)
     fireEvent.click(screen.getAllByLabelText(/^WebSearch /)[1])
     expect(await screen.findAllByTestId('tool-item-body')).toHaveLength(3)
     expect(screen.getByRole('textbox', { name: 'Prompt' })).toHaveAttribute(
