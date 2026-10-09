@@ -1,5 +1,5 @@
 import { File, FileCode, FileText, Folder, ImageIcon } from 'lucide-react'
-import { type Ref, useLayoutEffect, useRef, useState } from 'react'
+import { type Ref, useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 
@@ -42,7 +42,6 @@ export function FileCompletionMenu({
   const outlineRef = useRef<HTMLDivElement | null>(null)
   const [outlineTop, setOutlineTop] = useState(0)
   const activeItem = activeIndex >= 0 ? items[activeIndex] : undefined
-  const hasOutline = Boolean(activeItem && outline?.length)
 
   // Scroll first so the outline below aligns with the row's post-scroll position.
   useLayoutEffect(() => {
@@ -52,15 +51,26 @@ export function FileCompletionMenu({
 
   // Top-align the outline with the active result row; when the bottom runs out of
   // viewport, shift it up instead of following the row down.
-  useLayoutEffect(() => {
-    if (!hasOutline || activeIndex < 0) return
+  const updateOutlineTop = useCallback(() => {
+    if (activeIndex < 0) return
     const activeRow = optionRefs.current[activeIndex]
-    const outlineHeight = outlineRef.current?.offsetHeight ?? 0
-    if (!activeRow) return
+    const panel = outlineRef.current
+    if (!activeRow || !panel) return
     const desiredTop = activeRow.getBoundingClientRect().top - position.top
-    const maxTop = window.innerHeight - OUTLINE_VIEWPORT_PADDING - outlineHeight
+    const maxTop = window.innerHeight - OUTLINE_VIEWPORT_PADDING - panel.offsetHeight
     setOutlineTop(Math.max(0, Math.min(desiredTop, maxTop)))
-  }, [activeIndex, hasOutline, items, outline, position.top, scrollActiveIntoView])
+  }, [activeIndex, position.top])
+
+  useLayoutEffect(() => {
+    updateOutlineTop()
+    // The outline content swaps in async and can outgrow an earlier measurement;
+    // re-clamp whenever the panel itself resizes.
+    const panel = outlineRef.current
+    if (!panel || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(updateOutlineTop)
+    observer.observe(panel)
+    return () => observer.disconnect()
+  }, [updateOutlineTop, items, outline])
 
   return createPortal(
     <div
@@ -83,6 +93,7 @@ export function FileCompletionMenu({
         className="max-h-80 w-[31rem] max-w-[calc(100vw-24px)] min-w-0 shrink-0 overflow-y-auto rounded-lg border border-border/70 bg-popover p-1 shadow-float"
         data-glass="true"
         data-file-completion-results
+        onScroll={updateOutlineTop}
       >
         {items.length > 0 ? (
           items.map((item, index) => (
