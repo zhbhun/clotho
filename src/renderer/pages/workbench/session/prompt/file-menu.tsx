@@ -118,7 +118,7 @@ export function FileCompletionMenu({
       </div>
       {activeItem && outline?.length ? (
         <div
-          className="hidden w-72 shrink-0 self-start rounded-lg border border-border/70 bg-popover p-1.5 shadow-float md:block"
+          className="hidden max-h-80 w-72 shrink-0 self-start overflow-y-auto rounded-lg border border-border/70 bg-popover p-1.5 shadow-float md:block"
           data-glass="true"
           data-file-completion-outline
         >

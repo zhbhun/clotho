@@ -22,6 +22,13 @@ import { filterSlashCommands, slashCommandToNode } from './slash-command'
 const SLASH_MENU_ESTIMATED_SIZE = { width: 420, height: 288 }
 const FILE_MENU_ESTIMATED_SIZE = { width: 768, height: 320 }
 const FILE_COMPLETION_LIMIT = 40
+const LINE_NUMBER_SUFFIX_PATTERN = /([:#]\d*)+$/
+
+/** Drop a trailing `#125` / `:12:3` line hint so it never narrows the file search. */
+function stripLineNumberSuffix(query: string) {
+  return query.replace(LINE_NUMBER_SUFFIX_PATTERN, '')
+}
+
 export type PromptFileSearchClient = {
   enterWarmup: (params: {
     projectPath?: string
@@ -288,8 +295,9 @@ function useFileCompletion({
     }
 
     let isCancelled = false
-    const request = query.trim()
-      ? client.search({ limit: FILE_COMPLETION_LIMIT, projectPath, query })
+    const searchTerm = stripLineNumberSuffix(query)
+    const request = searchTerm.trim()
+      ? client.search({ limit: FILE_COMPLETION_LIMIT, projectPath, query: searchTerm })
       : client.listRootEntries({ limit: FILE_COMPLETION_LIMIT, projectPath })
 
     void request.then((result) => {
@@ -352,6 +360,7 @@ function useCompletionMenu(
   completion: DisplayedCompletion | null,
   placement: SlashCommandMenuPlacement,
   close: () => void,
+  resizeKey = '',
 ) {
   const menuRef = useRef<HTMLDivElement | null>(null)
   const [position, setPosition] = useState<ReturnType<
@@ -377,7 +386,8 @@ function useCompletionMenu(
         viewportSize: viewportSize(),
       }),
     )
-  }, [completion, placement])
+    // resizeKey re-measures when async content (file results, outline) changes the menu height.
+  }, [completion, placement, resizeKey])
 
   useEffect(() => {
     if (!completion) return
@@ -472,9 +482,14 @@ export function usePromptCompletion({
     setState: setFileState,
     t,
   })
-  const menu = useCompletionMenu(completion, placement, controller.close)
   const displayedFileItems =
     completion?.kind === 'file' ? (fileState.items.length ? fileState.items : completion.items) : []
+  const menu = useCompletionMenu(
+    completion,
+    placement,
+    controller.close,
+    `${displayedFileItems.length}:${fileState.outline.length}:${fileState.message ?? ''}`,
+  )
 
   return {
     ...controller,

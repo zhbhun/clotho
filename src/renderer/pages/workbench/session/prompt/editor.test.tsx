@@ -670,6 +670,69 @@ describe('PromptMarkdownEditor', () => {
     expect(screen.getByText('No files available')).toBeInTheDocument()
   })
 
+  it('searches without the line-number suffix typed after the file path', async () => {
+    const user = userEvent.setup()
+    const search = vi.fn(
+      async ({ query }) =>
+        ({
+          items: [
+            {
+              absolutePath: '/Users/test/project/src/server.ts',
+              displayPath: 'src',
+              kind: 'file',
+              name: 'server.ts',
+              ranking: 'fuzzy',
+              relativePath: 'src/server.ts',
+              source: 'fff',
+            },
+          ],
+          query,
+          ranking: 'fuzzy',
+          source: 'fff',
+          supported: true,
+        }) as ProjectFileSearchResult,
+    )
+    const fileSearchClient: PromptFileSearchClient = {
+      enterWarmup: vi.fn(async () => ({ supported: true })),
+      exitWarmup: vi.fn(async () => undefined),
+      getOutline: vi.fn(async () => ({ nodes: [], supported: true }) as ProjectFileSearchOutline),
+      listRootEntries: vi.fn(
+        async () =>
+          ({
+            items: [],
+            query: '',
+            ranking: 'root',
+            source: 'root',
+            supported: true,
+          }) as ProjectFileSearchResult,
+      ),
+      search,
+    }
+
+    render(
+      <TooltipProvider>
+        <PromptMarkdownEditor
+          fileSearchClient={fileSearchClient}
+          projectPath="/Users/test/project"
+          value=""
+          onChange={() => {}}
+          onSubmit={() => {}}
+        />
+      </TooltipProvider>,
+    )
+
+    const editor = screen.getByRole('textbox', { name: 'Prompt' })
+
+    editor.focus()
+    await user.keyboard('@src/server.ts:12')
+    expect(await screen.findByRole('option', { name: /server.ts/ })).toBeInTheDocument()
+
+    await user.keyboard('#5')
+
+    expect(screen.queryByText('No files available')).not.toBeInTheDocument()
+    expect(search).toHaveBeenLastCalledWith(expect.objectContaining({ query: 'src/server.ts' }))
+  })
+
   it('renders project file completions and inserts the active file as a relative mention', async () => {
     const user = userEvent.setup()
     const changes: string[] = []
