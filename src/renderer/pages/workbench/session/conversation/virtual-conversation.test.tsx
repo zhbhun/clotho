@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useConversationAutoScroll } from '../use-conversation-auto-scroll'
@@ -95,7 +95,10 @@ function VirtualListHarness({
 function ScrollRestoreHarness({ rows, viewKey }: { rows: TestRow[]; viewKey: string }) {
   const [viewport, setViewport] = useState<HTMLDivElement | null>(null)
   const listRef = useRef<VirtualConversationHandle>(null)
-  const { viewportRef } = useConversationAutoScroll(rows, viewKey, listRef)
+  // A unique key per mount keeps harness instances from sharing cached scroll
+  // state, mirroring one session per instance.
+  const sessionKey = useId()
+  const { viewportRef } = useConversationAutoScroll(rows, viewKey, sessionKey, listRef)
   const handleViewportRef = useCallback(
     (element: HTMLDivElement | null) => {
       viewportRef(element)

@@ -1,9 +1,10 @@
 import { act, fireEvent, render } from '@testing-library/react'
 import { type RefObject, useEffect } from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   type ConversationScrollAnchorController,
+  clearConversationScrollStates,
   useConversationAutoScroll,
 } from './use-conversation-auto-scroll'
 
@@ -11,18 +12,21 @@ function AutoScrollHarness({
   contentVersion,
   onResetReady,
   scrollAnchorRef,
+  sessionKey = 'session',
   showViewport = true,
   viewKey = 'root',
 }: {
   contentVersion: number
   onResetReady: (resetAutoScroll: () => void) => void
   scrollAnchorRef?: RefObject<ConversationScrollAnchorController | null>
+  sessionKey?: string
   showViewport?: boolean
   viewKey?: string
 }) {
   const { isContentScrolled, resetAutoScroll, viewportRef } = useConversationAutoScroll(
     contentVersion,
     viewKey,
+    sessionKey,
     scrollAnchorRef,
   )
 
@@ -71,6 +75,10 @@ class ContentObserverRecorder {
 }
 
 describe('useConversationAutoScroll', () => {
+  beforeEach(() => {
+    clearConversationScrollStates()
+  })
+
   it('reports whether the content has left the top edge', () => {
     const onResetReady = () => {}
     const { getByTestId } = render(
@@ -312,5 +320,76 @@ describe('useConversationAutoScroll', () => {
       rowKey: 'root-row',
     })
     expect(viewport.scrollTop).toBe(33)
+  })
+
+  it('reopens a session at its saved offset instead of snapping to the bottom', () => {
+    const onResetReady = () => {}
+    const first = render(
+      <AutoScrollHarness contentVersion={0} onResetReady={onResetReady} sessionKey="restore" />,
+    )
+    const firstViewport = first.getByTestId('viewport')
+    setScrollMetrics(firstViewport, { clientHeight: 100, scrollHeight: 500 })
+    firstViewport.scrollTop = 180
+    fireEvent.scroll(firstViewport)
+    first.unmount()
+
+    const second = render(
+      <AutoScrollHarness contentVersion={0} onResetReady={onResetReady} sessionKey="restore" />,
+    )
+    const viewport = second.getByTestId('viewport')
+    expect(viewport.scrollTop).toBe(0)
+
+    setScrollMetrics(viewport, { clientHeight: 100, scrollHeight: 500 })
+    second.rerender(
+      <AutoScrollHarness contentVersion={1} onResetReady={onResetReady} sessionKey="restore" />,
+    )
+    expect(viewport.scrollTop).toBe(180)
+  })
+
+  it('reopens a session at the bottom when it was left there', () => {
+    const onResetReady = () => {}
+    const first = render(
+      <AutoScrollHarness contentVersion={0} onResetReady={onResetReady} sessionKey="bottom" />,
+    )
+    const firstViewport = first.getByTestId('viewport')
+    setScrollMetrics(firstViewport, { clientHeight: 100, scrollHeight: 500 })
+    first.rerender(
+      <AutoScrollHarness contentVersion={1} onResetReady={onResetReady} sessionKey="bottom" />,
+    )
+    expect(firstViewport.scrollTop).toBe(400)
+    first.unmount()
+
+    const second = render(
+      <AutoScrollHarness contentVersion={1} onResetReady={onResetReady} sessionKey="bottom" />,
+    )
+    const viewport = second.getByTestId('viewport')
+    setScrollMetrics(viewport, { clientHeight: 100, scrollHeight: 500 })
+    second.rerender(
+      <AutoScrollHarness contentVersion={2} onResetReady={onResetReady} sessionKey="bottom" />,
+    )
+    expect(viewport.scrollTop).toBe(400)
+  })
+
+  it('cancels a pending restore when the user scrolls with the wheel', () => {
+    const onResetReady = () => {}
+    const first = render(
+      <AutoScrollHarness contentVersion={0} onResetReady={onResetReady} sessionKey="cancel" />,
+    )
+    const firstViewport = first.getByTestId('viewport')
+    setScrollMetrics(firstViewport, { clientHeight: 100, scrollHeight: 500 })
+    firstViewport.scrollTop = 180
+    fireEvent.scroll(firstViewport)
+    first.unmount()
+
+    const second = render(
+      <AutoScrollHarness contentVersion={0} onResetReady={onResetReady} sessionKey="cancel" />,
+    )
+    const viewport = second.getByTestId('viewport')
+    setScrollMetrics(viewport, { clientHeight: 100, scrollHeight: 500 })
+    fireEvent.wheel(viewport)
+    second.rerender(
+      <AutoScrollHarness contentVersion={1} onResetReady={onResetReady} sessionKey="cancel" />,
+    )
+    expect(viewport.scrollTop).toBe(0)
   })
 })

@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
+import { useId } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useConversationAutoScroll } from './use-conversation-auto-scroll'
@@ -44,7 +45,10 @@ function DockHarness({ mode }: { mode: 'ask' | 'prompt' }) {
 
 function AutoScrollDockHarness({ mode }: { mode: 'ask' | 'prompt' }) {
   const { dockRef, scrollVersion } = useConversationDock(mode)
-  const { viewportRef } = useConversationAutoScroll(scrollVersion)
+  // A unique key per mount keeps harness instances from sharing cached scroll
+  // state, mirroring one session per instance.
+  const sessionKey = useId()
+  const { viewportRef } = useConversationAutoScroll(scrollVersion, 'root', sessionKey)
 
   return (
     <>

@@ -473,7 +473,7 @@ function SessionAreaContent({
     virtualConversationRef.current?.scrollToTurn(turnScrollRequest.turnId)
   }, [turnScrollRequest])
   const { isContentScrolled, pauseAutoScroll, resetAutoScroll, viewportRef } =
-    useConversationAutoScroll(autoScrollVersion, activeViewKey, virtualConversationRef)
+    useConversationAutoScroll(autoScrollVersion, activeViewKey, sessionId, virtualConversationRef)
   const [conversationViewport, setConversationViewport] = useState<HTMLDivElement | null>(null)
   const [visibleTurnIds, setVisibleTurnIds] = useState<Set<string>>(() => new Set())
   const [isHistorySkeletonVisible, setHistorySkeletonVisible] = useState(false)
