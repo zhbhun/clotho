@@ -163,6 +163,35 @@ export class SendService {
   }
 
   /**
+   * Send the pending message queued behind the previous turn. The composer
+   * draft is untouched — only the queued content goes out. A pending `/clear`
+   * starts a new session and carries the current draft over, like a typed
+   * `/clear` does. Returns false when nothing was sent (the pending message
+   * stays queued for the user to edit or delete).
+   */
+  async sendPendingMessage() {
+    const composer = this.controller.composerStore.getState()
+    const pending = composer.pendingMessage
+    if (!pending || this.isTurnBlocked()) return false
+    const model = this.resolveTurnModel()
+    if (!model) return false
+    this.controller.composerService.deletePendingMessage()
+    if (isClearPrompt(pending.prompt, pending.attachments)) {
+      const draft = this.controller.composerService.snapshot()
+      this.startNewSession({ prompt: draft.prompt, attachments: draft.attachments ?? [] })
+      return true
+    }
+
+    return this.runPrompt({
+      clearPrompt: false,
+      model,
+      permissionMode: composer.permissionMode,
+      prompt: pending.prompt,
+      attachments: pending.attachments,
+    })
+  }
+
+  /**
    * Continue the latest turn that was interrupted after content had streamed:
    * send the hidden synthetic auto-continuation nudge so the agent picks up
    * right after the terminated reply. Requires a response to exist — a turn
@@ -548,6 +577,25 @@ export class SendService {
     }
     this.turnOutcome = outcome
     for (const resolve of this.turnEndWaiters.splice(0)) resolve()
+    if (
+      !queryFailure &&
+      outcome === 'success' &&
+      this.controller.composerStore.getState().pendingMessage
+    ) {
+      this.schedulePendingMessageSend()
+    }
+  }
+
+  /**
+   * A fully successful turn auto-sends the queued pending message; stops,
+   * failures, and recalls leave it queued for the user to edit or delete.
+   * Deferred so the finished turn's send promise settles first and the queued
+   * send goes through the controller's submit path cleanly.
+   */
+  private schedulePendingMessageSend() {
+    setTimeout(() => {
+      if (!this.controller.isDisposed) void this.controller.sendPendingMessage()
+    }, 0)
   }
 
   async runPrompt({

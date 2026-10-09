@@ -323,6 +323,15 @@ export class SessionController {
 
   resumeInterrupted = () => this.submitAfterHistory(() => this.sendService.resumeInterrupted())
 
+  /** Sends the message queued behind the previous turn (the pending-message auto-send). */
+  sendPendingMessage = () => this.submitAfterHistory(() => this.sendService.sendPendingMessage())
+
+  queuePendingMessage = () => this.composerService.queuePendingMessage()
+
+  editPendingMessage = () => this.composerService.editPendingMessage()
+
+  deletePendingMessage = () => this.composerService.deletePendingMessage()
+
   stopStreaming = () => this.sendService.stop()
 
   ingestLine = (line: string) => this.sendService.ingestLine(line)

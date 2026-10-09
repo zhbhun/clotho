@@ -258,6 +258,10 @@ function trackedStore(options: SessionControllerOptions) {
       refreshModels: controller.refreshModels,
       sendPrompt: controller.sendPrompt,
       resumeInterrupted: controller.resumeInterrupted,
+      sendPendingMessage: controller.sendPendingMessage,
+      queuePendingMessage: controller.queuePendingMessage,
+      editPendingMessage: controller.editPendingMessage,
+      deletePendingMessage: controller.deletePendingMessage,
       sendSlashCommand: controller.sendService.sendSlashCommand.bind(controller.sendService),
       prepareMessageEdit: controller.prepareMessageEdit,
       submitMessageEdit: controller.submitMessageEdit,
@@ -479,6 +483,126 @@ describe('SessionController', () => {
       attachments: [{ name: 'diagram.png', path: '/project/diagram.png' }],
     })
     expect(store.getState().attachments).toEqual([])
+  })
+
+  it('queues the draft as a pending message while streaming and clears the composer', async () => {
+    const client = createClient()
+    const manual = createManualStream()
+    client.openSessionStream.mockReturnValue(manual.stream as never)
+    const store = trackedStore({ ...createOptions('local:pending-queue'), client })
+    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
+    store.getState().setPrompt('First question')
+    const sending = store.getState().sendPrompt()
+    await vi.waitFor(() => expect(store.getState().isStreaming).toBe(true))
+
+    expect(store.getState().queuePendingMessage()).toBe(false)
+    store.getState().setPrompt('  Second question ')
+    expect(store.getState().queuePendingMessage()).toBe(true)
+    expect(store.getState().pendingMessage).toEqual({ prompt: 'Second question', attachments: [] })
+    expect(store.getState().prompt).toBe('')
+
+    // A newer send overwrites the queued pending message.
+    store.getState().setPrompt('Third question')
+    store.getState().queuePendingMessage()
+    expect(store.getState().pendingMessage).toEqual({ prompt: 'Third question', attachments: [] })
+
+    manual.finish()
+    await sending
+  })
+
+  it('auto-sends the pending message after the running turn succeeds', async () => {
+    const client = createClient()
+    const manual = createManualStream()
+    client.openSessionStream.mockReturnValue(manual.stream as never)
+    const store = trackedStore({ ...createOptions('local:pending-autosend'), client })
+    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
+    store.getState().setPrompt('First question')
+    const sending = store.getState().sendPrompt()
+    await vi.waitFor(() => expect(store.getState().isStreaming).toBe(true))
+
+    store.getState().setPrompt('Second question')
+    store.getState().queuePendingMessage()
+    // The user keeps typing a new draft while waiting; the auto-send must not eat it.
+    store.getState().setPrompt('New draft')
+
+    manual.emit(userHistoryMessage('First question'))
+    manual.emitResult()
+    await sending
+
+    await vi.waitFor(() => expect(manual.pushes.length).toBe(2))
+    expect(manual.pushes[1]).toMatchObject({ text: 'Second question' })
+    expect(store.getState().pendingMessage).toBeNull()
+    expect(store.getState().prompt).toBe('New draft')
+  })
+
+  it('keeps the pending message queued when the user stops the turn', async () => {
+    const client = createClient()
+    const manual = createManualStream()
+    client.openSessionStream.mockReturnValue(manual.stream as never)
+    const store = trackedStore({ ...createOptions('local:pending-stop'), client })
+    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
+    store.getState().setPrompt('First question')
+    const sending = store.getState().sendPrompt()
+    await vi.waitFor(() => expect(store.getState().isStreaming).toBe(true))
+
+    store.getState().setPrompt('Second question')
+    store.getState().queuePendingMessage()
+    await store.getState().stopStreaming()
+    await sending
+
+    expect(store.getState().pendingMessage).toEqual({ prompt: 'Second question', attachments: [] })
+    expect(manual.pushes.length).toBe(1)
+  })
+
+  it('keeps the pending message queued when the turn fails', async () => {
+    const client = createClient()
+    const failing = createFailingStream(new Error('Query died'))
+    client.openSessionStream.mockReturnValue(failing.stream as never)
+    const store = trackedStore({ ...createOptions('local:pending-failure'), client })
+    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
+    store.getState().setPrompt('First question')
+    const sending = store.getState().sendPrompt()
+    await vi.waitFor(() => expect(store.getState().isStreaming).toBe(true))
+
+    store.getState().setPrompt('Second question')
+    store.getState().queuePendingMessage()
+    await sending
+
+    expect(store.getState().pendingMessage).toEqual({ prompt: 'Second question', attachments: [] })
+    expect(failing.pushes.length).toBe(1)
+  })
+
+  it('moves the pending message back into the composer on edit and drops it on delete', async () => {
+    const client = createClient()
+    const manual = createManualStream()
+    client.openSessionStream.mockReturnValue(manual.stream as never)
+    const store = trackedStore({ ...createOptions('local:pending-edit'), client })
+    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
+    store.getState().setPrompt('First question')
+    store.getState().setAttachments([{ name: 'diagram.png', path: '/project/diagram.png' }])
+    const sending = store.getState().sendPrompt()
+    await vi.waitFor(() => expect(store.getState().isStreaming).toBe(true))
+
+    store.getState().setPrompt('Queued message')
+    store.getState().setAttachments([{ name: 'notes.txt', path: '/project/notes.txt' }])
+    store.getState().queuePendingMessage()
+    expect(store.getState().prompt).toBe('')
+    expect(store.getState().attachments).toEqual([])
+
+    store.getState().setPrompt('Current draft')
+    store.getState().editPendingMessage()
+    expect(store.getState().pendingMessage).toBeNull()
+    expect(store.getState().prompt).toBe('Queued message')
+    expect(store.getState().attachments).toEqual([
+      { name: 'notes.txt', path: '/project/notes.txt' },
+    ])
+
+    store.getState().queuePendingMessage()
+    store.getState().deletePendingMessage()
+    expect(store.getState().pendingMessage).toBeNull()
+
+    manual.finish()
+    await sending
   })
 
   it('keeps the draft when a model marked without multimodal support receives attachments', async () => {

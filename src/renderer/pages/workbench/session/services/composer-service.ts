@@ -174,6 +174,36 @@ export class ComposerService {
     this.persist({ selectedAgent })
   }
 
+  /**
+   * Queue the composer draft behind the running turn: the draft moves into the
+   * pending message (overwriting any earlier one) and the composer clears so
+   * the stop button returns. The pending message is transient — it lives only
+   * as long as the session controller does.
+   */
+  queuePendingMessage(): boolean {
+    const store = this.controller.composerStore
+    const state = store.getState()
+    const prompt = state.prompt.trim()
+    if (!prompt && !state.attachments.length) return false
+    if (!this.controller.runtimeStore.getState().isStreaming) return false
+    store.setState({ pendingMessage: { prompt, attachments: state.attachments } })
+    void this.restorePrompt('', [])
+    return true
+  }
+
+  /** Put the pending message back into the composer, replacing the current draft. */
+  editPendingMessage() {
+    const store = this.controller.composerStore
+    const pending = store.getState().pendingMessage
+    if (!pending) return
+    store.setState({ pendingMessage: null })
+    void this.restorePrompt(pending.prompt, pending.attachments)
+  }
+
+  deletePendingMessage() {
+    this.controller.composerStore.setState({ pendingMessage: null })
+  }
+
   setPermissionMode(permissionMode: ClaudePermissionMode) {
     this.controller.composerStore.getState().setPermissionMode(permissionMode)
     this.persist({ permissionMode })

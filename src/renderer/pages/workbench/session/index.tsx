@@ -285,10 +285,11 @@ function SessionAreaContent({
   const { t } = useTranslation()
   const controller = useSessionController()
   const availableCommands = useCatalogStore((state) => state.availableCommands)
-  const { attachments, permissionMode, prompt } = useComposerStore(
+  const { attachments, permissionMode, pendingMessage, prompt } = useComposerStore(
     useShallow((state) => ({
       attachments: state.attachments,
       permissionMode: state.permissionMode,
+      pendingMessage: state.pendingMessage,
       prompt: state.prompt,
     })),
   )
@@ -339,7 +340,10 @@ function SessionAreaContent({
   const cacheHitRate = useUsageStore((state) => averageCacheHitRate(state))
   const {
     cancelMessageEdit,
+    deletePendingMessage,
+    editPendingMessage,
     prepareMessageEdit,
+    queuePendingMessage,
     resumeInterrupted,
     retryInitialize,
     respondToolRequest,
@@ -608,6 +612,12 @@ function SessionAreaContent({
     isStreaming,
     model,
     modelOptions,
+    onDeletePendingMessage: deletePendingMessage,
+    onEditPendingMessage: editPendingMessage,
+    onQueuePendingMessage: () => {
+      queuePendingMessage()
+    },
+    pendingMessage,
     permissionMode,
     prompt,
     projectPath,

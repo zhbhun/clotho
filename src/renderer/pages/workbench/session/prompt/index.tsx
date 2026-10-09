@@ -39,6 +39,7 @@ import {
   readPastedFiles,
   readPickedFiles,
 } from '../services/attachments'
+import type { PendingMessage } from '../stores/composer-store'
 import { AddMenu } from './add-menu'
 import {
   type ContextUsage,
@@ -53,6 +54,7 @@ import {
   groupModelOptionsByProvider,
   resolveSelectedModelIconOption,
 } from './model-brand-icon'
+import { PendingMessagePanel } from './pending-message'
 import './prompt.css'
 import { resolveDirectSlashCommand } from './slash-command'
 import { usePromptHistory } from './use-prompt-history'
@@ -102,6 +104,13 @@ export type PromptComposerProps = {
   interactionScope?: string
   model: string
   modelOptions: ClaudeModelInfo[]
+  /** The message queued behind the running turn; null hides the panel. */
+  pendingMessage?: PendingMessage | null
+  /** Moves the pending message back into the composer, replacing the draft. */
+  onEditPendingMessage?: () => void
+  onDeletePendingMessage?: () => void
+  /** Queues the composer draft behind the running turn (available while streaming). */
+  onQueuePendingMessage?: () => void
   /** Executes a slash command without sending it as a regular prompt. */
   onRunCommand?: (command: ClaudeSlashCommand) => void
   /** Reloads the session transcript from disk on user request. */
@@ -153,7 +162,11 @@ export function PromptComposer({
   interactionScope,
   model,
   modelOptions,
+  onEditPendingMessage,
+  onDeletePendingMessage,
+  onQueuePendingMessage,
   onRunCommand,
+  pendingMessage,
   permissionMode,
   prompt,
   projectPath,
@@ -182,7 +195,11 @@ export function PromptComposer({
   const providersById = useMemo(() => new Map(providers.map((p) => [p.id, p])), [providers])
   const usageByProviderId = useProviderUsageStore((state) => state.usage)
   const refreshProviderUsage = useProviderUsageStore((state) => state.refreshAll)
-  const isEditorDisabled = isMockProject || !canUsePrompt || isStreaming || isSubmitting
+  const isEditorDisabled = isMockProject || !canUsePrompt
+  const hasDraft = Boolean(prompt.trim() || attachments.length)
+  // While the agent runs, a draft turns the stop button into a send arrow:
+  // submitting queues the draft as the pending message instead.
+  const canQueuePending = Boolean(isStreaming && hasDraft && onQueuePendingMessage)
   const handlePromptHistory = usePromptHistory({
     prompt,
     prompts: sentPrompts ?? EMPTY_SENT_PROMPTS,
@@ -247,6 +264,18 @@ export function PromptComposer({
   }
 
   function handleSubmit() {
+    if (isStreaming) {
+      // While the agent runs only the local context panel stays instant;
+      // everything else queues behind the running turn.
+      if (resolveDirectSlashCommand(prompt) === 'context' && contextUsageDetail) {
+        setPrompt('')
+        contextUsageDetail.onOpen()
+        setIsContextPanelOpen(true)
+        return
+      }
+      if (canQueuePending) onQueuePendingMessage!()
+      return
+    }
     if (!canSubmit) return
 
     const directCommand = resolveDirectSlashCommand(prompt)
@@ -279,10 +308,10 @@ export function PromptComposer({
     visibleModelOptions,
     t('workbench.prompt.otherProvider'),
   )
-  const canSelectFiles = !isMockProject && canUsePrompt && !isStreaming && !isSubmitting
+  const canSelectFiles = !isMockProject && canUsePrompt
   // The resume (play) action replaces the send button only while the composer
   // is empty — any typed content sends as a new regular prompt instead.
-  const showResumeButton = Boolean(canResume && onResume && !prompt.trim() && !attachments.length)
+  const showResumeButton = Boolean(canResume && onResume && !hasDraft)
   const selectedPermissionOption = permissionModeOption(permissionMode)
   const PermissionIcon = selectedPermissionOption.icon
   const modelMenu = model ? (
@@ -374,211 +403,237 @@ export function PromptComposer({
   ) : null
 
   return (
-    <Card
-      className={cn(
-        'group/composer @container w-full overflow-hidden rounded-[20px] text-sm [--card-spacing:--spacing(3)]',
-        appearance === 'default' && 'prompt-composer-surface ring-0',
-        appearance === 'message-edit' &&
-          'max-h-[450px] min-h-0 rounded-lg rounded-br-none border-border/60 bg-muted shadow-none',
-        className,
-      )}
-      data-elevated={appearance === 'default' && isElevated ? 'true' : undefined}
-      data-shadow-direction={appearance === 'default' ? shadowDirection : undefined}
-    >
-      {appearance === 'default' ? (
-        <PromptComposerShortcuts
-          canSelectFiles={canSelectFiles}
-          onOpenPermission={() => {
-            setIsModelMenuOpen(false)
-            setIsPermissionMenuOpen(true)
-          }}
-          onOpenModel={() => {
-            if (!modelOptions.length) return
-            setIsPermissionMenuOpen(false)
-            setIsModelMenuOpen(true)
-          }}
-          onSelectFiles={handleAddFiles}
+    // The wrapper anchors the pending strip, which sinks behind the card
+    // above it (the card stacks above while the strip is visible).
+    <div className="relative w-full">
+      {appearance === 'default' && pendingMessage ? (
+        <PendingMessagePanel
+          message={pendingMessage}
+          onEdit={onEditPendingMessage}
+          onDelete={onDeletePendingMessage}
         />
       ) : null}
-      <CardContent className="flex min-h-0 flex-col">
-        {attachments.length ? (
-          <AttachmentList
-            attachments={attachments}
-            disabled={!canSelectFiles}
-            isEmbedded={appearance === 'message-edit'}
-            onRemove={(index) => {
-              setAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index))
+      <Card
+        className={cn(
+          'group/composer @container w-full overflow-hidden rounded-[20px] text-sm [--card-spacing:--spacing(3)]',
+          appearance === 'default' && 'prompt-composer-surface ring-0',
+          appearance === 'default' && pendingMessage && 'z-10',
+          appearance === 'message-edit' &&
+            'max-h-[450px] min-h-0 rounded-lg rounded-br-none border-border/60 bg-muted shadow-none',
+          className,
+        )}
+        data-elevated={appearance === 'default' && isElevated ? 'true' : undefined}
+        data-shadow-direction={appearance === 'default' ? shadowDirection : undefined}
+      >
+        {appearance === 'default' ? (
+          <PromptComposerShortcuts
+            canSelectFiles={canSelectFiles}
+            onOpenPermission={() => {
+              setIsModelMenuOpen(false)
+              setIsPermissionMenuOpen(true)
             }}
+            onOpenModel={() => {
+              if (!modelOptions.length) return
+              setIsPermissionMenuOpen(false)
+              setIsModelMenuOpen(true)
+            }}
+            onSelectFiles={handleAddFiles}
           />
         ) : null}
-        <PromptMarkdownEditor
-          autoFocus={autoFocus}
-          availableCommands={availableCommands}
-          disabled={isEditorDisabled}
-          interactionScope={interactionScope}
-          onPasteFiles={handlePasteFiles}
-          onPromptHistory={isEditorDisabled ? undefined : handlePromptHistory}
-          placeholder={
-            isMockProject
-              ? t('workbench.prompt.mockReadonly')
-              : canUsePrompt
-                ? t('workbench.prompt.placeholder')
-                : t('workbench.prompt.selectProject')
-          }
-          projectPath={projectPath}
-          ref={promptEditorRef}
-          slashMenuPlacement={slashMenuPlacement}
-          value={prompt}
-          onChange={setPrompt}
-          onSubmit={handleSubmit}
-        />
-      </CardContent>
-      <CardFooter className="shrink-0 gap-1">
-        <AddMenu
-          canRefreshSession={canRefreshSession}
-          canSelectFiles={canSelectFiles}
-          commands={availableCommands}
-          editorHandle={promptEditorRef}
-          interactionScope={interactionScope}
-          onSelectFiles={() => void handleAddFiles()}
-          onQueryContextStatus={() => {
-            contextUsageDetail?.onOpen()
-            setIsContextPanelOpen(true)
-          }}
-          onRefreshSession={onRefreshSession}
-          onRunCommand={onRunCommand}
-        />
-
-        <Menu
-          open={isPermissionMenuOpen}
-          onOpenChange={(open) => {
-            setIsPermissionMenuOpen(open)
-            if (open) setIsModelMenuOpen(false)
-          }}
-        >
-          <MenuTrigger
-            render={
-              <Button
-                aria-label={t('permission.mode.menuLabel')}
-                className={COMPOSER_TEXT_CONTROL_CLASS}
-                type="button"
-                variant="ghost"
-              />
-            }
-          >
-            <PermissionIcon
-              data-icon="inline-start"
-              className={selectedPermissionOption.accentClassName}
+        <CardContent className="flex min-h-0 flex-col">
+          {attachments.length ? (
+            <AttachmentList
+              attachments={attachments}
+              disabled={!canSelectFiles}
+              isEmbedded={appearance === 'message-edit'}
+              onRemove={(index) => {
+                setAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index))
+              }}
             />
-            <span className="@max-[449px]:hidden">{t(selectedPermissionOption.labelKey)}</span>
-            <ChevronDown className="@max-[449px]:hidden" data-icon="inline-end" strokeWidth={1} />
-          </MenuTrigger>
-          <MenuContent
-            aria-label={t('permission.mode.menuLabel')}
-            align="start"
-            className="w-80 shadow-float"
-            data-message-edit-surface={interactionScope}
-            glass
+          ) : null}
+          <PromptMarkdownEditor
+            autoFocus={autoFocus}
+            availableCommands={availableCommands}
+            disabled={isEditorDisabled}
+            interactionScope={interactionScope}
+            onPasteFiles={handlePasteFiles}
+            onPromptHistory={isEditorDisabled ? undefined : handlePromptHistory}
+            placeholder={
+              isMockProject
+                ? t('workbench.prompt.mockReadonly')
+                : canUsePrompt
+                  ? t('workbench.prompt.placeholder')
+                  : t('workbench.prompt.selectProject')
+            }
+            projectPath={projectPath}
+            ref={promptEditorRef}
+            slashMenuPlacement={slashMenuPlacement}
+            value={prompt}
+            onChange={setPrompt}
+            onSubmit={handleSubmit}
+          />
+        </CardContent>
+        <CardFooter className="shrink-0 gap-1">
+          <AddMenu
+            canRefreshSession={canRefreshSession}
+            canSelectFiles={canSelectFiles}
+            commands={availableCommands}
+            editorHandle={promptEditorRef}
+            interactionScope={interactionScope}
+            onSelectFiles={() => void handleAddFiles()}
+            onQueryContextStatus={() => {
+              contextUsageDetail?.onOpen()
+              setIsContextPanelOpen(true)
+            }}
+            onRefreshSession={onRefreshSession}
+            onRunCommand={onRunCommand}
+          />
+
+          <Menu
+            open={isPermissionMenuOpen}
+            onOpenChange={(open) => {
+              setIsPermissionMenuOpen(open)
+              if (open) setIsModelMenuOpen(false)
+            }}
           >
-            <MenuList>
-              {PERMISSION_MODE_OPTIONS.map((option) => (
-                <MenuItem
-                  selected={permissionMode === option.value}
-                  key={option.value}
-                  onSelect={() => setPermissionMode(option.value)}
-                >
-                  <option.icon data-icon="inline-start" />
-                  <span className="flex min-w-0 flex-col">
-                    <span className="text-sm/5 whitespace-nowrap">{t(option.labelKey)}</span>
-                    <span className="truncate text-[12px] leading-4 text-foreground-subtlest!">
-                      {t(option.descriptionKey)}
-                    </span>
-                  </span>
-                </MenuItem>
-              ))}
-            </MenuList>
-          </MenuContent>
-        </Menu>
-
-        {appearance === 'message-edit' ? modelMenu : null}
-
-        <div className="ml-auto flex items-center gap-1">
-          {appearance === 'message-edit' ? (
-            <>
-              {onCancel ? (
+            <MenuTrigger
+              render={
                 <Button
-                  className="rounded-lg border-input"
-                  disabled={isSubmitting}
+                  aria-label={t('permission.mode.menuLabel')}
+                  className={COMPOSER_TEXT_CONTROL_CLASS}
                   type="button"
-                  variant="outline"
-                  onClick={onCancel}
-                >
-                  {t('workbench.action.cancel')}
-                </Button>
-              ) : null}
-              <Button
-                aria-label={
-                  isSubmitting ? t('workbench.prompt.sending') : t('workbench.prompt.send')
-                }
-                className="rounded-lg bg-foreground text-background hover:bg-foreground/80"
-                disabled={isSubmitting || !canSubmit}
-                type="button"
-                onClick={handleSubmit}
-              >
-                {isSubmitting ? <Spinner /> : t('workbench.prompt.send')}
-              </Button>
-            </>
-          ) : (
-            <>
-              {contextUsage ? (
-                contextUsageDetail ? (
-                  <ContextUsagePopover
-                    detail={contextUsageDetail}
-                    open={isContextPanelOpen}
-                    usage={contextUsage}
-                    onOpenChange={setIsContextPanelOpen}
+                  variant="ghost"
+                />
+              }
+            >
+              <PermissionIcon
+                data-icon="inline-start"
+                className={selectedPermissionOption.accentClassName}
+              />
+              <span className="@max-[449px]:hidden">{t(selectedPermissionOption.labelKey)}</span>
+              <ChevronDown className="@max-[449px]:hidden" data-icon="inline-end" strokeWidth={1} />
+            </MenuTrigger>
+            <MenuContent
+              aria-label={t('permission.mode.menuLabel')}
+              align="start"
+              className="w-80 shadow-float"
+              data-message-edit-surface={interactionScope}
+              glass
+            >
+              <MenuList>
+                {PERMISSION_MODE_OPTIONS.map((option) => (
+                  <MenuItem
+                    selected={permissionMode === option.value}
+                    key={option.value}
+                    onSelect={() => setPermissionMode(option.value)}
                   >
+                    <option.icon data-icon="inline-start" />
+                    <span className="flex min-w-0 flex-col">
+                      <span className="text-sm/5 whitespace-nowrap">{t(option.labelKey)}</span>
+                      <span className="truncate text-[12px] leading-4 text-foreground-subtlest!">
+                        {t(option.descriptionKey)}
+                      </span>
+                    </span>
+                  </MenuItem>
+                ))}
+              </MenuList>
+            </MenuContent>
+          </Menu>
+
+          {appearance === 'message-edit' ? modelMenu : null}
+
+          <div className="ml-auto flex items-center gap-1">
+            {appearance === 'message-edit' ? (
+              <>
+                {onCancel ? (
+                  <Button
+                    className="rounded-lg border-input"
+                    disabled={isSubmitting}
+                    type="button"
+                    variant="outline"
+                    onClick={onCancel}
+                  >
+                    {t('workbench.action.cancel')}
+                  </Button>
+                ) : null}
+                <Button
+                  aria-label={
+                    isSubmitting ? t('workbench.prompt.sending') : t('workbench.prompt.send')
+                  }
+                  className="rounded-lg bg-foreground text-background hover:bg-foreground/80"
+                  disabled={isSubmitting || !canSubmit}
+                  type="button"
+                  onClick={handleSubmit}
+                >
+                  {isSubmitting ? <Spinner /> : t('workbench.prompt.send')}
+                </Button>
+              </>
+            ) : (
+              <>
+                {contextUsage ? (
+                  contextUsageDetail ? (
+                    <ContextUsagePopover
+                      detail={contextUsageDetail}
+                      open={isContextPanelOpen}
+                      usage={contextUsage}
+                      onOpenChange={setIsContextPanelOpen}
+                    >
+                      <ContextUsageRing usage={contextUsage} />
+                    </ContextUsagePopover>
+                  ) : (
                     <ContextUsageRing usage={contextUsage} />
-                  </ContextUsagePopover>
-                ) : (
-                  <ContextUsageRing usage={contextUsage} />
-                )
-              ) : isSamplingContext ? (
-                <ContextUsageSamplingRing />
-              ) : null}
+                  )
+                ) : isSamplingContext ? (
+                  <ContextUsageSamplingRing />
+                ) : null}
 
-              {modelMenu}
+                {modelMenu}
 
-              <Button
-                aria-label={
-                  isStreaming
-                    ? t('workbench.prompt.stop')
-                    : isSubmitting
-                      ? t('workbench.prompt.sending')
+                <Button
+                  aria-label={
+                    isStreaming
+                      ? canQueuePending
+                        ? t('workbench.prompt.send')
+                        : t('workbench.prompt.stop')
+                      : isSubmitting
+                        ? t('workbench.prompt.sending')
+                        : showResumeButton
+                          ? t('workbench.prompt.resume')
+                          : t('workbench.prompt.send')
+                  }
+                  className="rounded-full prompt-composer-send"
+                  disabled={isStreaming ? false : isSubmitting || (!showResumeButton && !canSubmit)}
+                  size="icon"
+                  type="button"
+                  onClick={
+                    isStreaming
+                      ? canQueuePending
+                        ? handleSubmit
+                        : onStop
                       : showResumeButton
-                        ? t('workbench.prompt.resume')
-                        : t('workbench.prompt.send')
-                }
-                className="rounded-full prompt-composer-send"
-                disabled={isStreaming ? false : isSubmitting || (!showResumeButton && !canSubmit)}
-                size="icon"
-                type="button"
-                onClick={isStreaming ? onStop : showResumeButton ? onResume : handleSubmit}
-              >
-                {isStreaming ? (
-                  <Square className="size-3" fill="currentColor" strokeWidth={1} />
-                ) : isSubmitting ? (
-                  <Spinner />
-                ) : showResumeButton ? (
-                  <Play className="size-3.5 translate-x-px" fill="currentColor" strokeWidth={1} />
-                ) : (
-                  <ArrowUp />
-                )}
-              </Button>
-            </>
-          )}
-        </div>
-      </CardFooter>
-    </Card>
+                        ? onResume
+                        : handleSubmit
+                  }
+                >
+                  {isStreaming ? (
+                    canQueuePending ? (
+                      <ArrowUp />
+                    ) : (
+                      <Square className="size-3" fill="currentColor" strokeWidth={1} />
+                    )
+                  ) : isSubmitting ? (
+                    <Spinner />
+                  ) : showResumeButton ? (
+                    <Play className="size-3.5 translate-x-px" fill="currentColor" strokeWidth={1} />
+                  ) : (
+                    <ArrowUp />
+                  )}
+                </Button>
+              </>
+            )}
+          </div>
+        </CardFooter>
+      </Card>
+    </div>
   )
 }

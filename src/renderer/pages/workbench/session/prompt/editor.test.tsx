@@ -1331,6 +1331,117 @@ describe('PromptComposer typography', () => {
   })
 })
 
+describe('PromptComposer pending message', () => {
+  const baseProps = {
+    attachments: [],
+    availableCommands: [],
+    canSubmit: false,
+    canUsePrompt: true,
+    contextUsage: null,
+    isMockProject: false,
+    isStreaming: true,
+    model: 'claude-sonnet',
+    modelOptions: [],
+    permissionMode: 'bypassPermissions' as const,
+    prompt: '',
+    selectedModelLabel: 'Claude Sonnet',
+    selectedProviderId: 'anthropic',
+    setPermissionMode: () => undefined,
+    setPrompt: () => undefined,
+    setAttachments: () => undefined,
+    setSelectedProviderModel: () => undefined,
+    slashMenuPlacement: 'below' as const,
+    onSelectFiles: async () => [],
+    onStop: () => undefined,
+    onSubmit: () => undefined,
+  }
+
+  function renderComposer(props: Partial<Parameters<typeof PromptComposer>[0]>) {
+    return render(
+      <ShortcutRuntimeProvider runtime={shortcutRuntime}>
+        <ModelConfigurationProvider>
+          <ProviderUsageProvider>
+            <TooltipProvider>
+              <PromptComposer {...baseProps} {...props} />
+            </TooltipProvider>
+          </ProviderUsageProvider>
+        </ModelConfigurationProvider>
+      </ShortcutRuntimeProvider>,
+    )
+  }
+
+  it('keeps the editor editable while streaming', () => {
+    renderComposer({})
+
+    expect(screen.getByRole('textbox', { name: 'Prompt' })).not.toBeDisabled()
+  })
+
+  it('shows the stop button for an empty composer and the send arrow once a draft exists', () => {
+    const { rerender } = renderComposer({})
+
+    expect(screen.getByRole('button', { name: 'Stop responding' })).toBeEnabled()
+
+    rerender(
+      <ShortcutRuntimeProvider runtime={shortcutRuntime}>
+        <ModelConfigurationProvider>
+          <ProviderUsageProvider>
+            <TooltipProvider>
+              <PromptComposer
+                {...baseProps}
+                prompt="Follow-up"
+                onQueuePendingMessage={() => undefined}
+              />
+            </TooltipProvider>
+          </ProviderUsageProvider>
+        </ModelConfigurationProvider>
+      </ShortcutRuntimeProvider>,
+    )
+
+    expect(screen.getByRole('button', { name: 'Send' })).toBeEnabled()
+  })
+
+  it('queues the draft instead of submitting while streaming', () => {
+    const queue = vi.fn()
+    const submit = vi.fn()
+    renderComposer({ prompt: 'Follow-up', onQueuePendingMessage: queue, onSubmit: submit })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }))
+
+    expect(queue).toHaveBeenCalledOnce()
+    expect(submit).not.toHaveBeenCalled()
+  })
+
+  it('shows the pending message panel with edit and delete actions', () => {
+    const edit = vi.fn()
+    const remove = vi.fn()
+    renderComposer({
+      pendingMessage: { prompt: 'Queued follow-up', attachments: [] },
+      onEditPendingMessage: edit,
+      onDeletePendingMessage: remove,
+    })
+
+    expect(screen.getByText('Queued follow-up')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit queued message' }))
+    expect(edit).toHaveBeenCalledOnce()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete queued message' }))
+    expect(remove).toHaveBeenCalledOnce()
+  })
+
+  it('summarizes an attachments-only pending message as an image count', () => {
+    renderComposer({
+      pendingMessage: {
+        prompt: '',
+        attachments: [{ name: 'diagram.png', path: '/project/diagram.png' }],
+      },
+    })
+
+    expect(screen.getByText('1 image')).toBeInTheDocument()
+    expect(screen.queryByText('Queued follow-up')).not.toBeInTheDocument()
+  })
+})
+
 describe('PromptComposer context usage loading', () => {
   const baseProps = {
     attachments: [],
