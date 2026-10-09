@@ -515,7 +515,7 @@ describe('buildConversationRows', () => {
     expect(rows.map((row) => row.kind)).toEqual(['user', 'status', 'timeline'])
   })
 
-  it('keeps compact spacing before Thinking that follows a completed tool', () => {
+  it('replaces a completed tail tool row with Thinking while the turn streams', () => {
     const rows = buildConversationRows({
       expandedTurns: { 'user-1': true },
       interruptedTurnIds: new Set(),
@@ -538,12 +538,9 @@ describe('buildConversationRows', () => {
         ]),
       ],
     })
-    const toolRow = rows.find(
-      (row): row is Extract<(typeof rows)[number], { kind: 'timeline' }> => row.kind === 'timeline',
-    )
 
-    expect(rows.map((row) => row.kind)).toEqual(['user', 'status', 'timeline', 'thinking'])
-    expect(toolRow).toMatchObject({ compactAfter: true, isLast: false })
+    expect(rows.map((row) => row.kind)).toEqual(['user', 'status', 'thinking'])
+    expect(rows.at(-1)).toMatchObject({ key: 'turn:user-1:thinking', placement: 'timeline' })
   })
 
   it('appends Thinking after a committed text segment while the turn streams', () => {

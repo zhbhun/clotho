@@ -288,6 +288,10 @@ export function buildConversationRows(options: {
             ? (isSettledTool && !lastItemInCollapsedRun) || isIdleTextTail
             : Boolean(collapsedSummary)),
         )
+        // After a finished tool the Thinking placeholder takes the tool's own
+        // row (like a collapsed run header) instead of stacking a second
+        // shimmering line under the settled row.
+        const thinkingReplacesTailTool = showTrailingThinking && isSettledTool
 
         // A failure ends the turn after its work, so the status row closes the turn instead
         // of heading it; other statuses stay on top as the turn's expandable header.
@@ -353,6 +357,7 @@ export function buildConversationRows(options: {
             })
             return
           }
+          if (thinkingReplacesTailTool && isLastSlice) return
           rows.push({
             compactAfter: item.kind !== 'text' && nextIsWork,
             isLast: isLastSlice && !showTrailingThinking && !hasFailure,
