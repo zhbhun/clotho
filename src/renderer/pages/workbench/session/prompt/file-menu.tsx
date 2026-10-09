@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 
 import { cn } from '@/shadcn/utils'
 
+import { TransientScrollArea } from '../../../../components/transient-scroll-area'
 import type {
   ProjectFileSearchEntry,
   ProjectFileSearchOutlineNode,
@@ -94,11 +95,11 @@ export function FileCompletionMenu({
         event.stopPropagation()
       }}
     >
-      <div
-        className="max-h-80 w-[31rem] max-w-[calc(100vw-24px)] min-w-0 shrink-0 overflow-y-auto rounded-lg border border-border/70 bg-popover p-1 shadow-float"
+      <TransientScrollArea
+        className="w-[31rem] max-w-[calc(100vw-24px)] min-w-0 shrink-0 rounded-lg border border-border/70 bg-popover p-1 shadow-float"
         data-glass="true"
         data-file-completion-results
-        onScroll={updateOutlineTop}
+        viewportProps={{ className: 'max-h-80', onScroll: updateOutlineTop }}
       >
         {items.length > 0 ? (
           items.map((item, index) => (
@@ -141,14 +142,15 @@ export function FileCompletionMenu({
             {message ?? t('workbench.completion.noFiles')}
           </div>
         )}
-      </div>
+      </TransientScrollArea>
       {activeItem && outline?.length ? (
-        <div
-          className="absolute left-full ml-1 hidden max-h-80 w-72 shrink-0 overflow-y-auto rounded-lg border border-border/70 bg-popover p-1.5 shadow-float md:block"
+        <TransientScrollArea
+          className="absolute left-full ml-1 hidden w-72 shrink-0 rounded-lg border border-border/70 bg-popover p-1.5 shadow-float md:block"
           ref={outlineRef}
           style={{ top: outlineTop }}
           data-glass="true"
           data-file-completion-outline
+          viewportProps={{ className: 'max-h-80' }}
         >
           <div className="flex flex-col gap-0.5">
             {outline.map((node, index) => (
@@ -167,7 +169,7 @@ export function FileCompletionMenu({
               </div>
             ))}
           </div>
-        </div>
+        </TransientScrollArea>
       ) : null}
     </div>,
     document.body,
