@@ -98,6 +98,7 @@ function FileMentionView({ deleteNode, node }: NodeViewProps) {
   const { t } = useTranslation()
   const path = typeof node.attrs.path === 'string' ? node.attrs.path : ''
   const name = typeof node.attrs.name === 'string' ? node.attrs.name : basename(path)
+  const lineHint = typeof node.attrs.lineHint === 'string' ? node.attrs.lineHint : ''
   const mimeKind = (typeof node.attrs.mimeKind === 'string' ? node.attrs.mimeKind : 'file') as
     PromptFileMimeKind | string
   const safeKind: PromptFileMimeKind =
@@ -146,6 +147,9 @@ function FileMentionView({ deleteNode, node }: NodeViewProps) {
         </button>
       </span>
       <span className="min-w-0 truncate">{name}</span>
+      {lineHint ? (
+        <span className="shrink-0 text-xs text-foreground-subtle">{lineHint}</span>
+      ) : null}
     </>
   )
 
@@ -214,6 +218,7 @@ export const FileMention = Node.create({
   addAttributes() {
     return {
       mimeKind: { default: 'file' },
+      lineHint: { default: '' },
       name: { default: '' },
       path: { default: '' },
     }

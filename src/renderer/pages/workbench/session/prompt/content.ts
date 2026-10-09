@@ -118,8 +118,10 @@ function lineNodesWithMentions(
     if (referenceFilter && !referenceFilter(filePath)) continue
     const before = lineNodes(line.slice(start, index), commands)
     parts.push(...before)
-    parts.push({ type: 'fileMention', attrs: fileReferenceFromPath(filePath) })
-    if (lineHint) parts.push({ type: 'text', text: lineHint })
+    parts.push({
+      type: 'fileMention',
+      attrs: { ...fileReferenceFromPath(filePath), lineHint },
+    })
     start = index + match[0].length
   }
   parts.push(...lineNodes(line.slice(start), commands))
@@ -131,7 +133,9 @@ function serializeNode(node: JSONContent): string {
   if (node.type === 'hardBreak') return '\n'
   if (node.type === 'fileMention') {
     const path = typeof node.attrs?.path === 'string' ? node.attrs.path : ''
-    return path ? serializedFileMention(path) : ''
+    if (!path) return ''
+    const lineHint = typeof node.attrs?.lineHint === 'string' ? node.attrs.lineHint : ''
+    return serializedFileMention(path) + lineHint
   }
   if (node.type === 'slashCommand') {
     const name = typeof node.attrs?.name === 'string' ? node.attrs.name : ''

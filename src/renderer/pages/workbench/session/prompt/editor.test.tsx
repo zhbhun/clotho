@@ -1198,12 +1198,10 @@ describe('PromptMarkdownEditor', () => {
     await act(async () => {})
     pasteText(editor, 'check @packages/component/src/script/stores/editorStore.ts#11 here')
 
-    expect(
-      await screen.findByLabelText(
-        'editorStore.ts: packages/component/src/script/stores/editorStore.ts',
-      ),
-    ).toBeInTheDocument()
-    expect(editor).toHaveTextContent('#11 here')
+    const chip = await screen.findByLabelText(
+      'editorStore.ts: packages/component/src/script/stores/editorStore.ts',
+    )
+    expect(within(chip).getByText('#11')).toBeInTheDocument()
     expect(screen.queryByRole('listbox', { name: 'File completions' })).not.toBeInTheDocument()
     await waitFor(() => {
       expect(changes.at(-1)).toBe(
@@ -1264,10 +1262,8 @@ describe('PromptMarkdownEditor', () => {
       },
     })
 
-    expect(
-      await screen.findByLabelText('sidebar.css: src/renderer/styles/sidebar.css'),
-    ).toBeInTheDocument()
-    expect(editor).toHaveTextContent('#1-24')
+    const chip = await screen.findByLabelText('sidebar.css: src/renderer/styles/sidebar.css')
+    expect(within(chip).getByText('#1-24')).toBeInTheDocument()
     await waitFor(() => {
       expect(changes.at(-1)).toBe(text)
     })

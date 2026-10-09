@@ -59,9 +59,10 @@ describe('prompt content persistence', () => {
             {
               type: 'fileMention',
               attrs: {
-                path: 'src/folder @draft/quoted "name".tsx',
-                name: 'quoted "name".tsx',
+                lineHint: '',
                 mimeKind: 'code',
+                name: 'quoted "name".tsx',
+                path: 'src/folder @draft/quoted "name".tsx',
               },
             },
             { type: 'hardBreak' },
@@ -84,7 +85,7 @@ describe('prompt content persistence', () => {
     })
   })
 
-  it('splits line hints off restored file mentions', () => {
+  it('restores line hints as part of the file mention', () => {
     const doc = restorePromptDocument('check @src/app.tsx#L5-11 and @src/main.ts:12')
 
     expect(doc).toMatchObject({
@@ -94,15 +95,13 @@ describe('prompt content persistence', () => {
             { type: 'text', text: 'check ' },
             {
               type: 'fileMention',
-              attrs: { path: 'src/app.tsx', name: 'app.tsx', mimeKind: 'code' },
+              attrs: { path: 'src/app.tsx', name: 'app.tsx', mimeKind: 'code', lineHint: '#L5-11' },
             },
-            { type: 'text', text: '#L5-11' },
             { type: 'text', text: ' and ' },
             {
               type: 'fileMention',
-              attrs: { path: 'src/main.ts', name: 'main.ts', mimeKind: 'code' },
+              attrs: { path: 'src/main.ts', name: 'main.ts', mimeKind: 'code', lineHint: ':12' },
             },
-            { type: 'text', text: ':12' },
           ],
         },
       ],
