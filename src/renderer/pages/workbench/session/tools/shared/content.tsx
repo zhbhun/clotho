@@ -231,7 +231,7 @@ export function ToolGlyph({ icon: Icon }: { icon: LucideIcon }) {
  */
 export function ToolName({ isRunning = false, text }: { isRunning?: boolean; text: string }) {
   if (!text) return null
-  if (isRunning) return <ShinyText text={text} />
+  if (isRunning) return <ShinyText text={text} speed={1.5} delay={0.5} />
   return <span className="shrink-0 text-foreground-subtle">{text}</span>
 }
 
