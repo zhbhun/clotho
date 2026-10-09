@@ -33,6 +33,7 @@ function capitalizeSummary(text: string) {
 
 export function WorkRunRow({
   compactAfter,
+  heldToolUseIds,
   isActive,
   isExpanded,
   isLast,
@@ -46,6 +47,7 @@ export function WorkRunRow({
   onToggle,
 }: {
   compactAfter: boolean
+  heldToolUseIds?: ReadonlySet<string>
   isActive: boolean
   isExpanded: boolean
   isLast: boolean
@@ -61,6 +63,7 @@ export function WorkRunRow({
   const { t, i18n } = useTranslation()
   const translate = t as unknown as (key: string, options?: Record<string, unknown>) => string
   const header = workRunHeader(items, {
+    heldToolUseIds,
     isActive,
     isStreaming,
     pendingRequests,

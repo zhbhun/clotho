@@ -23,12 +23,14 @@ import { ModelSwitchDivider } from './model-switch-divider'
 import { ThinkingIndicator } from './thinking-indicator'
 import { TimelineEntry, TimelineRow, UserCard } from './timeline'
 import { computeLastSentTurnId, computeTurns } from './turns'
-import type { ConversationTurn } from './types'
+import type { ConversationTimelineItem, ConversationTurn } from './types'
 import { useStreamTextStall } from './use-stream-stall'
+import { useToolDisplayHold } from './use-tool-display-hold'
 import { type VirtualConversationHandle, VirtualConversationList } from './virtual-conversation'
 import { WorkRunRow } from './work-run'
 
 const EMPTY_INTERRUPTED_TURN_IDS = new Set<string>()
+const EMPTY_TIMELINE_ITEMS: ConversationTimelineItem[] = []
 
 export function ConversationState({
   icon: Icon,
@@ -107,6 +109,12 @@ export function ConversationView({
     () => computeLastSentTurnId(turns, sentTurnIds),
     [turns, sentTurnIds],
   )
+  // Fast local tools settle in milliseconds; the hold keeps the newest call
+  // displayed for a beat before the tail hands over to the Thinking placeholder.
+  const heldToolUseIds = useToolDisplayHold(
+    isStreaming ? (turns.at(-1)?.timelineItems ?? EMPTY_TIMELINE_ITEMS) : EMPTY_TIMELINE_ITEMS,
+    isStreaming,
+  )
   const lastStreamItem = isStreaming ? turns.at(-1)?.timelineItems.at(-1) : undefined
   const streamTailText = lastStreamItem?.kind === 'text' ? lastStreamItem.text : undefined
   const streamTextStalled = useStreamTextStall(streamTailText, isStreaming)
@@ -117,6 +125,7 @@ export function ConversationView({
         expandedRuns,
         expandedTurns,
         formatDuration: (seconds) => formatConversationDuration(seconds, t),
+        heldToolUseIds,
         interruptedTurnIds,
         interruptedTurnDurations,
         isStreaming,
@@ -130,6 +139,7 @@ export function ConversationView({
     [
       expandedRuns,
       expandedTurns,
+      heldToolUseIds,
       interruptedTurnIds,
       interruptedTurnDurations,
       isStreaming,
@@ -162,6 +172,7 @@ export function ConversationView({
       const content = (
         <ConversationRowContent
           hasTopPadding={firstAssistantKeys.has(row.key)}
+          heldToolUseIds={heldToolUseIds}
           isMessageEditing={row.kind === 'user' && visibleEditingMessageId === row.message.id}
           messageEdit={messageEdit}
           pendingRequests={pendingRequests}
@@ -196,6 +207,7 @@ export function ConversationView({
     [
       editingMessageId,
       firstAssistantKeys,
+      heldToolUseIds,
       isStreaming,
       messageEdit,
       onFork,
@@ -253,6 +265,7 @@ function estimateConversationRowSize(row: ConversationRow) {
 
 function ConversationRowContent({
   hasTopPadding,
+  heldToolUseIds,
   isMessageEditing,
   messageEdit,
   onCancelEdit,
@@ -267,6 +280,7 @@ function ConversationRowContent({
   row,
 }: {
   hasTopPadding: boolean
+  heldToolUseIds?: ReadonlySet<string>
   isMessageEditing: boolean
   messageEdit?: MessageEditConfig
   onCancelEdit: () => void
@@ -423,6 +437,7 @@ function ConversationRowContent({
       <div className={cn('px-3', hasTopPadding && 'pt-2')}>
         <WorkRunRow
           compactAfter={row.compactAfter}
+          heldToolUseIds={heldToolUseIds}
           isActive={row.isActive}
           isExpanded={row.isExpanded}
           isLast={row.isLast}

@@ -193,6 +193,27 @@ describe('workRunHeader', () => {
     })
   })
 
+  it('keeps a finished tool in the header while its display hold is active', () => {
+    expect(
+      workRunHeader([finishedTool], {
+        heldToolUseIds: new Set(['t1-use']),
+        isActive: true,
+        isStreaming: true,
+      }),
+    ).toEqual({ kind: 'running', tool: finishedTool })
+  })
+
+  it('drops the display hold once the turn reaches a terminal status', () => {
+    expect(
+      workRunHeader([finishedTool], {
+        heldToolUseIds: new Set(['t1-use']),
+        isActive: true,
+        isStreaming: true,
+        turnTerminalStatus: 'interrupted',
+      }),
+    ).toEqual({ kind: 'summary' })
+  })
+
   it('shows the summary once the run is no longer active', () => {
     expect(workRunHeader([finishedTool], { isActive: false, isStreaming: false })).toEqual({
       kind: 'summary',

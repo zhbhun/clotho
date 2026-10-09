@@ -149,9 +149,20 @@ function toolRequestFor(
     : undefined
 }
 
+function isToolDisplayHeld(
+  item: ConversationTimelineItem,
+  heldToolUseIds: ReadonlySet<string> | undefined,
+) {
+  return Boolean(
+    item.kind === 'tool' && item.use?.toolUseId && heldToolUseIds?.has(item.use.toolUseId),
+  )
+}
+
 export function buildConversationRows(options: {
   expandedRuns?: Record<string, boolean>
   expandedTurns: Record<string, boolean>
+  /** Tools inside their display-hold window; they keep the tail instead of Thinking. */
+  heldToolUseIds?: ReadonlySet<string>
   interruptedTurnDurations?: Record<string, number>
   interruptedTurnIds: Set<string>
   isStreaming: boolean
@@ -269,7 +280,10 @@ export function buildConversationRows(options: {
             isStreaming,
             pendingRequest: toolRequestFor(options.pendingRequests, lastVisibleItem),
             turnTerminalStatus,
-          }),
+          }) &&
+          // A tool inside its display-hold window still owns the tail (see
+          // useToolDisplayHold): handing over to Thinking here would flash.
+          !isToolDisplayHeld(lastVisibleItem, options.heldToolUseIds),
         )
         // A stream-placeholder text item (`stream-N` id) is still typing, so it
         // hides the placeholder — unless it has gone quiet past the stall

@@ -162,6 +162,7 @@ export function summarizeWorkRun(items: ConversationTimelineItem[]): { parts: Wo
 export function workRunHeader(
   items: ConversationTimelineItem[],
   options: {
+    heldToolUseIds?: ReadonlySet<string>
     isActive: boolean
     isStreaming: boolean
     pendingRequests?: Record<string, ClaudeToolRequest>
@@ -180,6 +181,16 @@ export function workRunHeader(
         turnTerminalStatus: options.turnTerminalStatus,
       })
       if (isRunning) return { kind: 'running', tool: lastItem }
+      // A call finished inside its display-hold window (see useToolDisplayHold)
+      // keeps the header: fast local tools would otherwise flash for a frame
+      // before the Thinking placeholder returns.
+      if (
+        !options.turnTerminalStatus &&
+        lastItem.use?.toolUseId &&
+        options.heldToolUseIds?.has(lastItem.use.toolUseId)
+      ) {
+        return { kind: 'running', tool: lastItem }
+      }
     }
     if (options.isStreaming && !options.turnTerminalStatus) return { kind: 'thinking' }
   }

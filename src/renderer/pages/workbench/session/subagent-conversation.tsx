@@ -20,6 +20,7 @@ import {
 import { ThinkingIndicator } from './conversation/thinking-indicator'
 import { TimelineEntry, UserCard } from './conversation/timeline'
 import { computeSubagentTimeline } from './conversation/turns'
+import { useToolDisplayHold } from './conversation/use-tool-display-hold'
 import {
   type VirtualConversationHandle,
   VirtualConversationList,
@@ -77,6 +78,7 @@ export function SubagentConversation({
       items: computeSubagentTimeline(timelineMessages),
     }
   }, [messages])
+  const heldToolUseIds = useToolDisplayHold(items, isRunning)
   const rows = useMemo(
     () =>
       buildSubagentConversationRows({
@@ -109,6 +111,7 @@ export function SubagentConversation({
           <div className={rowClassName}>
             <WorkRunRow
               compactAfter={row.compactAfter}
+              heldToolUseIds={heldToolUseIds}
               isActive={row.isActive}
               isExpanded={row.isExpanded}
               isLast={row.isLast}
@@ -147,6 +150,7 @@ export function SubagentConversation({
     },
     [
       firstTimelineKey,
+      heldToolUseIds,
       initialUserMessage,
       isRunning,
       onOpenSubagent,

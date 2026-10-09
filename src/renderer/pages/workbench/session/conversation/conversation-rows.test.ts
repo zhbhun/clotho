@@ -615,6 +615,37 @@ describe('buildConversationRows', () => {
     expect(rows.at(-1)).toMatchObject({ kind: 'thinking', placement: 'timeline' })
   })
 
+  it('keeps a just-finished tail tool on the streaming tail while its display hold is active', () => {
+    const finishedTool = {
+      id: 'tool-1',
+      kind: 'tool',
+      use: { type: 'tool_use', name: 'Edit', toolUseId: 'use-1', input: {} },
+      result: { type: 'tool_result', content: 'ok' },
+    } satisfies ConversationTimelineItem
+
+    const heldRows = buildConversationRows({
+      expandedTurns: { 'user-1': true },
+      heldToolUseIds: new Set(['use-1']),
+      interruptedTurnIds: new Set(),
+      isStreaming: true,
+      lastSentTurnId: null,
+      streamingElapsed: 2,
+      turns: [turn('user-1', [finishedTool])],
+    })
+    expect(heldRows.map((row) => row.kind)).toEqual(['user', 'status', 'timeline'])
+
+    // Once the hold elapses the Thinking placeholder takes the tool's row again.
+    const releasedRows = buildConversationRows({
+      expandedTurns: { 'user-1': true },
+      interruptedTurnIds: new Set(),
+      isStreaming: true,
+      lastSentTurnId: null,
+      streamingElapsed: 2,
+      turns: [turn('user-1', [finishedTool])],
+    })
+    expect(releasedRows.map((row) => row.kind)).toEqual(['user', 'status', 'thinking'])
+  })
+
   it('appends Thinking to a text-only turn whose reply committed while still streaming', () => {
     const rows = buildConversationRows({
       expandedTurns: {},
