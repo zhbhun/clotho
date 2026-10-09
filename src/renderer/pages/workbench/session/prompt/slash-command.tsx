@@ -14,6 +14,7 @@ import {
 } from '@/shadcn/popover'
 import { cn } from '@/shadcn/utils'
 
+import { TransientScrollArea } from '../../../../components/transient-scroll-area'
 import type { ClaudeSlashCommand } from '../../../../services/claude/claude'
 import type { SlashCommandMenuPlacement } from './menu-position'
 
@@ -307,9 +308,9 @@ export function SlashCommandMenu({
 }) {
   const { t } = useTranslation()
   return createPortal(
-    <div
+    <TransientScrollArea
       aria-label={t('workbench.completion.slashCommands')}
-      className="fixed z-50 max-h-72 overflow-y-auto rounded-lg border border-border/70 bg-popover p-1 text-popover-foreground shadow-float"
+      className="fixed z-50 rounded-lg border border-border/70 bg-popover p-1 text-popover-foreground shadow-float"
       data-glass="true"
       ref={menuRef}
       role="listbox"
@@ -324,6 +325,7 @@ export function SlashCommandMenu({
         event.preventDefault()
         event.stopPropagation()
       }}
+      viewportProps={{ className: 'max-h-72' }}
     >
       {commands.length ? (
         commands.map((command, index) => {
@@ -348,7 +350,7 @@ export function SlashCommandMenu({
             : t('workbench.completion.noCommands')}
         </div>
       )}
-    </div>,
+    </TransientScrollArea>,
     document.body,
   )
 }
