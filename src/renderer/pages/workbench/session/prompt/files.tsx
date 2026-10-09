@@ -119,7 +119,7 @@ function FileMentionView({ deleteNode, node }: NodeViewProps) {
   )
   const triggerContent = (
     <>
-      <span className="relative inline-flex size-4 shrink-0 items-center justify-center overflow-hidden rounded-sm text-primary">
+      <span className="relative inline-flex size-4 shrink-0 items-center justify-center overflow-hidden rounded-sm text-foreground-subtle">
         {showThumbnail ? (
           <img
             alt=""
