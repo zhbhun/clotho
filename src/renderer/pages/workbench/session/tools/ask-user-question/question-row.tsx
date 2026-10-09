@@ -156,7 +156,7 @@ function OptionField({
       <FieldLabel
         className={cn(
           'cursor-pointer border-0! transition-colors',
-          checked ? 'bg-primary/10' : 'hover:bg-muted/60',
+          checked ? 'bg-muted' : 'hover:bg-muted/60',
         )}
         htmlFor={id}
       >
@@ -208,7 +208,7 @@ function OtherField({
     <Field
       className={cn(
         'items-center! rounded-md px-2 py-1.5 transition-colors',
-        usingOther ? 'bg-primary/10' : 'hover:bg-muted/60',
+        usingOther ? 'bg-muted' : 'hover:bg-muted/60',
       )}
       orientation="horizontal"
     >

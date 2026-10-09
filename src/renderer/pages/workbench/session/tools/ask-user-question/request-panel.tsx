@@ -183,7 +183,7 @@ function AskForm({
   return (
     <Card className="max-h-[calc(100vh-8rem)] min-h-0 gap-0 overflow-hidden rounded-2xl border-border/80 py-0 shadow-popover">
       <CardHeader className="flex flex-row items-center gap-2 px-3 py-3">
-        <MessageCircleQuestion className="size-4 shrink-0 text-primary" />
+        <MessageCircleQuestion className="size-4 shrink-0 text-foreground" />
         <CardTitle className="min-w-0 flex-1 truncate text-sm font-medium">{title}</CardTitle>
         {isMultiple ? (
           <span className="shrink-0 text-xs text-foreground-subtlest">
@@ -218,7 +218,12 @@ function AskForm({
         <Button disabled={isSubmitting} type="button" variant="secondary" onClick={dismiss}>
           {t('tools.ask.cancel')}
         </Button>
-        <Button disabled={!allAnswered || isSubmitting} type="button" onClick={submit}>
+        <Button
+          className="bg-foreground text-background hover:bg-foreground/80"
+          disabled={!allAnswered || isSubmitting}
+          type="button"
+          onClick={submit}
+        >
           {isSubmitting ? <Spinner data-icon="inline-start" /> : <Check data-icon="inline-start" />}
           {t('tools.ask.submit')}
         </Button>
