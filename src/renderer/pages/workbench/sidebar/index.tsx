@@ -129,7 +129,7 @@ export function SessionSidebar({
       <SidebarHeader className="gap-0 p-0">
         <MacWindowChrome />
 
-        <SidebarMenu className="mt-2 h-10 justify-center px-2">
+        <SidebarMenu className="mt-1 h-10 justify-center px-2">
           <SidebarMenuItem>
             <SidebarMenuButton
               className="h-[30px] px-2 text-sm font-normal"
