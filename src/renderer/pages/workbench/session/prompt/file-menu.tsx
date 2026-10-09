@@ -12,9 +12,6 @@ import type {
 import type { CompletionMenuPosition } from './menu-position'
 
 const OUTLINE_VIEWPORT_PADDING = 12
-const OUTLINE_MAX_HEIGHT = 320
-
-type OutlineLayout = { maxHeight: number; top: number }
 
 export function FileCompletionMenu({
   activeIndex,
@@ -43,10 +40,7 @@ export function FileCompletionMenu({
   const { t } = useTranslation()
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([])
   const outlineRef = useRef<HTMLDivElement | null>(null)
-  const [outlineLayout, setOutlineLayout] = useState<OutlineLayout>({
-    maxHeight: OUTLINE_MAX_HEIGHT,
-    top: 0,
-  })
+  const [outlineTop, setOutlineTop] = useState(0)
   const activeItem = activeIndex >= 0 ? items[activeIndex] : undefined
 
   // Scroll first so the outline below aligns with the row's post-scroll position.
@@ -55,37 +49,33 @@ export function FileCompletionMenu({
     optionRefs.current[activeIndex]?.scrollIntoView({ block: 'nearest' })
   }, [activeIndex, scrollActiveIntoView])
 
-  // Top-align the outline with the active result row. maxHeight hard-caps the panel
-  // at the viewport space below that row, so it can never pass the window bottom;
-  // when the whole tree fits, the panel shifts up instead of shrinking.
-  const updateOutlineLayout = useCallback(() => {
+  // Top-align the outline with the active result row; when the tree would pass the
+  // window bottom, avoid it by lifting the panel whole instead of shrinking it.
+  const updateOutlineTop = useCallback(() => {
     if (activeIndex < 0) return
     const activeRow = optionRefs.current[activeIndex]
     const panel = outlineRef.current
     if (!activeRow || !panel) return
     const rowTop = activeRow.getBoundingClientRect().top
-    const maxHeight = Math.max(
-      0,
-      Math.min(OUTLINE_MAX_HEIGHT, window.innerHeight - OUTLINE_VIEWPORT_PADDING - rowTop),
-    )
+    const bottomLimit = window.innerHeight - OUTLINE_VIEWPORT_PADDING
     let top = rowTop - position.top
-    const height = panel.offsetHeight
-    if (height > maxHeight) top = Math.max(0, top - (height - maxHeight))
-    setOutlineLayout((prev) =>
-      prev.top === top && prev.maxHeight === maxHeight ? prev : { maxHeight, top },
-    )
+    const overflow = rowTop + panel.offsetHeight - bottomLimit
+    if (overflow > 0) {
+      top = Math.max(OUTLINE_VIEWPORT_PADDING - position.top, top - overflow)
+    }
+    setOutlineTop((prev) => (prev === top ? prev : top))
   }, [activeIndex, position.top])
 
   useLayoutEffect(() => {
-    updateOutlineLayout()
+    updateOutlineTop()
     // The outline content swaps in async and can outgrow an earlier measurement;
-    // re-layout whenever the panel itself resizes.
+    // re-avoid whenever the panel itself resizes.
     const panel = outlineRef.current
     if (!panel || typeof ResizeObserver === 'undefined') return
-    const observer = new ResizeObserver(updateOutlineLayout)
+    const observer = new ResizeObserver(updateOutlineTop)
     observer.observe(panel)
     return () => observer.disconnect()
-  }, [updateOutlineLayout, items, outline])
+  }, [updateOutlineTop, items, outline])
 
   return createPortal(
     <div
@@ -108,7 +98,7 @@ export function FileCompletionMenu({
         className="max-h-80 w-[31rem] max-w-[calc(100vw-24px)] min-w-0 shrink-0 overflow-y-auto rounded-lg border border-border/70 bg-popover p-1 shadow-float"
         data-glass="true"
         data-file-completion-results
-        onScroll={updateOutlineLayout}
+        onScroll={updateOutlineTop}
       >
         {items.length > 0 ? (
           items.map((item, index) => (
@@ -154,9 +144,9 @@ export function FileCompletionMenu({
       </div>
       {activeItem && outline?.length ? (
         <div
-          className="absolute left-full ml-1 hidden w-72 shrink-0 overflow-y-auto rounded-lg border border-border/70 bg-popover p-1.5 shadow-float md:block"
+          className="absolute left-full ml-1 hidden max-h-80 w-72 shrink-0 overflow-y-auto rounded-lg border border-border/70 bg-popover p-1.5 shadow-float md:block"
           ref={outlineRef}
-          style={{ maxHeight: outlineLayout.maxHeight, top: outlineLayout.top }}
+          style={{ top: outlineTop }}
           data-glass="true"
           data-file-completion-outline
         >
