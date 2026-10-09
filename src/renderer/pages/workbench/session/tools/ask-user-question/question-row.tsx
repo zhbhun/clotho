@@ -36,6 +36,10 @@ export type Answer = {
   otherText: string
 }
 
+/* Checked control color follows the dialog's neutral palette, not the user accent. */
+const CONTROL_CHECKED =
+  'data-checked:border-foreground data-checked:bg-foreground data-checked:text-background'
+
 export function QuestionRow({
   question,
   answer,
@@ -162,11 +166,15 @@ function OptionField({
       >
         <Field className="items-center! px-2! py-1.5!" orientation="horizontal">
           {control === 'radio' ? (
-            <RadioGroupItem className="cursor-pointer" id={id} value={`option-${optionIndex}`} />
+            <RadioGroupItem
+              className={cn('cursor-pointer', CONTROL_CHECKED)}
+              id={id}
+              value={`option-${optionIndex}`}
+            />
           ) : (
             <Checkbox
               checked={checked}
-              className="cursor-pointer"
+              className={cn('cursor-pointer', CONTROL_CHECKED)}
               id={id}
               onCheckedChange={() => onToggle(optionIndex)}
             />
@@ -215,7 +223,7 @@ function OtherField({
       {control === 'radio' ? (
         <RadioGroupItem
           aria-label={t('tools.ask.otherCustomAnswer')}
-          className="cursor-pointer"
+          className={cn('cursor-pointer', CONTROL_CHECKED)}
           id={id}
           value="other"
         />
@@ -223,7 +231,7 @@ function OtherField({
         <Checkbox
           aria-label={t('tools.ask.otherCustomAnswer')}
           checked={usingOther}
-          className="cursor-pointer"
+          className={cn('cursor-pointer', CONTROL_CHECKED)}
           id={id}
           onCheckedChange={(checked) => onSelectionChange(checked === true)}
         />
