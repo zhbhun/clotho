@@ -22,9 +22,9 @@ import { filterSlashCommands, slashCommandToNode } from './slash-command'
 const SLASH_MENU_ESTIMATED_SIZE = { width: 420, height: 288 }
 const FILE_MENU_ESTIMATED_SIZE = { width: 768, height: 320 }
 const FILE_COMPLETION_LIMIT = 40
-const LINE_NUMBER_SUFFIX_PATTERN = /([:#]\d*)+$/
+const LINE_NUMBER_SUFFIX_PATTERN = /([:#]L?\d*(?:-L?\d*)?)+$/i
 
-/** Drop a trailing `#125` / `:12:3` line hint so it never narrows the file search. */
+/** Drop a trailing `#125` / `:12:3` / `#7-11` line hint so it never narrows the file search. */
 function stripLineNumberSuffix(query: string) {
   return query.replace(LINE_NUMBER_SUFFIX_PATTERN, '')
 }

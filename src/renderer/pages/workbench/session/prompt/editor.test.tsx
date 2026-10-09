@@ -727,7 +727,7 @@ describe('PromptMarkdownEditor', () => {
     await user.keyboard('@src/server.ts:12')
     expect(await screen.findByRole('option', { name: /server.ts/ })).toBeInTheDocument()
 
-    await user.keyboard('#5')
+    await user.keyboard('#5-11')
 
     expect(screen.queryByText('No files available')).not.toBeInTheDocument()
     expect(search).toHaveBeenLastCalledWith(expect.objectContaining({ query: 'src/server.ts' }))
