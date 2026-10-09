@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { toast } from '@/shadcn/toast'
@@ -6,6 +6,7 @@ import { toast } from '@/shadcn/toast'
 import { ErrorBoundary } from '../../components/error-boundary'
 import { ResizableSidebarProvider } from '../../components/resizable-sidebar'
 import type { ClaudeProject } from '../../services/claude/claude'
+import { listenDesktopEvent } from '../../services/desktop/client'
 import { ModelConfigurationProvider } from '../../stores/model-configuration-context'
 import { ProviderUsageProvider } from '../../stores/provider-usage-context'
 import { type SettingsCategoryId, SettingsPage } from '../settings'
@@ -69,6 +70,25 @@ function WorkbenchContent() {
     setIsSettingsOpen(true)
   }, [])
   const handleOpenSettings = useCallback(() => openSettings('general'), [openSettings])
+
+  useEffect(() => {
+    let stopped = false
+    let unsubscribe: (() => void) | undefined
+    void listenDesktopEvent('menu-open-settings', ({ category }) => {
+      openSettings(category)
+    }).then(
+      (stop) => {
+        if (stopped) stop()
+        else unsubscribe = stop
+      },
+      () => {},
+    )
+    return () => {
+      stopped = true
+      unsubscribe?.()
+    }
+  }, [openSettings])
+
   const handleModelConfigurationRequired = useCallback(() => {
     toast.add({
       id: 'workbench-model-configuration-required',

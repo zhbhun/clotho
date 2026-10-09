@@ -31,6 +31,8 @@ type DesktopEventMap = {
   'claude-complete': DesktopMessageMap['claudeComplete']
   'claude-tool-request': DesktopMessageMap['claudeToolRequest']
   'claude-session-recycled': DesktopMessageMap['claudeSessionRecycled']
+  'menu-command-dispatch': DesktopMessageMap['menuCommandDispatch']
+  'menu-open-settings': DesktopMessageMap['menuOpenSettings']
 }
 
 type DesktopEventName = keyof DesktopEventMap
@@ -43,6 +45,8 @@ const PUSH_EVENT_BINDINGS: Array<[keyof DesktopMessageMap & string, DesktopEvent
   ['claudeComplete', 'claude-complete'],
   ['claudeToolRequest', 'claude-tool-request'],
   ['claudeSessionRecycled', 'claude-session-recycled'],
+  ['menuCommandDispatch', 'menu-command-dispatch'],
+  ['menuOpenSettings', 'menu-open-settings'],
 ]
 
 const eventListeners: {
@@ -53,6 +57,8 @@ const eventListeners: {
   'claude-complete': new Set(),
   'claude-tool-request': new Set(),
   'claude-session-recycled': new Set(),
+  'menu-command-dispatch': new Set(),
+  'menu-open-settings': new Set(),
 }
 
 function desktopBridge() {

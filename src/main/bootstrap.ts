@@ -2,14 +2,16 @@ import { randomUUID } from 'node:crypto'
 import os from 'node:os'
 import path from 'node:path'
 
-import { BrowserWindow, Menu, app, ipcMain, screen } from 'electron'
+import { BrowserWindow, Menu, app, ipcMain, screen, shell } from 'electron'
 import type { WebContents } from 'electron'
 
+import { commandCatalog } from '@/shared/command-catalog'
 import type { AppLogChannel } from '@/shared/logging'
 import type { AppLanguage, DesktopRPC } from '@/shared/rpc'
+import type { CommandId } from '@/shared/shortcuts'
 
 import { clothoDir } from './app-data'
-import { applicationMenuItems, menuLabels } from './application-menu'
+import { applicationMenuItems } from './application-menu'
 import { createClaudeDesktopService } from './claude-service'
 import { loadAttachmentFiles } from './claude/attachments'
 import { createModelProxy } from './claude/model-proxy'
@@ -27,11 +29,13 @@ import {
   shutdownLogging,
 } from './logging/runtime'
 import { DEV_SERVER_URL, getMainViewTarget } from './main-view-url'
+import { menuLabels } from './menu-labels'
 import { applyNativeAppearance } from './native-appearance'
 import { saveImage } from './save-image'
 import { createSessionStorage } from './session-storage'
 import { createShortcutStore, readShortcutOverrides } from './shortcuts'
 import { createStateStore, readState } from './state'
+import { openTaskManager } from './task-manager'
 import {
   createMainWindowOptions,
   showMainWindowWhenReady,
@@ -107,7 +111,6 @@ export async function bootstrap() {
         : undefined
     const isDev = devServerUrl !== undefined
     let menuLanguage: AppLanguage = 'en'
-    Menu.setApplicationMenu(Menu.buildFromTemplate(applicationMenuItems(menuLanguage, isDev)))
 
     let loadedState
     try {
@@ -148,6 +151,42 @@ export async function bootstrap() {
     const settingsStore = createSettingsStore(loadedSettings, undefined, recoverSettings)
     applyNativeAppearance(loadedSettings.appearance.theme)
     const shortcutStore = createShortcutStore(await readShortcutOverrides())
+
+    const TROUBLESHOOTING_URL = 'https://github.com/zhbhun/clotho/issues'
+    let isMenuCaptureActive = false
+
+    const resolveCommandBindings = (commandId: CommandId) => {
+      const overrides = shortcutStore.get()[commandId]
+      return overrides && overrides.length > 0
+        ? overrides
+        : (commandCatalog[commandId]?.defaultBindings ?? [])
+    }
+    const rebuildApplicationMenu = () => {
+      Menu.setApplicationMenu(
+        Menu.buildFromTemplate(
+          applicationMenuItems({
+            language: menuLanguage,
+            isDev,
+            isCaptureActive: isMenuCaptureActive,
+            commandBindings: resolveCommandBindings,
+            actions: {
+              dispatchCommand: (commandId) => {
+                sendToMainView(mainWindowWebview, 'menuCommandDispatch', { commandId })
+              },
+              openShortcutSettings: () => {
+                sendToMainView(mainWindowWebview, 'menuOpenSettings', { category: 'shortcuts' })
+              },
+              openTroubleshooting: () => {
+                void shell.openExternal(TROUBLESHOOTING_URL)
+              },
+              openTaskManager: () => openTaskManager(),
+            },
+          }),
+        ),
+      )
+    }
+    rebuildApplicationMenu()
+
     const proxySettings = settingsStore.get()
     let modelProxy
     try {
@@ -221,7 +260,11 @@ export async function bootstrap() {
       {
         applicationMenuSetLanguage: ({ language }) => {
           menuLanguage = language
-          Menu.setApplicationMenu(Menu.buildFromTemplate(applicationMenuItems(language, isDev)))
+          rebuildApplicationMenu()
+        },
+        applicationMenuSetCaptureActive: ({ active }) => {
+          isMenuCaptureActive = active
+          rebuildApplicationMenu()
         },
         appGetPreferences: () => service.getAppPreferences(),
         appSavePreferences: async (params) => {
@@ -292,8 +335,16 @@ export async function bootstrap() {
         claudeFetchProviderModels: (params) => service.fetchProviderModels(params),
         claudeGetProviderUsage: (params) => service.getProviderUsage(params),
         shortcutGetOverrides: () => shortcutStore.get(),
-        shortcutSetOverride: (params) => shortcutStore.set(params.commandId, params.bindings),
-        shortcutResetOverride: (params) => shortcutStore.reset(params.commandId),
+        shortcutSetOverride: (params) => {
+          const overrides = shortcutStore.set(params.commandId, params.bindings)
+          rebuildApplicationMenu()
+          return overrides
+        },
+        shortcutResetOverride: (params) => {
+          const overrides = shortcutStore.reset(params.commandId)
+          rebuildApplicationMenu()
+          return overrides
+        },
         windowToggleMaximize: () => {
           toggleMainWindowMaximize(mainWindow)
         },

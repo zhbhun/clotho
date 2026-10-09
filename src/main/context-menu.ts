@@ -1,6 +1,6 @@
 import type { MenuItemConstructorOptions } from 'electron'
 
-import type { ApplicationMenuLabels } from './application-menu'
+import type { ApplicationMenuLabels } from './menu-labels'
 
 export type WebviewContextMenuLabels = Pick<
   ApplicationMenuLabels,

@@ -5,6 +5,9 @@ import type { ClaudeModelMappingRole, ProviderApiType } from './provider'
 import type { DraftSession, DraftSessionIndex, LocalSession } from './session'
 import type { ShortcutBinding, ShortcutOverrides } from './shortcuts'
 
+/** Settings categories the application menu can deep-link into. */
+export type MenuSettingsCategory = 'shortcuts'
+
 export type { DraftSession, DraftSessionIndex, LocalSession, SessionInput } from './session'
 
 export type { ClaudeModelMappingRole, ProviderModelReasoning } from './provider'
@@ -845,6 +848,10 @@ export type DesktopRPC = {
         params: { language: AppLanguage }
         response: void
       }
+      applicationMenuSetCaptureActive: {
+        params: { active: boolean }
+        response: void
+      }
       appGetPreferences: {
         params: Record<string, never>
         response: AppPreferences
@@ -1065,6 +1072,10 @@ export type DesktopRPC = {
       claudeToolRequest: { streamId: ClaudeStreamId; request: ClaudeToolRequest }
       /** A session's idle query was recycled; its stream has (or will) end. */
       claudeSessionRecycled: { sessionId: string }
+      /** An application menu item triggered a shortcut command. */
+      menuCommandDispatch: { commandId: string }
+      /** An application menu item asked to open a settings category. */
+      menuOpenSettings: { category: MenuSettingsCategory }
     }
   }>
 }

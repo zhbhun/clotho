@@ -1,6 +1,11 @@
 import { useEffect } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 
+import {
+  isDesktopRuntime,
+  listenDesktopEvent,
+  requestFromDesktop,
+} from '../services/desktop/client'
 import { eventMatchesShortcutBinding } from '../services/shortcuts/bindings'
 import { dispatchCommand } from '../services/shortcuts/dispatcher'
 import { resolveActiveBindings } from '../services/shortcuts/resolver'
@@ -20,6 +25,38 @@ export function ShortcutHost() {
 
   useEffect(() => {
     void runtime.overrides.initialize()
+  }, [runtime])
+
+  useEffect(() => {
+    let stopped = false
+    let unsubscribe: (() => void) | undefined
+    void listenDesktopEvent('menu-command-dispatch', ({ commandId }) => {
+      void dispatchCommand(runtime.registry, commandId)
+    }).then(
+      (stop) => {
+        if (stopped) stop()
+        else unsubscribe = stop
+      },
+      () => {},
+    )
+    return () => {
+      stopped = true
+      unsubscribe?.()
+    }
+  }, [runtime])
+
+  useEffect(() => {
+    if (!isDesktopRuntime()) return undefined
+    // Menu accelerators swallow keystrokes before they reach the page, so the
+    // native menu drops them while a shortcut recorder is capturing.
+    const unsubscribe = runtime.capture.subscribe(() => {
+      requestFromDesktop('applicationMenuSetCaptureActive', {
+        active: runtime.capture.getSnapshot(),
+      }).catch(() => undefined)
+    })
+    return () => {
+      unsubscribe()
+    }
   }, [runtime])
 
   useHotkeys(

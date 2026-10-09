@@ -1,8 +1,8 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
 
-import { menuLabels } from './application-menu'
 import { textEditMenuItems } from './context-menu'
+import { menuLabels } from './menu-labels'
 
 const EDIT_FLAGS = {
   canCopy: true,

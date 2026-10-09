@@ -1,215 +1,90 @@
 import type { MenuItemConstructorOptions } from 'electron'
 
 import type { AppLanguage } from '@/shared/rpc'
+import type { CommandId, ShortcutBinding, ShortcutModifier } from '@/shared/shortcuts'
 
-export type ApplicationMenuLabels = {
-  about: string
-  copy: string
-  cut: string
-  edit: string
-  help: string
-  paste: string
-  quit: string
-  redo: string
-  selectAll: string
-  toggleDevTools: string
-  undo: string
+import type { ApplicationMenuLabels } from './menu-labels'
+import { menuLabels } from './menu-labels'
+
+export type ApplicationMenuActions = {
+  /** Forward a shortcut command to the focused renderer for dispatch. */
+  dispatchCommand: (commandId: CommandId) => void
+  openShortcutSettings: () => void
+  openTroubleshooting: () => void
+  openTaskManager: () => void
 }
 
-const MENU_LABELS = {
-  de: {
-    about: 'Über Clotho',
-    copy: 'Kopieren',
-    cut: 'Ausschneiden',
-    edit: 'Bearbeiten',
-    help: 'Hilfe',
-    paste: 'Einfügen',
-    quit: 'Beenden',
-    redo: 'Wiederholen',
-    selectAll: 'Alles auswählen',
-    toggleDevTools: 'Entwicklertools umschalten',
-    undo: 'Rückgängig',
-  },
-  en: {
-    about: 'About Clotho',
-    copy: 'Copy',
-    cut: 'Cut',
-    edit: 'Edit',
-    help: 'Help',
-    paste: 'Paste',
-    quit: 'Quit',
-    redo: 'Redo',
-    selectAll: 'Select All',
-    toggleDevTools: 'Toggle Developer Tools',
-    undo: 'Undo',
-  },
-  es: {
-    about: 'Acerca de Clotho',
-    copy: 'Copiar',
-    cut: 'Cortar',
-    edit: 'Editar',
-    help: 'Ayuda',
-    paste: 'Pegar',
-    quit: 'Salir',
-    redo: 'Rehacer',
-    selectAll: 'Seleccionar todo',
-    toggleDevTools: 'Alternar herramientas de desarrollo',
-    undo: 'Deshacer',
-  },
-  fr: {
-    about: 'À propos de Clotho',
-    copy: 'Copier',
-    cut: 'Couper',
-    edit: 'Édition',
-    help: 'Aide',
-    paste: 'Coller',
-    quit: 'Quitter',
-    redo: 'Rétablir',
-    selectAll: 'Tout sélectionner',
-    toggleDevTools: 'Outils de développement',
-    undo: 'Annuler',
-  },
-  hi: {
-    about: 'Clotho के बारे में',
-    copy: 'कॉपी करें',
-    cut: 'काटें',
-    edit: 'संपादित करें',
-    help: 'सहायता',
-    paste: 'पेस्ट करें',
-    quit: 'बाहर निकलें',
-    redo: 'फिर से करें',
-    selectAll: 'सभी चुनें',
-    toggleDevTools: 'डेवलपर टूल टॉगल करें',
-    undo: 'पूर्ववत करें',
-  },
-  id: {
-    about: 'Tentang Clotho',
-    copy: 'Salin',
-    cut: 'Potong',
-    edit: 'Edit',
-    help: 'Bantuan',
-    paste: 'Tempel',
-    quit: 'Keluar',
-    redo: 'Ulangi',
-    selectAll: 'Pilih Semua',
-    toggleDevTools: 'Alat Pengembang',
-    undo: 'Urungkan',
-  },
-  ja: {
-    about: 'Clotho について',
-    copy: 'コピー',
-    cut: 'カット',
-    edit: '編集',
-    help: 'ヘルプ',
-    paste: 'ペースト',
-    quit: '終了',
-    redo: 'やり直す',
-    selectAll: 'すべてを選択',
-    toggleDevTools: '開発者ツールの切り替え',
-    undo: '取り消す',
-  },
-  ko: {
-    about: 'Clotho 정보',
-    copy: '복사',
-    cut: '잘라내기',
-    edit: '편집',
-    help: '도움말',
-    paste: '붙여넣기',
-    quit: '종료',
-    redo: '다시 실행',
-    selectAll: '모두 선택',
-    toggleDevTools: '개발자 도구 전환',
-    undo: '실행 취소',
-  },
-  'pt-BR': {
-    about: 'Sobre o Clotho',
-    copy: 'Copiar',
-    cut: 'Recortar',
-    edit: 'Editar',
-    help: 'Ajuda',
-    paste: 'Colar',
-    quit: 'Sair',
-    redo: 'Refazer',
-    selectAll: 'Selecionar Tudo',
-    toggleDevTools: 'Ferramentas do desenvolvedor',
-    undo: 'Desfazer',
-  },
-  ru: {
-    about: 'О Clotho',
-    copy: 'Копировать',
-    cut: 'Вырезать',
-    edit: 'Правка',
-    help: 'Справка',
-    paste: 'Вставить',
-    quit: 'Выйти',
-    redo: 'Повторить',
-    selectAll: 'Выбрать всё',
-    toggleDevTools: 'Инструменты разработчика',
-    undo: 'Отменить',
-  },
-  tr: {
-    about: 'Clotho Hakkında',
-    copy: 'Kopyala',
-    cut: 'Kes',
-    edit: 'Düzen',
-    help: 'Yardım',
-    paste: 'Yapıştır',
-    quit: 'Çıkış',
-    redo: 'Yinele',
-    selectAll: 'Tümünü Seç',
-    toggleDevTools: 'Geliştirici Araçları',
-    undo: 'Geri Al',
-  },
-  vi: {
-    about: 'Giới thiệu Clotho',
-    copy: 'Sao chép',
-    cut: 'Cắt',
-    edit: 'Sửa',
-    help: 'Trợ giúp',
-    paste: 'Dán',
-    quit: 'Thoát',
-    redo: 'Làm lại',
-    selectAll: 'Chọn tất cả',
-    toggleDevTools: 'Công cụ dành cho nhà phát triển',
-    undo: 'Hoàn tác',
-  },
-  'zh-CN': {
-    about: '关于 Clotho',
-    copy: '复制',
-    cut: '剪切',
-    edit: '编辑',
-    help: '帮助',
-    paste: '粘贴',
-    quit: '退出',
-    redo: '重做',
-    selectAll: '全选',
-    toggleDevTools: '切换开发者工具',
-    undo: '撤销',
-  },
-  'zh-TW': {
-    about: '關於 Clotho',
-    copy: '複製',
-    cut: '剪下',
-    edit: '編輯',
-    help: '說明',
-    paste: '貼上',
-    quit: '結束',
-    redo: '重做',
-    selectAll: '全選',
-    toggleDevTools: '切換開發人員工具',
-    undo: '復原',
-  },
-} satisfies Record<AppLanguage, ApplicationMenuLabels>
-
-export function menuLabels(language: AppLanguage): ApplicationMenuLabels {
-  return MENU_LABELS[language]
+export type ApplicationMenuOptions = {
+  language: AppLanguage
+  isDev: boolean
+  /** While the renderer records a shortcut, accelerators must not swallow keystrokes. */
+  isCaptureActive: boolean
+  /**
+   * Effective bindings for a command (defaults plus user overrides); the first
+   * entry becomes the menu accelerator.
+   */
+  commandBindings: (commandId: CommandId) => readonly ShortcutBinding[]
+  actions: ApplicationMenuActions
 }
 
-export function applicationMenuItems(
-  language: AppLanguage,
-  isDev: boolean,
-): MenuItemConstructorOptions[] {
-  const labels = menuLabels(language)
+const ACCELERATOR_MODIFIERS: Record<ShortcutModifier, string> = {
+  alt: 'Alt',
+  ctrl: 'Control',
+  meta: 'Meta',
+  primary: 'CmdOrCtrl',
+  shift: 'Shift',
+}
+
+const ACCELERATOR_KEYS: Readonly<Record<string, string>> = {
+  arrowdown: 'Down',
+  arrowleft: 'Left',
+  arrowright: 'Right',
+  arrowup: 'Up',
+  backspace: 'Backspace',
+  delete: 'Delete',
+  down: 'Down',
+  end: 'End',
+  enter: 'Return',
+  escape: 'Esc',
+  esc: 'Esc',
+  home: 'Home',
+  left: 'Left',
+  pagedown: 'PageDown',
+  pageup: 'PageUp',
+  return: 'Return',
+  right: 'Right',
+  space: 'Space',
+  spacebar: 'Space',
+  tab: 'Tab',
+  up: 'Up',
+}
+
+export function bindingToAccelerator(binding: ShortcutBinding): string {
+  const modifiers = binding.modifiers.map((modifier) => ACCELERATOR_MODIFIERS[modifier]).join('+')
+  const normalizedKey = binding.key.toLocaleLowerCase('en-US')
+  const key = ACCELERATOR_KEYS[normalizedKey] ?? binding.key.toLocaleUpperCase('en-US')
+  return modifiers ? `${modifiers}+${key}` : key
+}
+
+function commandMenuItem(
+  label: string,
+  commandId: CommandId,
+  options: ApplicationMenuOptions,
+): MenuItemConstructorOptions {
+  const bindings = options.commandBindings(commandId)
+  return {
+    label,
+    accelerator:
+      !options.isCaptureActive && bindings.length > 0
+        ? bindingToAccelerator(bindings[0])
+        : undefined,
+    click: () => options.actions.dispatchCommand(commandId),
+  }
+}
+
+export function applicationMenuItems(options: ApplicationMenuOptions) {
+  const labels: ApplicationMenuLabels = menuLabels(options.language)
+  const isMac = process.platform === 'darwin'
 
   const items: MenuItemConstructorOptions[] = [
     {
@@ -223,6 +98,10 @@ export function applicationMenuItems(
       ],
     },
     {
+      label: labels.file,
+      submenu: [commandMenuItem(labels.close, 'workbench.session.close', options)],
+    },
+    {
       label: labels.edit,
       submenu: [
         { label: labels.undo, role: 'undo' },
@@ -234,17 +113,48 @@ export function applicationMenuItems(
         { label: labels.selectAll, role: 'selectAll' },
       ],
     },
-  ]
-
-  if (isDev) {
-    // The toggleDevTools role targets the focused window and carries the
-    // platform-default accelerator (Cmd+Option+I / Ctrl+Shift+I / F12).
-    items.push({
+    {
+      label: labels.view,
+      submenu: [
+        commandMenuItem(labels.toggleSidebar, 'workbench.sidebar.toggle', options),
+        { type: 'separator' },
+        commandMenuItem(labels.quickPanel, 'workbench.picker.quick.open', options),
+        commandMenuItem(labels.projectSwitcher, 'workbench.picker.project.open', options),
+        commandMenuItem(labels.chatHistory, 'workbench.picker.allSessions.open', options),
+        commandMenuItem(labels.sentMessages, 'workbench.picker.sentMessages.open', options),
+        { type: 'separator' },
+        commandMenuItem(labels.back, 'workbench.navigation.back', options),
+        commandMenuItem(labels.forward, 'workbench.navigation.forward', options),
+      ],
+    },
+    {
+      label: labels.window,
+      submenu: [
+        { label: labels.minimize, role: 'minimize' },
+        { label: labels.zoom, role: 'zoom' },
+        ...(isMac
+          ? [{ type: 'separator' as const }, { label: labels.front, role: 'front' as const }]
+          : []),
+      ],
+    },
+    {
       label: labels.help,
-      role: 'help',
-      submenu: [{ label: labels.toggleDevTools, role: 'toggleDevTools' }],
-    })
-  }
+      submenu: [
+        { label: labels.keyboardShortcuts, click: () => options.actions.openShortcutSettings() },
+        { type: 'separator' },
+        { label: labels.troubleshooting, click: () => options.actions.openTroubleshooting() },
+        { label: labels.taskManager, click: () => options.actions.openTaskManager() },
+        ...(options.isDev
+          ? [
+              { type: 'separator' as const },
+              // The toggleDevTools role targets the focused window and carries
+              // the platform-default accelerator (Cmd+Option+I / Ctrl+Shift+I).
+              { label: labels.toggleDevTools, role: 'toggleDevTools' as const },
+            ]
+          : []),
+      ],
+    },
+  ]
 
   return items
 }
