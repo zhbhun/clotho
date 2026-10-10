@@ -5,7 +5,7 @@ import { type RefCallback, useCallback, useLayoutEffect, useState } from 'react'
 // the floating pending-message strip, which is absolutely positioned and
 // therefore invisible to the dock measurement.
 const DEFAULT_BOTTOM_PADDING = 160
-const DOCK_GAP = 24
+const DOCK_GAP = 36
 
 export function useConversationDock(mode: 'ask' | 'prompt'): {
   bottomPadding: number

@@ -97,7 +97,7 @@ describe('useConversationDock', () => {
     dockHeight = 420
     act(() => resizeObservers.forEach((observer) => observer.resize(dock)))
 
-    expect(screen.getByTestId('padding')).toHaveTextContent('444')
+    expect(screen.getByTestId('padding')).toHaveTextContent('456')
   })
 
   it('changes its scroll version when the dock switches modes at the same height', () => {
