@@ -1,4 +1,4 @@
-import type { SDKMessage } from '@anthropic-ai/claude-agent-sdk'
+import type { SDKMessage, SDKResultMessage } from '@anthropic-ai/claude-agent-sdk'
 
 import { toast } from '@/shadcn/toast'
 import type { ClaudeAttachment, ClaudeOptions } from '@/shared/rpc'
@@ -47,6 +47,21 @@ type RunPromptInput = {
 }
 
 const AUTO_CONTINUATION_NUDGE = 'resume'
+
+/**
+ * The wire failure a result frame reports: the error subtypes carry an errors
+ * list, and a success-subtype result carries the API error text in result when
+ * is_error is set. Null marks a genuinely successful turn, so a failed turn
+ * never counts as one — a queued pending message must not auto-send behind it.
+ */
+function resultFrameFailure(message: SDKResultMessage): string | null {
+  if (message.subtype === 'success') {
+    return message.is_error
+      ? (message.result ?? '').trim() || 'The Claude turn ended on an API error'
+      : null
+  }
+  return message.errors?.[0] ?? 'The Claude turn ended with an error'
+}
 
 function createUuid() {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
@@ -428,8 +443,10 @@ export class SendService {
       const { sessionId } = this.controller.contextStore.getState()
       this.controller.options.onPromptStarted?.(sessionId)
     }
-    // A result frame ends the current turn — never the resident stream.
-    if (message.type === 'result') void this.finishTurn(null)
+    // A result frame ends the current turn — never the resident stream. A
+    // frame reporting a failed turn (API error, turn/budget limits) finishes
+    // the turn as a failure instead of a success.
+    if (message.type === 'result') void this.finishTurn(resultFrameFailure(message))
   }
 
   /**
@@ -484,12 +501,15 @@ export class SendService {
       return
     }
     const isUserCancel = isSendCancellationRequested(this.sendLifecycle)
-    const queryFailure =
-      error === null || isUserCancel
+    const wireFailure =
+      error == null
         ? null
-        : error instanceof Error
-          ? error.message
-          : 'Failed to execute Claude'
+        : typeof error === 'string'
+          ? error
+          : error instanceof Error
+            ? error.message
+            : 'Failed to execute Claude'
+    const queryFailure = isUserCancel ? null : wireFailure
     if (queryFailure) {
       this.logger.error('query.stream_failed', 'The Claude turn failed', {
         context: { phase: this.sendLifecycle.phase },

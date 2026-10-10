@@ -579,6 +579,30 @@ describe('SessionController', () => {
     expect(failing.pushes.length).toBe(1)
   })
 
+  it('keeps the pending message queued when the turn ends on an API error result', async () => {
+    const client = createClient()
+    const manual = createManualStream()
+    client.openSessionStream.mockReturnValue(manual.stream as never)
+    const store = trackedStore({ ...createOptions('local:pending-api-error'), client })
+    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
+    store.getState().setPrompt('First question')
+    const sending = store.getState().sendPrompt()
+    await vi.waitFor(() => expect(store.getState().isStreaming).toBe(true))
+
+    store.getState().setPrompt('Second question')
+    store.getState().queuePendingMessage()
+    manual.emit({
+      type: 'result',
+      subtype: 'success',
+      is_error: true,
+      result: 'API Error: 502 Bad Gateway',
+    })
+    await sending
+
+    expect(store.getState().pendingMessage).toEqual({ prompt: 'Second question', attachments: [] })
+    expect(manual.pushes.length).toBe(1)
+  })
+
   it('moves the pending message back into the composer on edit and drops it on delete', async () => {
     const client = createClient()
     const manual = createManualStream()
