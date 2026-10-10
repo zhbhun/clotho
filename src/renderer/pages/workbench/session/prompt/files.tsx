@@ -122,11 +122,11 @@ function FileMentionView({ deleteNode, node }: NodeViewProps) {
   )
   const triggerContent = (
     <>
-      <span className="relative inline-flex size-4 shrink-0 items-center justify-center overflow-hidden rounded-sm text-foreground-subtle">
+      <span className="relative inline-flex size-3.5 shrink-0 items-center justify-center overflow-hidden rounded-sm text-foreground-subtle">
         {showThumbnail ? (
           <img
             alt=""
-            className="size-4 object-cover group-hover/file:hidden"
+            className="size-3.5 object-cover group-hover/file:hidden"
             src={fileUrlFromPath(path)}
             onError={() => setHasImageError(true)}
           />
@@ -137,7 +137,7 @@ function FileMentionView({ deleteNode, node }: NodeViewProps) {
         )}
         <button
           aria-label={t('workbench.prompt.removeFile', { name })}
-          className="hidden size-4 items-center justify-center rounded-sm text-foreground-subtle hover:text-foreground group-hover/file:inline-flex"
+          className="hidden size-3.5 items-center justify-center rounded-sm text-foreground-subtle hover:text-foreground group-hover/file:inline-flex"
           type="button"
           onClick={(event) => {
             event.preventDefault()
