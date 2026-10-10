@@ -107,16 +107,34 @@ export class TurnStreamService {
     this.transition = transition
   }
 
+  /**
+   * The elapsed ticker's timing origin: the confirmed history timestamp once
+   * known, falling back to the optimistic prompt's timestamp — the CLI never
+   * echoes the pushed line back, so the send must tick before confirmation.
+   */
+  private elapsedOrigin(): number | null {
+    const lifecycle = this.getLifecycle()
+    const confirmed = sendLifecycleStartedAt(lifecycle)
+    if (confirmed !== null) return confirmed
+    const optimisticMessageId = pendingSendSnapshot(lifecycle)?.optimisticMessageId
+    if (!optimisticMessageId) return null
+    const parsed = Date.parse(
+      this.controller.historyService.optimisticTimestamp(optimisticMessageId) ?? '',
+    )
+    return Number.isFinite(parsed) ? parsed : null
+  }
+
   private updateElapsed = () => {
-    const startedAt = sendLifecycleStartedAt(this.getLifecycle())
+    const startedAt = this.elapsedOrigin()
     if (startedAt === null) return
     this.controller.runtimeStore.setState({
       streamingElapsed: Math.max(0, Math.floor((Date.now() - startedAt) / 1000)),
     })
   }
 
-  private startTimer() {
-    if (sendLifecycleStartedAt(this.getLifecycle()) === null || this.timer) return
+  /** Starts the elapsed ticker once a send has a timing origin. */
+  startElapsedTicker() {
+    if (this.elapsedOrigin() === null || this.timer) return
     this.updateElapsed()
     this.timer = setInterval(this.updateElapsed, 200)
   }
@@ -176,15 +194,13 @@ export class TurnStreamService {
         confirmation.optimisticMessageId,
         message,
       )
-      // The Working-for status row is already visible before the first agent
-      // frame, so the elapsed ticker must run from the history confirmation.
-      this.startTimer()
       return false
     }
 
     // API retries produce no agent content but can stretch for minutes; keep the
     // elapsed ticker running so the status row and retry card stay live.
-    if (result.isAgentEvent || result.isLocalCommandResult || result.isApiRetry) this.startTimer()
+    if (result.isAgentEvent || result.isLocalCommandResult || result.isApiRetry)
+      this.startElapsedTicker()
     return hasConfirmedResponse
   }
 

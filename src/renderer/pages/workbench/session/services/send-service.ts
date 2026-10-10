@@ -679,6 +679,7 @@ export class SendService {
         runtimeStatus: 'streaming',
         runtimeError: null,
       })
+      this.turnStream.startElapsedTicker()
       this.controller.options.onActivityChange?.(context.sessionId, 'processing')
     }
 
@@ -775,6 +776,7 @@ export class SendService {
         runtimeStatus: 'streaming',
         runtimeError: null,
       })
+      this.turnStream.startElapsedTicker()
       this.controller.options.onActivityChange?.(context.sessionId, 'processing')
     }
 

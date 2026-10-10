@@ -1951,6 +1951,41 @@ describe('SessionController', () => {
     expect(store.getState()).toMatchObject({ prompt: '', runtimeError: null })
   })
 
+  it('keeps the working timer ticking while the first agent frame is pending', async () => {
+    vi.useFakeTimers()
+    const client = createClient()
+    const controlled = createManualStream()
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
+    const store = trackedStore({ ...createOptions('local:first-frame-timer'), client })
+    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
+    store.getState().setPrompt('hello')
+
+    const sending = store.getState().sendPrompt()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(store.getState().isStreaming).toBe(true)
+
+    // No frames for 2.5s: the timer must tick on its own from the send moment.
+    await vi.advanceTimersByTimeAsync(2500)
+    expect(store.getState().streamingElapsed).toBe(2)
+
+    // The first frame lands and the turn keeps streaming: the timer stays live.
+    controlled.emit({
+      type: 'stream_event',
+      uuid: 'delta-uuid',
+      event: { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: 'Hi' } },
+    })
+    await vi.advanceTimersByTimeAsync(3000)
+    expect(store.getState().streamingElapsed).toBe(5)
+
+    controlled.emit({
+      type: 'assistant',
+      uuid: 'assistant-uuid',
+      message: { role: 'assistant', model: 'glm-5.2', content: [{ type: 'text', text: 'Hi' }] },
+    })
+    controlled.emitResult()
+    await sending
+  })
+
   it('does not flash the interrupted status when recalling an unanswered send', async () => {
     const client = createClient()
     const controlled = createManualStream({ finishOnInterrupt: false })
@@ -2298,7 +2333,9 @@ describe('SessionController', () => {
 
     vi.setSystemTime(new Date('2026-08-27T10:00:12.000Z'))
     await vi.advanceTimersByTimeAsync(200)
-    expect(store.getState().streamingElapsed).toBe(0)
+    // The Working-for row is already live before the first agent frame, so the
+    // elapsed ticker runs here too — still measured from the history timestamp.
+    expect(store.getState().streamingElapsed).toBe(10)
 
     controlled.emit({
       type: 'assistant',
