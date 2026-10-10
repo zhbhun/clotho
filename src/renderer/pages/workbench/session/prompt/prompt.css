@@ -69,3 +69,23 @@
   -webkit-user-select: none;
   user-select: none;
 }
+
+/* Native selection never paints over the chip's own background, so the
+   fileMention plugin mirrors "the selection covers this chip" onto
+   .file-mention-in-selection; Highlight/HighlightText are the system
+   selection colors, keeping the chip consistent with the text around it. */
+.prompt-markdown-editor
+  .file-mention-in-selection
+  [data-file-mention]
+  [data-pointer-cursor-target] {
+  background-color: Highlight;
+  color: HighlightText;
+}
+
+.prompt-markdown-editor
+  .file-mention-in-selection
+  [data-file-mention]
+  [data-pointer-cursor-target]
+  * {
+  color: HighlightText;
+}

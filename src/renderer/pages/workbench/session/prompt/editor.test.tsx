@@ -1324,6 +1324,50 @@ describe('PromptMarkdownEditor', () => {
     })
   })
 
+  it('highlights file mention chips covered by the selection', async () => {
+    render(
+      <TooltipProvider>
+        <PromptMarkdownEditor value="" onChange={() => {}} onSubmit={() => {}} />
+      </TooltipProvider>,
+    )
+
+    const editor = screen.getByRole('textbox', { name: 'Prompt' })
+
+    editor.focus()
+    // Flush the mount-time value-restoration microtask so it cannot race the paste.
+    await act(async () => {})
+    pasteText(editor, '@src/renderer/styles/sidebar.css#1-24')
+    const chip = await screen.findByLabelText('sidebar.css: src/renderer/styles/sidebar.css')
+
+    const range = document.createRange()
+    range.selectNodeContents(editor.querySelector('p') as Node)
+    const selection = document.getSelection()
+    selection?.removeAllRanges()
+    selection?.addRange(range)
+    fireEvent(document, new Event('selectionchange'))
+
+    const highlighted = await waitFor(() => {
+      const node = editor.querySelector('.file-mention-in-selection')
+      expect(node).not.toBeNull()
+      return node
+    })
+    expect(highlighted).toContainElement(chip)
+
+    // Park the caret at the end of the paragraph, outside the chip's
+    // non-editable node view, so ProseMirror reads the collapsed selection.
+    const paragraph = editor.querySelector('p') as HTMLElement
+    const caret = document.createRange()
+    caret.setStart(paragraph, paragraph.childNodes.length)
+    caret.collapse(true)
+    selection?.removeAllRanges()
+    selection?.addRange(caret)
+    fireEvent(document, new Event('selectionchange'))
+
+    await waitFor(() => {
+      expect(editor.querySelector('.file-mention-in-selection')).toBeNull()
+    })
+  })
+
   it('does not reopen file completions when the cursor moves back into a path', async () => {
     const user = userEvent.setup()
 

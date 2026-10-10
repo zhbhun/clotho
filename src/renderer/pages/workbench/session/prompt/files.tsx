@@ -1,4 +1,6 @@
 import { type JSONContent, Node } from '@tiptap/core'
+import { Plugin, PluginKey } from '@tiptap/pm/state'
+import { Decoration, DecorationSet } from '@tiptap/pm/view'
 import { type NodeViewProps, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
 import { File, FileCode, FileText, ImageIcon, X } from 'lucide-react'
 import { useState } from 'react'
@@ -208,6 +210,41 @@ function FileMentionView({ deleteNode, node }: NodeViewProps) {
   )
 }
 
+const FILE_MENTION_IN_SELECTION_CLASS = 'file-mention-in-selection'
+
+const fileMentionSelectionKey = new PluginKey<DecorationSet>('fileMentionInSelection')
+
+/**
+ * The browser never paints the native selection over the chip's own background,
+ * so mirror "the selection covers this chip" as a node decoration class and let
+ * prompt.css restyle the chip with the system selection colors.
+ */
+const fileMentionSelectionPlugin = new Plugin<DecorationSet>({
+  key: fileMentionSelectionKey,
+  state: {
+    init: () => DecorationSet.empty,
+    apply(tr, decorations) {
+      if (!tr.docChanged && !tr.selectionSet) return decorations
+      const { selection } = tr
+      if (selection.empty) return DecorationSet.empty
+      const marks: Decoration[] = []
+      tr.doc.nodesBetween(selection.from, selection.to, (node, pos) => {
+        if (node.type.name === 'fileMention') {
+          marks.push(
+            Decoration.node(pos, pos + node.nodeSize, {
+              class: FILE_MENTION_IN_SELECTION_CLASS,
+            }),
+          )
+        }
+      })
+      return marks.length > 0 ? DecorationSet.create(tr.doc, marks) : DecorationSet.empty
+    },
+  },
+  props: {
+    decorations: (state) => fileMentionSelectionKey.getState(state),
+  },
+})
+
 export const FileMention = Node.create({
   name: 'fileMention',
   group: 'inline',
@@ -249,5 +286,9 @@ export const FileMention = Node.create({
 
   addNodeView() {
     return ReactNodeViewRenderer(FileMentionView, { className: 'inline-block' })
+  },
+
+  addProseMirrorPlugins() {
+    return [fileMentionSelectionPlugin]
   },
 })
