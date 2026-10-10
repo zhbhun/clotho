@@ -370,7 +370,7 @@ describe('buildConversationRows', () => {
     expect(rows.map((row) => row.kind)).toEqual(['user', 'status', 'api-retry'])
   })
 
-  it('places an expandable failure status after prior tool work', () => {
+  it('places an expandable failure status above prior tool work', () => {
     const rows = buildConversationRows({
       expandedTurns: { 'user-1': true },
       interruptedTurnIds: new Set(),
@@ -381,23 +381,22 @@ describe('buildConversationRows', () => {
       turns: [turn('user-1', [{ id: 'tool-1', kind: 'tool' }])],
     })
 
-    expect(rows.map((row) => row.kind)).toEqual(['user', 'timeline', 'status', 'error-card'])
+    expect(rows.map((row) => row.kind)).toEqual(['user', 'status', 'timeline', 'error-card'])
     expect(rows[1]).toMatchObject({
+      canToggle: true,
+      kind: 'status',
+      status: 'failed',
+    })
+    expect(rows[2]).toMatchObject({
       isLast: false,
       isStreaming: false,
       kind: 'timeline',
       turnTerminalStatus: 'failed',
     })
-    expect(rows[2]).toMatchObject({
-      canToggle: true,
-      isLast: true,
-      kind: 'status',
-      status: 'failed',
-    })
     expect(rows[3]).toMatchObject({ kind: 'error-card', message: 'model offline' })
   })
 
-  it('places the failure status after the reply text of a text-only turn', () => {
+  it('places the failure status above the reply text of a text-only turn', () => {
     const rows = buildConversationRows({
       expandedTurns: {},
       interruptedTurnIds: new Set(),
@@ -408,10 +407,9 @@ describe('buildConversationRows', () => {
       turns: [turn('user-1', [{ id: 'text-1', kind: 'text', text: 'Partial reply' }])],
     })
 
-    expect(rows.map((row) => row.kind)).toEqual(['user', 'text', 'status', 'error-card'])
-    expect(rows[2]).toMatchObject({
+    expect(rows.map((row) => row.kind)).toEqual(['user', 'status', 'text', 'error-card'])
+    expect(rows[1]).toMatchObject({
       canToggle: false,
-      isLast: true,
       kind: 'status',
       status: 'failed',
     })

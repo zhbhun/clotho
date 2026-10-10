@@ -316,9 +316,10 @@ export function buildConversationRows(options: {
         // shimmering line under the settled row.
         const thinkingReplacesTailTool = showTrailingThinking && isSettledTool
 
-        // A failure ends the turn after its work, so the status row closes the turn instead
-        // of heading it; other statuses stay on top as the turn's expandable header.
-        if (!hasFailure && !isCompactionOnlyTurn) {
+        // Every status — including a terminal failure — heads the turn under
+        // the prompt as its expandable header; the failure's error card still
+        // closes the turn below.
+        if (!isCompactionOnlyTurn) {
           rows.push({
             canToggle: true,
             duration,
@@ -415,7 +416,7 @@ export function buildConversationRows(options: {
           })
         }
       } else {
-        if (!hasFailure && !isCompactionOnlyTurn) {
+        if (!isCompactionOnlyTurn) {
           rows.push({
             canToggle: false,
             duration,
@@ -482,16 +483,6 @@ export function buildConversationRows(options: {
       }
 
       if (hasFailure && failureMessage) {
-        rows.push({
-          canToggle: hasStructuredTimeline,
-          duration,
-          isExpanded: hasStructuredTimeline ? isExpanded : false,
-          isLast: true,
-          key: `turn:${turnId}:status`,
-          kind: 'status',
-          status,
-          turnId,
-        })
         rows.push({
           key: `turn:${turnId}:error-card`,
           kind: 'error-card',
