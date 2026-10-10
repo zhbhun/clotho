@@ -207,5 +207,8 @@ export class TurnStreamService {
   stop() {
     if (this.timer) clearInterval(this.timer)
     this.timer = null
+    // The turn's final ingested state lands with the terminal transition, not
+    // a frame later.
+    this.controller.historyService.flushPendingPublish()
   }
 }

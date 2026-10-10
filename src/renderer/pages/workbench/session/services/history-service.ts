@@ -96,6 +96,8 @@ export class HistoryService {
   private optimisticUserMessageIds = new Set<string>()
   /** Avoid notifying React when a follower only replays an already-seen entry. */
   private publishedRevision = -1
+  /** Pending frame that will carry the batched stream notification. */
+  private publishFrame: number | null = null
   private isRecalledTail = false
   private recalledUuid: string | null = null
   get hasRecalledTail() {
@@ -152,7 +154,46 @@ export class HistoryService {
     }
   }
 
+  /**
+   * Coalesce the stream notification to one per frame: every stream_event
+   * delta bumps the revision, and notifying React per delta floods the commit
+   * cycle while the scroll/measure pipeline is also writing back — the
+   * interleaved sync updates can exhaust React's nested update limit
+   * ("Minified React error #185") and kill the turn. The frame callback runs
+   * after that frame's scroll listeners, so each notification's cascade drains
+   * before the next one lands.
+   */
+  private schedulePublish() {
+    const revision = this.assembler.getRevision()
+    if (revision === this.publishedRevision || this.publishFrame !== null) return
+    this.publishFrame = requestAnimationFrame(() => {
+      this.publishFrame = null
+      if (this.controller.isDisposed) return
+      this.publishedRevision = this.assembler.getRevision()
+      this.controller.conversationStore.getState().replaceMessages(this.assembler.getAll())
+    })
+  }
+
+  /**
+   * Flush a pending batched notification now. The turn's end must land with
+   * its terminal transition (failure card, stopped marker) instead of a frame
+   * later.
+   */
+  flushPendingPublish() {
+    if (this.publishFrame === null) return
+    cancelAnimationFrame(this.publishFrame)
+    this.publishFrame = null
+    this.publishedRevision = this.assembler.getRevision()
+    this.controller.conversationStore.getState().replaceMessages(this.assembler.getAll())
+  }
+
   private publish() {
+    // A synchronous publish (turn transitions, history reset) supersedes any
+    // pending batched frame so message identity swaps stay ordered.
+    if (this.publishFrame !== null) {
+      cancelAnimationFrame(this.publishFrame)
+      this.publishFrame = null
+    }
     const revision = this.assembler.getRevision()
     if (revision === this.publishedRevision) return
     this.publishedRevision = revision
@@ -428,7 +469,7 @@ export class HistoryService {
       const parsed = parseClaudeLine(messageLine, Date.now())
       if (parsed) this.assembler.commit(parsed)
     }
-    this.publish()
+    this.schedulePublish()
     return {
       json,
       isAgentEvent: Boolean(json && isAgentContentEvent(json)),
@@ -447,7 +488,7 @@ export class HistoryService {
         rawType: 'stderr',
       },
     )
-    this.publish()
+    this.schedulePublish()
   }
 }
 

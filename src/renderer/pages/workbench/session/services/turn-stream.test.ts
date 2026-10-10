@@ -15,6 +15,7 @@ function createController(setState: ReturnType<typeof vi.fn>, optimisticTimestam
       ingestLine: vi.fn(),
       optimisticTimestamp: vi.fn(() => optimisticTimestamp),
       replaceOptimisticMessage: vi.fn(),
+      flushPendingPublish: vi.fn(),
     },
     runtimeStore: { setState },
   } as unknown as SessionController

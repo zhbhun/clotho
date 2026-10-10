@@ -280,6 +280,13 @@ afterEach(() => {
 
 describe('SessionController', () => {
   it('does not notify conversation subscribers for replayed transcript entries', () => {
+    // Stream notifications are frame-batched; flushing rAF synchronously keeps
+    // this dedup assertion deterministic.
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      callback(0)
+      return 0
+    })
+
     const controller = createSessionController({
       ...createOptions('local:history-replay'),
       claudeSessionId: 'claude-history',
@@ -301,6 +308,7 @@ describe('SessionController', () => {
     const notificationsAfterFirstEntry = notifications
     controller.ingestLine(line)
     unsubscribe()
+    vi.unstubAllGlobals()
 
     expect(notificationsAfterFirstEntry).toBe(1)
     expect(notifications).toBe(notificationsAfterFirstEntry)
