@@ -17,6 +17,7 @@ import {
   formatConversationDuration,
 } from './conversation-rows'
 import { parseFailureMessage } from './failure-info'
+import { FileChangesCard } from './file-changes-card'
 import { HistoricalMessageEditor, type MessageEditConfig } from './historical-message-editor'
 import { AgentMessageActions } from './message-actions'
 import { ModelSwitchDivider } from './model-switch-divider'
@@ -257,6 +258,7 @@ function estimateConversationRowSize(row: ConversationRow) {
   if (row.kind === 'compaction') return 40
   if (row.kind === 'model-switch') return 76
   if (row.kind === 'error-card') return 96
+  if (row.kind === 'file-changes') return 44 + row.files.length * 36
   if (row.kind === 'work-run') {
     return row.isExpanded ? 32 + row.items.length * 96 : 32
   }
@@ -458,6 +460,14 @@ function ConversationRowContent({
     return (
       <div className={cn('px-3 pb-1', hasTopPadding && 'pt-2')}>
         <MarkdownRenderer content={row.item.text} isStreaming={row.isStreaming} />
+      </div>
+    )
+  }
+
+  if (row.kind === 'file-changes') {
+    return (
+      <div className="px-3 pt-3 pb-1">
+        <FileChangesCard files={row.files} projectPath={projectPath} />
       </div>
     )
   }

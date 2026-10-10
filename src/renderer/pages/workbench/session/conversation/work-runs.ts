@@ -47,7 +47,7 @@ const COMMAND_TOOL_NAMES = new Set([
   'PowerShellTool',
 ])
 const READ_TOOL_NAMES = new Set(['Read', 'FileReadTool', 'ReadCoalesced'])
-const EDIT_TOOL_NAMES = new Set(['Edit', 'FileEditTool', 'Write', 'FileWriteTool'])
+export const EDIT_TOOL_NAMES = new Set(['Edit', 'FileEditTool', 'Write', 'FileWriteTool'])
 const SEARCH_TOOL_NAMES = new Set(['Glob', 'GlobTool', 'Grep', 'GrepTool'])
 const WEB_TOOL_NAMES = new Set(['WebFetch', 'WebFetchTool', 'WebSearch', 'WebSearchTool'])
 const AGENT_TOOL_NAMES = new Set(['Agent', 'AgentTool', 'Task'])

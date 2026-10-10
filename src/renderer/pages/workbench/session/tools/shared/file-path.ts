@@ -36,6 +36,12 @@ export function formatDisplayPath(path: string, projectPath?: string): string {
   return compactDisplayPath(relativeProjectPath(path, projectPath))
 }
 
+/** Full project-relative path with normalized separators; no middle compaction. */
+export function relativeDisplayPath(path: string, projectPath?: string): string {
+  if (!path) return ''
+  return normalizePathSeparators(relativeProjectPath(path, projectPath))
+}
+
 function normalizePathSeparators(path: string): string {
   return path.replace(/\\/g, '/')
 }

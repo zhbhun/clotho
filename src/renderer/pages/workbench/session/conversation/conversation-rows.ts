@@ -2,6 +2,8 @@ import type { TFunction } from 'i18next'
 
 import type { ClaudeToolRequest } from '../../../../services/claude/claude'
 import type { ClaudeMessage } from '../services/message'
+import type { TurnFileChange } from './file-changes'
+import { summarizeTurnFileChanges } from './file-changes'
 import { type TurnTerminalStatus, isTimelineToolRunning } from './tool-state'
 import type { ConversationTimelineItem, ConversationTurn } from './types'
 import { groupWorkRuns } from './work-runs'
@@ -87,6 +89,13 @@ export type ConversationRow =
       kind: 'model-switch'
       timestamp?: string
       toModel: string
+      turnId: string
+    }
+  | {
+      /** Turn-end summary card listing the files the turn's edits touched. */
+      files: TurnFileChange[]
+      key: string
+      kind: 'file-changes'
       turnId: string
     }
   | {
@@ -446,6 +455,18 @@ export function buildConversationRows(options: {
             turnId,
           })
         }
+      }
+
+      // Turn-end record of edited files: only once the turn settles, so the
+      // card reflects the turn's final set of changes.
+      const fileChanges = isStreaming ? [] : summarizeTurnFileChanges(turn.timelineItems)
+      if (fileChanges.length > 0) {
+        rows.push({
+          files: fileChanges,
+          key: `turn:${turnId}:file-changes`,
+          kind: 'file-changes',
+          turnId,
+        })
       }
 
       if (!isStreaming && finalTextItem) {
