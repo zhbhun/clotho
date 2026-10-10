@@ -196,6 +196,34 @@ describe('buildConversationRows', () => {
     })
   })
 
+  it('opens a fresh turn with a processing status row above the Thinking placeholder', () => {
+    const pendingTurn = turn('user-1', [])
+    pendingTurn.userMessage.timestamp = '2026-08-28T10:00:00.000Z'
+
+    const rows = buildConversationRows({
+      expandedTurns: {},
+      interruptedTurnIds: new Set(),
+      isStreaming: true,
+      lastSentTurnId: 'user-1',
+      streamingElapsed: 0,
+      turns: [pendingTurn],
+      formatDuration: (seconds) => `${seconds}s`,
+    })
+
+    expect(rows.map((row) => row.kind)).toEqual(['user', 'status', 'thinking'])
+    expect(rows[1]).toMatchObject({
+      canToggle: false,
+      duration: expect.stringMatching(/^\d+s$/),
+      isExpanded: false,
+      isLast: false,
+      key: 'turn:user-1:status',
+      kind: 'status',
+      status: 'processing',
+      turnId: 'user-1',
+    })
+    expect(rows[2]).toMatchObject({ key: 'turn:user-1:thinking', placement: 'standalone' })
+  })
+
   it('does not show a transient Thinking row when a stop is already visible', () => {
     const rows = buildConversationRows({
       expandedTurns: {},

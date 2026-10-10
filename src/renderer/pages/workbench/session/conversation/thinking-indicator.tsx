@@ -4,8 +4,8 @@ import { ShinyText } from '../../../../components/shiny-text'
 
 /**
  * Waiting-for-the-model row: a static brain glyph next to shining "Thinking…".
- * The glyph presumes visible work above (the Working line); before any work has
- * appeared the plain shining text stands alone.
+ * The glyph presumes visible work above (the Working line); the subagent view
+ * has no such line, so its placeholder passes hasIcon={false}.
  */
 export function ThinkingIndicator({ hasIcon = true }: { hasIcon?: boolean }) {
   return (

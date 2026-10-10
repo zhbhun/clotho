@@ -176,6 +176,9 @@ export class TurnStreamService {
         confirmation.optimisticMessageId,
         message,
       )
+      // The Working-for status row is already visible before the first agent
+      // frame, so the elapsed ticker must run from the history confirmation.
+      this.startTimer()
       return false
     }
 

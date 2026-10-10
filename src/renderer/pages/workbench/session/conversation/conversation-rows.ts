@@ -483,6 +483,22 @@ export function buildConversationRows(options: {
     // A stop/failure marker can arrive before the streaming flag is cleared. Do not render
     // the transient Thinking placeholder alongside a terminal status during that handoff.
     if (isStreaming && !turnTerminalStatus && !turn.timelineItems.length) {
+      // First agent frame still pending: the Working-for timer runs from the
+      // send moment while the Thinking placeholder holds the turn's tail.
+      rows.push({
+        canToggle: false,
+        duration: durationLabel(
+          turn,
+          isStreaming,
+          options.formatDuration ?? formatConversationDuration,
+        ),
+        isExpanded: false,
+        isLast: false,
+        key: `turn:${turnId}:status`,
+        kind: 'status',
+        status: 'processing',
+        turnId,
+      })
       rows.push({
         key: `turn:${turnId}:thinking`,
         kind: 'thinking',
