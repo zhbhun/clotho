@@ -1269,6 +1269,61 @@ describe('PromptMarkdownEditor', () => {
     })
   })
 
+  it('keeps file references through copy and paste inside the editor', async () => {
+    const changes: string[] = []
+    const reference = '123 @src/renderer/styles/sidebar.css#1-24 123'
+
+    render(
+      <TooltipProvider>
+        <PromptMarkdownEditor
+          value=""
+          onChange={(value) => changes.push(value)}
+          onSubmit={() => {}}
+        />
+      </TooltipProvider>,
+    )
+
+    const editor = screen.getByRole('textbox', { name: 'Prompt' })
+
+    editor.focus()
+    // Flush the mount-time value-restoration microtask so it cannot race the paste.
+    await act(async () => {})
+    pasteText(editor, reference)
+    await screen.findByLabelText('sidebar.css: src/renderer/styles/sidebar.css')
+
+    const range = document.createRange()
+    range.selectNodeContents(editor.querySelector('p') as Node)
+    const selection = document.getSelection()
+    selection?.removeAllRanges()
+    selection?.addRange(range)
+    fireEvent(document, new Event('selectionchange'))
+
+    const clipboard: Record<string, string> = {}
+    fireEvent.copy(editor, {
+      clipboardData: {
+        clearData: () => {},
+        setData: (type: string, value: string) => {
+          clipboard[type] = value
+        },
+      },
+    })
+
+    expect(clipboard['text/plain']).toBe(reference)
+
+    fireEvent.paste(editor, {
+      clipboardData: {
+        getData: (type: string) => clipboard[type] ?? '',
+      },
+    })
+
+    expect(
+      await screen.findByLabelText('sidebar.css: src/renderer/styles/sidebar.css'),
+    ).toBeInTheDocument()
+    await waitFor(() => {
+      expect(changes.at(-1)).toBe(reference)
+    })
+  })
+
   it('does not reopen file completions when the cursor moves back into a path', async () => {
     const user = userEvent.setup()
 

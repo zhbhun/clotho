@@ -158,6 +158,11 @@ export function PromptMarkdownEditor({
           }
           return false
         },
+        clipboardTextSerializer(slice) {
+          // Chips ride along as their markdown form, so editor-internal
+          // copy-paste keeps the reference and other apps receive the text.
+          return promptDocToMarkdown({ type: 'doc', content: slice.content.toJSON() })
+        },
         handlePaste(view, event) {
           const clipboard = event.clipboardData
           const files = clipboard?.files

@@ -1,4 +1,4 @@
-import { type JSONContent, Node, mergeAttributes } from '@tiptap/core'
+import { type JSONContent, Node } from '@tiptap/core'
 import { type NodeViewProps, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
 import { File, FileCode, FileText, ImageIcon, X } from 'lucide-react'
 import { useState } from 'react'
@@ -225,15 +225,25 @@ export const FileMention = Node.create({
   },
 
   parseHTML() {
-    return [{ tag: 'span[data-file-mention]' }]
+    return [
+      {
+        tag: 'span[data-file-mention]',
+        getAttrs: (element) => {
+          const reference = fileReferenceFromPath(element.getAttribute('data-mention-path') ?? '')
+          return { ...reference, lineHint: element.getAttribute('data-mention-line-hint') ?? '' }
+        },
+      },
+    ]
   },
 
-  renderHTML({ HTMLAttributes }) {
+  renderHTML({ node }) {
     return [
       'span',
-      mergeAttributes(HTMLAttributes, {
+      {
         'data-file-mention': '',
-      }),
+        'data-mention-path': node.attrs.path,
+        'data-mention-line-hint': node.attrs.lineHint ?? '',
+      },
     ]
   },
 
