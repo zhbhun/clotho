@@ -8,6 +8,10 @@ type ActiveMessageEdit = {
   sessionId: string
 }
 
+function isMissingCheckpoint(error: string | undefined) {
+  return typeof error === 'string' && /no file checkpoint/i.test(error)
+}
+
 export class MessageEditService {
   private readonly controller: SessionController
   private activeEdit: ActiveMessageEdit | undefined
@@ -115,13 +119,18 @@ export class MessageEditService {
       if (!this.isCurrent(operation, draft)) {
         throw new Error('The historical edit is no longer active')
       }
-      if (!preview.canRewind) {
+      if (!preview.canRewind && !isMissingCheckpoint(preview.error)) {
         throw new Error(preview.error || 'No file checkpoint is available for this message')
       }
+      // A message copied into a forked session (or sent before checkpointing
+      // was enabled) has no recorded file state; the CLI reports that as a
+      // failed rewind instead of an empty diff. Nothing can be restored, so
+      // the edit goes ahead on the current files.
       const hasFileChanges =
-        Boolean(preview.filesChanged?.length) ||
-        Boolean(preview.insertions) ||
-        Boolean(preview.deletions)
+        preview.canRewind &&
+        (Boolean(preview.filesChanged?.length) ||
+          Boolean(preview.insertions) ||
+          Boolean(preview.deletions))
       if (hasFileChanges) {
         return {
           status: 'confirm',

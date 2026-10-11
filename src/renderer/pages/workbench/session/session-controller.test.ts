@@ -3539,11 +3539,53 @@ describe('SessionController', () => {
     )
   })
 
-  it('reports a checkpoint preview failure without sending the edit', async () => {
+  it('sends the edited message without rewinding when no file checkpoint exists', async () => {
+    const client = createClient()
+    const successful = createSuccessfulStream()
+    client.rebuildSessionStream.mockReturnValue(successful.stream as never)
+    client.rewindSessionFiles.mockResolvedValue({
+      canRewind: false,
+      error: 'No file checkpoint found for this message.',
+    })
+    const store = trackedStore({
+      ...createOptions('local:historical-no-checkpoint'),
+      claudeSessionId: 'same-session',
+      client,
+    })
+    store.getState().commitUserMessage({
+      id: 'user-local-id',
+      uuid: 'target-user-uuid',
+      role: 'user',
+      content: 'Original prompt',
+    })
+    const { prepareMessageEdit } = store.getState()
+
+    await expect(
+      prepareMessageEdit?.({
+        messageId: 'user-local-id',
+        messageUuid: 'target-user-uuid',
+        prompt: 'Edited prompt',
+        providerId: 'zhipu',
+        modelId: 'glm-5.2',
+        permissionMode: 'bypassPermissions',
+      }),
+    ).resolves.toEqual({ status: 'sent' })
+    expect(client.rewindSessionFiles).toHaveBeenCalledTimes(1)
+    expect(client.rewindSessionFiles).toHaveBeenLastCalledWith({
+      sessionId: 'same-session',
+      projectId: 'project-1',
+      userMessageId: 'target-user-uuid',
+      dryRun: true,
+    })
+    expect(client.rebuildSessionStream).toHaveBeenCalled()
+    expect(store.getState().runtimeError).toBeNull()
+  })
+
+  it('reports a rewind failure without sending the edit', async () => {
     const client = createClient()
     client.rewindSessionFiles.mockResolvedValue({
       canRewind: false,
-      error: 'No file checkpoint found',
+      error: 'File rewinding is not enabled.',
     })
     const store = trackedStore({
       ...createOptions('local:historical-error'),
@@ -3570,7 +3612,7 @@ describe('SessionController', () => {
     ).resolves.toEqual({ status: 'error' })
     expect(store.getState().runtimeError).toEqual({
       kind: 'message-edit',
-      message: 'No file checkpoint found',
+      message: 'File rewinding is not enabled.',
     })
     expect(client.rebuildSessionStream).not.toHaveBeenCalled()
   })
