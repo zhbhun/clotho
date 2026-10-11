@@ -1,8 +1,16 @@
-import { act, render, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, waitFor } from '@testing-library/react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 
 import { MarkdownRenderer } from './markdown-renderer'
+
+const desktopClientMocks = vi.hoisted(() => ({
+  requestFromDesktop: vi.fn(async () => ({ opened: true })),
+}))
+
+vi.mock('../services/desktop/client', () => ({
+  requestFromDesktop: desktopClientMocks.requestFromDesktop,
+}))
 
 const shikiMocks = vi.hoisted(() => ({
   codeToHtml: vi.fn(async (code: string) => {
@@ -93,5 +101,44 @@ describe('MarkdownRenderer', () => {
     expect(container.textContent).toContain('One.')
     expect(container.textContent).not.toContain('Two.')
     vi.unstubAllGlobals()
+  })
+
+  it('routes link clicks through the desktop with the raw href and project root', () => {
+    const { container } = render(
+      <MarkdownRenderer
+        content={'[store](src/chatPreviewStore.ts)'}
+        projectPath="/workspace/proj"
+      />,
+    )
+
+    fireEvent.click(container.querySelector('a')!)
+
+    expect(desktopClientMocks.requestFromDesktop).toHaveBeenCalledWith('appOpenLink', {
+      href: 'src/chatPreviewStore.ts',
+      projectPath: '/workspace/proj',
+    })
+  })
+
+  it('opens absolute web links through the desktop as well', () => {
+    const { container } = render(
+      <MarkdownRenderer content={'[docs](https://example.com)'} projectPath="/workspace/proj" />,
+    )
+
+    fireEvent.click(container.querySelector('a')!)
+
+    expect(desktopClientMocks.requestFromDesktop).toHaveBeenCalledWith('appOpenLink', {
+      href: 'https://example.com',
+      projectPath: '/workspace/proj',
+    })
+  })
+
+  it('leaves same-page fragment links alone', () => {
+    const { container } = render(
+      <MarkdownRenderer content={'[top](#top)'} projectPath="/workspace/proj" />,
+    )
+
+    fireEvent.click(container.querySelector('a')!)
+
+    expect(desktopClientMocks.requestFromDesktop).not.toHaveBeenCalled()
   })
 })

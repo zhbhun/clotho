@@ -2,7 +2,10 @@ import DOMPurify from 'dompurify'
 import { marked } from 'marked'
 import morphdom from 'morphdom'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import type { MouseEvent } from 'react'
 import { bundledLanguagesInfo, codeToHtml } from 'shiki/bundle/web'
+
+import { requestFromDesktop } from '../services/desktop/client'
 
 // Dual-theme output: token colors are written to --shiki-light / --shiki-dark variables and switched by CSS.
 const shikiThemes = { light: 'github-light-default', dark: 'github-dark-default' } as const
@@ -101,11 +104,28 @@ function prefersReducedMotion() {
 export function MarkdownRenderer({
   content,
   isStreaming,
+  projectPath,
 }: {
   content: string
   isStreaming?: boolean
+  projectPath?: string
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // Route link clicks through the main process with the raw href intact: the
+  // navigation guard only sees resolved URLs, which lose relative paths.
+  const handleLinkClick = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      const anchor = (event.target as HTMLElement).closest('a')
+      if (!anchor) return
+      const href = anchor.getAttribute('href')
+      if (!href || href.startsWith('#') || !projectPath) return
+      event.preventDefault()
+      void requestFromDesktop('appOpenLink', { href, projectPath }).catch(() => undefined)
+    },
+    [projectPath],
+  )
+
   const [initialHtml] = useState(() => renderMarkdown(content, isStreaming))
   const [ready, setReady] = useState(false)
   const [revealedLength, setRevealedLength] = useState(content.length)
@@ -195,6 +215,7 @@ export function MarkdownRenderer({
     <div
       className="markdown-body max-w-none select-text"
       dangerouslySetInnerHTML={{ __html: initialHtml }}
+      onClick={handleLinkClick}
       ref={containerRef}
     />
   )

@@ -246,7 +246,11 @@ export function TimelineEntry({
         />
       ) : item.kind === 'text' ? (
         <div className="assistant-summary min-w-0 leading-6 text-foreground">
-          <MarkdownRenderer content={item.text} isStreaming={isStreaming} />
+          <MarkdownRenderer
+            content={item.text}
+            isStreaming={isStreaming}
+            projectPath={projectPath}
+          />
         </div>
       ) : null}
     </TimelineRow>

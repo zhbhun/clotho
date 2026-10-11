@@ -866,6 +866,10 @@ export type DesktopRPC = {
         params: { preferences: AppPreferences }
         response: AppPreferences
       }
+      appOpenLink: {
+        params: { href: string; projectPath: string }
+        response: { opened: boolean }
+      }
       claudeAddProjectFromFolder: {
         params: Record<string, never>
         response: ClaudeProject | null

@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
@@ -20,6 +21,7 @@ import { projectIdFromPath } from './claude/sessions'
 import { createSettingsStore, defaultSettings, readSettings } from './claude/settings'
 import { textEditMenuItems } from './context-menu'
 import { setDialogOwnerWindow } from './dialogs'
+import { attachExternalNavigation } from './external-navigation'
 import { createFatalErrorHandler, installGlobalErrorHandlers } from './logging/global-errors'
 import { wrapRequestHandlers } from './logging/rpc'
 import {
@@ -31,6 +33,7 @@ import {
 import { DEV_SERVER_URL, getMainViewTarget } from './main-view-url'
 import { menuLabels } from './menu-labels'
 import { applyNativeAppearance } from './native-appearance'
+import { openLink } from './open-link'
 import { saveImage } from './save-image'
 import { createSessionStorage } from './session-storage'
 import { createShortcutStore, readShortcutOverrides } from './shortcuts'
@@ -220,6 +223,14 @@ export async function bootstrap() {
         Menu.buildFromTemplate(items).popup({ window: mainWindow })
       }
     })
+    attachExternalNavigation(mainWindowWebview, target, (url) => {
+      shell.openExternal(url).catch((caught) => {
+        appLogger.error('external_open.failed', 'Failed to open an external link', {
+          error: caught,
+          context: { url },
+        })
+      })
+    })
 
     const service = createClaudeDesktopService(
       {
@@ -269,6 +280,22 @@ export async function bootstrap() {
           applyNativeAppearance(saved.appearance.theme)
           return saved
         },
+        appOpenLink: (params) =>
+          openLink(params, {
+            openExternal: (url) => shell.openExternal(url),
+            showItemInFolder: (filePath) => shell.showItemInFolder(filePath),
+            pathExists: (filePath) =>
+              fs.promises.stat(filePath).then(
+                () => true,
+                () => false,
+              ),
+          }).catch((caught) => {
+            appLogger.error('link_open.failed', 'Failed to open a link', {
+              error: caught,
+              context: { href: params.href },
+            })
+            return { opened: false }
+          }),
         claudeStartup: (params) => service.startup(params),
         claudeQueryControl: (params) => service.controlQuery(params),
         claudeSessionQueryEnsure: (params) => service.sessionQueryEnsure(params),

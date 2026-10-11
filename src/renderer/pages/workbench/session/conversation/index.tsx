@@ -463,7 +463,11 @@ function ConversationRowContent({
   if (row.kind === 'text') {
     return (
       <div className={cn('px-3 pb-1', hasTopPadding && 'pt-2')}>
-        <MarkdownRenderer content={row.item.text} isStreaming={row.isStreaming} />
+        <MarkdownRenderer
+          content={row.item.text}
+          isStreaming={row.isStreaming}
+          projectPath={projectPath}
+        />
       </div>
     )
   }
