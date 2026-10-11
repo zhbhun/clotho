@@ -71,8 +71,8 @@ export const DEFAULT_APP_PREFERENCES: AppPreferences = {
     themePalettes: {
       dark: {
         accent: '#f5f5f5',
-        background: '#0a0a0a',
-        foreground: '#f5f5f5',
+        background: '#161513',
+        foreground: '#eae7de',
         preset: 'clotho',
       },
       light: {

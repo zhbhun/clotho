@@ -8,11 +8,13 @@ export function createStartupThemePreload(appearance: AppAppearancePreferences) 
         accent: appearance.themePalettes.dark.accent,
         background: appearance.themePalettes.dark.background,
         foreground: appearance.themePalettes.dark.foreground,
+        preset: appearance.themePalettes.dark.preset,
       },
       light: {
         accent: appearance.themePalettes.light.accent,
         background: appearance.themePalettes.light.background,
         foreground: appearance.themePalettes.light.foreground,
+        preset: appearance.themePalettes.light.preset,
       },
     },
   }
@@ -28,9 +30,14 @@ export function createStartupThemePreload(appearance: AppAppearancePreferences) 
       if (!root) return false
       root.classList.remove('light', 'dark')
       root.classList.add(resolvedTheme)
-      root.style.setProperty('--primary', palette.accent)
-      root.style.setProperty('--background', palette.background)
-      root.style.setProperty('--foreground', palette.foreground)
+      // The stylesheet owns the colors for the clotho preset (it derives the
+      // full scale from its anchors); overriding them inline would freeze the
+      // palette of settings written before a preset update.
+      if (palette.preset !== 'clotho') {
+        root.style.setProperty('--primary', palette.accent)
+        root.style.setProperty('--background', palette.background)
+        root.style.setProperty('--foreground', palette.foreground)
+      }
       return true
     }
     if (!applyTheme()) {

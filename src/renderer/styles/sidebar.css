@@ -8,7 +8,8 @@
 }
 
 .dark .app-sidebar-layout {
-  --sidebar: color-mix(in srgb, var(--background), var(--color-black) 30%);
+  /* 10% keeps the rail just below the near-black canvas without vanishing. */
+  --sidebar: color-mix(in srgb, var(--background), var(--color-black) 10%);
   --sidebar-separation-shadow: inset -4px 0 12px
     color-mix(in oklab, var(--color-neutral-950) 22%, transparent);
 }

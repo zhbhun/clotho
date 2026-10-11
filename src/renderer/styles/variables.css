@@ -149,8 +149,11 @@
 
 .dark {
   /* shadcn semantic colors */
-  --background: var(--color-neutral-950);
-  --foreground: var(--color-neutral-100);
+  /* Near-black anchors (#161513 ≈ oklch(19.5% 0.005 70)): black with only a
+     trace of warmth, kept above void-level luminance; chrome stays neutral and
+     color lives in content (code, icons, status). */
+  --background: #161513;
+  --foreground: #eae7de;
   --card: color-mix(in srgb, var(--background), var(--color-white) 5.3061%);
   --card-foreground: var(--foreground);
   --popover: var(--card);

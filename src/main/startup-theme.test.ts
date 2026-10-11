@@ -45,6 +45,18 @@ describe('startup theme preload', () => {
     window.eval(createStartupThemePreload(DEFAULT_APP_PREFERENCES.appearance))
 
     expect(document.documentElement.classList.contains('dark')).toBe(true)
-    expect(document.documentElement.style.getPropertyValue('--background')).toBe('#0a0a0a')
+  })
+
+  it('leaves clotho-preset colors to the stylesheet', () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({ matches: true })),
+    )
+
+    window.eval(createStartupThemePreload(DEFAULT_APP_PREFERENCES.appearance))
+
+    expect(document.documentElement.style.getPropertyValue('--background')).toBe('')
+    expect(document.documentElement.style.getPropertyValue('--foreground')).toBe('')
+    expect(document.documentElement.style.getPropertyValue('--primary')).toBe('')
   })
 })
