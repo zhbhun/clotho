@@ -210,8 +210,8 @@ export function ProjectSettings({
     <>
       <section className="flex flex-col gap-3">
         {sortedProjects.length > 0 ? (
-          <div className="flex min-h-8 items-center justify-end">
-            <Button size="lg" type="button" variant="outline" onClick={onCreateProject}>
+          <div className="flex min-h-7 items-center justify-end">
+            <Button type="button" variant="outline" onClick={onCreateProject}>
               <Plus data-icon="inline-start" />
               {t('settings.project.add')}
             </Button>

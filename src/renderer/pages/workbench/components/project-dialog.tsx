@@ -196,7 +196,7 @@ export function ProjectDialog({
             <Field data-invalid={Boolean(pathError)}>
               <FieldLabel>{t('project.path')}</FieldLabel>
               {isEditing ? (
-                <div className="flex h-8 items-center gap-3.5 rounded-md border border-input bg-input/20 px-2 dark:bg-input/30">
+                <div className="flex h-7 items-center gap-3.5 rounded-md border border-input bg-input/20 px-2 dark:bg-input/30">
                   <FolderRoot
                     className="size-3.5 shrink-0 text-foreground-subtlest"
                     strokeWidth={1.5}
@@ -210,7 +210,7 @@ export function ProjectDialog({
                 <Button
                   aria-label={t('project.selectFolder')}
                   aria-invalid={Boolean(pathError)}
-                  className="h-8 w-full justify-start gap-3.5 border-input bg-input/20 px-2 hover:bg-input dark:hover:bg-input"
+                  className="h-7 w-full justify-start gap-3.5 border-input bg-input/20 px-2 hover:bg-input dark:hover:bg-input"
                   disabled={isSaving}
                   type="button"
                   variant="outline"

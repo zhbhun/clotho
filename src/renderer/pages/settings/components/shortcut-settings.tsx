@@ -220,7 +220,6 @@ export function ShortcutSettings({ isActive = true }: { isActive?: boolean } = {
           </InputGroup>
           <Button
             disabled={!hasOverrides || isResetting}
-            size="lg"
             type="button"
             variant="outline"
             onClick={() => void handleResetAll()}
