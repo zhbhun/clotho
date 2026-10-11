@@ -42,7 +42,7 @@ function remainingText(window: ProviderUsageWindow): string {
   return `${remaining}%`
 }
 
-/** Ring geometry: outermost = longest period, matching the RING_PERIOD_HOURS order. */
+/** Ring geometry: outermost = shortest period, matching the RING_PERIOD_HOURS order. */
 const RING_RADII = [7, 4.5, 2]
 const RING_STROKE_WIDTH = 2
 
@@ -53,12 +53,12 @@ const RING_PERIOD_HOURS: Record<string, number> = {
   fiveHour: 5,
 }
 
-/** Percentage windows for the rings, longest period first, at most one per ring. */
+/** Percentage windows for the rings, shortest period first, at most one per ring. */
 function ringWindows(quota: ProviderUsageQuota): ProviderUsageWindow[] {
   const windows = Array.isArray(quota.windows) ? quota.windows : []
   return windows
     .filter((window) => window.name !== 'balance' && window.utilization !== undefined)
-    .sort((a, b) => (RING_PERIOD_HOURS[b.name] ?? 0) - (RING_PERIOD_HOURS[a.name] ?? 0))
+    .sort((a, b) => (RING_PERIOD_HOURS[a.name] ?? 0) - (RING_PERIOD_HOURS[b.name] ?? 0))
     .slice(0, RING_RADII.length)
 }
 
@@ -110,8 +110,8 @@ function UsageWindowsSummary({ windows }: { windows: ProviderUsageWindow[] }) {
 
 /**
  * Remaining quota as concentric rings for tight surfaces (the model menu's
- * provider headings): the outermost ring is the longest period (monthly >
- * weekly > five-hour), inner rings the shorter ones, at most three. A ring's
+ * provider headings): the outermost ring is the shortest period (five-hour >
+ * weekly > monthly), inner rings the longer ones, at most three. A ring's
  * arc fills with the window's remaining share; balance windows carry no
  * percentage and are skipped. Hover shows the per-window reset times.
  */
@@ -160,8 +160,8 @@ export function ProviderUsageRings({ quota }: { quota: ProviderUsageQuota | unde
         </svg>
       </TooltipTrigger>
       <TooltipContent className="max-w-none flex-col items-start gap-0.5">
-        {/* Rings nest longest-first; the tooltip lists the shortest period on top. */}
-        {[...windows].reverse().map((window, index) => (
+        {/* Windows are shortest-first; the tooltip keeps the shortest period on top. */}
+        {windows.map((window, index) => (
           <WindowDetail key={window.name ?? index} language={i18n.language} window={window} />
         ))}
       </TooltipContent>
