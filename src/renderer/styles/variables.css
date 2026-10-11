@@ -149,26 +149,28 @@
 
 .dark {
   /* shadcn semantic colors */
-  /* Near-black anchors (#161513 ≈ oklch(19.5% 0.005 70)): black with only a
-     trace of warmth, kept above void-level luminance; chrome stays neutral and
-     color lives in content (code, icons, status). */
-  --background: #161513;
-  --foreground: #eae7de;
-  --card: color-mix(in srgb, var(--background), var(--color-white) 5.3061%);
+  /* Reference-matched dark canvas: pure neutral (R=G=B) at the reference's
+     lightness. Warm and cool whispers both read as casts here, so the gray
+     carries no hue at all. */
+  --background: #1c1c1c;
+  --foreground: var(--color-neutral-100);
+  --card: color-mix(in srgb, var(--background), var(--color-white) 2.5%);
   --card-foreground: var(--foreground);
   --popover: var(--card);
   --popover-foreground: var(--foreground);
   --primary: var(--color-neutral-100);
   --primary-foreground: color-mix(in oklab, var(--background), var(--foreground) 7.2727%);
-  --secondary: color-mix(in srgb, var(--background), var(--color-white) 11.4286%);
+  /* White lifts mirror the reference: surfaces hover a few percent above the
+     canvas, so panels read as a whisper of elevation instead of bright slabs. */
+  --secondary: color-mix(in srgb, var(--background), var(--color-white) 4.5%);
   --secondary-foreground: var(--foreground);
   --muted: var(--secondary);
   --muted-foreground: var(--foreground-subtlest);
-  --accent: color-mix(in srgb, var(--background), var(--color-white) 14.5%);
+  --accent: color-mix(in srgb, var(--background), var(--color-white) 6%);
   --accent-foreground: color-mix(in oklab, var(--foreground), var(--color-white) 50%);
   --destructive: oklch(0.704 0.191 22.216);
   --border: var(--secondary);
-  --input: color-mix(in srgb, var(--background), var(--color-white) 22.0408%);
+  --input: color-mix(in srgb, var(--background), var(--color-white) 10%);
   --ring: var(--foreground);
   --chart-1: color-mix(in oklab, var(--background), var(--foreground) 87.8788%);
   --chart-2: color-mix(in oklab, var(--background), var(--foreground) 49.8182%);
@@ -216,7 +218,7 @@
   --project-icon-purple: var(--color-purple-400);
   --project-icon-pink: var(--color-pink-400);
   --project-icon-cyan: var(--color-cyan-400);
-  --project-switcher-surface: color-mix(in srgb, var(--background), var(--color-white) 3%);
-  --session-tab-surface: color-mix(in srgb, var(--background), var(--color-white) 7.7551%);
+  --project-switcher-surface: color-mix(in srgb, var(--background), var(--color-white) 2%);
+  --session-tab-surface: color-mix(in srgb, var(--background), var(--color-white) 3%);
   --sidebar-active: var(--sidebar-accent);
 }

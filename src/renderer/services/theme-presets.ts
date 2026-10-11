@@ -34,8 +34,8 @@ export const THEME_PRESETS: Record<ThemeVariant, readonly ThemePreset[]> = {
       id: 'clotho',
       name: 'Clotho',
       accent: '#f5f5f5',
-      background: '#161513',
-      foreground: '#eae7de',
+      background: '#1c1c1c',
+      foreground: '#f5f5f5',
     },
     {
       id: 'dracula',
@@ -122,8 +122,8 @@ export const THEME_PRESETS: Record<ThemeVariant, readonly ThemePreset[]> = {
 export const DEFAULT_THEME_PALETTES: ThemePalettes = {
   dark: {
     accent: '#f5f5f5',
-    background: '#161513',
-    foreground: '#eae7de',
+    background: '#1c1c1c',
+    foreground: '#f5f5f5',
     preset: 'clotho',
   },
   light: {
