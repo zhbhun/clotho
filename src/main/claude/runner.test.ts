@@ -286,6 +286,66 @@ describe('Claude SDK runner', () => {
     expect(close).toHaveBeenCalledOnce()
   })
 
+  it('waits for the rewind child process to exit before resolving', async () => {
+    let finishRewind!: () => void
+    let finishExit!: () => void
+    const exited = new Promise<void>((resolve) => {
+      finishExit = resolve
+    })
+    const spawn = vi.fn()
+    const processSpy = vi.spyOn(queryProcessApi, 'createQueryProcess').mockReturnValueOnce({
+      spawn,
+      waitForExit: () => exited,
+      stderr: () => '',
+    })
+    try {
+      const rewindFiles = vi.fn(
+        () =>
+          new Promise<{ canRewind: boolean }>((resolve) => {
+            finishRewind = () => resolve({ canRewind: false })
+          }),
+      )
+      const close = vi.fn()
+      vi.mocked(sdkQuery).mockReturnValue(
+        createMockQuery([], { close, initializationResult: {}, rewindFiles }) as never,
+      )
+
+      let isDone = false
+      const running = runnerApi
+        .rewindSessionFiles({
+          cwd: '/tmp/app',
+          sessionId: 'same-session',
+          userMessageId: 'target-user-uuid',
+          dryRun: true,
+        })
+        .then(() => {
+          isDone = true
+        })
+
+      await vi.waitFor(() =>
+        expect(rewindFiles).toHaveBeenCalledWith('target-user-uuid', { dryRun: true }),
+      )
+      finishRewind()
+      await vi.waitFor(() => expect(close).toHaveBeenCalledOnce())
+      await Promise.resolve()
+      await Promise.resolve()
+      // The child process still holds the resumed session's lock; the next
+      // query for the same id must not start until it has exited.
+      expect(isDone).toBe(false)
+      finishExit()
+      await running
+      expect(isDone).toBe(true)
+      expect(sdkQuery).toHaveBeenCalledWith({
+        prompt: expect.any(Object),
+        options: expect.objectContaining({ spawnClaudeCodeProcess: spawn }),
+      })
+    } finally {
+      finishRewind()
+      finishExit()
+      processSpy.mockRestore()
+    }
+  })
+
   it('closes a historical rewind query when SDK initialization times out', async () => {
     vi.useFakeTimers()
     const close = vi.fn()

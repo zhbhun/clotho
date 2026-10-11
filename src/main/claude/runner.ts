@@ -372,14 +372,30 @@ function pendingPrompt(): AsyncIterable<never> {
   }
 }
 
+/**
+ * Finish a throwaway query the way closeQuery does: close() starts cleanup
+ * but discards its promise, and the child keeps a resumed session's lock
+ * until it exits — a follow-up query may already be resuming the same id.
+ */
+async function closeThrowawayQuery(sdk: Query, process: ReturnType<typeof createQueryProcess>) {
+  try {
+    sdk.close()
+    await sdk[Symbol.asyncDispose]?.()
+    await process.waitForExit()
+  } catch (caught) {
+    logger.error('query.close_failed', 'Failed to finish Claude query cleanup', { error: caught })
+  }
+}
+
 export async function startup({
   options,
   initializeTimeoutMs = 60_000,
 }: ClaudeStartupParams = {}): Promise<ClaudeInitializationResult> {
   const normalizedOptions = normalizeOptions(options)
+  const process = createQueryProcess()
   const sdk = sdkQuery({
     prompt: pendingPrompt(),
-    options: normalizedOptions,
+    options: { ...normalizedOptions, spawnClaudeCodeProcess: process.spawn },
   })
   let timeout: ReturnType<typeof setTimeout> | undefined
 
@@ -408,7 +424,7 @@ export async function startup({
     if (timeout) {
       clearTimeout(timeout)
     }
-    sdk.close()
+    await closeThrowawayQuery(sdk, process)
   }
 }
 
@@ -425,9 +441,13 @@ export async function rewindSessionFiles({
   dryRun?: boolean
   initializeTimeoutMs?: number
 }): Promise<RewindFilesResult> {
+  const process = createQueryProcess()
   const sdk = sdkQuery({
     prompt: pendingPrompt(),
-    options: normalizeOptions({ cwd, resume: sessionId }),
+    options: {
+      ...normalizeOptions({ cwd, resume: sessionId }),
+      spawnClaudeCodeProcess: process.spawn,
+    },
   })
   let timeout: ReturnType<typeof setTimeout> | undefined
 
@@ -443,7 +463,7 @@ export async function rewindSessionFiles({
     return await sdk.rewindFiles(userMessageId, { dryRun })
   } finally {
     if (timeout) clearTimeout(timeout)
-    sdk.close()
+    await closeThrowawayQuery(sdk, process)
   }
 }
 
@@ -456,9 +476,13 @@ export async function sampleSessionContextUsage(
   { cwd, sessionId, model, initializeTimeoutMs = 60_000 }: ClaudeSampleContextUsageParams,
   proxy?: ClaudeProxyConnection,
 ): Promise<ClaudeContextUsageSnapshot | null> {
+  const process = createQueryProcess()
   const sdk = sdkQuery({
     prompt: pendingPrompt(),
-    options: normalizeOptions({ cwd, resume: sessionId, model }, proxy),
+    options: {
+      ...normalizeOptions({ cwd, resume: sessionId, model }, proxy),
+      spawnClaudeCodeProcess: process.spawn,
+    },
   })
   let timeout: ReturnType<typeof setTimeout> | undefined
 
@@ -474,7 +498,7 @@ export async function sampleSessionContextUsage(
     return await sampleContextUsage(sdk)
   } finally {
     if (timeout) clearTimeout(timeout)
-    sdk.close()
+    await closeThrowawayQuery(sdk, process)
   }
 }
 
