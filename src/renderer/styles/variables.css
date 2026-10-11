@@ -170,7 +170,7 @@
   --accent-foreground: color-mix(in oklab, var(--foreground), var(--color-white) 50%);
   --destructive: oklch(0.704 0.191 22.216);
   --border: var(--secondary);
-  --input: color-mix(in srgb, var(--background), var(--color-white) 10%);
+  --input: color-mix(in srgb, var(--background), var(--color-white) 15%);
   --ring: var(--foreground);
   --chart-1: color-mix(in oklab, var(--background), var(--foreground) 87.8788%);
   --chart-2: color-mix(in oklab, var(--background), var(--foreground) 49.8182%);
