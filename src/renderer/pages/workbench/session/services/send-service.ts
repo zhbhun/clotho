@@ -108,6 +108,7 @@ export class SendService {
       controller,
       () => this.sendLifecycle,
       (event) => this.transition(event),
+      () => this.abandonStalledStream(),
     )
   }
 
@@ -486,6 +487,27 @@ export class SendService {
     }
   }
 
+  /**
+   * The query went silent past an API retry's deadline: its retry chain was
+   * killed (machine sleep, frozen connection) and no frame will ever arrive.
+   * Abandon the resident query so the next send rebuilds fresh, and settle the
+   * turn as a failure instead of streaming "Retrying..." forever.
+   */
+  private abandonStalledStream() {
+    if (this.stream) {
+      this.logger.error(
+        'query.stream_stalled',
+        'The Claude query went silent during an API retry',
+        {
+          error: new Error('No query frame arrived past the last API retry deadline'),
+        },
+      )
+      this.detachStream()
+      this.streamDied = true
+    }
+    void this.finishTurn(new Error('The API connection was lost while retrying the request'))
+  }
+
   private waitForTurnEnd(): Promise<void> {
     return new Promise((resolve) => {
       this.turnEndWaiters.push(resolve)
@@ -550,14 +572,15 @@ export class SendService {
         }
         // The cancelled pair stays in the transcript: the resident query's
         // context cannot be edited mid-flight, and the next rebuild purges it.
-        // A failed record write must not block the state reset below.
-        try {
-          await this.recalledInput.record(terminalEffect.snapshot, this.turnRestoreToComposer)
-        } catch (recordError) {
-          this.logger.error('recall.record_failed', 'Failed to persist the recalled input', {
-            error: recordError,
+        // The record write runs alongside the state reset below — the store
+        // updates inside are synchronous, only its persistence is async.
+        this.recalledInput
+          .record(terminalEffect.snapshot, this.turnRestoreToComposer)
+          .catch((recordError: unknown) => {
+            this.logger.error('recall.record_failed', 'Failed to persist the recalled input', {
+              error: recordError,
+            })
           })
-        }
         if (
           !terminalEffect.snapshot.messages.some(
             (message) => isUserPromptMessage(message) || message.role === 'assistant',

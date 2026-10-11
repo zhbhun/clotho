@@ -8,9 +8,24 @@ import {
   pendingSendSnapshot,
   sendLifecycleStartedAt,
 } from '../stores/send-lifecycle'
-import { type ClaudeMessage, claudeJsonToMessage, isUserPromptMessage } from './message'
+import {
+  type ClaudeMessage,
+  claudeJsonToMessage,
+  isUserPromptMessage,
+  parseApiRetry,
+} from './message'
 
 type Transition = (event: SendLifecycleEvent) => SendLifecycleEffect | undefined
+
+/**
+ * An API retry whose chain stays silent this long is dead — the machine slept
+ * through the backoff or the connection froze — and no further frame will ever
+ * arrive for it. Generous base so a live backoff (frames land every few
+ * seconds, delay-capped) never trips it.
+ */
+const API_RETRY_STALL_BASE_MS = 120_000
+/** Extra wait granted on top of the retry notice's own retry_delay_ms. */
+const API_RETRY_STALL_MARGIN_MS = 30_000
 
 function hasUserMessageUuid(line: string, expectedUuid?: string) {
   if (!expectedUuid) return false
@@ -95,16 +110,21 @@ export class TurnStreamService {
   private readonly controller: SessionController
   private readonly getLifecycle: () => SendLifecycle
   private readonly transition: Transition
+  /** Fired when the turn's latest API retry chain goes permanently silent. */
+  private readonly onStalledRetry?: () => void
   private timer: ReturnType<typeof setInterval> | null = null
+  private stallTimer: ReturnType<typeof setTimeout> | null = null
 
   constructor(
     controller: SessionController,
     getLifecycle: () => SendLifecycle,
     transition: Transition,
+    onStalledRetry?: () => void,
   ) {
     this.controller = controller
     this.getLifecycle = getLifecycle
     this.transition = transition
+    this.onStalledRetry = onStalledRetry
   }
 
   /**
@@ -166,6 +186,16 @@ export class TurnStreamService {
       suppressUntilRootUserHistory,
     })
 
+    // Any frame proves the query alive; an API retry notice arms a one-shot
+    // deadline past its own wait — silence beyond it means the retry chain
+    // died (sleep, frozen connection) and the turn must be settled instead of
+    // streaming "Retrying..." forever.
+    if (result.isApiRetry) {
+      this.armRetryStall(result.json ? parseApiRetry(result.json)?.retryDelayMs : undefined)
+    } else {
+      this.clearRetryStall()
+    }
+
     const hasConfirmedResponse =
       !result.wasSuppressed && (result.isAgentEvent || result.isLocalCommandResult)
     if (hasConfirmedResponse && pendingSend) {
@@ -204,9 +234,27 @@ export class TurnStreamService {
     return hasConfirmedResponse
   }
 
+  private armRetryStall(retryDelayMs?: number) {
+    this.clearRetryStall()
+    const wait = Math.max(API_RETRY_STALL_BASE_MS, (retryDelayMs ?? 0) + API_RETRY_STALL_MARGIN_MS)
+    this.stallTimer = setTimeout(() => {
+      this.stallTimer = null
+      if (this.getLifecycle().phase === 'idle') return
+      // A pending ask means the wait is on the user, not on a dead chain.
+      if (Object.keys(this.controller.runtimeStore.getState().pendingToolRequests).length) return
+      this.onStalledRetry?.()
+    }, wait)
+  }
+
+  private clearRetryStall() {
+    if (this.stallTimer) clearTimeout(this.stallTimer)
+    this.stallTimer = null
+  }
+
   stop() {
     if (this.timer) clearInterval(this.timer)
     this.timer = null
+    this.clearRetryStall()
     // The turn's final ingested state lands with the terminal transition, not
     // a frame later.
     this.controller.historyService.flushPendingPublish()
