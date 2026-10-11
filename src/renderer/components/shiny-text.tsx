@@ -22,7 +22,7 @@ interface ShinyTextProps {
 function ShinyText({
   text,
   disabled = false,
-  speed = 2,
+  speed = 1.5,
   className,
   color = 'color-mix(in oklab, var(--foreground-subtle), transparent 40%)',
   shineColor = 'var(--foreground)',
@@ -30,7 +30,7 @@ function ShinyText({
   yoyo = false,
   pauseOnHover = false,
   direction = 'left',
-  delay = 1,
+  delay = 0.5,
 }: ShinyTextProps) {
   const [isPaused, setIsPaused] = useState(false)
   const progress = useMotionValue(0)
