@@ -123,10 +123,14 @@ export function WorkRunRow({
             </span>
           )}
           {isThinkingHeader ? (
-            <ShinyText text="Thinking…" />
+            isExpanded ? (
+              <span className="shrink-0 text-foreground-subtle">Thinking…</span>
+            ) : (
+              <ShinyText text="Thinking…" />
+            )
           ) : header.kind === 'running' ? (
             <ToolHeading
-              isRunning
+              isRunning={!isExpanded}
               name={runningDisplayName}
               summary={runningSummary}
               summaryClassName="transition-colors group-hover:text-foreground"
