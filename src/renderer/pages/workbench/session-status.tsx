@@ -39,7 +39,7 @@ export function SessionStatus({ activity, icon }: { activity: SessionActivity; i
           aria-hidden="true"
           className={cn(
             'session-status-icon flex size-4 items-center justify-center transition-transform duration-200 ease-out',
-            isProcessing ? 'scale-[0.5]' : 'scale-100',
+            isProcessing ? 'scale-[0.6]' : 'scale-100',
           )}
         >
           {icon}
