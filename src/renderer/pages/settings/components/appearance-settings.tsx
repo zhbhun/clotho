@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shadcn/card'
@@ -10,10 +11,16 @@ import {
   FieldLabel,
   FieldTitle,
 } from '@/shadcn/field'
-import { RadioGroup, RadioGroupItem } from '@/shadcn/radio-group'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shadcn/select'
 import { Separator } from '@/shadcn/separator'
 import { Switch } from '@/shadcn/switch'
-import { cn } from '@/shadcn/utils'
 
 import { SettingsSection } from '../../../components/settings-section'
 import { useTheme } from '../../../components/theme-provider'
@@ -66,11 +73,18 @@ function ReducedMotionControl({
   value: ReducedMotionPreference
 }) {
   const { t } = useTranslation()
+  const items = useMemo(
+    () =>
+      REDUCED_MOTION_OPTIONS.map((option) => ({
+        label: t(option.labelKey),
+        value: option.value,
+      })),
+    [t],
+  )
 
   return (
-    <RadioGroup
-      aria-label={t('appearance.reducedMotion.title')}
-      className="w-auto grid-cols-3 gap-1 self-center rounded-lg bg-transparent"
+    <Select
+      items={items}
       value={value}
       onValueChange={(nextValue) => {
         if (REDUCED_MOTION_PREFERENCES.includes(nextValue as ReducedMotionPreference)) {
@@ -78,27 +92,23 @@ function ReducedMotionControl({
         }
       }}
     >
-      {REDUCED_MOTION_OPTIONS.map((option) => {
-        const id = `settings-reduced-motion-${option.value}`
-        const selected = option.value === value
-
-        return (
-          <FieldLabel
-            className={cn(
-              'relative min-w-14 items-center justify-center rounded-md px-3 py-1.5 text-center font-medium transition-colors',
-              selected
-                ? 'bg-accent text-accent-foreground'
-                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
-            )}
-            htmlFor={id}
-            key={option.value}
-          >
-            <RadioGroupItem className="absolute sr-only" id={id} value={option.value} />
-            {t(option.labelKey)}
-          </FieldLabel>
-        )
-      })}
-    </RadioGroup>
+      <SelectTrigger
+        aria-label={t('appearance.reducedMotion.title')}
+        className="w-32 self-center"
+        id="settings-reduced-motion"
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent glass alignItemWithTrigger={false} align="end">
+        <SelectGroup>
+          {items.map((item) => (
+            <SelectItem key={item.value} value={item.value}>
+              {item.label}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
   )
 }
 
@@ -159,6 +169,7 @@ export function AppearanceSettings() {
               </PreferenceRow>
               <Separator />
               <PreferenceRow
+                controlId="settings-reduced-motion"
                 description={t('appearance.reducedMotion.description')}
                 title={t('appearance.reducedMotion.title')}
               >
