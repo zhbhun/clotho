@@ -18,6 +18,7 @@ import { readRenderer } from './read'
 import { JsonInput } from './shared/content'
 import { fileToolSummary, isFileToolName } from './shared/file-path'
 import type { ToolRenderer } from './shared/types'
+import { mcpToolName } from './shared/utils'
 import { skillRenderer } from './skill'
 import { taskCreateRenderer } from './task-create'
 import { taskGetRenderer } from './task-get'
@@ -26,6 +27,7 @@ import { taskOutputRenderer } from './task-output'
 import { taskStopRenderer } from './task-stop'
 import { taskUpdateRenderer } from './task-update'
 import { todoRenderer } from './todo-write/renderer'
+import { toolSearchRenderer } from './tool-search'
 import { webFetchRenderer } from './web-fetch'
 import { webSearchRenderer } from './web-search'
 import { workflowRenderer } from './workflow'
@@ -82,6 +84,8 @@ const RENDERERS: Record<string, ToolRenderer> = {
   TaskUpdateTool: taskUpdateRenderer,
   Skill: skillRenderer,
   SkillTool: skillRenderer,
+  ToolSearch: toolSearchRenderer,
+  ToolSearchTool: toolSearchRenderer,
   EnterPlanMode: enterPlanModeRenderer,
   EnterPlanModeTool: enterPlanModeRenderer,
   ExitPlanMode: exitPlanModeRenderer,
@@ -159,9 +163,4 @@ export function getToolSummary({
 
 export function formatToolDisplayName(name: string): string {
   return name.replace(/Tool$/, '')
-}
-
-/** `mcp__server__tool_name` → `server:tool_name`; `__` is the separator. */
-function mcpToolName(name: string): string {
-  return name.replace(/^mcp__/, '').replace(/__+/g, ':')
 }

@@ -21,6 +21,7 @@ import { reviewLines } from './sessions/review'
 import { skillLines } from './sessions/skill'
 import { taskLines } from './sessions/task'
 import { todoLines } from './sessions/todo'
+import { toolSearchLines } from './sessions/tool-search'
 import { webLines } from './sessions/web'
 import { workflowLines, workflowRuns, workflowSubagents } from './sessions/workflow'
 import type { MockSubagentDef } from './types'
@@ -111,6 +112,15 @@ export const MOCK_SESSIONS: MockSessionDef[] = [
       first_prompt: 'Look up the React useEffect usage documentation.',
     },
     lines: () => mcpLines(),
+  },
+  {
+    meta: {
+      id: 'mock-tool-search',
+      title: 'ToolSearch · Tool search',
+      created_at: BASE_TIME - 0.24 * hour,
+      first_prompt: 'Help me create a meeting-notes page in Notion; find the tools first.',
+    },
+    lines: () => toolSearchLines(),
   },
   {
     meta: {
