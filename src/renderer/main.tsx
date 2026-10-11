@@ -2,7 +2,7 @@ import ReactDOM from 'react-dom/client'
 
 import App from './app'
 import { ErrorBoundary } from './components/error-boundary'
-import { FailureEmpty } from './components/failure-empty'
+import { StartupFailure } from './components/startup-failure'
 import { ThemeProvider, applyAppearanceTheme } from './components/theme-provider'
 import { LanguageProvider } from './i18n/language-provider'
 import { appI18n, initializeAppI18n } from './i18n/runtime'
@@ -27,18 +27,6 @@ const appLogger = getLogger('app')
 const persistenceLogger = getLogger('persistence')
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
-
-function StartupFailure() {
-  return (
-    <FailureEmpty
-      actionLabel="重新加载 / Reload"
-      className="h-svh rounded-none bg-background text-foreground"
-      description="应用暂时无法启动，请重新加载。 / Clotho could not start. Please reload."
-      title="无法启动 Clotho / Unable to start Clotho"
-      onAction={() => window.location.reload()}
-    />
-  )
-}
 
 async function renderApp() {
   const settings = initializeAppSettings().then(() => {
