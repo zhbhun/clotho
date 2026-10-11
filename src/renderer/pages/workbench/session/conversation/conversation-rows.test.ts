@@ -370,6 +370,67 @@ describe('buildConversationRows', () => {
     expect(rows.map((row) => row.kind)).toEqual(['user', 'status', 'api-retry'])
   })
 
+  it('drops the retry card once the turn recovers from the retry sequence', () => {
+    const retryItem: ConversationTimelineItem = {
+      id: 'retry-1',
+      kind: 'api-retry',
+      attempt: 4,
+      maxRetries: 4,
+      retryDelayMs: 30000,
+      status: 429,
+    }
+
+    const completed = buildConversationRows({
+      expandedTurns: {},
+      interruptedTurnIds: new Set(),
+      isStreaming: false,
+      lastSentTurnId: null,
+      streamingElapsed: 0,
+      turns: [
+        turn('user-1', [retryItem, { id: 'text-1', kind: 'text', text: 'Recovered answer' }]),
+      ],
+    })
+    expect(completed.map((row) => row.kind)).toEqual(['user', 'status', 'timeline'])
+
+    const recoveredMidStream = buildConversationRows({
+      expandedTurns: {},
+      interruptedTurnIds: new Set(),
+      isStreaming: true,
+      lastSentTurnId: 'user-1',
+      streamingElapsed: 0,
+      turns: [
+        turn('user-1', [retryItem, { id: 'tool-1', kind: 'tool' }, { id: 'tool-2', kind: 'tool' }]),
+      ],
+    })
+    expect(recoveredMidStream.map((row) => row.kind)).toEqual(['user', 'status', 'work-run'])
+  })
+
+  it('keeps the retry card when the turn ends in failure', () => {
+    const failedTurn = turn('user-1', [
+      {
+        id: 'retry-1',
+        kind: 'api-retry',
+        attempt: 4,
+        maxRetries: 4,
+        retryDelayMs: 30000,
+        status: 429,
+      },
+    ])
+    failedTurn.failure = { message: 'API Error: Request rejected (429) · quota exhausted' }
+
+    const rows = buildConversationRows({
+      expandedTurns: { 'user-1': true },
+      interruptedTurnIds: new Set(),
+      isStreaming: false,
+      lastSentTurnId: 'user-1',
+      streamingElapsed: 0,
+      turns: [failedTurn],
+    })
+
+    expect(rows.map((row) => row.kind)).toEqual(['user', 'status', 'api-retry', 'error-card'])
+    expect(rows[2]).toMatchObject({ isLast: false, kind: 'api-retry' })
+  })
+
   it('places an expandable failure status above prior tool work', () => {
     const rows = buildConversationRows({
       expandedTurns: { 'user-1': true },

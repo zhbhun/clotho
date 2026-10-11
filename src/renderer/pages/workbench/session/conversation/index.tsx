@@ -369,16 +369,20 @@ function ConversationRowContent({
   if (row.kind === 'api-retry') {
     return (
       <div className={cn('px-3', hasTopPadding && 'pt-2')}>
-        <ApiErrorCard
-          attempt={row.item.attempt}
-          detail={row.item.detail}
-          kind={row.item.errorKind}
-          maxRetries={row.item.maxRetries}
-          retryDelayMs={row.item.retryDelayMs}
-          state={row.isStreaming && row.isLast && !row.turnTerminalStatus ? 'retrying' : 'settled'}
-          status={row.item.status}
-          timestamp={row.item.timestamp}
-        />
+        <TimelineRow isLast={row.isLast}>
+          <ApiErrorCard
+            attempt={row.item.attempt}
+            detail={row.item.detail}
+            kind={row.item.errorKind}
+            maxRetries={row.item.maxRetries}
+            retryDelayMs={row.item.retryDelayMs}
+            state={
+              row.isStreaming && row.isLast && !row.turnTerminalStatus ? 'retrying' : 'settled'
+            }
+            status={row.item.status}
+            timestamp={row.item.timestamp}
+          />
+        </TimelineRow>
       </div>
     )
   }

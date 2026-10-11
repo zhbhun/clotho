@@ -358,6 +358,12 @@ export function buildConversationRows(options: {
 
           const item = slice.item
           if (item.kind === 'api-retry') {
+            // Recovered retries are transient noise: keep the card while its
+            // retry is pending, or when the turn failed or was interrupted and
+            // the card explains that ending; once the turn moves past it, drop it.
+            const isRetryPending =
+              isStreaming && isLastSlice && !showTrailingThinking && !turnTerminalStatus
+            if (!isRetryPending && !turnTerminalStatus) return
             rows.push({
               isLast: isLastSlice && !showTrailingThinking && !hasFailure,
               isStreaming,
