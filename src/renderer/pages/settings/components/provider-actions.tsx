@@ -26,12 +26,12 @@ export function ProviderActions({
   const { t } = useTranslation()
   return (
     <div className="flex flex-wrap gap-2">
-      <Button variant="outline" onClick={onNew}>
+      <Button size="lg" variant="outline" onClick={onNew}>
         <Plus data-icon="inline-start" />
         {t('settings.provider.add')}
       </Button>
       <Menu>
-        <MenuTrigger render={<Button variant="outline" />}>
+        <MenuTrigger render={<Button size="lg" variant="outline" />}>
           <Library data-icon="inline-start" />
           {t('settings.provider.addFromPreset')}
           <ChevronDown data-icon="inline-end" strokeWidth={1} />

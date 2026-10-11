@@ -63,6 +63,7 @@ function ModelTargetPicker({
             <Button
               disabled={disabled || choices.length === 0}
               id={id}
+              size="lg"
               variant="outline"
               className="w-full justify-between font-normal"
             />
