@@ -496,7 +496,7 @@ function ConversationRowContent({
       </TimelineRow>
     </div>
   ) : (
-    <div className="px-3 pt-4">
+    <div className="px-3">
       <ThinkingIndicator />
     </div>
   )
