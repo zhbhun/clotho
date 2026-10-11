@@ -43,12 +43,7 @@ function PermissionOption({
 
   return (
     <FieldLabel
-      className={cn(
-        'relative w-full cursor-pointer items-center gap-3 rounded-xl border bg-background px-3.5 py-3 transition-colors has-[:focus-visible]:border-ring has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring/50',
-        isChecked
-          ? 'border-foreground/25 bg-muted/40 has-data-checked:bg-muted/40 dark:has-data-checked:bg-muted/40'
-          : 'border-border/60 hover:border-border hover:bg-muted/40',
-      )}
+      className="relative w-full cursor-pointer items-center gap-3 rounded-lg bg-card px-3.5 py-3 ring-1 ring-foreground/10 transition-colors hover:bg-muted/40 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring/50"
       htmlFor={id}
     >
       <RadioGroupItem className="absolute opacity-0" id={id} value={value} />
