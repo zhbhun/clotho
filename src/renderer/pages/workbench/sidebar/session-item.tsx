@@ -44,7 +44,6 @@ export function SessionItem({
   const { t } = useTranslation()
   const title = sessionDisplayTitle(session, t)
   const displayTitle = title
-  const displayedActivity = session.isDraft ? 'idle' : activity
   const buttonRef = useRef<HTMLButtonElement>(null)
 
   useLayoutEffect(() => {
@@ -84,12 +83,12 @@ export function SessionItem({
             <span className="truncate">{projectLabel}</span>
           </span>
         </span>
-        {displayedActivity !== 'idle' ? (
+        {activity !== 'idle' ? (
           <span
             className="flex min-h-full w-4 shrink-0 items-center justify-center"
             data-session-status-column
           >
-            <SessionStatus activity={displayedActivity} />
+            <SessionStatus activity={activity} />
           </span>
         ) : null}
       </span>

@@ -73,7 +73,7 @@ export function SessionHistoryMenuContent({
             <MenuGroup>
               {sessions.map((session) => {
                 const time = sessionTimeLabel(session.created_at, now, t, locale)
-                const activity = session.isDraft ? 'idle' : (sessionActivity[session.id] ?? 'idle')
+                const activity = sessionActivity[session.id] ?? 'idle'
 
                 return (
                   <MenuItem

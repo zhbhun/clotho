@@ -149,7 +149,7 @@ export function QuickOpenPanel({
 
   const renderSessionItem = (session: WorkbenchSession) => {
     const time = sessionTimeLabel(session.updated_at ?? session.created_at, now, t, locale)
-    const activity = session.isDraft ? 'idle' : (sessionActivity[session.id] ?? 'idle')
+    const activity = sessionActivity[session.id] ?? 'idle'
 
     return (
       <SwitcherCommandItem

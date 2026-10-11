@@ -157,7 +157,7 @@ export function SessionTabs({
         {sessions.map((session, index) => {
           const title = sessionDisplayTitle(session, t)
           const displayTitle = title
-          const activity = session.isDraft ? 'idle' : (sessionActivity[session.id] ?? 'idle')
+          const activity = sessionActivity[session.id] ?? 'idle'
           const isActive = session.id === activeSessionId
           const shortcutNumber = index < 9 ? index + 1 : null
 
