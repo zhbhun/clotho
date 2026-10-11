@@ -133,7 +133,7 @@ export function ProviderUsageRings({ quota }: { quota: ProviderUsageQuota | unde
             return (
               <g key={window.name ?? index}>
                 <circle
-                  className="stroke-border"
+                  className="stroke-foreground/25"
                   cx="10"
                   cy="10"
                   fill="none"

@@ -6,7 +6,7 @@ const RING_RADIUS = 7
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS
 const RING_FRAME_CLASS = 'relative inline-flex size-5 items-center justify-center'
 const RING_SVG_CLASS = 'size-4'
-const RING_TRACK_CLASS = 'stroke-border'
+const RING_TRACK_CLASS = 'stroke-foreground/25'
 const RING_ARC_CLASS = 'stroke-foreground-subtlest'
 
 export function ContextUsageRing({ usage }: { usage: ContextUsage }) {
