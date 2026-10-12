@@ -5,6 +5,7 @@ import { cn } from '@/shadcn/utils'
 import { APP_CONTENT_CONTAINER_CLASS } from '../../../components/app-layout'
 import type { ClaudeToolRequest, ClaudeToolResult } from '../../../services/claude/claude'
 import { PromptComposer, type PromptComposerBaseProps } from './prompt'
+import type { SessionSubagent } from './subagents'
 import { TaskProgressPanel } from './task-progress-panel'
 import { AskPanel } from './tools/ask-user-question/request-panel'
 import type { WorkflowSubagentTarget } from './use-subagents'
@@ -16,6 +17,7 @@ export type ConversationDockProps = {
   dockRef: RefCallback<HTMLDivElement>
   isSubagentSelected: boolean
   taskProgress: TaskProgress
+  onOpenSubagent: (subagent: SessionSubagent) => void
   onOpenWorkflowAgent: (target: WorkflowSubagentTarget) => void
   onRespond: (toolUseId: string, result: ClaudeToolResult) => Promise<void>
 }
@@ -27,6 +29,7 @@ export function ConversationDock({
   dockRef,
   isSubagentSelected,
   taskProgress,
+  onOpenSubagent,
   onOpenWorkflowAgent,
   onRespond,
 }: ConversationDockProps) {
@@ -47,6 +50,7 @@ export function ConversationDock({
           todos={taskProgress.latestTodos}
           workflows={taskProgress.activeWorkflowGroups}
           onOpenAgent={onOpenWorkflowAgent}
+          onOpenSubagent={onOpenSubagent}
         />
         {!isSubagentSelected ? (
           <AskPanel

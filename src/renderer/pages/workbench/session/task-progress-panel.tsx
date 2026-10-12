@@ -15,12 +15,14 @@ import type { WorkflowSubagentGroup, WorkflowSubagentTarget } from './use-subage
  */
 export function TaskProgressPanel({
   onOpenAgent,
+  onOpenSubagent,
   runningSubagents,
   subagentStats,
   todos,
   workflows,
 }: {
   onOpenAgent: (target: WorkflowSubagentTarget) => void
+  onOpenSubagent: (subagent: SessionSubagent) => void
   runningSubagents: SessionSubagent[]
   subagentStats: { done: number; total: number }
   todos: TodoItem[]
@@ -32,7 +34,12 @@ export function TaskProgressPanel({
       <TodoProgress key="todos" todos={todos} />
     ) : null,
     runningSubagents.length ? (
-      <SubagentProgress key="subagents" running={runningSubagents} stats={subagentStats} />
+      <SubagentProgress
+        key="subagents"
+        running={runningSubagents}
+        stats={subagentStats}
+        onOpen={onOpenSubagent}
+      />
     ) : null,
     workflows.length ? (
       <WorkflowProgress key="workflows" workflows={workflows} onOpenAgent={onOpenAgent} />

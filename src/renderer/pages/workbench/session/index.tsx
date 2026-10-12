@@ -794,6 +794,7 @@ function SessionAreaContent({
             dockRef={dockRef}
             isSubagentSelected={Boolean(subagentView.selectedSubagent)}
             taskProgress={taskProgress}
+            onOpenSubagent={subagentView.selectSubagent}
             onOpenWorkflowAgent={subagentView.openWorkflowSubagent}
             onRespond={respondToolRequest}
           />
