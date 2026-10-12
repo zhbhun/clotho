@@ -60,6 +60,8 @@
   --color-project-icon-cyan: var(--project-icon-cyan);
   --color-project-switcher-surface: var(--project-switcher-surface);
   --color-sidebar-active: var(--sidebar-active);
+  --color-control-checked: var(--control-checked);
+  --color-control-checked-foreground: var(--control-checked-foreground);
 
   --shadow-float: var(--float-shadow);
   --shadow-popover: var(--popover-shadow);
@@ -145,6 +147,9 @@
   --project-switcher-surface: var(--muted);
   --session-tab-surface: var(--secondary);
   --sidebar-active: var(--sidebar-accent);
+  /* Checked-state black/white for selection controls; palette overrides must not tint it. */
+  --control-checked: var(--color-neutral-900);
+  --control-checked-foreground: var(--color-white);
 }
 
 .dark {
@@ -221,4 +226,6 @@
   --project-switcher-surface: color-mix(in srgb, var(--background), var(--color-white) 2%);
   --session-tab-surface: color-mix(in srgb, var(--background), var(--color-white) 3%);
   --sidebar-active: var(--sidebar-accent);
+  --control-checked: var(--color-neutral-100);
+  --control-checked-foreground: var(--color-neutral-900);
 }
