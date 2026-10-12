@@ -10,12 +10,12 @@ const buttonVariants = cva(
       variant: {
         default: 'bg-foreground text-background hover:bg-foreground/80',
         outline:
-          'border-input hover:bg-input/50 hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-input/50',
+          'border-input hover:bg-accent hover:text-foreground aria-expanded:bg-accent aria-expanded:text-foreground',
         secondary:
           'bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground',
         ghost:
-          'hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50',
-        mute: 'text-muted-foreground hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50',
+          'hover:bg-accent hover:text-foreground aria-expanded:bg-accent aria-expanded:text-foreground',
+        mute: 'text-muted-foreground hover:bg-accent hover:text-foreground aria-expanded:bg-accent aria-expanded:text-foreground',
         surface:
           'hover:bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_5%)] hover:text-foreground aria-expanded:bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_5%)] aria-expanded:text-foreground data-active:bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_5%)] data-active:text-foreground',
         'surface-strong':

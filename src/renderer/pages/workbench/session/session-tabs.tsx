@@ -215,7 +215,7 @@ export function SessionTabs({
                     variant="ghost"
                     onClick={() => onCloseSession(session)}
                   >
-                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-foreground/6">
+                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-foreground/10">
                       <CircleX className="size-3.5" data-icon="inline-start" strokeWidth={1.5} />
                     </span>
                   </Button>

@@ -90,7 +90,9 @@
   --secondary-foreground: var(--foreground);
   --muted: var(--secondary);
   --muted-foreground: var(--foreground-subtlest);
-  --accent: var(--secondary);
+  /* Interaction hover tier: darker than secondary so hovers stay legible on
+     white surfaces; menus and button hovers all land here. */
+  --accent: color-mix(in oklab, var(--background), var(--foreground) 6.5%);
   --accent-foreground: var(--foreground);
   --destructive: oklch(0.577 0.245 27.325);
   --border: color-mix(in oklab, var(--background), var(--foreground) 9.8113%);
@@ -171,7 +173,9 @@
   --secondary-foreground: var(--foreground);
   --muted: var(--secondary);
   --muted-foreground: var(--foreground-subtlest);
-  --accent: color-mix(in srgb, var(--background), var(--color-white) 6%);
+  /* Interaction hover tier: clearly above the static-surface ladder (card
+     2.5%, secondary 4.5%) so menus and button hovers stay legible. */
+  --accent: color-mix(in srgb, var(--background), var(--color-white) 10%);
   --accent-foreground: color-mix(in oklab, var(--foreground), var(--color-white) 50%);
   --destructive: oklch(0.704 0.191 22.216);
   --border: var(--secondary);
@@ -224,7 +228,7 @@
   --project-icon-pink: var(--color-pink-400);
   --project-icon-cyan: var(--color-cyan-400);
   --project-switcher-surface: color-mix(in srgb, var(--background), var(--color-white) 2%);
-  --session-tab-surface: color-mix(in srgb, var(--background), var(--color-white) 3%);
+  --session-tab-surface: color-mix(in srgb, var(--background), var(--color-white) 5%);
   --sidebar-active: var(--sidebar-accent);
   --control-checked: var(--color-neutral-100);
   --control-checked-foreground: var(--color-neutral-900);

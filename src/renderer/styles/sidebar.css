@@ -1,7 +1,9 @@
 .app-sidebar-layout {
   --sidebar: color-mix(in srgb, var(--background), var(--color-black) 10.1961%);
-  --sidebar-accent: var(--color-accent);
-  --sidebar-active: color-mix(in srgb, var(--color-accent), var(--color-black) 4%);
+  /* Session rows share the session tabs' hover/selected surface, so the header
+     tabs and the sidebar list speak one highlight color per theme. */
+  --sidebar-accent: var(--session-tab-surface);
+  --sidebar-active: color-mix(in srgb, var(--session-tab-surface), var(--color-black) 4%);
   --sidebar-divider: color-mix(in oklab, var(--border) 97%, var(--foreground) 3%);
   --sidebar-separation-shadow: inset -4px 0 12px
     color-mix(in oklab, var(--color-neutral-950) 2.5%, transparent);
