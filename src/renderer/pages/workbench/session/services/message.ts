@@ -367,6 +367,27 @@ function isImageAnnotationText(text: string): boolean {
   return IMAGE_ANNOTATION_TEXT_PATTERNS.some((pattern) => pattern.test(text.trim()))
 }
 
+/**
+ * The continuation nudge the CLI writes when a turn hits the output token
+ * limit. It addresses the model, not the user; the transcript entry is marked
+ * isMeta, but the live wire frame carries no such flag, so the generated text
+ * itself is the only marker — it must never surface as a user prompt.
+ */
+const OUTPUT_LIMIT_NUDGE_PATTERN = /^Output token limit hit\./
+
+function isOutputLimitNudgeEntry(entry: ClaudeJsonLine): boolean {
+  if (entry.type !== 'user') return false
+  const content = entry.message?.content
+  if (typeof content === 'string') return OUTPUT_LIMIT_NUDGE_PATTERN.test(content.trim())
+  if (!Array.isArray(content) || content.length === 0) return false
+  return content.every(
+    (part) =>
+      part.type === 'text' &&
+      typeof part.text === 'string' &&
+      OUTPUT_LIMIT_NUDGE_PATTERN.test(part.text.trim()),
+  )
+}
+
 function isImageAnnotationEntry(entry: ClaudeJsonLine): boolean {
   if (entry.type !== 'user') return false
   const content = entry.message?.content
@@ -389,6 +410,7 @@ function shouldSkipEntry(entry: ClaudeJsonLine): boolean {
     isLocalCommandOutputEntry(entry) ||
     isModelSwitchReceiptEntry(entry) ||
     isAgentMessageEntry(entry) ||
+    isOutputLimitNudgeEntry(entry) ||
     isImageAnnotationEntry(entry) ||
     t === 'attachment' ||
     t === 'file-history-snapshot' ||

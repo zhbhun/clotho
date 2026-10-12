@@ -90,6 +90,33 @@ describe('Claude message parsing', () => {
     ).toMatchObject({ role: 'user' })
   })
 
+  it('skips the output-limit continuation nudge delivered on the user channel', () => {
+    const nudge =
+      'Output token limit hit. Resume directly — no apology, no recap of what you were doing. Pick up mid-thought if that is where the cut happened. Break remaining work into smaller pieces.'
+    expect(
+      claudeJsonToMessage({
+        type: 'user',
+        uuid: 'synthetic-continuation-uuid',
+        message: { role: 'user', content: nudge },
+      }),
+    ).toBeNull()
+    expect(
+      claudeJsonToMessage({
+        type: 'user',
+        message: { role: 'user', content: [{ type: 'text', text: nudge }] },
+      }),
+    ).toBeNull()
+    expect(
+      claudeJsonToMessage({
+        type: 'user',
+        message: {
+          role: 'user',
+          content: 'The log said "Output token limit hit." — does that affect my export?',
+        },
+      }),
+    ).toMatchObject({ role: 'user' })
+  })
+
   it('renders live local slash-command output as an assistant reply', () => {
     expect(
       claudeJsonToMessage({
