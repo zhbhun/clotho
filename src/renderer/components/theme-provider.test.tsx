@@ -52,6 +52,7 @@ function AppearanceProbe() {
       <button onClick={() => setTheme('dark')}>dark</button>
       <button onClick={() => setThemePreset('dark', 'clotho')}>clotho</button>
       <button onClick={() => setPointerCursor(true)}>pointer</button>
+      <button onClick={() => setPointerCursor(false)}>no-pointer</button>
       <button onClick={() => setReducedMotion('reduce')}>reduce</button>
       <button onClick={() => setReducedMotion('no-preference')}>motion</button>
     </div>
@@ -152,12 +153,12 @@ describe('ThemeProvider appearance preferences', () => {
       </ThemeProvider>,
     )
 
-    expect(screen.getByText('system/false/system/false')).toBeInTheDocument()
+    expect(screen.getByText('system/true/system/false')).toBeInTheDocument()
 
     reducedMotionQuery.matches = true
     handleChange?.({ matches: true } as MediaQueryListEvent)
 
-    expect(await screen.findByText('system/false/system/true')).toBeInTheDocument()
+    expect(await screen.findByText('system/true/system/true')).toBeInTheDocument()
     expect(document.documentElement).toHaveAttribute('data-reduced-motion', 'reduce')
   })
 
@@ -285,16 +286,16 @@ describe('ThemeProvider appearance preferences', () => {
       </ThemeProvider>,
     )
 
-    await user.click(screen.getByRole('button', { name: 'pointer' }))
+    await user.click(screen.getByRole('button', { name: 'no-pointer' }))
     await user.click(screen.getByRole('button', { name: 'motion' }))
 
-    expect(screen.getByText('system/true/no-preference/false')).toBeInTheDocument()
-    expect(document.documentElement).toHaveAttribute('data-pointer-cursor', 'true')
+    expect(screen.getByText('system/false/no-preference/false')).toBeInTheDocument()
+    expect(document.documentElement).toHaveAttribute('data-pointer-cursor', 'false')
     expect(document.documentElement).toHaveAttribute('data-reduced-motion', 'no-preference')
     await flushAppSettings()
     expect(savedPreferences.at(-1)).toMatchObject({
       appearance: {
-        pointerCursor: true,
+        pointerCursor: false,
         reducedMotion: 'no-preference',
       },
     })
@@ -325,7 +326,7 @@ describe('ThemeProvider appearance preferences', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'dark' }))
 
-    expect(await screen.findByText('system/false/system/false')).toBeInTheDocument()
+    expect(await screen.findByText('system/true/system/false')).toBeInTheDocument()
     expect(document.documentElement).toHaveClass('light')
   })
 })

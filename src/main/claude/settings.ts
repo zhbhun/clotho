@@ -66,7 +66,7 @@ export const DEFAULT_APP_PREFERENCES: AppPreferences = {
   defaultPermissionMode: 'default',
   appearance: {
     theme: 'system',
-    pointerCursor: false,
+    pointerCursor: true,
     reducedMotion: 'system',
     themePalettes: {
       dark: {

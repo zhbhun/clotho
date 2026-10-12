@@ -38,7 +38,7 @@ export type AppearancePreferences = {
 
 export const DEFAULT_APPEARANCE_PREFERENCES: AppearancePreferences = {
   theme: 'system',
-  pointerCursor: false,
+  pointerCursor: true,
   reducedMotion: 'system',
   themePalettes: DEFAULT_THEME_PALETTES,
 }

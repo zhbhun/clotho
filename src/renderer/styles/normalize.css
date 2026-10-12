@@ -22,10 +22,6 @@
     -webkit-user-select: text;
     user-select: text;
   }
-  button:not(:disabled),
-  [role='button']:not(:disabled) {
-    cursor: pointer;
-  }
   html {
     @apply font-sans;
   }
