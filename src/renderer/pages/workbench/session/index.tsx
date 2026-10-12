@@ -427,7 +427,11 @@ function SessionAreaContent({
     [pendingToolRequests],
   )
   const dockMode = !subagentView.selectedSubagent && askRequests.length ? 'ask' : 'prompt'
-  const { bottomPadding, dockRef, scrollVersion: dockScrollVersion } = useConversationDock(dockMode)
+  const {
+    bottomPadding,
+    dockRef,
+    scrollVersion: dockScrollVersion,
+  } = useConversationDock(dockMode, Boolean(pendingMessage))
   const contextUsage = usageSnapshot
     ? {
         usedTokens: usageSnapshot.totalTokens,

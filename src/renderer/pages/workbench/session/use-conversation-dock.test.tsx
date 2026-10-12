@@ -31,8 +31,14 @@ class TestResizeObserver {
   }
 }
 
-function DockHarness({ mode }: { mode: 'ask' | 'prompt' }) {
-  const { bottomPadding, dockRef, scrollVersion } = useConversationDock(mode)
+function DockHarness({
+  mode,
+  hasPendingMessage = false,
+}: {
+  mode: 'ask' | 'prompt'
+  hasPendingMessage?: boolean
+}) {
+  const { bottomPadding, dockRef, scrollVersion } = useConversationDock(mode, hasPendingMessage)
 
   return (
     <>
@@ -107,6 +113,27 @@ describe('useConversationDock', () => {
     rerender(<DockHarness mode="ask" />)
 
     expect(screen.getByTestId('version').textContent).not.toBe(promptVersion)
+  })
+
+  it('reserves strip clearance while a pending message floats over the tail', () => {
+    dockHeight = 420
+    const { rerender } = render(<DockHarness mode="prompt" hasPendingMessage={false} />)
+    expect(screen.getByTestId('padding')).toHaveTextContent('456')
+
+    rerender(<DockHarness mode="prompt" hasPendingMessage={true} />)
+    // Dock 420 + gap 36 + the strip's 44px overlap above the composer card.
+    expect(screen.getByTestId('padding')).toHaveTextContent('500')
+
+    rerender(<DockHarness mode="prompt" hasPendingMessage={false} />)
+    expect(screen.getByTestId('padding')).toHaveTextContent('456')
+  })
+
+  it('changes its scroll version when a pending message appears or leaves', () => {
+    const { rerender } = render(<DockHarness mode="prompt" hasPendingMessage={false} />)
+    const idleVersion = screen.getByTestId('version').textContent
+
+    rerender(<DockHarness mode="prompt" hasPendingMessage={true} />)
+    expect(screen.getByTestId('version').textContent).not.toBe(idleVersion)
   })
 
   it('follows a dock mode switch only while the user has not scrolled', () => {
