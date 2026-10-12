@@ -131,13 +131,19 @@ export function PromptMarkdownEditor({
           ) {
             return false
           }
-          // Sent-prompt recall owns the arrows while it is active; an IME
-          // composition (keyCode 229) still uses them for its candidates.
+          // Sent-prompt recall owns the bare arrows while it is active; an IME
+          // composition (keyCode 229) still uses them for its candidates, and
+          // modified arrows (word-wise moves, document edges, selections) stay
+          // with the editor.
           const onPromptHistory = onPromptHistoryRef.current
           if (
             onPromptHistory &&
             !event.isComposing &&
             event.keyCode !== 229 &&
+            !event.shiftKey &&
+            !event.metaKey &&
+            !event.ctrlKey &&
+            !event.altKey &&
             (event.key === 'ArrowUp' || event.key === 'ArrowDown') &&
             onPromptHistory(event.key === 'ArrowUp' ? 'up' : 'down')
           ) {

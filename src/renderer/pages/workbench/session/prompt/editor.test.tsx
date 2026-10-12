@@ -211,6 +211,37 @@ describe('PromptMarkdownEditor', () => {
     expect(onSubmit).toHaveBeenCalledTimes(1)
   })
 
+  it('recalls prompt history only on bare ArrowUp and ArrowDown', () => {
+    const onPromptHistory = vi.fn(() => true)
+
+    render(
+      <TooltipProvider>
+        <PromptMarkdownEditor
+          value=""
+          onChange={() => undefined}
+          onSubmit={() => undefined}
+          onPromptHistory={onPromptHistory}
+        />
+      </TooltipProvider>,
+    )
+
+    const editor = screen.getByRole('textbox', { name: 'Prompt' })
+    editor.focus()
+
+    // Modified arrows move the caret or extend the selection (word-wise moves,
+    // document edges), so they must stay with the editor.
+    fireEvent.keyDown(editor, { key: 'ArrowUp', altKey: true })
+    fireEvent.keyDown(editor, { key: 'ArrowDown', altKey: true })
+    fireEvent.keyDown(editor, { key: 'ArrowUp', metaKey: true, shiftKey: true })
+    fireEvent.keyDown(editor, { key: 'ArrowDown', ctrlKey: true })
+    expect(onPromptHistory).not.toHaveBeenCalled()
+
+    fireEvent.keyDown(editor, { key: 'ArrowUp' })
+    fireEvent.keyDown(editor, { key: 'ArrowDown' })
+    expect(onPromptHistory).toHaveBeenNthCalledWith(1, 'up')
+    expect(onPromptHistory).toHaveBeenNthCalledWith(2, 'down')
+  })
+
   it('keeps the editor mounted when parent rerenders with fresh callbacks', () => {
     function EditorHost({ tick }: { tick: number }) {
       return (
