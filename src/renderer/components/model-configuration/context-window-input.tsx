@@ -9,7 +9,7 @@ import {
 } from '@/shadcn/combobox'
 import { Field, FieldDescription } from '@/shadcn/field'
 
-const CONTEXT_PRESETS = ['10', '200', '250', '300', '1000']
+const CONTEXT_PRESETS = ['10', '200', '250', '300', '500', '1000']
 const TOKENS_PER_K = 1000
 
 export function ContextWindowInput({
