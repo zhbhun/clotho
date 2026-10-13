@@ -205,7 +205,7 @@ export function ToolItem({
       </div>
 
       {annotation || (open && hasBody) ? (
-        <Card className="relative mt-2 gap-2 rounded-md border-border/60 bg-code-surface py-0">
+        <Card className="relative mt-2 gap-2 rounded-md border-border/60 bg-chat-tool py-0">
           {annotation ? (
             <div className="px-3 pt-2 text-xs leading-5 text-foreground-subtlest">{annotation}</div>
           ) : null}

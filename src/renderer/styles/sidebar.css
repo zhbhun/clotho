@@ -1,17 +1,19 @@
 .app-sidebar-layout {
-  --sidebar: color-mix(in srgb, var(--background), var(--color-black) 10.1961%);
+  --sidebar: color-mix(in oklab, var(--background), var(--color-black) 7.81%);
   /* Session rows share the session tabs' hover/selected surface, so the header
      tabs and the sidebar list speak one highlight color per theme. */
   --sidebar-accent: var(--session-tab-surface);
-  --sidebar-active: color-mix(in srgb, var(--session-tab-surface), var(--color-black) 4%);
-  --sidebar-divider: color-mix(in oklab, var(--border) 97%, var(--foreground) 3%);
+  --sidebar-active: color-mix(in oklab, var(--session-tab-surface), var(--color-black) 3.15%);
+  /* Sits below --border (toward black, not foreground) so the rail edge reads
+     in dark mode too, where foreground would brighten the line instead. */
+  --sidebar-divider: color-mix(in oklab, var(--background), var(--foreground) 6%);
   --sidebar-separation-shadow: inset -4px 0 12px
     color-mix(in oklab, var(--color-neutral-950) 2.5%, transparent);
 }
 
 .dark .app-sidebar-layout {
-  /* 10% keeps the rail just below the near-black canvas without vanishing. */
-  --sidebar: color-mix(in srgb, var(--background), var(--color-black) 10%);
+  /* ~6% oklab keeps the rail just below the near-black canvas without vanishing. */
+  --sidebar: color-mix(in oklab, var(--background), var(--color-black) 5.76%);
   --sidebar-separation-shadow: inset -4px 0 12px
     color-mix(in oklab, var(--color-neutral-950) 22%, transparent);
 }

@@ -416,7 +416,7 @@ export function PromptComposer({
       <Card
         className={cn(
           'group/composer @container w-full overflow-hidden rounded-[20px] text-sm [--card-spacing:--spacing(3)]',
-          appearance === 'default' && 'prompt-composer-surface ring-0',
+          appearance === 'default' && 'prompt-composer-surface ring-0 bg-chat-input',
           appearance === 'default' && pendingMessage && 'z-10',
           appearance === 'message-edit' &&
             'max-h-[450px] min-h-0 rounded-lg rounded-br-none border-border/60 bg-muted shadow-none',

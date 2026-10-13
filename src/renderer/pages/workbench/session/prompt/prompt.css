@@ -17,6 +17,16 @@
   border: 1px solid var(--prompt-composer-border);
 }
 
+/* Inside the composer, chips, button hovers, and muted surfaces step above the
+   input surface itself instead of the global accent tier; portal-rendered
+   menus (model, permission, slash) are outside this subtree and keep the
+   global tier. */
+.dark .prompt-composer-surface {
+  --secondary: color-mix(in oklab, var(--chat-input), var(--foreground) 9.55%);
+  --accent: var(--secondary);
+  --muted: var(--secondary);
+}
+
 .prompt-composer-surface[data-shadow-direction='downward'] {
   --prompt-composer-shadow:
     0 10px 16px -12px color-mix(in oklab, var(--color-neutral-950) 16%, transparent),

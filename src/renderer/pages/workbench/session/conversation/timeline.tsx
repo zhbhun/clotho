@@ -85,7 +85,7 @@ export function UserCard({
       {editor ?? (
         <div className="group/user-message min-w-16 max-w-[75%]">
           <div
-            className="relative overflow-hidden rounded-[16px] rounded-br-none border border-border/60 bg-muted"
+            className="relative overflow-hidden rounded-[16px] rounded-br-none border border-border/60 bg-chat-message"
             data-slot="user-message-card"
           >
             <div className={cn('overflow-hidden', !isExpanded && 'max-h-[450px]')}>
@@ -103,7 +103,7 @@ export function UserCard({
                       {chips.map((chip, i) => (
                         <span
                           key={i}
-                          className="inline-flex max-w-[80%] items-center gap-1.5 rounded-md bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_8%)] px-1.5 py-0.5 leading-5 text-foreground"
+                          className="inline-flex max-w-[80%] items-center gap-1.5 rounded-md bg-secondary px-1.5 py-0.5 leading-5 text-foreground"
                         >
                           {chip.kind === 'selection' ? (
                             <FileSearch className="size-3" />
@@ -118,7 +118,7 @@ export function UserCard({
 
                   {showCommand ? (
                     <p className="whitespace-pre-wrap wrap-break-word leading-6">
-                      <span className="mx-0.5 inline-flex h-5 items-center rounded-md bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_8%)] px-1.5 leading-5 text-foreground">
+                      <span className="mx-0.5 inline-flex h-5 items-center rounded-md bg-secondary px-1.5 leading-5 text-foreground">
                         /{message.commandName}
                       </span>
                       {message.commandArgs ? (
@@ -133,7 +133,7 @@ export function UserCard({
             </div>
 
             {hasOverflow && !isExpanded ? (
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-muted to-transparent" />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-chat-message to-transparent" />
             ) : null}
 
             {hasOverflow ? (

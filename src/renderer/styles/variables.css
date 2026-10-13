@@ -42,6 +42,7 @@
   --color-status-confirm: var(--status-confirm);
   --color-status-unread: var(--status-unread);
   --color-code-surface: var(--code-surface);
+  --color-chat-tool: var(--chat-tool);
   --color-code-added: var(--code-added);
   --color-code-keyword: var(--code-keyword);
   --color-code-number: var(--code-number);
@@ -62,6 +63,8 @@
   --color-sidebar-active: var(--sidebar-active);
   --color-control-checked: var(--control-checked);
   --color-control-checked-foreground: var(--control-checked-foreground);
+  --color-chat-message: var(--chat-message);
+  --color-chat-input: var(--chat-input);
 
   --shadow-float: var(--float-shadow);
   --shadow-popover: var(--popover-shadow);
@@ -86,13 +89,14 @@
   --popover-foreground: var(--foreground);
   --primary: var(--color-neutral-900);
   --primary-foreground: color-mix(in oklab, var(--background), var(--foreground) 1.8868%);
-  --secondary: color-mix(in oklab, var(--background), var(--foreground) 3.7736%);
+  /* One visible step above the canvas (≈ #f1f1f1 on the default anchors);
+     static surfaces, hovers, and mention chips all land here. */
+  --secondary: color-mix(in oklab, var(--background), var(--foreground) 5.25%);
   --secondary-foreground: var(--foreground);
   --muted: var(--secondary);
   --muted-foreground: var(--foreground-subtlest);
-  /* Interaction hover tier: darker than secondary so hovers stay legible on
-     white surfaces; menus and button hovers all land here. */
-  --accent: color-mix(in oklab, var(--background), var(--foreground) 6.5%);
+  /* Hover shares the static secondary tier; menus and button hovers all land here. */
+  --accent: var(--secondary);
   --accent-foreground: var(--foreground);
   --destructive: oklch(0.577 0.245 27.325);
   --border: color-mix(in oklab, var(--background), var(--foreground) 9.8113%);
@@ -130,7 +134,8 @@
     0 0 28px -12px color-mix(in oklab, var(--color-neutral-950) 26%, transparent);
   --status-confirm: oklch(0.68 0.17 65);
   --status-unread: oklch(0.58 0.19 255);
-  --code-surface: color-mix(in oklab, var(--background), var(--foreground) 1.8868%);
+  --code-surface: var(--chat-tool);
+  --chat-tool: color-mix(in oklab, var(--background), var(--foreground) 1.8868%);
   --code-added: var(--color-green-600);
   --code-keyword: var(--color-violet-600);
   --code-number: var(--color-blue-600);
@@ -149,6 +154,8 @@
   --project-icon-cyan: var(--color-cyan-600);
   --project-switcher-surface: var(--muted);
   --session-tab-surface: var(--secondary);
+  --chat-message: var(--secondary);
+  --chat-input: var(--card);
   --sidebar-active: var(--sidebar-accent);
   /* Checked-state black/white for selection controls; palette overrides must not tint it. */
   --control-checked: var(--color-neutral-900);
@@ -162,25 +169,25 @@
      carries no hue at all. */
   --background: #1c1c1c;
   --foreground: var(--color-neutral-100);
-  --card: color-mix(in srgb, var(--background), var(--color-white) 2.5%);
+  /* Surfaces hover a few percent above the canvas, sized so each ladder step
+     (canvas → card → secondary) stays legible on the compressed dark range;
+     like light, both mix toward the foreground anchor so tints follow each
+     palette's text color. */
+  --card: color-mix(in oklab, var(--background), var(--foreground) 7.14%);
   --card-foreground: var(--foreground);
   --popover: var(--card);
   --popover-foreground: var(--foreground);
   --primary: var(--color-neutral-100);
-  --primary-foreground: color-mix(in oklab, var(--background), var(--foreground) 7.2727%);
-  /* White lifts mirror the reference: surfaces hover a few percent above the
-     canvas, so panels read as a whisper of elevation instead of bright slabs. */
-  --secondary: color-mix(in srgb, var(--background), var(--color-white) 4.5%);
+  --primary-foreground: var(--card);
+  --secondary: color-mix(in oklab, var(--background), var(--foreground) 14.76%);
   --secondary-foreground: var(--foreground);
   --muted: var(--secondary);
   --muted-foreground: var(--foreground-subtlest);
-  /* Interaction hover tier: clearly above the static-surface ladder (card
-     2.5%, secondary 4.5%) so menus and button hovers stay legible. */
-  --accent: color-mix(in srgb, var(--background), var(--color-white) 10%);
-  --accent-foreground: color-mix(in oklab, var(--foreground), var(--color-white) 50%);
+  --accent: var(--secondary);
+  --accent-foreground: var(--foreground);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: var(--secondary);
-  --input: color-mix(in srgb, var(--background), var(--color-white) 15%);
+  --border: color-mix(in oklab, var(--background), var(--foreground) 8%);
+  --input: color-mix(in oklab, var(--background), var(--color-white) 17.77%);
   --ring: color-mix(in oklab, var(--primary) 44%, var(--background));
   --chart-1: color-mix(in oklab, var(--background), var(--foreground) 87.8788%);
   --chart-2: color-mix(in oklab, var(--background), var(--foreground) 49.8182%);
@@ -198,7 +205,7 @@
 
   /* Application theme extensions */
   --foreground-subtle: color-mix(in oklab, var(--background), var(--foreground) 87.8788%);
-  --foreground-subtlest: color-mix(in oklab, var(--background), var(--foreground) 68.2424%);
+  --foreground-subtlest: color-mix(in oklab, var(--background), var(--foreground) 67%);
   --foreground-disabled: color-mix(in oklab, var(--background), var(--foreground) 35.6364%);
   --float-shadow:
     0 0 12px -4px color-mix(in oklab, var(--color-neutral-950) 36%, transparent),
@@ -211,7 +218,8 @@
     0 0 30px -12px color-mix(in oklab, var(--color-neutral-950) 56%, transparent);
   --status-confirm: oklch(0.78 0.15 75);
   --status-unread: oklch(0.72 0.16 255);
-  --code-surface: var(--card);
+  --code-surface: var(--chat-tool);
+  --chat-tool: color-mix(in oklab, var(--background), var(--foreground) 1.8868%);
   --code-added: var(--color-green-400);
   --code-keyword: var(--color-fuchsia-400);
   --code-number: var(--color-violet-400);
@@ -228,8 +236,10 @@
   --project-icon-purple: var(--color-purple-400);
   --project-icon-pink: var(--color-pink-400);
   --project-icon-cyan: var(--color-cyan-400);
-  --project-switcher-surface: color-mix(in srgb, var(--background), var(--color-white) 2%);
-  --session-tab-surface: color-mix(in srgb, var(--background), var(--color-white) 5%);
+  --project-switcher-surface: color-mix(in oklab, var(--card), var(--color-white) 4.99%);
+  --session-tab-surface: color-mix(in oklab, var(--card), var(--color-white) 7.16%);
+  --chat-message: color-mix(in oklab, var(--background), var(--foreground) 5.5%);
+  --chat-input: color-mix(in oklab, var(--background), var(--color-white) 12.74%);
   --sidebar-active: var(--sidebar-accent);
   --control-checked: var(--color-neutral-100);
   --control-checked-foreground: var(--color-neutral-900);

@@ -54,7 +54,7 @@ export function CollapsibleRegion({
             className={cn(
               'pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t to-transparent',
               edgeOverlay
-                ? 'from-code-surface via-code-surface/60'
+                ? 'from-chat-tool via-chat-tool/60'
                 : 'from-background/95 via-background/65',
             )}
             data-testid="terminal-transcript-fade"
