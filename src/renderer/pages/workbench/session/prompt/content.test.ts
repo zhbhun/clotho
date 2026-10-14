@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { promptDocToMarkdown, restorePromptDocument } from './content'
+import { promptDocToMarkdown, promptTextToInlineNodes, restorePromptDocument } from './content'
 
 const commands = [
   {
@@ -40,21 +40,13 @@ describe('prompt content persistence', () => {
       '/review inspect @"src/folder @draft/quoted \\"name\\".tsx"\n' +
         'Keep **markdown** as source text.',
     )
-    expect(restorePromptDocument(prompt, commands)).toEqual({
+    expect(restorePromptDocument(prompt)).toEqual({
       type: 'doc',
       content: [
         {
           type: 'paragraph',
           content: [
-            {
-              type: 'slashCommand',
-              attrs: {
-                aliases: ['code-review'],
-                argumentHint: '[scope]',
-                description: 'Review code changes.',
-                name: 'review',
-              },
-            },
+            { type: 'slashCommand', attrs: { name: 'review' } },
             { type: 'text', text: ' inspect ' },
             {
               type: 'fileMention',
@@ -114,5 +106,62 @@ describe('prompt content persistence', () => {
       type: 'doc',
       content: [{ type: 'paragraph', content: [] }],
     })
+  })
+})
+
+describe('restored command chips', () => {
+  it('chips slash tokens without consulting the command list', () => {
+    const doc = restorePromptDocument('run /archify next')
+
+    expect(doc).toMatchObject({
+      content: [
+        {
+          content: [
+            { type: 'text', text: 'run ' },
+            { type: 'slashCommand', attrs: { name: 'archify' } },
+            { type: 'text', text: ' next' },
+          ],
+        },
+      ],
+    })
+    expect(promptDocToMarkdown(doc)).toBe('run /archify next')
+  })
+
+  it('keeps trailing sentence punctuation out of the chip', () => {
+    const doc = restorePromptDocument('run /clear, then /review.')
+
+    expect(doc).toMatchObject({
+      content: [
+        {
+          content: [
+            { type: 'text', text: 'run ' },
+            { type: 'slashCommand', attrs: { name: 'clear' } },
+            { type: 'text', text: ', then ' },
+            { type: 'slashCommand', attrs: { name: 'review' } },
+            { type: 'text', text: '.' },
+          ],
+        },
+      ],
+    })
+    expect(promptDocToMarkdown(doc)).toBe('run /clear, then /review.')
+  })
+
+  it('keeps slash text without a word-start slash as plain text', () => {
+    const doc = restorePromptDocument('abc/reviews stay textual')
+
+    expect(doc).toMatchObject({
+      content: [{ content: [{ type: 'text', text: 'abc/reviews stay textual' }] }],
+    })
+  })
+})
+
+describe('pasted prompt text', () => {
+  it('chips only file references and keeps slash tokens as text', () => {
+    const nodes = promptTextToInlineNodes('see /archify and @src/app.ts')
+
+    expect(nodes).toMatchObject([
+      { type: 'text', text: 'see /archify and ' },
+      { type: 'fileMention', attrs: { path: 'src/app.ts' } },
+    ])
   })
 })

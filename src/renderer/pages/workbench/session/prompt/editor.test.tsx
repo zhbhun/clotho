@@ -500,6 +500,23 @@ describe('PromptMarkdownEditor', () => {
     expect(await screen.findByLabelText('/brainstorming')).toBeInTheDocument()
   })
 
+  it('restores the persisted slash command before the command list arrives', async () => {
+    // Session startup resolves after the composer mounts, so the first restore
+    // runs with an empty command list; the chip must render right away.
+    render(
+      <TooltipProvider>
+        <PromptMarkdownEditor
+          availableCommands={[]}
+          value="/brainstorming "
+          onChange={() => {}}
+          onSubmit={() => {}}
+        />
+      </TooltipProvider>,
+    )
+
+    expect(await screen.findByLabelText('/brainstorming')).toBeInTheDocument()
+  })
+
   it('shows command details after the popover delay', async () => {
     const user = userEvent.setup()
 

@@ -1,14 +1,17 @@
 import type { JSONContent } from '@tiptap/core'
 
-import type { ClaudeSlashCommand } from '../../../../services/claude/claude'
 import { fileReferenceFromPath } from './files'
 
 function textNode(text: string): JSONContent | null {
   return text ? { type: 'text', text } : null
 }
 
-function normalizedCommandName(name: string) {
-  return name.replace(/^\/+/, '')
+// Trailing sentence punctuation stays out of a restored command chip; it
+// resumes as text right after it, so the serialized prompt is unchanged.
+const TRAILING_PUNCTUATION_PATTERN = /[.,;:!?)\]}，。；：！？）」』]+$/u
+
+function slashCommandNode(name: string): JSONContent {
+  return { type: 'slashCommand', attrs: { name } }
 }
 
 function serializedFileMention(path: string) {
@@ -43,15 +46,16 @@ function looksLikeFilePath(path: string) {
   return /[\\/]/.test(path) || /\.[A-Za-z0-9]+$/.test(path)
 }
 
-function lineNodes(line: string, commands: ClaudeSlashCommand[]) {
-  if (!line || commands.length === 0) {
+function lineNodes(line: string, chipSlashCommands = false) {
+  if (!line || !chipSlashCommands) {
     const node = textNode(line)
     return node ? [node] : []
   }
 
-  const commandsByName = new Map(
-    commands.map((command) => [normalizedCommandName(command.name), command]),
-  )
+  // Restored drafts turn every word-start slash token into a command chip
+  // without consulting the command list: the composer must not wait for
+  // session startup to show the reference blocks, and the token serializes
+  // back identically either way.
   const content: JSONContent[] = []
   const commandPattern = /\/[^\s/]+/g
   let textStart = 0
@@ -59,21 +63,13 @@ function lineNodes(line: string, commands: ClaudeSlashCommand[]) {
   for (const match of line.matchAll(commandPattern)) {
     const index = match.index
     if (index > 0 && !/\s/.test(line[index - 1] ?? '')) continue
-    const command = commandsByName.get(match[0].slice(1))
-    if (!command) continue
+    const name = match[0].slice(1).replace(TRAILING_PUNCTUATION_PATTERN, '')
+    if (!name) continue
 
     const before = textNode(line.slice(textStart, index))
     if (before) content.push(before)
-    content.push({
-      type: 'slashCommand',
-      attrs: {
-        aliases: command.aliases ?? [],
-        argumentHint: command.argumentHint,
-        description: command.description,
-        name: normalizedCommandName(command.name),
-      },
-    })
-    textStart = index + match[0].length
+    content.push(slashCommandNode(name))
+    textStart = index + 1 + name.length
   }
 
   const after = textNode(line.slice(textStart))
@@ -81,15 +77,12 @@ function lineNodes(line: string, commands: ClaudeSlashCommand[]) {
   return content
 }
 
-export function markdownTextToDoc(
-  value: string | null | undefined,
-  commands: ClaudeSlashCommand[] = [],
-): JSONContent {
+export function markdownTextToDoc(value: string | null | undefined): JSONContent {
   const content: JSONContent[] = []
   const lines = (typeof value === 'string' ? value : '').split('\n')
 
   lines.forEach((line, index) => {
-    content.push(...lineNodesWithMentions(line, commands))
+    content.push(...lineNodesWithMentions(line, true))
     if (index < lines.length - 1) content.push({ type: 'hardBreak' })
   })
 
@@ -101,7 +94,7 @@ export function markdownTextToDoc(
 
 function lineNodesWithMentions(
   line: string,
-  commands: ClaudeSlashCommand[],
+  chipSlashCommands: boolean,
   referenceFilter?: (path: string) => boolean,
 ) {
   // Reconstruct file chips from their markdown form. Simple paths stay @path;
@@ -116,15 +109,14 @@ function lineNodesWithMentions(
     if (path === null) continue
     const { filePath, lineHint } = splitLineHint(path)
     if (referenceFilter && !referenceFilter(filePath)) continue
-    const before = lineNodes(line.slice(start, index), commands)
-    parts.push(...before)
+    parts.push(...lineNodes(line.slice(start, index), chipSlashCommands))
     parts.push({
       type: 'fileMention',
       attrs: { ...fileReferenceFromPath(filePath), lineHint },
     })
     start = index + match[0].length
   }
-  parts.push(...lineNodes(line.slice(start), commands))
+  parts.push(...lineNodes(line.slice(start), chipSlashCommands))
   return parts
 }
 
@@ -150,11 +142,8 @@ export function promptDocToMarkdown(doc: JSONContent): string {
   return blocks.map(serializeNode).join('\n\n')
 }
 
-export function restorePromptDocument(
-  value: string | null | undefined,
-  commands: ClaudeSlashCommand[] = [],
-) {
-  return markdownTextToDoc(value, commands)
+export function restorePromptDocument(value: string | null | undefined) {
+  return markdownTextToDoc(value)
 }
 
 /**
@@ -168,7 +157,7 @@ export function promptTextToInlineNodes(text: string): JSONContent[] | null {
   const lines = text.split('\n')
   const nodes: JSONContent[] = []
   lines.forEach((line, index) => {
-    nodes.push(...lineNodesWithMentions(line, [], looksLikeFilePath))
+    nodes.push(...lineNodesWithMentions(line, false, looksLikeFilePath))
     if (index < lines.length - 1) nodes.push({ type: 'hardBreak' })
   })
   return nodes.some((node) => node.type === 'fileMention') ? nodes : null

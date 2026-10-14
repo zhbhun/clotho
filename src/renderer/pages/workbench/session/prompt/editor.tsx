@@ -27,7 +27,12 @@ import { promptDocToMarkdown, promptTextToInlineNodes, restorePromptDocument } f
 import { FileCompletionMenu } from './file-menu'
 import { FileMention, type PromptFileReference, fileReferenceToNode } from './files'
 import type { SlashCommandMenuPlacement } from './menu-position'
-import { SlashCommand, SlashCommandMenu, prepareSlashCommands } from './slash-command'
+import {
+  SlashCommand,
+  SlashCommandMenu,
+  SlashCommandsContext,
+  prepareSlashCommands,
+} from './slash-command'
 import { type PromptFileSearchClient, usePromptCompletion } from './use-completion'
 
 type PromptMarkdownEditorProps = {
@@ -113,7 +118,7 @@ export function PromptMarkdownEditor({
   )
   const editor = useEditor(
     {
-      content: restorePromptDocument(value, promptCommands),
+      content: restorePromptDocument(value),
       editable: !disabled,
       editorProps: {
         attributes: {
@@ -279,7 +284,7 @@ export function PromptMarkdownEditor({
     let isCancelled = false
     queueMicrotask(() => {
       if (isCancelled || editor.isDestroyed) return
-      const restored = restorePromptDocument(value, promptCommands)
+      const restored = restorePromptDocument(value)
       if (promptDocToMarkdown(editor.getJSON()) !== value) {
         editor.commands.setContent(restored, { emitUpdate: false })
       }
@@ -287,7 +292,7 @@ export function PromptMarkdownEditor({
     return () => {
       isCancelled = true
     }
-  }, [editor, promptCommands, value])
+  }, [editor, value])
 
   useEffect(() => {
     if (!editor || editor.isDestroyed || filesToInsert.length === 0) return
@@ -309,7 +314,7 @@ export function PromptMarkdownEditor({
   }, [editor, filesToInsert])
 
   return (
-    <>
+    <SlashCommandsContext.Provider value={promptCommands}>
       <EditorContent
         className={cn(
           'min-h-[40px] max-h-[360px] cursor-text overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
@@ -369,6 +374,6 @@ export function PromptMarkdownEditor({
           onSelect={completion.selectFileItem}
         />
       ) : null}
-    </>
+    </SlashCommandsContext.Provider>
   )
 }

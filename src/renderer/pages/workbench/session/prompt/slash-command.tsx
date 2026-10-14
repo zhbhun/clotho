@@ -1,6 +1,6 @@
 import { type JSONContent, Node, mergeAttributes } from '@tiptap/core'
 import { type NodeViewProps, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
-import { type Ref, useEffect, useRef } from 'react'
+import { type Ref, createContext, useContext, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 
@@ -55,10 +55,24 @@ function highlightedName(name: string, query: string) {
   )
 }
 
+function findCommandByName(commands: ClaudeSlashCommand[], name: string) {
+  return commands.find((command) => command.name.replace(/^\/+/, '') === name)
+}
+
+/**
+ * Slash commands known to the editor. Restored chips carry the command name
+ * only — they resolve preview data from this list, so a chip renders before
+ * session startup delivers the commands and its preview fills in when they
+ * arrive, without rewriting the document.
+ */
+export const SlashCommandsContext = createContext<ClaudeSlashCommand[]>([])
+
 function SlashCommandView({ node }: NodeViewProps) {
+  const commands = useContext(SlashCommandsContext)
   const name = typeof node.attrs.name === 'string' ? node.attrs.name : ''
   const description =
-    typeof node.attrs.description === 'string' ? node.attrs.description : undefined
+    (typeof node.attrs.description === 'string' ? node.attrs.description : undefined) ??
+    findCommandByName(commands, name)?.description
 
   return (
     <NodeViewWrapper
