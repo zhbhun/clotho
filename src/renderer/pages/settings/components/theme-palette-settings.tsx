@@ -19,6 +19,7 @@ import {
 } from '@/shadcn/select'
 import { Separator } from '@/shadcn/separator'
 import { toast } from '@/shadcn/toast'
+import { cn } from '@/shadcn/utils'
 
 import { SettingsSection } from '../../../components/settings-section'
 import {
@@ -36,11 +37,20 @@ const COLOR_ROWS = [
   { color: 'foreground', labelKey: 'settings.appearance.theme.foreground' },
 ] as const
 
-function ThemeBadge({ palette }: { palette: Pick<ThemePalette, 'accent' | 'background'> }) {
+function ThemeBadge({
+  className,
+  palette,
+}: {
+  className?: string
+  palette: Pick<ThemePalette, 'accent' | 'background'>
+}) {
   return (
     <span
       aria-hidden="true"
-      className="flex size-7 shrink-0 items-center justify-center rounded-md text-xs font-semibold ring-1 ring-foreground/10"
+      className={cn(
+        'flex size-7 shrink-0 items-center justify-center rounded-md text-xs font-semibold ring-1 ring-foreground/10',
+        className,
+      )}
       style={{ backgroundColor: palette.background, color: palette.accent }}
     >
       Aa
@@ -93,13 +103,13 @@ function PresetControl({
           <SelectGroup>
             {palette.preset === 'custom' ? (
               <SelectItem value="custom">
-                <ThemeBadge palette={palette} />
+                <ThemeBadge className="size-5 rounded-sm text-[10px]" palette={palette} />
                 {t('settings.appearance.theme.custom')}
               </SelectItem>
             ) : null}
             {presets.map((preset) => (
               <SelectItem key={preset.id} value={preset.id}>
-                <ThemeBadge palette={preset} />
+                <ThemeBadge className="size-5 rounded-sm text-[10px]" palette={preset} />
                 {preset.name}
               </SelectItem>
             ))}
