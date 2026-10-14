@@ -17,15 +17,19 @@ export type SessionEmptyStateProps = {
   historyError: string | null
   historyIsLoading: boolean
   historySessions: WorkbenchSession[]
+  pinnedSessionIds: ReadonlySet<string>
   projectMode: 'project' | 'home'
   projectName: string
   projects: WorkbenchProject[]
   selectedProject?: WorkbenchProject
   sessionActivity: Record<string, SessionActivity>
   onAddProject: () => void
+  onDeleteSession: (session: WorkbenchSession) => void
+  onRenameSession: (session: WorkbenchSession) => void
   onSelectProject: (projectId: string | null) => void
   onSelectSession: (session: WorkbenchSession) => void
   onRetryHistory: () => void
+  onTogglePinSession: (session: WorkbenchSession) => void
 }
 
 /** Surface shown when there is no conversation yet: brand mark centered above the bottom-docked composer. */
@@ -36,15 +40,19 @@ export function SessionEmptyState({
   historyError,
   historyIsLoading,
   historySessions,
+  pinnedSessionIds,
   projectMode,
   projectName,
   projects,
   selectedProject,
   sessionActivity,
   onAddProject,
+  onDeleteSession,
+  onRenameSession,
   onSelectProject,
   onSelectSession,
   onRetryHistory,
+  onTogglePinSession,
 }: SessionEmptyStateProps) {
   const { t } = useTranslation()
   // Without tabs the selected session is the blank new-chat draft, so the
@@ -99,10 +107,14 @@ export function SessionEmptyState({
                   activeSessionId={activeSessionId}
                   error={historyError}
                   isLoading={historyIsLoading}
+                  pinnedSessionIds={pinnedSessionIds}
                   sessionActivity={sessionActivity}
                   sessions={historySessions}
                   onRetry={onRetryHistory}
+                  onDeleteSession={onDeleteSession}
+                  onRenameSession={onRenameSession}
                   onSelectSession={onSelectSession}
+                  onTogglePinSession={onTogglePinSession}
                 />
               </div>
               <div className="relative z-10 -mt-4">

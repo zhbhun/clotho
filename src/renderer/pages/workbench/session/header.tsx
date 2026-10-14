@@ -114,10 +114,14 @@ export function ConversationHeader({
             activeSessionId={activeSessionId}
             error={historyError}
             isLoading={historyIsLoading}
+            pinnedSessionIds={pinnedSessionIds}
             sessionActivity={sessionActivity}
             sessions={historySessions}
             onRetry={onRetryHistory}
+            onDeleteSession={onDeleteSession}
+            onRenameSession={onRenameSession}
             onSelectSession={onSelectSession}
+            onTogglePinSession={onTogglePinSession}
           />
         </div>
       ) : null}

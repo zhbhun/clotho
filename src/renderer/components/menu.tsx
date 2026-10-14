@@ -14,6 +14,8 @@ import { cn } from '@/shadcn/utils'
 
 type OpenChangeDetails = Parameters<NonNullable<PopoverPrimitive.Root.Props['onOpenChange']>>[1]
 
+export type MenuOpenChangeDetails = OpenChangeDetails
+
 const CloseContext = React.createContext<(() => void) | null>(null)
 
 type MenuHighlightState = {

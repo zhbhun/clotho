@@ -259,6 +259,7 @@ function SessionAreaContent({
   forkSession,
   isMockProject,
   isProjectSessionLoading,
+  pinnedSessionIds,
   projectMode,
   projectSessionError,
   projects,
@@ -272,10 +273,12 @@ function SessionAreaContent({
   turnScrollRequest,
   onAddProject,
   onContentScrolledChange,
+  onDeleteSession,
   onOpenSettings,
   onRenameSession,
   onSelectSession,
   onRetryProjectSessions,
+  onTogglePinSession,
   setSelectedProjectId,
 }: SessionAreaProps & {
   sessionId: string
@@ -807,15 +810,19 @@ function SessionAreaContent({
           historyError={projectSessionError}
           historyIsLoading={isProjectSessionLoading}
           historySessions={workspaceSessions}
+          pinnedSessionIds={pinnedSessionIds}
           projectMode={projectMode}
           projectName={selectedProject ? projectDisplayName(selectedProject) : ''}
           projects={projects}
           selectedProject={selectedProject}
           sessionActivity={sessionActivity}
           onAddProject={onAddProject}
+          onDeleteSession={onDeleteSession}
+          onRenameSession={onRenameSession}
           onSelectProject={setSelectedProjectId}
           onSelectSession={onSelectSession}
           onRetryHistory={onRetryProjectSessions}
+          onTogglePinSession={onTogglePinSession}
         />
       )}
     </>

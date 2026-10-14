@@ -1,4 +1,4 @@
-import { MessageCircleCode } from 'lucide-react'
+import { MessageCircleCode, Pin } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { Skeleton } from '@/shadcn/skeleton'
@@ -15,32 +15,49 @@ import {
 import { LoadFailure } from '../components/loading-state'
 import { SessionStatus } from '../session-status'
 import type { SessionActivity, WorkbenchSession } from '../stores/workbench-store'
-import { sessionTimeLabel, sessionTitle } from '../utils/session-list'
+import { compareSessions, sessionTimeLabel, sessionTitle } from '../utils/session-list'
+import { SessionHistoryRowMenu } from './session-history-row-menu'
 
 export type SessionHistoryMenuContentProps = {
   activeSessionId: string | null
   error?: string | null
   isLoading?: boolean
+  pinnedSessionIds?: ReadonlySet<string>
   sessionActivity?: Record<string, SessionActivity>
   sessions: WorkbenchSession[]
   onRetry?: () => void
+  onDeleteSession: (session: WorkbenchSession) => void
+  onRenameSession: (session: WorkbenchSession) => void
   onSelectSession: (session: WorkbenchSession) => void
+  onTogglePinSession: (session: WorkbenchSession) => void
 }
 
 /** Dropdown body for the history button: searchable session rows mirroring the
-    palette dialog's loading, error, and empty states. */
+    palette dialog's loading, error, and empty states. Pinned sessions sort to
+    the top and every row carries a hover "..." menu. */
 export function SessionHistoryMenuContent({
   activeSessionId,
   error = null,
   isLoading = false,
+  pinnedSessionIds,
   sessionActivity = {},
   sessions,
   onRetry = () => {},
+  onDeleteSession,
+  onRenameSession,
   onSelectSession,
+  onTogglePinSession,
 }: SessionHistoryMenuContentProps) {
   const { i18n, t } = useTranslation()
   const locale = i18n.resolvedLanguage ?? i18n.language
   const now = new Date()
+  const orderedSessions = pinnedSessionIds?.size
+    ? sessions.toSorted((left, right) => {
+        const pinnedLeft = pinnedSessionIds.has(left.id) ? 0 : 1
+        const pinnedRight = pinnedSessionIds.has(right.id) ? 0 : 1
+        return pinnedLeft - pinnedRight || compareSessions(left, right)
+      })
+    : sessions
 
   return (
     <MenuContent
@@ -71,9 +88,10 @@ export function SessionHistoryMenuContent({
               {sessions.length ? t('workbench.history.empty') : t('workbench.history.noSessions')}
             </MenuEmpty>
             <MenuGroup>
-              {sessions.map((session) => {
+              {orderedSessions.map((session) => {
                 const time = sessionTimeLabel(session.created_at, now, t, locale)
                 const activity = sessionActivity[session.id] ?? 'idle'
+                const isPinned = pinnedSessionIds?.has(session.id) ?? false
 
                 return (
                   <MenuItem
@@ -90,7 +108,19 @@ export function SessionHistoryMenuContent({
                       icon={<MessageCircleCode className="size-4" strokeWidth={1.5} />}
                     />
                     <span className="min-w-0 truncate text-sm/5">{sessionTitle(session)}</span>
+                    {isPinned ? (
+                      <Pin className="size-3 shrink-0 text-foreground-subtlest" strokeWidth={1.5} />
+                    ) : null}
                     <span className="shrink-0 text-[12px] text-foreground-subtlest">{time}</span>
+                    <span className="ml-auto flex shrink-0 items-center">
+                      <SessionHistoryRowMenu
+                        isPinned={isPinned}
+                        session={session}
+                        onDeleteSession={onDeleteSession}
+                        onRenameSession={onRenameSession}
+                        onTogglePinSession={onTogglePinSession}
+                      />
+                    </span>
                   </MenuItem>
                 )
               })}

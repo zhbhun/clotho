@@ -26,12 +26,17 @@ beforeEach(async () => {
 describe('SessionHistoryButton', () => {
   function renderHistoryButton({
     activeSessionId = null,
+    pinnedSessionIds,
     sessions = [SESSION],
   }: {
     activeSessionId?: string | null
+    pinnedSessionIds?: ReadonlySet<string>
     sessions?: WorkbenchSession[]
   } = {}) {
+    const onDeleteSession = vi.fn()
+    const onRenameSession = vi.fn()
     const onSelectSession = vi.fn()
+    const onTogglePinSession = vi.fn()
     const runtime = createShortcutRuntime({
       catalog: commandCatalog,
       client: {
@@ -52,14 +57,18 @@ describe('SessionHistoryButton', () => {
         <TooltipProvider>
           <SessionHistoryButton
             activeSessionId={activeSessionId}
+            pinnedSessionIds={pinnedSessionIds}
             sessions={sessions}
+            onDeleteSession={onDeleteSession}
+            onRenameSession={onRenameSession}
             onSelectSession={onSelectSession}
+            onTogglePinSession={onTogglePinSession}
           />
         </TooltipProvider>
       </ShortcutRuntimeProvider>,
     )
 
-    return { onSelectSession }
+    return { onDeleteSession, onRenameSession, onSelectSession, onTogglePinSession }
   }
 
   it('opens the dropdown menu in place and selects a session from it', async () => {
@@ -96,5 +105,42 @@ describe('SessionHistoryButton', () => {
       expect(highlighted()[0]).toHaveAttribute('data-value', duplicate.id)
     })
     expect(highlighted()).toHaveLength(1)
+  })
+
+  it('pins a session from its row menu without selecting the row or closing the history menu', async () => {
+    const { onSelectSession, onTogglePinSession } = renderHistoryButton()
+    const user = userEvent.setup()
+
+    await user.click(screen.getByRole('button', { name: appI18n.t('workbench.history.title') }))
+    await user.hover(screen.getByRole('button', { name: appI18n.t('workbench.action.more') }))
+
+    const rowMenu = await screen.findByRole('dialog', {
+      name: appI18n.t('workbench.action.more'),
+    })
+    await user.click(
+      within(rowMenu).getByRole('option', { name: appI18n.t('workbench.action.pin') }),
+    )
+
+    expect(onTogglePinSession).toHaveBeenCalledWith(SESSION)
+    expect(onSelectSession).not.toHaveBeenCalled()
+    expect(
+      screen.getByRole('dialog', { name: appI18n.t('workbench.history.title') }),
+    ).toBeInTheDocument()
+  })
+
+  it('sorts pinned sessions ahead of the recency order', async () => {
+    const older = { ...SESSION, id: 'session-older', title: 'Older conversation', created_at: 1 }
+    const newer = { ...SESSION, id: 'session-newer', title: 'Newer conversation', created_at: 10 }
+    renderHistoryButton({ pinnedSessionIds: new Set([older.id]), sessions: [newer, older] })
+    const user = userEvent.setup()
+
+    await user.click(screen.getByRole('button', { name: appI18n.t('workbench.history.title') }))
+
+    const menu = screen.getByRole('dialog', { name: appI18n.t('workbench.history.title') })
+    const values = within(menu)
+      .getAllByRole('option')
+      .map((option) => option.getAttribute('data-value'))
+
+    expect(values).toEqual([older.id, newer.id])
   })
 })
