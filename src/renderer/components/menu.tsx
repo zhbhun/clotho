@@ -24,17 +24,27 @@ type MenuHighlightState = {
 
 const HighlightContext = React.createContext<MenuHighlightState | null>(null)
 
+const IndicatorContext = React.createContext(false)
+
 type MenuProps = Omit<PopoverPrimitive.Root.Props, 'open' | 'onOpenChange'> & {
   open?: boolean
   onOpenChange?: (open: boolean, eventDetails: OpenChangeDetails) => void
+  indicator?: boolean
 }
 
 /**
  * Searchable dropdown menu built from Popover + Command.
  * Supports controlled and uncontrolled open state and closes after selecting a MenuItem.
- * Omit MenuSearch to use a plain menu.
+ * Omit MenuSearch to use a plain menu. Selected items show a trailing check only
+ * when indicator is enabled (on Menu or an individual MenuItem).
  */
-function Menu({ open: openProp, onOpenChange, defaultOpen, ...props }: MenuProps) {
+function Menu({
+  open: openProp,
+  onOpenChange,
+  defaultOpen,
+  indicator = false,
+  ...props
+}: MenuProps) {
   const [internalOpen, setInternalOpen] = React.useState(defaultOpen ?? false)
   const isControlled = openProp !== undefined
   const open = isControlled ? openProp : internalOpen
@@ -65,11 +75,13 @@ function Menu({ open: openProp, onOpenChange, defaultOpen, ...props }: MenuProps
   )
 
   return (
-    <HighlightContext.Provider value={highlight}>
-      <CloseContext.Provider value={close}>
-        <PopoverPrimitive.Root data-slot="menu" open={open} onOpenChange={setOpen} {...props} />
-      </CloseContext.Provider>
-    </HighlightContext.Provider>
+    <IndicatorContext.Provider value={indicator}>
+      <HighlightContext.Provider value={highlight}>
+        <CloseContext.Provider value={close}>
+          <PopoverPrimitive.Root data-slot="menu" open={open} onOpenChange={setOpen} {...props} />
+        </CloseContext.Provider>
+      </HighlightContext.Provider>
+    </IndicatorContext.Provider>
   )
 }
 
@@ -236,12 +248,14 @@ function MenuLabel({ className, ...props }: React.ComponentProps<'div'>) {
 function MenuItem({
   selected,
   onSelect,
+  indicator,
   ...props
 }: React.ComponentProps<typeof CommandItem> & {
   selected?: boolean
 }) {
   const close = React.useContext(CloseContext)
   const highlight = React.useContext(HighlightContext)
+  const menuIndicator = React.useContext(IndicatorContext)
   const initActiveValue = highlight?.initActiveValue
   const itemRef = React.useRef<HTMLDivElement | null>(null)
 
@@ -258,6 +272,7 @@ function MenuItem({
     <CommandItem
       ref={itemRef}
       data-checked={selected ? 'true' : undefined}
+      indicator={indicator ?? menuIndicator}
       onSelect={(value) => {
         onSelect?.(value)
         close?.()

@@ -5,10 +5,10 @@ import * as React from 'react'
 import { ScrollArea } from '@/shadcn/scroll-area'
 import { cn } from '@/shadcn/utils'
 
-const IndicatorContext = React.createContext(true)
+const IndicatorContext = React.createContext(false)
 
 function Select<Value, Multiple extends boolean | undefined = false>({
-  indicator = true,
+  indicator = false,
   ...props
 }: SelectPrimitive.Root.Props<Value, Multiple> & {
   indicator?: boolean
