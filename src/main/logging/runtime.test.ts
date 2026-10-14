@@ -9,8 +9,8 @@ describe('logging runtime', () => {
   test.each([
     ['stable', path.join('/Users/alice/.clotho', 'logs', 'clotho.jsonl')],
     ['canary', path.join('/Users/alice/.clotho', 'logs', 'canary', 'clotho.jsonl')],
-    ['dev', path.join('/Users/alice/.clotho', 'logs', 'dev', 'clotho.jsonl')],
-  ] as const)('places %s logs in the expected channel directory', (channel, expected) => {
+    ['dev', path.join('/Users/alice/.clotho', 'logs', 'clotho.dev.jsonl')],
+  ] as const)('places %s logs at the expected path', (channel, expected) => {
     expect(getLogFilePath('/Users/alice/.clotho', channel)).toBe(expected)
   })
 

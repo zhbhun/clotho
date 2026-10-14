@@ -57,6 +57,7 @@ export function getLoggingDestinations(
 }
 
 export function getLogFilePath(rootDir: string, channel: AppLogChannel) {
+  if (channel === 'dev') return path.join(rootDir, 'logs', 'clotho.dev.jsonl')
   const logDir =
     channel === 'stable' ? path.join(rootDir, 'logs') : path.join(rootDir, 'logs', channel)
   return path.join(logDir, 'clotho.jsonl')
