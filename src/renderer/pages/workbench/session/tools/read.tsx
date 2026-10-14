@@ -1,8 +1,10 @@
 import { FileScan } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { requestFromDesktop } from '../../../../services/desktop/client'
 import { ToolHeading, ToolIcon } from './shared/content'
-import { fileSummary, formatDisplayPath } from './shared/file-path'
+import { fileSummary, formatDisplayPath, relativeDisplayPath } from './shared/file-path'
 import type { CoalescedRead, ToolRenderer } from './shared/types'
 
 export const readRenderer: ToolRenderer = {
@@ -42,11 +44,48 @@ export function ReadCoalescedCard({
               description={translate(readRenderer.description)}
               icon={readRenderer.icon}
             />
-            <ToolHeading name={translate(readRenderer.label)} summary={summary} />
+            <ToolHeading
+              name={translate(readRenderer.label)}
+              summary={
+                <ReadPathLink path={read.file_path} projectPath={projectPath}>
+                  {summary}
+                </ReadPathLink>
+              }
+            />
           </div>
         )
       })}
     </div>
+  )
+}
+
+/**
+ * Reveals the read file in the system file manager. The href is the
+ * project-relative path so the main-process link guard accepts it; files
+ * outside the project resolve to "ignore" there and the click is a no-op.
+ */
+function ReadPathLink({
+  path,
+  projectPath,
+  children,
+}: {
+  path: string
+  projectPath?: string
+  children: ReactNode
+}) {
+  return (
+    <span
+      className="cursor-pointer underline-offset-2 hover:text-foreground hover:underline"
+      onClick={() => {
+        if (!projectPath) return
+        void requestFromDesktop('appOpenLink', {
+          href: relativeDisplayPath(path, projectPath),
+          projectPath,
+        }).catch(() => undefined)
+      }}
+    >
+      {children}
+    </span>
   )
 }
 

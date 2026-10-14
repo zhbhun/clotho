@@ -244,7 +244,7 @@ export function ToolHeading({
 }: {
   isRunning?: boolean
   name: string
-  summary?: string
+  summary?: ReactNode
   summaryClassName?: string
 }) {
   return (
