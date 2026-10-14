@@ -63,7 +63,7 @@ function ProjectRows({
                       <Button
                         aria-label={t('settings.provider.editProvider', { name })}
                         className="invisible group-hover/project-row:visible"
-                        size="icon-sm"
+                        size="icon"
                         type="button"
                         variant="mute"
                         onClick={() => onEditProject(project)}
@@ -80,7 +80,7 @@ function ProjectRows({
                       <Button
                         aria-label={t('settings.project.removeNamed', { name })}
                         className="invisible group-hover/project-row:visible"
-                        size="icon-sm"
+                        size="icon"
                         type="button"
                         variant="mute"
                         onClick={() => onRemoveProject(project)}
