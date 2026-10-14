@@ -129,7 +129,8 @@ Keep names short while preserving meaning. Split and refine names as responsibil
 
 - Use Vitest + jsdom/node for the frontend and the Electron main process. Keep tests next to source files and name them `*.test.ts(x)`.
 - Use unit tests sparingly: add them only when they protect against meaningful, realistic regressions and justify their maintenance cost; do not write tests for coverage, implementation details, trivial code, visual tuning, or behavior already guaranteed by third-party libraries.
-- Do not use Chromium, Playwright, or ego-browser to test or accept this project's UI/functionality, and do not run `npm start`. The user starts the Electron app for manual verification; describe the verification method.
+- Do not use Chromium, Playwright, or ego-browser to test the app, and do not run `npm start`.
+- Verify app behavior via `npm run debug` (renderer CDP on 3367, main-process inspector on 3368). Check `curl -s http://127.0.0.1:3367/json/version` first and reuse an existing instance; drive verification over CDP (e.g. `Runtime.evaluate`), and stop the app if you started it.
 - By default, run only tests for affected modules; do not run the full suite unless explicitly requested. Run `npm run typecheck` for TypeScript changes; run ESLint and Prettier only on changed files. Run `npm run package` only when changing build-related files.
 
 ### Commit conventions
