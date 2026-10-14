@@ -8,13 +8,7 @@ import {
 } from 'react'
 
 import { ScrollArea } from '@/shadcn/scroll-area'
-import { cn } from '@/shadcn/utils'
-
-import './transient-scroll-area.css'
-import {
-  SCROLLBAR_SELECTOR,
-  useTransientScrollbarVisibility,
-} from './use-transient-scrollbar-visibility'
+import { SCROLLBAR_SELECTOR } from '@/shadcn/use-transient-scrollbar-visibility'
 
 const SIDEBAR_LAYOUT_SELECTOR = '.session-sidebar-layout'
 const sidebarLayoutDragCounts = new WeakMap<HTMLElement, number>()
@@ -80,7 +74,6 @@ function acquireLayoutDragLock(layout: HTMLElement | null) {
 }
 
 export function TransientScrollArea({
-  className,
   onPointerDownCapture,
   orientation = 'vertical',
   ...props
@@ -100,9 +93,6 @@ export function TransientScrollArea({
   }, [])
 
   useEffect(() => () => finishScrollbarDrag(), [finishScrollbarDrag])
-
-  const rootRef = useRef<HTMLDivElement>(null)
-  useTransientScrollbarVisibility(rootRef, orientation === 'horizontal')
 
   const handlePointerDownCapture = (event: BaseUIEvent<ReactPointerEvent<HTMLDivElement>>) => {
     onPointerDownCapture?.(event)
@@ -136,10 +126,8 @@ export function TransientScrollArea({
   return (
     <ScrollArea
       {...props}
-      className={cn('transient-scroll-area', className)}
-      data-transient-scroll-area
+      transient
       orientation={orientation}
-      ref={rootRef}
       onPointerDownCapture={handlePointerDownCapture}
     />
   )

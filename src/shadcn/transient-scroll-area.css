@@ -8,13 +8,19 @@
   user-select: none;
 }
 
-/* Keep hidden until visible (Base UI has no built-in auto-hide; the state machine drives data-state). */
-.transient-scroll-area [data-slot='scroll-area-scrollbar']:not([data-state='visible']) {
+/* Hidden until visible (the data-state machine drives visibility; Base UI's own
+   data-scrolling flag additionally covers programmatic scrolls such as keyboard
+   navigation and typeahead). */
+.transient-scroll-area [data-slot='scroll-area-scrollbar'] {
   opacity: 0;
   pointer-events: none;
+  transition: opacity 180ms ease-in;
 }
 
-.transient-scroll-area [data-slot='scroll-area-scrollbar'][data-state='visible'] {
+.transient-scroll-area [data-slot='scroll-area-scrollbar'][data-state='visible'],
+.transient-scroll-area [data-slot='scroll-area-scrollbar'][data-scrolling] {
+  opacity: 1;
+  pointer-events: auto;
   animation: transient-scrollbar-fade-in 140ms ease-out both;
 }
 

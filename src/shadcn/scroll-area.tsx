@@ -1,30 +1,52 @@
 import { ScrollArea as ScrollAreaPrimitive } from '@base-ui/react/scroll-area'
 import * as React from 'react'
 
+import { useTransientScrollbarVisibility } from '@/shadcn/use-transient-scrollbar-visibility'
 import { cn } from '@/shadcn/utils'
 
-function ScrollArea({
-  className,
-  children,
-  viewportRef,
-  viewportProps,
-  orientation = 'vertical',
-  ...props
-}: ScrollAreaPrimitive.Root.Props & {
+import './transient-scroll-area.css'
+
+type ScrollAreaProps = React.ComponentProps<typeof ScrollAreaPrimitive.Root> & {
   viewportRef?: React.Ref<HTMLDivElement>
   orientation?: 'vertical' | 'horizontal'
+  transient?: boolean
   viewportProps?: Omit<
     React.ComponentProps<typeof ScrollAreaPrimitive.Viewport>,
     'children' | 'ref'
   >
-}) {
+}
+
+function ScrollArea({
+  className,
+  children,
+  transient = false,
+  viewportRef,
+  viewportProps,
+  orientation = 'vertical',
+  ref,
+  ...props
+}: ScrollAreaProps) {
+  const rootRef = React.useRef<HTMLDivElement | null>(null)
+  useTransientScrollbarVisibility(rootRef, {
+    enabled: transient,
+    trackScroll: orientation === 'horizontal',
+  })
+
   const { className: viewportClassName, ...resolvedViewportProps } = viewportProps ?? {}
+
+  const setRootRef = (node: HTMLDivElement | null) => {
+    rootRef.current = node
+    if (typeof ref === 'function') ref(node)
+    else if (ref) (ref as React.RefObject<HTMLDivElement | null>).current = node
+  }
 
   return (
     <ScrollAreaPrimitive.Root
       data-slot="scroll-area"
-      className={cn('relative', className)}
+      data-transient-scroll-area={transient ? 'true' : undefined}
+      className={cn('relative', transient && 'transient-scroll-area', className)}
       {...props}
+      ref={setRootRef}
     >
       <ScrollAreaPrimitive.Viewport
         {...resolvedViewportProps}

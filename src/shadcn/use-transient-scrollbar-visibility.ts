@@ -11,11 +11,12 @@ export const SCROLLBAR_SELECTOR = '[data-slot="scroll-area-scrollbar"]'
  */
 export function useTransientScrollbarVisibility(
   rootRef: RefObject<HTMLDivElement | null>,
-  trackScroll = false,
+  options: { enabled?: boolean; trackScroll?: boolean } = {},
 ) {
+  const { enabled = true, trackScroll = false } = options
   useEffect(() => {
     const root = rootRef.current
-    if (!root) return
+    if (!enabled || !root) return
     const belongsToRoot = (element: Element) =>
       element.closest('[data-transient-scroll-area]') === root
     const scrollbars = [...root.querySelectorAll<HTMLElement>(SCROLLBAR_SELECTOR)].filter(
@@ -98,5 +99,5 @@ export function useTransientScrollbarVisibility(
       }
       window.clearTimeout(hideTimer)
     }
-  }, [rootRef, trackScroll])
+  }, [rootRef, enabled, trackScroll])
 }
