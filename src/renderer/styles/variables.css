@@ -238,7 +238,7 @@
   --project-icon-cyan: var(--color-cyan-400);
   --project-switcher-surface: color-mix(in oklab, var(--card), var(--color-white) 4.99%);
   --session-tab-surface: var(--secondary);
-  --chat-message: color-mix(in oklab, var(--background), var(--foreground) 5.5%);
+  --chat-message: color-mix(in oklab, var(--background), var(--foreground) 6%);
   --chat-input: color-mix(in oklab, var(--background), var(--color-white) 12.74%);
   --sidebar-active: var(--sidebar-accent);
   --control-checked: var(--color-neutral-100);
