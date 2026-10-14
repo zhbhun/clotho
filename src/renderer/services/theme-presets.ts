@@ -3,8 +3,31 @@ export const THEME_VARIANTS = ['dark', 'light'] as const
 export type ThemeVariant = (typeof THEME_VARIANTS)[number]
 
 export const THEME_PRESET_IDS = {
-  dark: ['clotho', 'dracula', 'github', 'material', 'notion', 'one', 'xcode'],
-  light: ['clotho', 'github', 'notion', 'one', 'xcode'],
+  dark: [
+    'clotho',
+    'codex',
+    'dracula',
+    'github',
+    'linear',
+    'material',
+    'notion',
+    'one',
+    'oscurange',
+    'raycast',
+    'xcode',
+  ],
+  light: [
+    'clotho',
+    'codex',
+    'absolutely',
+    'catppuccin',
+    'github',
+    'linear',
+    'notion',
+    'one',
+    'raycast',
+    'xcode',
+  ],
 } as const
 
 type DarkThemePresetId = (typeof THEME_PRESET_IDS.dark)[number]
@@ -38,6 +61,13 @@ export const THEME_PRESETS: Record<ThemeVariant, readonly ThemePreset[]> = {
       foreground: '#f5f5f5',
     },
     {
+      id: 'codex',
+      name: 'Codex',
+      accent: '#0169cc',
+      background: '#111111',
+      foreground: '#fcfcfc',
+    },
+    {
       id: 'dracula',
       name: 'Dracula',
       accent: '#ff79c6',
@@ -50,6 +80,13 @@ export const THEME_PRESETS: Record<ThemeVariant, readonly ThemePreset[]> = {
       accent: '#1f6feb',
       background: '#0d1117',
       foreground: '#e6edf3',
+    },
+    {
+      id: 'linear',
+      name: 'Linear',
+      accent: '#606acc',
+      background: '#0f0f11',
+      foreground: '#e3e4e6',
     },
     {
       id: 'material',
@@ -73,6 +110,20 @@ export const THEME_PRESETS: Record<ThemeVariant, readonly ThemePreset[]> = {
       foreground: '#abb2bf',
     },
     {
+      id: 'oscurange',
+      name: 'Oscurange',
+      accent: '#f9b98c',
+      background: '#0b0b0f',
+      foreground: '#e6e6e6',
+    },
+    {
+      id: 'raycast',
+      name: 'Raycast',
+      accent: '#ff6363',
+      background: '#101010',
+      foreground: '#fefefe',
+    },
+    {
       id: 'xcode',
       name: 'Xcode',
       accent: '#5482ff',
@@ -89,11 +140,39 @@ export const THEME_PRESETS: Record<ThemeVariant, readonly ThemePreset[]> = {
       foreground: '#171717',
     },
     {
+      id: 'codex',
+      name: 'Codex',
+      accent: '#0169cc',
+      background: '#ffffff',
+      foreground: '#0d0d0d',
+    },
+    {
+      id: 'absolutely',
+      name: 'Absolutely',
+      accent: '#cc7d5e',
+      background: '#f9f9f7',
+      foreground: '#2d2d2b',
+    },
+    {
+      id: 'catppuccin',
+      name: 'Catppuccin',
+      accent: '#8839ef',
+      background: '#eff1f5',
+      foreground: '#4c4f69',
+    },
+    {
       id: 'github',
       name: 'GitHub',
       accent: '#0969da',
       background: '#ffffff',
       foreground: '#1f2328',
+    },
+    {
+      id: 'linear',
+      name: 'Linear',
+      accent: '#5e6ad2',
+      background: '#fcfcfd',
+      foreground: '#1b1b1b',
     },
     {
       id: 'notion',
@@ -108,6 +187,13 @@ export const THEME_PRESETS: Record<ThemeVariant, readonly ThemePreset[]> = {
       accent: '#526fff',
       background: '#fafafa',
       foreground: '#383a42',
+    },
+    {
+      id: 'raycast',
+      name: 'Raycast',
+      accent: '#ff6363',
+      background: '#ffffff',
+      foreground: '#030303',
     },
     {
       id: 'xcode',
