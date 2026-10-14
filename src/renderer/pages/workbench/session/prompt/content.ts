@@ -10,6 +10,12 @@ function textNode(text: string): JSONContent | null {
 // resumes as text right after it, so the serialized prompt is unchanged.
 const TRAILING_PUNCTUATION_PATTERN = /[.,;:!?)\]}，。；：！？）」』]+$/u
 
+// A chip takes punctuation directly (`/review,`) the way a word does, without
+// the boundary space.
+const CHIP_PUNCTUATION_PATTERN = /^[.,;:!?)\]}，。；：！？）」』]/u
+
+const CHIP_NODE_TYPES = new Set(['fileMention', 'slashCommand'])
+
 function slashCommandNode(name: string): JSONContent {
   return { type: 'slashCommand', attrs: { name } }
 }
@@ -59,6 +65,7 @@ function lineNodes(line: string, chipSlashCommands = false) {
   const content: JSONContent[] = []
   const commandPattern = /\/[^\s/]+/g
   let textStart = 0
+  let lastWasChip = false
 
   for (const match of line.matchAll(commandPattern)) {
     const index = match.index
@@ -66,15 +73,23 @@ function lineNodes(line: string, chipSlashCommands = false) {
     const name = match[0].slice(1).replace(TRAILING_PUNCTUATION_PATTERN, '')
     if (!name) continue
 
-    const before = textNode(line.slice(textStart, index))
+    const before = textNode(stripBoundarySpace(line.slice(textStart, index), lastWasChip))
     if (before) content.push(before)
     content.push(slashCommandNode(name))
     textStart = index + 1 + name.length
+    lastWasChip = true
   }
 
-  const after = textNode(line.slice(textStart))
-  if (after) content.push(after)
-  return content
+  const after = textNode(stripBoundarySpace(line.slice(textStart), lastWasChip))
+  return after ? [...content, after] : content
+}
+
+// A chip's surrounding spaces live in its padding, not as text: drop the one
+// space the serializer writes on each side of a chip so the restored document
+// does not show both.
+function stripBoundarySpace(text: string, afterChip: boolean) {
+  if (afterChip) return text.startsWith(' ') ? text.slice(1) : text
+  return text.endsWith(' ') ? text.slice(0, -1) : text
 }
 
 export function markdownTextToDoc(value: string | null | undefined): JSONContent {
@@ -102,6 +117,7 @@ function lineNodesWithMentions(
   const parts: JSONContent[] = []
   const pattern = /@"(?:\\.|[^"\\])*"|@([^\s@]+)/g
   let start = 0
+  let lastWasChip = false
   for (const match of line.matchAll(pattern)) {
     const index = match.index
     if (index > 0 && !/[\s([{]/.test(line[index - 1] ?? '')) continue
@@ -109,14 +125,17 @@ function lineNodesWithMentions(
     if (path === null) continue
     const { filePath, lineHint } = splitLineHint(path)
     if (referenceFilter && !referenceFilter(filePath)) continue
-    parts.push(...lineNodes(line.slice(start, index), chipSlashCommands))
+    parts.push(
+      ...lineNodes(stripBoundarySpace(line.slice(start, index), lastWasChip), chipSlashCommands),
+    )
     parts.push({
       type: 'fileMention',
       attrs: { ...fileReferenceFromPath(filePath), lineHint },
     })
     start = index + match[0].length
+    lastWasChip = true
   }
-  parts.push(...lineNodes(line.slice(start), chipSlashCommands))
+  parts.push(...lineNodes(stripBoundarySpace(line.slice(start), lastWasChip), chipSlashCommands))
   return parts
 }
 
@@ -134,7 +153,32 @@ function serializeNode(node: JSONContent): string {
     return name ? `/${name}` : ''
   }
 
-  return (node.content ?? []).map(serializeNode).join('')
+  return serializeInline(node.content ?? [])
+}
+
+// Chips always own a space on each side — the editor renders it as the chip's
+// padding — so a chip typed flush against text still serializes with the
+// boundaries the restore parser requires.
+function serializeInline(nodes: JSONContent[]): string {
+  let out = ''
+  let prevIsChip = false
+  for (const node of nodes) {
+    const text = serializeNode(node)
+    if (!text) continue
+    const isChip = CHIP_NODE_TYPES.has(node.type ?? '')
+    if ((prevIsChip || isChip) && needsBoundarySpace(out, text)) out += ' '
+    out += text
+    prevIsChip = isChip
+  }
+  return out
+}
+
+function needsBoundarySpace(out: string, text: string) {
+  const last = out.at(-1)
+  const first = text[0]
+  return Boolean(
+    last && first && !/\s/.test(last) && !/\s/.test(first) && !CHIP_PUNCTUATION_PATTERN.test(first),
+  )
 }
 
 export function promptDocToMarkdown(doc: JSONContent): string {

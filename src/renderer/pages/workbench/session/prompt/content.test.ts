@@ -47,7 +47,7 @@ describe('prompt content persistence', () => {
           type: 'paragraph',
           content: [
             { type: 'slashCommand', attrs: { name: 'review' } },
-            { type: 'text', text: ' inspect ' },
+            { type: 'text', text: 'inspect' },
             {
               type: 'fileMention',
               attrs: {
@@ -84,12 +84,12 @@ describe('prompt content persistence', () => {
       content: [
         {
           content: [
-            { type: 'text', text: 'check ' },
+            { type: 'text', text: 'check' },
             {
               type: 'fileMention',
               attrs: { path: 'src/app.tsx', name: 'app.tsx', mimeKind: 'code', lineHint: '#L5-11' },
             },
-            { type: 'text', text: ' and ' },
+            { type: 'text', text: 'and' },
             {
               type: 'fileMention',
               attrs: { path: 'src/main.ts', name: 'main.ts', mimeKind: 'code', lineHint: ':12' },
@@ -117,9 +117,9 @@ describe('restored command chips', () => {
       content: [
         {
           content: [
-            { type: 'text', text: 'run ' },
+            { type: 'text', text: 'run' },
             { type: 'slashCommand', attrs: { name: 'archify' } },
-            { type: 'text', text: ' next' },
+            { type: 'text', text: 'next' },
           ],
         },
       ],
@@ -134,7 +134,7 @@ describe('restored command chips', () => {
       content: [
         {
           content: [
-            { type: 'text', text: 'run ' },
+            { type: 'text', text: 'run' },
             { type: 'slashCommand', attrs: { name: 'clear' } },
             { type: 'text', text: ', then ' },
             { type: 'slashCommand', attrs: { name: 'review' } },
@@ -160,8 +160,46 @@ describe('pasted prompt text', () => {
     const nodes = promptTextToInlineNodes('see /archify and @src/app.ts')
 
     expect(nodes).toMatchObject([
-      { type: 'text', text: 'see /archify and ' },
+      { type: 'text', text: 'see /archify and' },
       { type: 'fileMention', attrs: { path: 'src/app.ts' } },
     ])
+  })
+})
+
+describe('flush-adjacent chips', () => {
+  it('serializes chips flush against text with the boundary spaces restore needs', () => {
+    const prompt = promptDocToMarkdown({
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            { type: 'text', text: '123' },
+            { type: 'slashCommand', attrs: { name: 'archify' } },
+            { type: 'text', text: 'q23' },
+            {
+              type: 'fileMention',
+              attrs: { path: 'src/app.ts', name: 'app.ts', mimeKind: 'code' },
+            },
+            { type: 'text', text: '789' },
+          ],
+        },
+      ],
+    })
+
+    expect(prompt).toBe('123 /archify q23 @src/app.ts 789')
+    expect(restorePromptDocument(prompt)).toMatchObject({
+      content: [
+        {
+          content: [
+            { type: 'text', text: '123' },
+            { type: 'slashCommand', attrs: { name: 'archify' } },
+            { type: 'text', text: 'q23' },
+            { type: 'fileMention', attrs: { path: 'src/app.ts' } },
+            { type: 'text', text: '789' },
+          ],
+        },
+      ],
+    })
   })
 })
