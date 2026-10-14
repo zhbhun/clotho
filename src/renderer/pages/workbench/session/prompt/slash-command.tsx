@@ -100,7 +100,12 @@ function SlashCommandView({ node }: NodeViewProps) {
           <Box aria-hidden className="size-3.5 shrink-0" />
           <span className="min-w-0 truncate">{name}</span>
         </PopoverTrigger>
-        <PopoverContent align="start" className="w-80 gap-0 p-3" side="top" sideOffset={6}>
+        <PopoverContent
+          align="start"
+          className="max-h-72 w-[min(28rem,calc(100vw-2rem))] gap-0 overflow-y-auto p-3"
+          side="top"
+          sideOffset={6}
+        >
           <PopoverHeader className="gap-1.5">
             <PopoverTitle className="text-foreground">{commandTitle(name)}</PopoverTitle>
             {description ? (
