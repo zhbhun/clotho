@@ -1,6 +1,6 @@
 import { type JSONContent, Node, mergeAttributes } from '@tiptap/core'
 import { type NodeViewProps, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
-import { Box } from 'lucide-react'
+import { Box, CircleX } from 'lucide-react'
 import { type Ref, createContext, useContext, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
@@ -68,8 +68,9 @@ function findCommandByName(commands: ClaudeSlashCommand[], name: string) {
  */
 export const SlashCommandsContext = createContext<ClaudeSlashCommand[]>([])
 
-function SlashCommandView({ node }: NodeViewProps) {
+function SlashCommandView({ deleteNode, node }: NodeViewProps) {
   const commands = useContext(SlashCommandsContext)
+  const { t } = useTranslation()
   const name = typeof node.attrs.name === 'string' ? node.attrs.name : ''
   const description =
     (typeof node.attrs.description === 'string' ? node.attrs.description : undefined) ??
@@ -92,12 +93,24 @@ function SlashCommandView({ node }: NodeViewProps) {
           render={
             <span
               aria-label={`/${name}`}
-              className="inline-flex h-6 max-w-64 items-center gap-1 px-1.5 align-top leading-6 text-(--prompt-composer-chip) transition-colors hover:text-(--primary)"
+              className="group/command inline-flex h-6 max-w-64 items-center gap-1 px-1.5 align-top leading-6 text-(--prompt-composer-chip) transition-colors hover:text-(--primary)"
               data-pointer-cursor-target=""
             />
           }
         >
-          <Box aria-hidden className="size-3.5 shrink-0" />
+          <Box aria-hidden className="size-3.5 shrink-0 group-hover/command:hidden" />
+          <button
+            aria-label={t('workbench.prompt.removeCommand', { name })}
+            className="hidden size-3.5 items-center justify-center rounded-full transition-colors hover:bg-foreground/10 group-hover/command:inline-flex"
+            type="button"
+            onClick={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              deleteNode()
+            }}
+          >
+            <CircleX aria-hidden className="size-3.5" strokeWidth={1.5} />
+          </button>
           <span className="min-w-0 truncate">{name}</span>
         </PopoverTrigger>
         <PopoverContent

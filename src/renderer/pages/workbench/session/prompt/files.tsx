@@ -1,6 +1,6 @@
 import { type JSONContent, Node } from '@tiptap/core'
 import { type NodeViewProps, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
-import { File, FileCode, FileText, ImageIcon, X } from 'lucide-react'
+import { CircleX, File, FileCode, FileText, ImageIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -135,7 +135,7 @@ function FileMentionView({ deleteNode, node }: NodeViewProps) {
         )}
         <button
           aria-label={t('workbench.prompt.removeFile', { name })}
-          className="hidden size-3.5 items-center justify-center rounded-sm text-foreground-subtle hover:text-foreground group-hover/file:inline-flex"
+          className="hidden size-3.5 items-center justify-center rounded-full transition-colors hover:bg-foreground/10 group-hover/file:inline-flex"
           type="button"
           onClick={(event) => {
             event.preventDefault()
@@ -143,7 +143,7 @@ function FileMentionView({ deleteNode, node }: NodeViewProps) {
             deleteNode()
           }}
         >
-          <X aria-hidden className="size-3.5" />
+          <CircleX aria-hidden className="size-3.5" strokeWidth={1.5} />
         </button>
       </span>
       <span className="min-w-0 truncate">{name}</span>
