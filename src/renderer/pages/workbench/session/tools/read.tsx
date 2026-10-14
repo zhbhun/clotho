@@ -11,6 +11,7 @@ export const readRenderer: ToolRenderer = {
   description: 'tools.read.description',
   summary: (input) => fileSummary(input),
   inputView: () => null,
+  hasBody: () => false,
   itemView: ({ coalescedReads, projectPath }) =>
     coalescedReads?.length ? (
       <ReadCoalescedCard projectPath={projectPath} reads={coalescedReads} />
