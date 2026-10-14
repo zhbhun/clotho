@@ -1395,7 +1395,7 @@ describe('PromptMarkdownEditor', () => {
     fireEvent(document, new Event('selectionchange'))
 
     const highlighted = await waitFor(() => {
-      const node = editor.querySelector('.file-mention-in-selection')
+      const node = editor.querySelector('.mention-in-selection')
       expect(node).not.toBeNull()
       return node
     })
@@ -1412,8 +1412,35 @@ describe('PromptMarkdownEditor', () => {
     fireEvent(document, new Event('selectionchange'))
 
     await waitFor(() => {
-      expect(editor.querySelector('.file-mention-in-selection')).toBeNull()
+      expect(editor.querySelector('.mention-in-selection')).toBeNull()
     })
+  })
+
+  it('highlights slash command chips covered by the selection', async () => {
+    render(
+      <TooltipProvider>
+        <PromptMarkdownEditor value="/review" onChange={() => {}} onSubmit={() => {}} />
+      </TooltipProvider>,
+    )
+
+    const editor = screen.getByRole('textbox', { name: 'Prompt' })
+
+    editor.focus()
+    const chip = await screen.findByLabelText('/review')
+
+    const range = document.createRange()
+    range.selectNodeContents(editor.querySelector('p') as Node)
+    const selection = document.getSelection()
+    selection?.removeAllRanges()
+    selection?.addRange(range)
+    fireEvent(document, new Event('selectionchange'))
+
+    const highlighted = await waitFor(() => {
+      const node = editor.querySelector('.mention-in-selection')
+      expect(node).not.toBeNull()
+      return node
+    })
+    expect(highlighted).toContainElement(chip)
   })
 
   it('does not reopen file completions when the cursor moves back into a path', async () => {

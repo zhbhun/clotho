@@ -17,14 +17,34 @@
   border: 1px solid var(--prompt-composer-border);
 }
 
-/* Inside the composer, chips, button hovers, and muted surfaces step above the
-   input surface itself instead of the global accent tier; portal-rendered
-   menus (model, permission, slash) are outside this subtree and keep the
-   global tier. */
+/* Inside the composer, button hovers and muted surfaces step above the input
+   surface itself instead of the global accent tier; portal-rendered menus
+   (model, permission, slash) are outside this subtree and keep the global
+   tier. */
 .dark .prompt-composer-surface {
   --secondary: color-mix(in oklab, var(--chat-input), var(--foreground) 9.55%);
   --accent: var(--secondary);
   --muted: var(--secondary);
+}
+
+/* Chip and selection colors live on the editor root so the composer and the
+   message-edit surface render identically. Dark chips read brighter than the
+   raw accent to stay legible on dark surfaces. */
+.prompt-markdown-editor {
+  --prompt-composer-chip: var(--primary);
+  --prompt-composer-selection: color-mix(in oklab, var(--prompt-composer-chip) 33%, transparent);
+  --prompt-composer-selection-text: var(--foreground);
+}
+
+.dark .prompt-markdown-editor {
+  --prompt-composer-chip: color-mix(in oklab, var(--primary), white 45%);
+}
+
+/* The reference selection is the chip color diluted over the input surface;
+   the text keeps its own color, so only the background is overridden. */
+.prompt-markdown-editor ::selection,
+.prompt-markdown-editor::selection {
+  background-color: var(--prompt-composer-selection);
 }
 
 .prompt-composer-surface[data-shadow-direction='downward'] {
@@ -80,22 +100,19 @@
   user-select: none;
 }
 
-/* Native selection never paints over the chip's own background, so the
-   fileMention plugin mirrors "the selection covers this chip" onto
-   .file-mention-in-selection; Highlight/HighlightText are the system
-   selection colors, keeping the chip consistent with the text around it. */
-.prompt-markdown-editor
-  .file-mention-in-selection
-  [data-file-mention]
-  [data-pointer-cursor-target] {
-  background-color: Highlight;
-  color: HighlightText;
+/* Native selection never paints over the chips' own background, so the
+   MentionSelection extension mirrors "the selection covers this chip" onto
+   .mention-in-selection; the chip then repeats the editor selection colors
+   with square corners and its spacing held in padding, so the band stays
+   continuous with the selected text around it. */
+.prompt-markdown-editor .mention-in-selection [data-file-mention] [data-pointer-cursor-target],
+.prompt-markdown-editor .mention-in-selection [data-slash-command] [data-pointer-cursor-target] {
+  border-radius: 0;
+  background-color: var(--prompt-composer-selection);
+  color: var(--prompt-composer-selection-text);
 }
 
-.prompt-markdown-editor
-  .file-mention-in-selection
-  [data-file-mention]
-  [data-pointer-cursor-target]
-  * {
-  color: HighlightText;
+.prompt-markdown-editor .mention-in-selection [data-file-mention] [data-pointer-cursor-target] *,
+.prompt-markdown-editor .mention-in-selection [data-slash-command] [data-pointer-cursor-target] * {
+  color: var(--prompt-composer-selection-text);
 }

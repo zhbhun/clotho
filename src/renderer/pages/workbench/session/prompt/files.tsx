@@ -1,6 +1,4 @@
 import { type JSONContent, Node } from '@tiptap/core'
-import { Plugin, PluginKey } from '@tiptap/pm/state'
-import { Decoration, DecorationSet } from '@tiptap/pm/view'
 import { type NodeViewProps, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
 import { File, FileCode, FileText, ImageIcon, X } from 'lucide-react'
 import { useState } from 'react'
@@ -116,13 +114,13 @@ function FileMentionView({ deleteNode, node }: NodeViewProps) {
   const trigger = (
     <span
       aria-label={`${name}: ${path}`}
-      className="group/file mx-0.5 inline-flex h-5.5 max-w-56 items-center gap-1.5 rounded-md bg-secondary px-1.5 align-top text-sm leading-6 text-foreground transition-colors hover:bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_8%)]"
+      className="group/file inline-flex h-6 max-w-56 items-center gap-1 px-1.5 align-top text-sm leading-6 text-(--prompt-composer-chip) transition-colors hover:text-(--primary)"
       data-pointer-cursor-target=""
     />
   )
   const triggerContent = (
     <>
-      <span className="relative inline-flex size-3.5 shrink-0 items-center justify-center overflow-hidden rounded-sm text-foreground-subtle">
+      <span className="relative inline-flex size-3.5 shrink-0 items-center justify-center overflow-hidden rounded-sm">
         {showThumbnail ? (
           <img
             alt=""
@@ -150,7 +148,9 @@ function FileMentionView({ deleteNode, node }: NodeViewProps) {
       </span>
       <span className="min-w-0 truncate">{name}</span>
       {lineHint ? (
-        <span className="shrink-0 text-xs text-foreground-subtle">{lineHint}</span>
+        <span className="shrink-0 text-xs text-(--prompt-composer-chip) opacity-60">
+          {lineHint}
+        </span>
       ) : null}
     </>
   )
@@ -210,41 +210,6 @@ function FileMentionView({ deleteNode, node }: NodeViewProps) {
   )
 }
 
-const FILE_MENTION_IN_SELECTION_CLASS = 'file-mention-in-selection'
-
-const fileMentionSelectionKey = new PluginKey<DecorationSet>('fileMentionInSelection')
-
-/**
- * The browser never paints the native selection over the chip's own background,
- * so mirror "the selection covers this chip" as a node decoration class and let
- * prompt.css restyle the chip with the system selection colors.
- */
-const fileMentionSelectionPlugin = new Plugin<DecorationSet>({
-  key: fileMentionSelectionKey,
-  state: {
-    init: () => DecorationSet.empty,
-    apply(tr, decorations) {
-      if (!tr.docChanged && !tr.selectionSet) return decorations
-      const { selection } = tr
-      if (selection.empty) return DecorationSet.empty
-      const marks: Decoration[] = []
-      tr.doc.nodesBetween(selection.from, selection.to, (node, pos) => {
-        if (node.type.name === 'fileMention') {
-          marks.push(
-            Decoration.node(pos, pos + node.nodeSize, {
-              class: FILE_MENTION_IN_SELECTION_CLASS,
-            }),
-          )
-        }
-      })
-      return marks.length > 0 ? DecorationSet.create(tr.doc, marks) : DecorationSet.empty
-    },
-  },
-  props: {
-    decorations: (state) => fileMentionSelectionKey.getState(state),
-  },
-})
-
 export const FileMention = Node.create({
   name: 'fileMention',
   group: 'inline',
@@ -286,9 +251,5 @@ export const FileMention = Node.create({
 
   addNodeView() {
     return ReactNodeViewRenderer(FileMentionView, { className: 'inline-block' })
-  },
-
-  addProseMirrorPlugins() {
-    return [fileMentionSelectionPlugin]
   },
 })

@@ -26,6 +26,7 @@ import { EditorCompletion } from './completion-extension'
 import { promptDocToMarkdown, promptTextToInlineNodes, restorePromptDocument } from './content'
 import { FileCompletionMenu } from './file-menu'
 import { FileMention, type PromptFileReference, fileReferenceToNode } from './files'
+import { MentionSelection } from './mention-selection'
 import type { SlashCommandMenuPlacement } from './menu-position'
 import {
   SlashCommand,
@@ -109,6 +110,7 @@ export function PromptMarkdownEditor({
       HardBreak,
       FileMention,
       SlashCommand,
+      MentionSelection,
       PromptAtomNavigation,
       EditorCompletion,
       Placeholder.configure({ placeholder }),

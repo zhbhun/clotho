@@ -1,5 +1,6 @@
 import { type JSONContent, Node, mergeAttributes } from '@tiptap/core'
 import { type NodeViewProps, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
+import { Box } from 'lucide-react'
 import { type Ref, createContext, useContext, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
@@ -91,12 +92,13 @@ function SlashCommandView({ node }: NodeViewProps) {
           render={
             <span
               aria-label={`/${name}`}
-              className="mx-0.5 inline-flex h-6 max-w-64 items-center rounded-md bg-secondary px-1.5 align-top leading-6 transition-colors hover:bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_8%)]"
+              className="inline-flex h-6 max-w-64 items-center gap-1 px-1.5 align-top leading-6 text-(--prompt-composer-chip) transition-colors hover:text-(--primary)"
               data-pointer-cursor-target=""
             />
           }
         >
-          <span className="min-w-0 truncate">/{name}</span>
+          <Box aria-hidden className="size-3.5 shrink-0" />
+          <span className="min-w-0 truncate">{name}</span>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-80 gap-0 p-3" side="top" sideOffset={6}>
           <PopoverHeader className="gap-1.5">
