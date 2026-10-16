@@ -12,6 +12,7 @@ import MoonshotIcon from '@thesvg/react/moonshot'
 import OpenaiChatgptIcon from '@thesvg/react/openai-chatgpt'
 import QwenIcon from '@thesvg/react/qwen'
 import StepfunIcon from '@thesvg/react/stepfun'
+import XiaomiMimoIcon from '@thesvg/react/xiaomi-mimo'
 import ZhipuIcon from '@thesvg/react/zhipu'
 import { Brain } from 'lucide-react'
 import { createElement } from 'react'
@@ -37,6 +38,7 @@ const BRAND_MAPPINGS: BrandMapping[] = [
   { icon: OpenaiChatgptIcon, keywords: ['gpt', 'chatgpt', 'openai', 'codex'] },
   { icon: ZhipuIcon, keywords: ['glm', 'zhipu', 'chatglm'] },
   { icon: MoonshotIcon, keywords: ['kimi', 'moonshot'] },
+  { icon: XiaomiMimoIcon, keywords: ['mimo'] },
   { icon: DeepseekIcon, keywords: ['deepseek'] },
   { icon: DoubaoIcon, keywords: ['doubao'] },
   { icon: MinimaxIcon, keywords: ['minimax', 'abab'] },
