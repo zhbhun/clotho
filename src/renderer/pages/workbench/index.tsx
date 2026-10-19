@@ -14,6 +14,7 @@ import { LoadFailure, WorkbenchStartupFailure } from './components/loading-state
 import { ModelStartupBoundary } from './components/model-startup-boundary'
 import { ProjectDialog } from './components/project-dialog'
 import { type SessionAction, SessionActionDialogs } from './components/session-action-dialogs'
+import { useArchiveSweep } from './hooks/use-archive-sweep'
 import { useSessionNavigation } from './hooks/use-session-navigation'
 import { useWorkbench } from './hooks/use-workbench'
 import { SessionArea, type SessionAreaProps } from './session'
@@ -60,6 +61,7 @@ function WorkbenchContent() {
   )
   const workbench = useWorkbench(handleSessionError, sessionControllerRegistry)
   const { refreshProjects } = workbench
+  useArchiveSweep()
   const touchDraftSession = useWorkbenchStore((state) => state.touchDraftSession)
 
   const openSettings = useCallback((category: SettingsCategoryId) => {
@@ -108,6 +110,33 @@ function WorkbenchContent() {
   const handleRenameSession = useCallback((session: WorkbenchSession) => {
     setSessionAction({ kind: 'rename', sessionId: session.id })
   }, [])
+
+  const handleToggleArchiveSession = useCallback(
+    (session: WorkbenchSession) => {
+      const { archiveSessions, unarchiveSessions } = workbench
+      const willArchive = !session.archived
+      const toggle = willArchive ? archiveSessions([session]) : unarchiveSessions([session])
+      void toggle
+        .then((count) => {
+          if (!count || !willArchive) return
+          toast.add({
+            id: 'workbench-sessions-archived',
+            title: t('workbench.toast.archived', { count }),
+            type: 'success',
+            actionProps: {
+              children: t('workbench.toast.undo'),
+              onClick: () => {
+                void unarchiveSessions([session])
+              },
+            },
+          })
+        })
+        .catch(() => {
+          // Failure details are already logged by the action hook.
+        })
+    },
+    [t, workbench],
+  )
 
   const handleDeleteSession = useCallback((session: WorkbenchSession) => {
     setSessionAction({ kind: 'delete', sessionId: session.id })
@@ -229,6 +258,7 @@ function WorkbenchContent() {
             onSelectSession={handleSelectSession}
             onStartNewSession={handleStartNewSessionInCurrentWorkspace}
             onTogglePinSession={workbench.togglePinSession}
+            onToggleArchiveSession={handleToggleArchiveSession}
           />
 
           <SessionArea {...sessionAreaProps} />

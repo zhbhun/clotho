@@ -5,6 +5,7 @@ import type {
   DraftSession,
   DraftSessionIndex,
   LocalSession,
+  SessionArchiveFlags,
   SessionIndex,
   SessionIndexEntry,
 } from '@/shared/session'
@@ -17,6 +18,10 @@ const logger = getLogger('persistence')
 const ID_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/
 const INDEX_FILE = 'index.json'
 const LEGACY_INDEX_FILE = 'drafts.json'
+/** Index key prefix for archive markers of claude sessions never opened in clotho. */
+const MARKER_PREFIX = 'claude-'
+/** How long an unarchive timestamp keeps shielding a session from the auto-archive sweep. */
+const UNARCHIVED_AT_TTL_MS = 14 * 24 * 60 * 60 * 1000
 
 function assertId(id: string) {
   // The index names double as on-disk file names, so the reserved file names
@@ -58,7 +63,10 @@ function validEntry(v: unknown): v is SessionIndexEntry {
     (x.isDraft === undefined || typeof x.isDraft === 'boolean') &&
     (x.title === undefined || typeof x.title === 'string') &&
     (x.createdAt === undefined || typeof x.createdAt === 'number') &&
-    (x.updatedAt === undefined || typeof x.updatedAt === 'number')
+    (x.updatedAt === undefined || typeof x.updatedAt === 'number') &&
+    (x.archived === undefined || typeof x.archived === 'boolean') &&
+    (x.archivedAt === undefined || typeof x.archivedAt === 'number') &&
+    (x.unarchivedAt === undefined || typeof x.unarchivedAt === 'number')
   )
 }
 function validSession(v: unknown): v is LocalSession {
@@ -98,6 +106,13 @@ export interface SessionStorage {
   }): Promise<void>
   /** claudeSessionId → owning project-entry id (null marks home-mode conversations). */
   sessionOwnership(): Promise<Record<string, string | null>>
+  /** Archive or unarchive sessions by claude session id, creating marker entries when unbound. */
+  sessionSetArchived(params: {
+    sessions: Array<{ projectId: string; sessionId: string }>
+    archived: boolean
+  }): Promise<void>
+  /** Archive marks by claude session id, merged into listed sessions. */
+  sessionArchiveFlags(): Promise<Record<string, SessionArchiveFlags>>
   /** Move a project entry's session references (index and stored input files) to a new id. */
   sessionRebindProject(params: { fromProjectId: string; toProjectId: string }): Promise<void>
   sessionDelete(params: { sessionId: string }): Promise<void>
@@ -189,10 +204,22 @@ export function createSessionStorage(rootDir: string, homeProjectId?: string): S
     index[sessionId] = entry
     await atomic(indexPath, JSON.stringify(index))
   }
+  /**
+   * Archive fields of an index entry; every path that rebuilds an existing
+   * entry (draft completion, ownership binding, draft rewrite) must spread
+   * them back in or an archived session silently loses its mark.
+   */
+  const archiveFieldsOf = (entry: SessionIndexEntry | undefined) =>
+    ({
+      ...(entry?.archived ? { archived: true } : {}),
+      ...(entry?.archivedAt !== undefined ? { archivedAt: entry.archivedAt } : {}),
+      ...(entry?.unarchivedAt !== undefined ? { unarchivedAt: entry.unarchivedAt } : {}),
+    }) as Pick<SessionIndexEntry, 'archived' | 'archivedAt' | 'unarchivedAt'>
   /** A started conversation keeps its ownership and drops the draft bookkeeping. */
   const startedEntry = (entry: SessionIndexEntry | undefined): SessionIndexEntry => ({
     projectId: entry?.projectId ?? null,
     ...(entry?.claudeSessionId ? { claudeSessionId: entry.claudeSessionId } : {}),
+    ...archiveFieldsOf(entry),
   })
   const atomic = async (file: string, content: string) => {
     await mkdir(dir, { recursive: true })
@@ -257,6 +284,7 @@ export function createSessionStorage(rootDir: string, homeProjectId?: string): S
             ...draft,
             isDraft: true,
             ...(previous?.claudeSessionId ? { claudeSessionId: previous.claudeSessionId } : {}),
+            ...archiveFieldsOf(previous),
           }
           await atomic(indexPath, JSON.stringify(index))
         }
@@ -293,6 +321,85 @@ export function createSessionStorage(rootDir: string, homeProjectId?: string): S
           }
         }
         return ownership
+      }),
+    sessionSetArchived: ({ sessions, archived }) =>
+      run(async () => {
+        const index = await readIndex()
+        const now = Math.floor(Date.now() / 1000)
+        const staleUnarchivedBefore = Date.now() - UNARCHIVED_AT_TTL_MS
+        const byClaudeId = new Map<string, string[]>()
+        for (const [id, entry] of Object.entries(index)) {
+          if (!entry.claudeSessionId) continue
+          const ids = byClaudeId.get(entry.claudeSessionId)
+          if (ids) ids.push(id)
+          else byClaudeId.set(entry.claudeSessionId, [id])
+        }
+        for (const { projectId, sessionId } of sessions) {
+          const boundIds = byClaudeId.get(sessionId) ?? []
+          if (boundIds.length > 0) {
+            for (const id of boundIds) {
+              const next = { ...index[id] }
+              if (archived) {
+                next.archived = true
+                next.archivedAt = now
+              } else {
+                delete next.archived
+                delete next.archivedAt
+                next.unarchivedAt = now
+              }
+              index[id] = next
+            }
+            continue
+          }
+          // Never-opened history sessions have no index entry yet; a marker
+          // keyed under the claude id carries the mark (and, on unarchive, the
+          // auto-archive grace timestamp) without a stored session file.
+          index[`${MARKER_PREFIX}${sessionId}`] = archived
+            ? { projectId, claudeSessionId: sessionId, archived: true, archivedAt: now }
+            : { projectId, claudeSessionId: sessionId, unarchivedAt: now }
+        }
+        for (const [id, entry] of Object.entries(index)) {
+          if (
+            entry.unarchivedAt === undefined ||
+            entry.unarchivedAt * 1000 >= staleUnarchivedBefore
+          )
+            continue
+          if (id.startsWith(MARKER_PREFIX) && !entry.archived) {
+            delete index[id]
+            continue
+          }
+          const next = { ...entry }
+          delete next.unarchivedAt
+          index[id] = next
+        }
+        await atomic(indexPath, JSON.stringify(index))
+      }),
+    sessionArchiveFlags: () =>
+      run(async () => {
+        const index = await readIndex()
+        const flags: Record<string, SessionArchiveFlags> = {}
+        for (const entry of Object.values(index)) {
+          if (!entry.claudeSessionId) continue
+          const flag = flags[entry.claudeSessionId] ?? { archived: false }
+          if (entry.archived) {
+            flag.archived = true
+            flag.archivedAt = entry.archivedAt
+          }
+          if (
+            entry.unarchivedAt !== undefined &&
+            (flag.unarchivedAt === undefined || entry.unarchivedAt > flag.unarchivedAt)
+          ) {
+            flag.unarchivedAt = entry.unarchivedAt
+          }
+          flags[entry.claudeSessionId] = flag
+        }
+        for (const flag of Object.values(flags)) {
+          // A newer unarchive overrides an older archive mark.
+          if (flag.archived && flag.unarchivedAt !== undefined) {
+            flag.archived = (flag.archivedAt ?? 0) > flag.unarchivedAt
+          }
+        }
+        return flags
       }),
     sessionRebindProject: ({ fromProjectId, toProjectId }) =>
       run(async () => {

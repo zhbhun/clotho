@@ -41,6 +41,7 @@ export function SessionSidebar({
   onSelectSession,
   onStartNewSession,
   onTogglePinSession,
+  onToggleArchiveSession,
 }: {
   activeTab: 'current' | 'history'
   focusNavigationRevision?: number
@@ -56,6 +57,7 @@ export function SessionSidebar({
   onSelectSession: (session: WorkbenchSession) => void
   onStartNewSession: () => void
   onTogglePinSession: (session: WorkbenchSession) => void
+  onToggleArchiveSession?: (session: WorkbenchSession) => void
 }) {
   const { t } = useTranslation()
   const { hoverPreview, setHoverPreview } = useSidebar()
@@ -63,6 +65,7 @@ export function SessionSidebar({
   const [viewport, setViewport] = useState<HTMLDivElement | null>(null)
   const [locateRequestRevision, setLocateRequestRevision] = useState(0)
   const [enterListRevision, setEnterListRevision] = useState(0)
+  const [isArchivedCollapsed, setIsArchivedCollapsed] = useState(true)
   const sessionCount = sessionTimeline.reduce((total, group) => total + group.sessions.length, 0)
   const selectedSessionId = selectedSession?.id ?? null
   // Closing a session means closing its open tab, so the actions belong to the
@@ -167,6 +170,7 @@ export function SessionSidebar({
               enterListRevision={enterListRevision}
               focusNavigationRevision={focusNavigationRevision}
               focusedSessionId={focusedSessionId}
+              isArchivedCollapsed={isArchivedCollapsed}
               locateRequestRevision={locateRequestRevision}
               selectedSessionId={selectedSessionId}
               sessionTimeline={sessionTimeline}
@@ -174,7 +178,9 @@ export function SessionSidebar({
               onDeleteSession={onDeleteSession}
               onRenameSession={onRenameSession}
               onSelectSession={onSelectSession}
+              onToggleArchivedCollapsed={() => setIsArchivedCollapsed((collapsed) => !collapsed)}
               onTogglePinSession={onTogglePinSession}
+              onToggleArchiveSession={onToggleArchiveSession}
             />
           ) : (
             <SidebarState

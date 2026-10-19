@@ -84,6 +84,7 @@ export type WorkbenchState = WorkbenchDataState & {
   setSessionTitle: (sessionId: string, title: string) => void
   setLocalTitle: (sessionId: string, title: string) => void
   togglePinSession: (sessionId: string) => void
+  setSessionsArchived: (sessionIds: string[], archived: boolean) => void
   setSessionActivity: (sessionId: string, activity: SessionActivityEvent) => void
   bindClaudeSession: (sessionId: string, claudeSessionId: string) => void
   removeSession: (sessionId: string) => void
@@ -648,6 +649,28 @@ export const useWorkbenchStore = create<WorkbenchState>()(
               ? state.pinnedSessionIds.filter((id) => id !== sessionId)
               : [...state.pinnedSessionIds, sessionId],
           }
+        }),
+      setSessionsArchived: (sessionIds, archived) =>
+        set((state) => {
+          const idSet = new Set(sessionIds)
+          const sessions = { ...state.sessions }
+          let touched = false
+          for (const id of sessionIds) {
+            const session = sessions[id]
+            if (!session) continue
+            touched = true
+            const now = Math.floor(Date.now() / 1000)
+            sessions[id] = archived
+              ? { ...session, archived: true, archived_at: now }
+              : { ...session, archived: undefined, archived_at: undefined, unarchived_at: now }
+          }
+          if (!touched) return state
+          // Archiving unpins: an archived session must not keep claiming a
+          // slot in the "current" tab's pinned group.
+          const pinnedSessionIds = archived
+            ? state.pinnedSessionIds.filter((id) => !idSet.has(id))
+            : state.pinnedSessionIds
+          return { sessions, pinnedSessionIds }
         }),
       setSessionActivity: (sessionId, activity) =>
         set((state) => {

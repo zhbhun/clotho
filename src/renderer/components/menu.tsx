@@ -251,6 +251,7 @@ function MenuItem({
   selected,
   onSelect,
   indicator,
+  className,
   ...props
 }: React.ComponentProps<typeof CommandItem> & {
   selected?: boolean
@@ -275,6 +276,7 @@ function MenuItem({
       ref={itemRef}
       data-checked={selected ? 'true' : undefined}
       indicator={indicator ?? menuIndicator}
+      className={cn('cursor-pointer', className)}
       onSelect={(value) => {
         onSelect?.(value)
         close?.()

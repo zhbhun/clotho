@@ -53,6 +53,7 @@ export function sessionInfoToClaudeSession({
     project_id: projectId,
     project_path: projectPath,
     created_at: secondsFromMillis(info.lastModified),
+    updated_at: secondsFromMillis(info.lastModified),
     title,
     custom_title: info.customTitle,
     first_prompt: info.firstPrompt,

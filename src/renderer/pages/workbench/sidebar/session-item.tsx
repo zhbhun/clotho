@@ -25,6 +25,7 @@ export function SessionItem({
   onDeleteSession,
   onRenameSession,
   onTogglePinSession,
+  onToggleArchiveSession,
 }: {
   activity?: SessionActivity
   close?: SessionMenuClose
@@ -40,6 +41,7 @@ export function SessionItem({
   onDeleteSession: (session: WorkbenchSession) => void
   onRenameSession: (session: WorkbenchSession) => void
   onTogglePinSession: (session: WorkbenchSession) => void
+  onToggleArchiveSession?: (session: WorkbenchSession) => void
 }) {
   const { t } = useTranslation()
   const title = sessionDisplayTitle(session, t)
@@ -98,12 +100,14 @@ export function SessionItem({
   return (
     <SessionContextMenu
       close={close}
+      isArchived={Boolean(session.archived)}
       isPinned={isPinned}
       session={session}
       variant="list"
       onDeleteSession={onDeleteSession}
       onRenameSession={onRenameSession}
       onTogglePinSession={onTogglePinSession}
+      onToggleArchiveSession={onToggleArchiveSession}
     >
       <SidebarMenuItem data-focused={isFocused ? 'true' : undefined} data-session-item={session.id}>
         {sessionButton}

@@ -24,6 +24,12 @@ export type SessionTimelineGroup = {
   sessions: (SessionListEntry & { projectLabel: string })[]
 }
 
+/**
+ * Synthetic trailing group of buildSessionTimeline holding archived sessions
+ * when the caller opts in; the list renders it collapsed behind its header.
+ */
+export const ARCHIVED_GROUP_ID = 'archived'
+
 export type WorkbenchTranslator = TFunction
 
 /**
@@ -36,6 +42,7 @@ export const DEFAULT_SESSION_TITLE = 'New Chat'
 const DEFAULT_TRANSLATOR = ((key: string) =>
   ({
     'workbench.session.new': 'New Chat',
+    'workbench.session.archived': 'Archived chats',
     'workbench.session.pinned': 'Pinned',
     'workbench.session.today': 'Today',
     'workbench.session.twoDaysAgo': 'Two days ago',
@@ -148,6 +155,7 @@ export function pickOpenOrPinnedSessions({
 }
 
 export function buildSessionTimeline({
+  archivedGroup = false,
   hiddenProjectIds,
   now = new Date(),
   pinnedSessionIds,
@@ -156,13 +164,23 @@ export function buildSessionTimeline({
   sessions,
   t: providedT,
   locale,
-}: BuildSessionTimelineOptions & { locale?: string; now?: Date; t?: WorkbenchTranslator }) {
+}: BuildSessionTimelineOptions & {
+  archivedGroup?: boolean
+  locale?: string
+  now?: Date
+  t?: WorkbenchTranslator
+}) {
   const t = providedT ?? DEFAULT_TRANSLATOR
   const groups: SessionTimelineGroup[] = []
   const groupsById = new Map<string, SessionTimelineGroup>()
   const pinnedGroup: SessionTimelineGroup = {
     id: 'pinned',
     label: t('workbench.session.pinned'),
+    sessions: [],
+  }
+  const archived: SessionTimelineGroup = {
+    id: ARCHIVED_GROUP_ID,
+    label: t('workbench.session.archived'),
     sessions: [],
   }
   const orderedSessions = Object.values(sessions).toSorted(compareSessions)
@@ -172,6 +190,22 @@ export function buildSessionTimeline({
     // A blank unsaved draft only exists as the open tab; it joins the history
     // list once it gains content and is materialized.
     if (session.isUnsavedDraft) continue
+
+    // History keeps archived sessions out of the date groups; the "current"
+    // tab (archivedGroup off) still shows them while their tab is open.
+    if (archivedGroup && session.archived) {
+      const project = session.project_id ? projects[session.project_id] : undefined
+      archived.sessions.push({
+        activity: sessionActivity[session.id] ?? 'idle',
+        isPinned: false,
+        project,
+        projectLabel: project
+          ? projectDisplayName(project)
+          : projectNameFromPath(session.project_path) || session.project_id,
+        session,
+      })
+      continue
+    }
 
     let group = pinnedSessionIds?.has(session.id) ? pinnedGroup : undefined
     if (!group) {
@@ -196,7 +230,8 @@ export function buildSessionTimeline({
     })
   }
 
-  return pinnedGroup.sessions.length ? [pinnedGroup, ...groups] : groups
+  const datedGroups = pinnedGroup.sessions.length ? [pinnedGroup, ...groups] : groups
+  return archived.sessions.length ? [...datedGroups, archived] : datedGroups
 }
 
 export function compareSessions(left: WorkbenchSession, right: WorkbenchSession) {
@@ -204,4 +239,48 @@ export function compareSessions(left: WorkbenchSession, right: WorkbenchSession)
     (right.updated_at ?? right.created_at) - (left.updated_at ?? left.created_at) ||
     left.id.localeCompare(right.id)
   )
+}
+
+export type AutoArchiveCandidatesOptions = {
+  currentSessionId: string | null
+  /** Inactivity threshold in whole days; 0 disables the sweep. */
+  days: number
+  now?: Date
+  openSessionIds: Iterable<string>
+  pinnedSessionIds: ReadonlySet<string>
+  sessionActivity: Record<string, SessionActivity>
+  sessions: Record<string, WorkbenchSession>
+}
+
+/**
+ * Sessions idle long enough to archive automatically. Activity counts from the
+ * last transcript write, and a recent manual unarchive grants one full grace
+ * period before the session can be swept again. Anything in use — open in a
+ * tab, selected, pinned, running, awaiting input, or unread — never sweeps.
+ */
+export function pickAutoArchiveCandidates({
+  currentSessionId,
+  days,
+  now = new Date(),
+  openSessionIds,
+  pinnedSessionIds,
+  sessionActivity,
+  sessions,
+}: AutoArchiveCandidatesOptions): WorkbenchSession[] {
+  if (days <= 0) return []
+  const cutoffSeconds = Math.floor((now.getTime() - days * 24 * 60 * 60 * 1000) / 1000)
+  const openIds = openSessionIds instanceof Set ? openSessionIds : new Set(openSessionIds)
+  return Object.values(sessions).filter((session) => {
+    if (session.archived) return false
+    if (session.isDraft || session.isUnsavedDraft) return false
+    if (session.id === currentSessionId) return false
+    if (openIds.has(session.id)) return false
+    if (pinnedSessionIds.has(session.id)) return false
+    if ((sessionActivity[session.id] ?? 'idle') !== 'idle') return false
+    const lastActivitySeconds = Math.max(
+      session.updated_at ?? session.created_at ?? 0,
+      session.unarchived_at ?? 0,
+    )
+    return lastActivitySeconds > 0 && lastActivitySeconds < cutoffSeconds
+  })
 }

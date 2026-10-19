@@ -1,4 +1,5 @@
 import type {
+  AppArchiveInactiveDays,
   AppDefaultPermissionMode,
   AppPreferences,
   AppReducedMotionPreference,
@@ -29,6 +30,10 @@ export const DEFAULT_LANGUAGE_PREFERENCE: LanguagePreference = 'system'
 export const REDUCED_MOTION_PREFERENCES = ['system', 'reduce', 'no-preference'] as const
 export type ReducedMotionPreference = AppReducedMotionPreference
 
+export const ARCHIVE_INACTIVE_DAY_OPTIONS = [0, 1, 2, 7, 14] as const
+export type ArchiveInactiveDays = AppArchiveInactiveDays
+export const DEFAULT_ARCHIVE_INACTIVE_DAYS: ArchiveInactiveDays = 14
+
 export type AppearancePreferences = {
   theme: AppTheme
   pointerCursor: boolean
@@ -46,6 +51,7 @@ export const DEFAULT_APPEARANCE_PREFERENCES: AppearancePreferences = {
 export const DEFAULT_APP_PREFERENCES: AppPreferences = {
   language: DEFAULT_LANGUAGE_PREFERENCE,
   defaultPermissionMode: DEFAULT_PERMISSION_MODE,
+  archiveInactiveSessions: DEFAULT_ARCHIVE_INACTIVE_DAYS,
   appearance: DEFAULT_APPEARANCE_PREFERENCES,
 }
 
@@ -64,6 +70,10 @@ function isReducedMotionPreference(value: unknown): value is ReducedMotionPrefer
 
 function isLanguagePreference(value: unknown): value is LanguagePreference {
   return LANGUAGE_PREFERENCES.includes(value as LanguagePreference)
+}
+
+function isArchiveInactiveDays(value: unknown): value is ArchiveInactiveDays {
+  return ARCHIVE_INACTIVE_DAY_OPTIONS.includes(value as ArchiveInactiveDays)
 }
 
 function isTheme(value: unknown): value is AppTheme {
@@ -89,6 +99,9 @@ function sanitizePreferences(value: unknown): AppPreferences {
     defaultPermissionMode: isConfigurablePermissionMode(candidate.defaultPermissionMode)
       ? candidate.defaultPermissionMode
       : DEFAULT_PERMISSION_MODE,
+    archiveInactiveSessions: isArchiveInactiveDays(candidate.archiveInactiveSessions)
+      ? candidate.archiveInactiveSessions
+      : DEFAULT_ARCHIVE_INACTIVE_DAYS,
     appearance: {
       theme: isTheme(appearance.theme) ? appearance.theme : DEFAULT_APPEARANCE_PREFERENCES.theme,
       pointerCursor:
@@ -130,6 +143,9 @@ export function createAppSettingsService(client: AppSettingsClient) {
     defaultPermissionMode: dirtyFields.has('defaultPermissionMode')
       ? current.defaultPermissionMode
       : base.defaultPermissionMode,
+    archiveInactiveSessions: dirtyFields.has('archiveInactiveSessions')
+      ? current.archiveInactiveSessions
+      : base.archiveInactiveSessions,
     appearance: dirtyFields.has('appearance') ? current.appearance : base.appearance,
   })
 
@@ -196,6 +212,14 @@ export function createAppSettingsService(client: AppSettingsClient) {
       current = { ...current, defaultPermissionMode: permissionMode }
       return persist('defaultPermissionMode')
     },
+    loadArchiveInactiveSessions() {
+      return current.archiveInactiveSessions
+    },
+    saveArchiveInactiveSessions(days: ArchiveInactiveDays) {
+      if (!isArchiveInactiveDays(days)) return Promise.resolve()
+      current = { ...current, archiveInactiveSessions: days }
+      return persist('archiveInactiveSessions')
+    },
     loadLanguagePreference() {
       return current.language as LanguagePreference
     },
@@ -244,6 +268,9 @@ export const flushAppSettings = () => appSettings.flush()
 export const loadDefaultPermissionMode = () => appSettings.loadDefaultPermissionMode()
 export const saveDefaultPermissionMode = (permissionMode: ConfigurablePermissionMode) =>
   appSettings.saveDefaultPermissionMode(permissionMode)
+export const loadArchiveInactiveSessions = () => appSettings.loadArchiveInactiveSessions()
+export const saveArchiveInactiveSessions = (days: ArchiveInactiveDays) =>
+  appSettings.saveArchiveInactiveSessions(days)
 export const loadLanguagePreference = () => appSettings.loadLanguagePreference()
 export const saveLanguagePreference = (language: LanguagePreference) =>
   appSettings.saveLanguagePreference(language)

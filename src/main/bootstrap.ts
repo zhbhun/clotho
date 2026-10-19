@@ -256,6 +256,8 @@ export async function bootstrap() {
       {
         sessionOwnership: () => sessionStorage.sessionOwnership(),
         sessionRebindProject: (ids) => sessionStorage.sessionRebindProject(ids),
+        sessionSetArchived: (params) => sessionStorage.sessionSetArchived(params),
+        sessionArchiveFlags: () => sessionStorage.sessionArchiveFlags(),
       },
       {
         onSessionRecycled: (sessionId) => {
@@ -325,6 +327,7 @@ export async function bootstrap() {
         claudeGetProjectFileOutline: (params) => service.getProjectFileOutline(params),
         claudeSetProjectLastOpened: (params) => service.setProjectLastOpened(params),
         claudeListSessions: (params) => service.listSessions(params),
+        claudeSetSessionsArchived: (params) => service.setSessionsArchived(params),
         sessionListDrafts: () => sessionStorage.sessionListDrafts(),
         sessionRead: (params) => sessionStorage.sessionRead(params),
         sessionWrite: (params) => sessionStorage.sessionWrite(params),

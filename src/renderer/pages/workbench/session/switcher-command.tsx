@@ -96,7 +96,7 @@ export function SwitcherCommandItem({
   trailing?: ReactNode
 }) {
   return (
-    <CommandItem {...props} className={cn('spotlight-command-item px-2', className)}>
+    <CommandItem {...props} className={cn('spotlight-command-item cursor-pointer px-2', className)}>
       <span aria-hidden="true" className="spotlight-command-icon">
         {iconElement ?? (Icon ? <Icon /> : null)}
       </span>

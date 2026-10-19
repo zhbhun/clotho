@@ -21,7 +21,8 @@ function visibleQuickOpenSession(session: WorkbenchSession) {
   return true
 }
 
-/** Sessions visible to the quick-open panel: all of them newest first, the
+/** Sessions visible to the quick-open panel, split so archived ones render
+    only behind the panel's collapsed group: all of them newest first, the
     current project's slice (home mode lists everything, like the history
     picker), and the most recently updated sessions across projects. */
 export function useQuickOpenSessions() {
@@ -29,15 +30,23 @@ export function useQuickOpenSessions() {
   const currentProjectId = useWorkbenchStore((state) => state.currentProjectId)
 
   return useMemo(() => {
-    const allSessions = Object.values(sessionMap)
-      .filter(visibleQuickOpenSession)
-      .toSorted(compareSessions)
+    const splitSessions = (sessions: WorkbenchSession[]) => ({
+      active: sessions.filter((session) => !session.archived),
+      archived: sessions.filter((session) => session.archived),
+    })
+    const all = splitSessions(
+      Object.values(sessionMap).filter(visibleQuickOpenSession).toSorted(compareSessions),
+    )
     return {
-      allSessions,
+      allSessions: all.active,
+      allArchivedSessions: all.archived,
       projectSessions: currentProjectId
-        ? allSessions.filter((session) => session.project_id === currentProjectId)
-        : allSessions,
-      recentSessions: allSessions.slice(0, RECENT_SESSIONS_LIMIT),
+        ? all.active.filter((session) => session.project_id === currentProjectId)
+        : all.active,
+      projectArchivedSessions: currentProjectId
+        ? all.archived.filter((session) => session.project_id === currentProjectId)
+        : all.archived,
+      recentSessions: all.active.slice(0, RECENT_SESSIONS_LIMIT),
     }
   }, [currentProjectId, sessionMap])
 }

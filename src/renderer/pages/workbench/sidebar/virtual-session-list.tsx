@@ -1,11 +1,13 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
+import { ChevronRight } from 'lucide-react'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 import { SidebarGroup, SidebarGroupLabel, SidebarMenu } from '@/shadcn/sidebar'
+import { cn } from '@/shadcn/utils'
 
 import type { SessionMenuClose } from '../components/session-context-menu'
 import type { WorkbenchSession } from '../stores/workbench-store'
-import type { SessionTimelineGroup } from '../utils/session-list'
+import { ARCHIVED_GROUP_ID, type SessionTimelineGroup } from '../utils/session-list'
 import { SessionItem } from './session-item'
 import {
   GROUP_GAP,
@@ -36,12 +38,46 @@ function GroupLabel({ label }: { label: string }) {
   )
 }
 
+/** Collapsible header of the trailing archived group; count always shows. */
+function ArchivedGroupHeader({
+  count,
+  isCollapsed,
+  label,
+  onToggle,
+}: {
+  count: number
+  isCollapsed: boolean
+  label: string
+  onToggle: () => void
+}) {
+  return (
+    <button
+      aria-expanded={!isCollapsed}
+      className="flex h-8 w-full items-center gap-1 px-2 text-sm font-normal text-foreground-subtlest hover:text-foreground"
+      type="button"
+      onClick={onToggle}
+    >
+      <span>
+        {label} · {count}
+      </span>
+      <ChevronRight
+        className={cn('size-4 shrink-0 transition-transform', !isCollapsed && 'rotate-90')}
+        strokeWidth={1.5}
+      />
+    </button>
+  )
+}
+
 /*
  * Group labels are plain virtualized rows: they scroll away with their group (no
  * sticky pinning — the fixed tabs bar above the list owns the top edge). Positioned
  * with `transform`, like the session rows.
  */
-function renderGroupRow(row: VirtualGroupRow, virtualRow: { size: number; start: number }) {
+function renderGroupRow(
+  row: VirtualGroupRow,
+  virtualRow: { size: number; start: number },
+  onToggleArchivedGroup?: () => void,
+) {
   return (
     <div
       className="absolute left-0 top-0 w-full"
@@ -53,7 +89,16 @@ function renderGroupRow(row: VirtualGroupRow, virtualRow: { size: number; start:
     >
       {row.hasTopGap ? <div style={{ height: GROUP_GAP }} /> : null}
       <SidebarGroup className="px-2 py-0">
-        <GroupLabel label={row.label} />
+        {row.isArchivedGroup && onToggleArchivedGroup ? (
+          <ArchivedGroupHeader
+            count={row.count}
+            isCollapsed={row.isCollapsed}
+            label={row.label}
+            onToggle={onToggleArchivedGroup}
+          />
+        ) : (
+          <GroupLabel label={row.label} />
+        )}
       </SidebarGroup>
     </div>
   )
@@ -64,6 +109,7 @@ export function VirtualSessionList({
   enterListRevision,
   focusNavigationRevision,
   focusedSessionId,
+  isArchivedCollapsed = false,
   locateRequestRevision,
   selectedSessionId,
   sessionTimeline,
@@ -71,12 +117,15 @@ export function VirtualSessionList({
   onDeleteSession,
   onRenameSession,
   onSelectSession,
+  onToggleArchivedCollapsed,
   onTogglePinSession,
+  onToggleArchiveSession,
 }: {
   close?: SessionMenuClose
   enterListRevision: number
   focusNavigationRevision: number
   focusedSessionId: string | null
+  isArchivedCollapsed?: boolean
   locateRequestRevision: number
   selectedSessionId: string | null
   sessionTimeline: SessionTimelineGroup[]
@@ -84,15 +133,21 @@ export function VirtualSessionList({
   onDeleteSession: (session: WorkbenchSession) => void
   onRenameSession: (session: WorkbenchSession) => void
   onSelectSession: (session: WorkbenchSession) => void
+  onToggleArchivedCollapsed?: () => void
   onTogglePinSession: (session: WorkbenchSession) => void
+  onToggleArchiveSession?: (session: WorkbenchSession) => void
 }) {
   // Arrow-key navigation (parent revision) and Tabbing into the list from the tabs bar
   // (local revision) share one scroll-and-focus effect.
   const listFocusRevision = focusNavigationRevision + enterListRevision
   const lastFocusNavigationRevisionRef = useRef(listFocusRevision)
+  const collapsedGroupIds = useMemo(
+    () => (isArchivedCollapsed ? new Set([ARCHIVED_GROUP_ID]) : undefined),
+    [isArchivedCollapsed],
+  )
   const { rows, sessionIndexes } = useMemo(
-    () => createVirtualRows(sessionTimeline),
-    [sessionTimeline],
+    () => createVirtualRows(sessionTimeline, { collapsedGroupIds }),
+    [collapsedGroupIds, sessionTimeline],
   )
   const getScrollElement = useCallback(() => viewport, [viewport])
   const getItemKey = useCallback((index: number) => rows[index]?.key ?? index, [rows])
@@ -179,7 +234,7 @@ export function VirtualSessionList({
       {virtualizer.getVirtualItems().map((virtualRow) => {
         const row = rows[virtualRow.index]
         if (!row) return null
-        if (row.type === 'group') return renderGroupRow(row, virtualRow)
+        if (row.type === 'group') return renderGroupRow(row, virtualRow, onToggleArchivedCollapsed)
 
         return (
           <div
@@ -210,6 +265,7 @@ export function VirtualSessionList({
                 onDeleteSession={onDeleteSession}
                 onRenameSession={onRenameSession}
                 onTogglePinSession={onTogglePinSession}
+                onToggleArchiveSession={onToggleArchiveSession}
               />
             </SidebarMenu>
           </div>

@@ -3,7 +3,7 @@ import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { requestFromDesktop } from '../../../services/desktop/client'
-import { useWorkbenchStore } from '../stores/workbench-store'
+import { type WorkbenchSession, useWorkbenchStore } from '../stores/workbench-store'
 import { useSessionActions } from './use-session-actions'
 
 vi.mock('../../../services/desktop/client', () => ({
@@ -12,7 +12,7 @@ vi.mock('../../../services/desktop/client', () => ({
   listenDesktopEvent: vi.fn(() => Promise.resolve(() => {})),
 }))
 
-function setup() {
+function setup(overrides: Partial<Parameters<typeof useSessionActions>[0]> = {}) {
   return renderHook(() =>
     useSessionActions({
       closeSession: vi.fn(),
@@ -21,9 +21,22 @@ function setup() {
       removeSession: vi.fn(),
       selectSession: vi.fn(),
       setSessionTitle: vi.fn(),
+      setSessionsArchived: useWorkbenchStore.getState().setSessionsArchived,
       togglePinSession: vi.fn(),
+      ...overrides,
     }),
   )
+}
+
+function storeSession(id: string, claudeSessionId: string | null): WorkbenchSession {
+  return {
+    id,
+    claudeSessionId,
+    project_id: 'project-1',
+    project_path: '/workspace/project-1',
+    created_at: 0,
+    title: id,
+  }
 }
 
 beforeEach(() => {
@@ -95,5 +108,85 @@ describe('useSessionActions deleteSession on drafts', () => {
       sessionId: 'claude-B',
     })
     expect(requestFromDesktop).not.toHaveBeenCalledWith('sessionRead', expect.anything())
+  })
+})
+
+describe('useSessionActions archive', () => {
+  it('archives by claude id, flags the store, and unpins archived sessions', async () => {
+    useWorkbenchStore.setState({
+      sessions: {
+        a: storeSession('a', 'claude-a'),
+        b: storeSession('b', 'claude-b'),
+        draft: { ...storeSession('draft', null), isDraft: true },
+      },
+      pinnedSessionIds: ['a'],
+    })
+    const { result } = setup()
+
+    let archivedCount = 0
+    await act(async () => {
+      const state = useWorkbenchStore.getState()
+      archivedCount = await result.current.archiveSessions([
+        state.sessions.a,
+        state.sessions.b,
+        state.sessions.draft,
+      ])
+    })
+
+    // The unbound draft has no claude session to mark and stays out of the RPC.
+    expect(archivedCount).toBe(2)
+    expect(requestFromDesktop).toHaveBeenCalledWith('claudeSetSessionsArchived', {
+      sessions: [
+        { projectId: 'project-1', sessionId: 'claude-a' },
+        { projectId: 'project-1', sessionId: 'claude-b' },
+      ],
+      archived: true,
+    })
+    const state = useWorkbenchStore.getState()
+    expect(state.sessions.a).toMatchObject({ archived: true })
+    expect(typeof state.sessions.a.archived_at).toBe('number')
+    expect(state.pinnedSessionIds).toEqual([])
+  })
+
+  it('unarchives, clearing the mark and recording the grace timestamp', async () => {
+    useWorkbenchStore.setState({
+      sessions: { a: { ...storeSession('a', 'claude-a'), archived: true, archived_at: 1 } },
+      pinnedSessionIds: [],
+    })
+    const { result } = setup()
+
+    let unarchivedCount = 0
+    await act(async () => {
+      unarchivedCount = await result.current.unarchiveSessions([
+        useWorkbenchStore.getState().sessions.a,
+      ])
+    })
+
+    expect(unarchivedCount).toBe(1)
+    expect(requestFromDesktop).toHaveBeenCalledWith('claudeSetSessionsArchived', {
+      sessions: [{ projectId: 'project-1', sessionId: 'claude-a' }],
+      archived: false,
+    })
+    const archived = useWorkbenchStore.getState().sessions.a
+    expect(archived.archived).toBeUndefined()
+    expect(archived.archived_at).toBeUndefined()
+    expect(typeof archived.unarchived_at).toBe('number')
+  })
+
+  it('throws and leaves the store untouched when the RPC fails', async () => {
+    useWorkbenchStore.setState({
+      sessions: { a: storeSession('a', 'claude-a') },
+      pinnedSessionIds: [],
+    })
+    vi.mocked(requestFromDesktop).mockRejectedValueOnce(new Error('RPC down'))
+    const { result } = setup()
+
+    await act(async () => {
+      await expect(
+        result.current.archiveSessions([useWorkbenchStore.getState().sessions.a]),
+      ).rejects.toThrow('RPC down')
+    })
+
+    expect(useWorkbenchStore.getState().sessions.a.archived).toBeUndefined()
   })
 })

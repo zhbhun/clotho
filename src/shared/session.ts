@@ -50,6 +50,19 @@ export interface SessionIndexEntry {
   title?: string
   createdAt?: number
   updatedAt?: number
+  /** Archive mark; may live on a marker entry that has no stored session file. */
+  archived?: boolean
+  /** When the session was archived (seconds). */
+  archivedAt?: number
+  /** When the user last unarchived the session (seconds); grants one auto-archive grace period. */
+  unarchivedAt?: number
 }
 
 export type SessionIndex = Record<string, SessionIndexEntry>
+
+/** Archive state of one claude session, gathered from the index by claudeSessionId. */
+export interface SessionArchiveFlags {
+  archived: boolean
+  archivedAt?: number
+  unarchivedAt?: number
+}

@@ -946,4 +946,14 @@ export const claude = {
 
     return requestFromDesktop('claudeDeleteSession', { projectId, sessionId })
   },
+  async setSessionsArchived(params: {
+    sessions: Array<{ projectId: string; sessionId: string }>
+    archived: boolean
+  }) {
+    if (!isTauriRuntime() || params.sessions.length === 0) {
+      return
+    }
+
+    return requestFromDesktop('claudeSetSessionsArchived', params)
+  },
 }

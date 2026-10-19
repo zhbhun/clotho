@@ -66,6 +66,7 @@ export function useProjects(
   const bindClaudeSession = useWorkbenchStore((state) => state.bindClaudeSession)
   const removeSession = useWorkbenchStore((state) => state.removeSession)
   const setSessionTitle = useWorkbenchStore((state) => state.setSessionTitle)
+  const setSessionsArchived = useWorkbenchStore((state) => state.setSessionsArchived)
   const togglePinSessionState = useWorkbenchStore((state) => state.togglePinSession)
   const setProjectDefaultModelState = useWorkbenchStore((state) => state.setProjectDefaultModel)
 
@@ -87,6 +88,7 @@ export function useProjects(
   const sessionTimeline = useMemo(
     () =>
       buildSessionTimeline({
+        archivedGroup: true,
         hiddenProjectIds: HIDDEN_SIDEBAR_PROJECT_IDS,
         locale: i18n.resolvedLanguage ?? i18n.language,
         pinnedSessionIds: pinnedSessionIdSet,
@@ -333,18 +335,26 @@ export function useProjects(
     [selectSessionState],
   )
 
-  const { closeSession, deleteSession, forkSession, renameSession, togglePinSession } =
-    useSessionActions({
-      closeSession: closeSessionState,
-      controllerRegistry,
-      onError: onSessionError,
-      refreshProjects,
-      releaseSessionController,
-      removeSession,
-      selectSession: selectSessionState,
-      setSessionTitle,
-      togglePinSession: togglePinSessionState,
-    })
+  const {
+    archiveSessions,
+    closeSession,
+    deleteSession,
+    forkSession,
+    renameSession,
+    togglePinSession,
+    unarchiveSessions,
+  } = useSessionActions({
+    closeSession: closeSessionState,
+    controllerRegistry,
+    onError: onSessionError,
+    refreshProjects,
+    releaseSessionController,
+    removeSession,
+    selectSession: selectSessionState,
+    setSessionTitle,
+    setSessionsArchived,
+    togglePinSession: togglePinSessionState,
+  })
 
   const removeProject = useCallback(
     async (projectId: string) => {
@@ -394,6 +404,7 @@ export function useProjects(
     activeTab,
     setActiveTab,
     activeTimeline,
+    archiveSessions,
     bindClaudeSession,
     closeSession,
     deleteSession,
@@ -427,6 +438,7 @@ export function useProjects(
     selectSession,
     setSessionActivity,
     togglePinSession,
+    unarchiveSessions,
     workspaceSessions,
   }
 }

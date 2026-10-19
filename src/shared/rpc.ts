@@ -42,6 +42,9 @@ export type AppReducedMotionPreference = 'system' | 'reduce' | 'no-preference'
 export type AppDefaultPermissionMode =
   'default' | 'acceptEdits' | 'auto' | 'plan' | 'bypassPermissions'
 
+/** Inactivity days before a session is archived automatically; 0 disables the sweep. */
+export type AppArchiveInactiveDays = 0 | 1 | 2 | 7 | 14
+
 export interface AppThemePalette {
   accent: string
   background: string
@@ -62,6 +65,7 @@ export interface AppAppearancePreferences {
 export interface AppPreferences {
   language: AppLanguagePreference
   defaultPermissionMode: AppDefaultPermissionMode
+  archiveInactiveSessions: AppArchiveInactiveDays
   appearance: AppAppearancePreferences
 }
 
@@ -144,6 +148,11 @@ export interface ClaudeSession {
   first_prompt?: string
   git_branch?: string
   tag?: string
+  /** SDK lastModified in seconds; drives inactivity checks and recency ordering. */
+  updated_at?: number
+  archived?: boolean
+  archived_at?: number
+  unarchived_at?: number
 }
 
 export interface GitBranchRef {
@@ -1006,6 +1015,10 @@ export type DesktopRPC = {
       }
       claudeRenameSession: {
         params: { projectId: string; sessionId: string; title: string }
+        response: void
+      }
+      claudeSetSessionsArchived: {
+        params: { sessions: Array<{ projectId: string; sessionId: string }>; archived: boolean }
         response: void
       }
       claudeDeleteSession: {

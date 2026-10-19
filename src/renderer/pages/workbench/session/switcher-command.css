@@ -13,6 +13,29 @@
   min-height: 32px;
 }
 
+/* The archived group's toggle reads as a section caption, not an action row:
+   it sits in the subtlest text tier, and selecting it — pointer or keyboard —
+   darkens the text instead of painting the accent background. */
+.spotlight-command-item[data-archived-toggle='true'] {
+  background: transparent;
+}
+
+.spotlight-command-item[data-archived-toggle='true'] .spotlight-command-title {
+  color: var(--foreground-subtlest);
+}
+
+.spotlight-command-item[data-archived-toggle='true'][data-selected='true']
+  .spotlight-command-title {
+  color: var(--foreground);
+}
+
+.spotlight-command-item[data-archived-toggle='true'][data-selected='true'] .spotlight-command-icon,
+.spotlight-command-item[data-archived-toggle='true'][data-selected='true']
+  .spotlight-command-icon
+  svg {
+  color: var(--foreground);
+}
+
 .spotlight-command-icon {
   color: var(--foreground-subtlest);
 }

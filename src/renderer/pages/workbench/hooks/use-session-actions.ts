@@ -24,6 +24,7 @@ type SessionActionsOptions = {
   removeSession: (sessionId: string) => void
   selectSession: (sessionId: string) => void
   setSessionTitle: (sessionId: string, title: string) => void
+  setSessionsArchived: (sessionIds: string[], archived: boolean) => void
   togglePinSession: (sessionId: string) => void
 }
 
@@ -35,6 +36,7 @@ export function useSessionActions(options: SessionActionsOptions) {
     removeSession,
     selectSession,
     setSessionTitle,
+    setSessionsArchived: setSessionsArchivedState,
     togglePinSession: togglePinSessionState,
   } = options
   const releaseSessionController = options.releaseSessionController ?? releaseNoop
@@ -182,5 +184,78 @@ export function useSessionActions(options: SessionActionsOptions) {
     [togglePinSessionState],
   )
 
-  return { closeSession, deleteSession, forkSession, renameSession, togglePinSession }
+  /**
+   * Archivable sessions have a backend identity: drafts live only in the
+   * local index and cannot carry an archive mark.
+   */
+  const archivableTargets = (sessions: WorkbenchSession[]) =>
+    sessions.flatMap((session) =>
+      session.isDraft === true || !session.claudeSessionId || !session.project_id ? [] : [session],
+    )
+
+  const archiveSessions = useCallback(
+    async (sessions: WorkbenchSession[]) => {
+      const targets = archivableTargets(sessions)
+      if (targets.length === 0) return 0
+      try {
+        await claude.setSessionsArchived({
+          sessions: targets.map((session) => ({
+            projectId: session.project_id,
+            sessionId: session.claudeSessionId!,
+          })),
+          archived: true,
+        })
+      } catch (caught) {
+        logger.error('session.archive_failed', 'Failed to archive sessions', {
+          context: { count: targets.length },
+          error: caught,
+        })
+        throw caught
+      }
+      setSessionsArchivedState(
+        targets.map((session) => session.id),
+        true,
+      )
+      return targets.length
+    },
+    [setSessionsArchivedState],
+  )
+
+  const unarchiveSessions = useCallback(
+    async (sessions: WorkbenchSession[]) => {
+      const targets = archivableTargets(sessions)
+      if (targets.length === 0) return 0
+      try {
+        await claude.setSessionsArchived({
+          sessions: targets.map((session) => ({
+            projectId: session.project_id,
+            sessionId: session.claudeSessionId!,
+          })),
+          archived: false,
+        })
+      } catch (caught) {
+        logger.error('session.unarchive_failed', 'Failed to unarchive sessions', {
+          context: { count: targets.length },
+          error: caught,
+        })
+        throw caught
+      }
+      setSessionsArchivedState(
+        targets.map((session) => session.id),
+        false,
+      )
+      return targets.length
+    },
+    [setSessionsArchivedState],
+  )
+
+  return {
+    archiveSessions,
+    closeSession,
+    deleteSession,
+    forkSession,
+    renameSession,
+    togglePinSession,
+    unarchiveSessions,
+  }
 }

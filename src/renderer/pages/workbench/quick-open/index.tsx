@@ -1,6 +1,8 @@
-import { MessageCircleCode, MessageSquareText } from 'lucide-react'
+import { ChevronRight, MessageCircleCode, MessageSquareText } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
+
+import { cn } from '@/shadcn/utils'
 
 import { ProjectIcon } from '../../../components/project-icon'
 import { getEffectiveBindings } from '../../../services/shortcuts/keymap'
@@ -98,10 +100,19 @@ export function QuickOpenPanel({
   const inputRef = useRef<HTMLInputElement>(null)
   const currentProjectId = useWorkbenchStore((state) => state.currentProjectId)
   const currentSessionId = useWorkbenchStore((state) => state.currentSessionId)
-  const { allSessions, projectSessions, recentSessions } = useQuickOpenSessions()
+  const {
+    allArchivedSessions,
+    allSessions,
+    projectArchivedSessions,
+    projectSessions,
+    recentSessions,
+  } = useQuickOpenSessions()
   const sentPrompts = useQuickOpenSentPrompts(open)
   const initialQuery = useQuickOpenStore((state) => state.initialQuery)
   const openCount = useQuickOpenStore((state) => state.openCount)
+  // Archived sessions stay folded behind their group row; expanding renders
+  // them from the in-memory catalog, no extra loading.
+  const [isArchivedExpanded, setIsArchivedExpanded] = useState(false)
   // Mode rows hint the command that opens the palette straight into the mode;
   // the store subscription keeps the hint in step with binding overrides.
   const { catalog, overrides: overrideStore, platform } = useShortcutRuntime()
@@ -113,6 +124,11 @@ export function QuickOpenPanel({
     if (!open) return
     setQuery(initialQuery)
   }, [open, openCount, initialQuery])
+
+  useEffect(() => {
+    if (!open) return
+    setIsArchivedExpanded(false)
+  }, [open, openCount])
 
   const enterMode = (entry: QuickOpenModeEntry) => {
     setQuery(entry.prefix)
@@ -147,13 +163,14 @@ export function QuickOpenPanel({
     )
   }
 
-  const renderSessionItem = (session: WorkbenchSession) => {
+  const renderSessionItem = (session: WorkbenchSession, className?: string) => {
     const time = sessionTimeLabel(session.updated_at ?? session.created_at, now, t, locale)
     const activity = sessionActivity[session.id] ?? 'idle'
 
     return (
       <SwitcherCommandItem
         key={session.id}
+        className={className}
         description={
           time ? `${sessionProjectLabel(session)} · ${time}` : sessionProjectLabel(session)
         }
@@ -201,6 +218,37 @@ export function QuickOpenPanel({
     />
   )
 
+  /** Trailing collapsed group: the header row toggles it, and expansion
+      renders the archived sessions through the same query ranking. */
+  const renderArchivedGroup = (archived: WorkbenchSession[]) => {
+    if (!archived.length) return null
+    const rankedArchived = rankByScore(archived, filter, (session) => [
+      sessionDisplayTitle(session, t),
+    ])
+    return (
+      <>
+        {/* Bare rows miss the group wrapper's 4px inset; add it back so the
+            toggle and its expanded sessions line up with the rows above. */}
+        <SwitcherCommandItem
+          className="pl-3 pr-2"
+          data-archived-toggle="true"
+          iconElement={
+            <ChevronRight
+              className={cn('size-4 transition-transform', isArchivedExpanded && 'rotate-90')}
+              strokeWidth={1.5}
+            />
+          }
+          label={`${String(t('workbench.session.archived'))} · ${archived.length}`}
+          value="archived-group"
+          onSelect={() => setIsArchivedExpanded((expanded) => !expanded)}
+        />
+        {isArchivedExpanded
+          ? rankedArchived.map((session) => renderSessionItem(session, 'pl-3 pr-2'))
+          : null}
+      </>
+    )
+  }
+
   const rankedProjects = rankByScore(userProjects, filter, (project) => [
     projectDisplayName(project),
     project.path,
@@ -236,8 +284,9 @@ export function QuickOpenPanel({
             className="spotlight-command-group-ruled"
             heading={String(t('workbench.quick.recent'))}
           >
-            {recentSessions.map(renderSessionItem)}
+            {recentSessions.map((session) => renderSessionItem(session))}
           </SwitcherCommandGroup>
+          {renderArchivedGroup(allArchivedSessions)}
         </>
       )
     } else {
@@ -256,9 +305,10 @@ export function QuickOpenPanel({
           ) : null}
           {rankedAllSessions.length ? (
             <SwitcherCommandGroup heading={String(t('workbench.quick.groupSessions'))}>
-              {rankedAllSessions.map(renderSessionItem)}
+              {rankedAllSessions.map((session) => renderSessionItem(session))}
             </SwitcherCommandGroup>
           ) : null}
+          {renderArchivedGroup(allArchivedSessions)}
           {rankedPrompts.length ? (
             <SwitcherCommandGroup heading={String(t('workbench.quick.groupMessages'))}>
               {rankedPrompts.map(renderPromptItem)}
@@ -297,7 +347,12 @@ export function QuickOpenPanel({
     content = (
       <>
         <SwitcherCommandEmpty>{String(t('workbench.quick.emptySessions'))}</SwitcherCommandEmpty>
-        <SwitcherCommandGroup>{sessions.map(renderSessionItem)}</SwitcherCommandGroup>
+        <SwitcherCommandGroup>
+          {sessions.map((session) => renderSessionItem(session))}
+        </SwitcherCommandGroup>
+        {renderArchivedGroup(
+          mode === 'projectSessions' ? projectArchivedSessions : allArchivedSessions,
+        )}
       </>
     )
   }

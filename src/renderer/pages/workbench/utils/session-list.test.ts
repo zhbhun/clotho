@@ -2,14 +2,17 @@ import { describe, expect, it } from 'vitest'
 
 import type { WorkbenchProject, WorkbenchSession } from '../stores/workbench-store'
 import {
+  ARCHIVED_GROUP_ID,
   type WorkbenchTranslator,
   buildSessionTimeline,
+  pickAutoArchiveCandidates,
   pickOpenOrPinnedSessions,
   sessionDateLabel,
 } from './session-list'
 
 const en = (key: string) =>
   ({
+    'workbench.session.archived': 'Archived chats',
     'workbench.session.today': 'Today',
     'workbench.session.yesterday': 'Yesterday',
     'workbench.session.twoDaysAgo': 'Two days ago',
@@ -18,6 +21,7 @@ const en = (key: string) =>
 
 const zhCN = (key: string) =>
   ({
+    'workbench.session.archived': '已归档',
     'workbench.session.today': '今天',
     'workbench.session.yesterday': '昨天',
     'workbench.session.twoDaysAgo': '前天',
@@ -181,6 +185,131 @@ describe('session timeline', () => {
     expect(result.flatMap((group) => group.sessions.map((entry) => entry.session.id))).toEqual([
       'visible',
     ])
+  })
+
+  it('collects archived sessions into a trailing collapsed group for the history list', () => {
+    const sessions = {
+      fresh: session({ id: 'fresh', created_at: at(2026, 8, 7, 16) }),
+      old: session({ id: 'old', created_at: at(2026, 8, 1, 9), archived: true }),
+      archivedPinned: session({
+        id: 'archived-pinned',
+        created_at: at(2026, 8, 2, 9),
+        archived: true,
+      }),
+    }
+
+    const result = buildSessionTimeline({
+      archivedGroup: true,
+      now: new Date(2026, 7, 7, 18),
+      pinnedSessionIds: new Set(['archived-pinned']),
+      projects: {},
+      sessionActivity: {},
+      sessions,
+      t: en as WorkbenchTranslator,
+    })
+
+    expect(result.map((group) => group.id)).toEqual(['2026-08-07', ARCHIVED_GROUP_ID])
+    expect(result[1]?.label).toBe('Archived chats')
+    expect(result[1]?.sessions.map((entry) => entry.session.id)).toEqual(['archived-pinned', 'old'])
+    // Archived sessions never keep a pin slot; the archived group owns them.
+    expect(result[1]?.sessions.every((entry) => !entry.isPinned)).toBe(true)
+  })
+
+  it('keeps archived sessions in their date groups when the archived group is off', () => {
+    const archived = session({ id: 'archived', created_at: at(2026, 8, 7, 9), archived: true })
+
+    const result = buildSessionTimeline({
+      now: new Date(2026, 7, 7, 18),
+      projects: {},
+      sessionActivity: {},
+      sessions: { archived },
+      t: en as WorkbenchTranslator,
+    })
+
+    // The "current" tab shows a session while its tab is still open.
+    expect(result.map((group) => group.id)).toEqual(['2026-08-07'])
+    expect(result[0]?.sessions.map((entry) => entry.session.id)).toEqual(['archived'])
+  })
+})
+
+describe('pickAutoArchiveCandidates', () => {
+  const now = new Date(2026, 7, 7, 18)
+  const quiet = (overrides: Partial<WorkbenchSession> = {}) =>
+    session({ id: 'quiet', created_at: at(2026, 7, 20), updated_at: at(2026, 7, 20), ...overrides })
+
+  it('archives idle sessions quiet past the threshold and honors the unarchive grace', () => {
+    const sessions = {
+      quiet: quiet(),
+      recentlyUpdated: quiet({ id: 'recent', updated_at: at(2026, 8, 1) }),
+      recentlyUnarchived: quiet({
+        id: 'graced',
+        unarchived_at: at(2026, 8, 6),
+      }),
+      staleUnarchived: quiet({
+        id: 'stale-grace',
+        unarchived_at: at(2026, 7, 21),
+      }),
+    }
+
+    const result = pickAutoArchiveCandidates({
+      currentSessionId: null,
+      days: 7,
+      now,
+      openSessionIds: [],
+      pinnedSessionIds: new Set(),
+      sessionActivity: {},
+      sessions,
+    })
+
+    // The grace window restarts the clock from the manual unarchive, so the
+    // graced session is safe while the one whose grace expired sweeps again.
+    expect(result.map((candidate) => candidate.id)).toEqual(['quiet', 'stale-grace'])
+  })
+
+  it('sweeps nothing when disabled, and skips archived, draft, timestampless, or in-use sessions', () => {
+    const sessions = {
+      quiet: quiet(),
+      archived: quiet({ id: 'archived', archived: true }),
+      draft: quiet({ id: 'draft', isDraft: true }),
+      noTimestamp: session({ id: 'no-timestamp' }),
+      current: quiet({ id: 'current' }),
+      open: quiet({ id: 'open' }),
+      pinned: quiet({ id: 'pinned' }),
+      processing: quiet({ id: 'processing' }),
+      awaiting: quiet({ id: 'awaiting' }),
+      unread: quiet({ id: 'unread' }),
+    }
+    const sweep = (
+      options: {
+        currentSessionId?: string
+        days?: number
+        openSessionIds?: string[]
+        pinned?: string[]
+      } = {},
+    ) =>
+      pickAutoArchiveCandidates({
+        currentSessionId: options.currentSessionId ?? null,
+        days: options.days ?? 7,
+        now,
+        openSessionIds: options.openSessionIds ?? [],
+        pinnedSessionIds: new Set(options.pinned ?? []),
+        sessionActivity: {
+          processing: 'processing',
+          awaiting: 'awaiting-user',
+          unread: 'unread-success',
+        },
+        sessions,
+      })
+
+    expect(sweep({ days: 0 })).toEqual([])
+    // Archived, draft, timestampless, and active-activity sessions never sweep;
+    // open/current/pinned ones do until their exclusion is passed in.
+    expect(sweep().map((candidate) => candidate.id)).toEqual(['quiet', 'current', 'open', 'pinned'])
+    expect(
+      sweep({ currentSessionId: 'current', openSessionIds: ['open'], pinned: ['pinned'] }).map(
+        (candidate) => candidate.id,
+      ),
+    ).toEqual(['quiet'])
   })
 })
 

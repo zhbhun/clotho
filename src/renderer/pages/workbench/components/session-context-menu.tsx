@@ -1,4 +1,6 @@
 import {
+  Archive,
+  ArchiveRestore,
   CopyX,
   ListX,
   PanelBottomClose,
@@ -31,15 +33,18 @@ export type SessionMenuClose = {
 export function SessionContextMenu({
   children,
   close,
+  isArchived = false,
   isPinned,
   session,
   variant = 'tab',
   onDeleteSession,
   onRenameSession,
   onTogglePinSession,
+  onToggleArchiveSession,
 }: {
   children: ReactElement
   close?: SessionMenuClose
+  isArchived?: boolean
   isPinned: boolean
   session: WorkbenchSession
   /** 'tab' phrases the direction item for a horizontal tab strip, 'list' for a vertical list. */
@@ -47,6 +52,7 @@ export function SessionContextMenu({
   onDeleteSession: (session: WorkbenchSession) => void
   onRenameSession: (session: WorkbenchSession) => void
   onTogglePinSession: (session: WorkbenchSession) => void
+  onToggleArchiveSession?: (session: WorkbenchSession) => void
 }) {
   const { t } = useTranslation()
   return (
@@ -54,6 +60,12 @@ export function SessionContextMenu({
       <ContextMenuTrigger render={children} />
       <ContextMenuContent glass>
         <ContextMenuGroup>
+          {onToggleArchiveSession ? (
+            <ContextMenuItem onClick={() => onToggleArchiveSession(session)}>
+              {isArchived ? <ArchiveRestore strokeWidth={1.5} /> : <Archive strokeWidth={1.5} />}
+              {isArchived ? t('workbench.action.unarchive') : t('workbench.action.archive')}
+            </ContextMenuItem>
+          ) : null}
           <ContextMenuItem onClick={() => onTogglePinSession(session)}>
             {isPinned ? <PinOff strokeWidth={1.5} /> : <Pin strokeWidth={1.5} />}
             {isPinned ? t('workbench.action.unpin') : t('workbench.action.pin')}

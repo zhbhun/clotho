@@ -444,3 +444,131 @@ test('without a home project id, null ownership stays null', async () => {
 
   await expect(store.sessionOwnership()).resolves.toEqual({ 'claude-1': null })
 })
+
+test('archive marks ride on bound entries and survive draft rebuilds', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'clotho-session-'))
+  const store = createSessionStorage(dir)
+  const projectId = projectIdFromPath('/p')
+  await store.sessionBindOwner({ sessionId: 's1', projectId, claudeSessionId: 'claude-1' })
+
+  await store.sessionSetArchived({
+    sessions: [{ projectId, sessionId: 'claude-1' }],
+    archived: true,
+  })
+  const archivedEntry = JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'))['s1']
+  expect(archivedEntry).toMatchObject({ projectId, claudeSessionId: 'claude-1', archived: true })
+  expect(typeof archivedEntry.archivedAt).toBe('number')
+  await expect(store.sessionArchiveFlags()).resolves.toEqual({
+    'claude-1': { archived: true, archivedAt: archivedEntry.archivedAt },
+  })
+
+  // A draft write and its completion rebuild the entry; the mark must survive.
+  await store.sessionWrite({
+    sessionId: 's1',
+    data: {
+      id: 's1',
+      projectId,
+      projectPath: '/p',
+      claudeSessionId: 'claude-1',
+      input: {
+        prompt: 'hi',
+        attachments: [],
+        model: null,
+        permissionMode: 'default' as const,
+        agent: null,
+      },
+    },
+    draft: { title: 'T', createdAt: 1, updatedAt: 2, projectId, projectPath: '/p' },
+  })
+  await store.sessionCompleteDraft({ sessionId: 's1' })
+  expect(JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'))['s1']).toMatchObject({
+    projectId,
+    claudeSessionId: 'claude-1',
+    archived: true,
+  })
+
+  await store.sessionSetArchived({
+    sessions: [{ projectId, sessionId: 'claude-1' }],
+    archived: false,
+  })
+  const unarchivedEntry = JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'))['s1']
+  expect(unarchivedEntry).toMatchObject({ projectId, claudeSessionId: 'claude-1' })
+  expect(unarchivedEntry.archived).toBeUndefined()
+  expect(typeof unarchivedEntry.unarchivedAt).toBe('number')
+  await expect(store.sessionArchiveFlags()).resolves.toEqual({
+    'claude-1': { archived: false, unarchivedAt: unarchivedEntry.unarchivedAt },
+  })
+})
+
+test('archiving a never-opened session writes a marker entry that project deletion clears', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'clotho-session-'))
+  const store = createSessionStorage(dir)
+  const projectId = projectIdFromPath('/p')
+  const claudeId = 'a1b2c3d4-0000-4000-8000-000000000001'
+
+  await store.sessionSetArchived({
+    sessions: [{ projectId, sessionId: claudeId }],
+    archived: true,
+  })
+  const markerId = `claude-${claudeId}`
+  expect(JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'))[markerId]).toEqual({
+    projectId,
+    claudeSessionId: claudeId,
+    archived: true,
+    archivedAt: expect.any(Number),
+  })
+  // A marker carries no stored conversation payload.
+  await expect(store.sessionRead({ sessionId: markerId })).resolves.toBeNull()
+  await expect(store.sessionArchiveFlags()).resolves.toEqual({
+    [claudeId]: { archived: true, archivedAt: expect.any(Number) },
+  })
+
+  await store.sessionSetArchived({
+    sessions: [{ projectId, sessionId: claudeId }],
+    archived: false,
+  })
+  const marker = JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'))[markerId]
+  expect(marker).toEqual({
+    projectId,
+    claudeSessionId: claudeId,
+    unarchivedAt: expect.any(Number),
+  })
+  // The pure marker stays: its unarchivedAt is the auto-archive grace record.
+  await expect(store.sessionArchiveFlags()).resolves.toEqual({
+    [claudeId]: { archived: false, unarchivedAt: marker.unarchivedAt },
+  })
+
+  await store.sessionDeleteProject({ projectId })
+  expect(JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'))).not.toHaveProperty(
+    markerId,
+  )
+})
+
+test('stale unarchive grace is pruned and pure markers dropped', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'clotho-session-'))
+  const store = createSessionStorage(dir)
+  const staleSeconds = Math.floor((Date.now() - 20 * 24 * 60 * 60 * 1000) / 1000)
+  await writeFile(
+    path.join(dir, 'index.json'),
+    JSON.stringify({
+      bound: { projectId: 'p', claudeSessionId: 'id-claude-1', unarchivedAt: staleSeconds },
+      'claude-id-claude-2': {
+        projectId: 'p',
+        claudeSessionId: 'id-claude-2',
+        unarchivedAt: staleSeconds,
+      },
+      kept: { projectId: 'p', claudeSessionId: 'id-claude-3', archived: true, archivedAt: 1 },
+    }),
+  )
+
+  // Archive markers with a claudeSessionId count as bound entries and update in place.
+  await store.sessionSetArchived({
+    sessions: [{ projectId: 'p', sessionId: 'id-claude-3' }],
+    archived: true,
+  })
+  const index = JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'))
+  expect(index.bound).toEqual({ projectId: 'p', claudeSessionId: 'id-claude-1' })
+  expect(index).not.toHaveProperty('claude-id-claude-2')
+  expect(index.kept).toMatchObject({ claudeSessionId: 'id-claude-3', archived: true })
+  expect(index.kept.archivedAt).toBeGreaterThan(1)
+})

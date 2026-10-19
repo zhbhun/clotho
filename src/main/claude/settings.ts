@@ -4,6 +4,7 @@ import path from 'node:path'
 
 import type {
   AppAppearancePreferences,
+  AppArchiveInactiveDays,
   AppDefaultPermissionMode,
   AppLanguagePreference,
   AppPreferences,
@@ -26,6 +27,7 @@ export interface ClaudeskSettings {
   defaultModel?: string
   language: AppLanguagePreference
   defaultPermissionMode: AppDefaultPermissionMode
+  archiveInactiveSessions: AppArchiveInactiveDays
   appearance: AppAppearancePreferences
 }
 
@@ -59,11 +61,13 @@ const REDUCED_MOTION_PREFERENCES: AppReducedMotionPreference[] = [
   'reduce',
   'no-preference',
 ]
+const ARCHIVE_INACTIVE_DAYS: AppArchiveInactiveDays[] = [0, 1, 2, 7, 14]
 const HEX_COLOR_PATTERN = /^#[\da-f]{6}$/i
 
 export const DEFAULT_APP_PREFERENCES: AppPreferences = {
   language: 'system',
   defaultPermissionMode: 'default',
+  archiveInactiveSessions: 14,
   appearance: {
     theme: 'system',
     pointerCursor: true,
@@ -155,6 +159,11 @@ export function sanitizeAppPreferences(value: unknown): AppPreferences {
     )
       ? (candidate.defaultPermissionMode as AppDefaultPermissionMode)
       : DEFAULT_APP_PREFERENCES.defaultPermissionMode,
+    archiveInactiveSessions: ARCHIVE_INACTIVE_DAYS.includes(
+      candidate.archiveInactiveSessions as AppArchiveInactiveDays,
+    )
+      ? (candidate.archiveInactiveSessions as AppArchiveInactiveDays)
+      : DEFAULT_APP_PREFERENCES.archiveInactiveSessions,
     appearance: {
       theme: THEMES.includes(appearance.theme as AppTheme)
         ? (appearance.theme as AppTheme)
@@ -251,6 +260,7 @@ function cloneSettings(settings: ClaudeskSettings): ClaudeskSettings {
     defaultModel: settings.defaultModel,
     language: settings.language,
     defaultPermissionMode: settings.defaultPermissionMode,
+    archiveInactiveSessions: settings.archiveInactiveSessions,
     appearance: {
       ...settings.appearance,
       themePalettes: {

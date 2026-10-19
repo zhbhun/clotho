@@ -45,6 +45,7 @@ import { LanguageSettings } from './components/language-settings'
 import { PermissionSettings } from './components/permission-settings'
 import { ProjectSettings } from './components/project-settings'
 import { ProviderSettings } from './components/provider-settings'
+import { SessionSettings } from './components/session-settings'
 import { ShortcutSettings } from './components/shortcut-settings'
 
 const CATEGORIES = [
@@ -321,6 +322,7 @@ function SettingsPageContent({
                       <div className="flex flex-col gap-8">
                         <LanguageSettings />
                         <PermissionSettings />
+                        <SessionSettings />
                       </div>
                     </SettingsCategory>
                     <SettingsCategory isActive={category.id === 'models'}>

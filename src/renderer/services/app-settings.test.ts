@@ -9,6 +9,7 @@ describe('app settings persistence', () => {
       load: async () => ({
         language: 'system',
         defaultPermissionMode: 'acceptEdits',
+        archiveInactiveSessions: 0,
         appearance: {
           ...DEFAULT_APPEARANCE_PREFERENCES,
           theme: 'light',
@@ -34,6 +35,7 @@ describe('app settings persistence', () => {
     expect(service.get()).toEqual({
       defaultPermissionMode: 'acceptEdits',
       language: 'fr',
+      archiveInactiveSessions: 0,
       appearance: preferences,
     })
     expect(saved).toHaveLength(1)
@@ -44,6 +46,7 @@ describe('app settings persistence', () => {
     const diskPreferences = {
       language: 'es' as const,
       defaultPermissionMode: 'bypassPermissions' as const,
+      archiveInactiveSessions: 0 as const,
       appearance: {
         ...DEFAULT_APPEARANCE_PREFERENCES,
         theme: 'light' as const,
@@ -84,6 +87,7 @@ describe('app settings persistence', () => {
       load: async () => ({
         language: 'system',
         defaultPermissionMode: 'acceptEdits',
+        archiveInactiveSessions: 0,
         appearance: DEFAULT_APPEARANCE_PREFERENCES,
       }),
       save,
@@ -103,6 +107,7 @@ describe('app settings persistence', () => {
       load: async () => ({
         language: 'system',
         defaultPermissionMode: 'acceptEdits',
+        archiveInactiveSessions: 0,
         appearance: DEFAULT_APPEARANCE_PREFERENCES,
       }),
       save: async () => {

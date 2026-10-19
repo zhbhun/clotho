@@ -15,6 +15,7 @@ import type {
   GetProviderUsageParams,
   ModelProvider,
 } from '@/shared/rpc'
+import type { SessionArchiveFlags } from '@/shared/session'
 
 import { getAttachmentPreview, snapshotAttachments } from './claude/attachments'
 import { getProjectGitBranch, listProjectGitBranches, switchProjectGitBranch } from './claude/git'
@@ -92,6 +93,11 @@ export function createClaudeDesktopService(
   sessionStore?: {
     sessionOwnership: () => Promise<Record<string, string | null>>
     sessionRebindProject: (ids: { fromProjectId: string; toProjectId: string }) => Promise<void>
+    sessionSetArchived: (params: {
+      sessions: Array<{ projectId: string; sessionId: string }>
+      archived: boolean
+    }) => Promise<void>
+    sessionArchiveFlags: () => Promise<Record<string, SessionArchiveFlags>>
   },
   sessionHooks?: {
     /** Fired after a session query was closed because it went idle or was recycled. */
@@ -158,7 +164,28 @@ export function createClaudeDesktopService(
         ? sessionStore
             .sessionOwnership()
             .then((ownership) => getProjectSessions({ ...params, ownership }))
+            .then((sessions) =>
+              sessionStore.sessionArchiveFlags().then((flags) =>
+                sessions.map((session) => {
+                  const flag = flags[session.id]
+                  if (!flag) return session
+                  return {
+                    ...session,
+                    archived: flag.archived || undefined,
+                    archived_at: flag.archived ? flag.archivedAt : undefined,
+                    unarchived_at: flag.unarchivedAt,
+                  }
+                }),
+              ),
+            )
         : getProjectSessions(params),
+    setSessionsArchived: (params: {
+      sessions: Array<{ projectId: string; sessionId: string }>
+      archived: boolean
+    }) => {
+      if (!sessionStore) throw new Error('Session storage is unavailable')
+      return sessionStore.sessionSetArchived(params)
+    },
     getSessionMessages: loadSessionHistory,
     getWorkflowRuns: loadWorkflowRuns,
     listSubagents: listSessionSubagents,
@@ -216,8 +243,9 @@ export function createClaudeDesktopService(
       return next.defaultModel ?? null
     },
     getAppPreferences: () => {
-      const { language, defaultPermissionMode, appearance } = settingsStore.get()
-      return { language, defaultPermissionMode, appearance }
+      const { language, defaultPermissionMode, appearance, archiveInactiveSessions } =
+        settingsStore.get()
+      return { language, defaultPermissionMode, appearance, archiveInactiveSessions }
     },
     saveAppPreferences: async ({ preferences }: { preferences: AppPreferences }) => {
       const sanitized = sanitizeAppPreferences(preferences)
@@ -226,6 +254,7 @@ export function createClaudeDesktopService(
         language: next.language,
         defaultPermissionMode: next.defaultPermissionMode,
         appearance: next.appearance,
+        archiveInactiveSessions: next.archiveInactiveSessions,
       }
     },
     setProjectModel: (params: { projectId: string; providerId: string; modelId: string }) =>

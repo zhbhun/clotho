@@ -143,4 +143,28 @@ describe('SessionHistoryButton', () => {
 
     expect(values).toEqual([older.id, newer.id])
   })
+
+  it('collapses archived chats behind a toggle row until it expands', async () => {
+    const archived = {
+      ...SESSION,
+      id: 'session-archived',
+      title: 'Archived conversation',
+      archived: true,
+    }
+    const { onSelectSession } = renderHistoryButton({ sessions: [SESSION, archived] })
+    const user = userEvent.setup()
+
+    await user.click(screen.getByRole('button', { name: appI18n.t('workbench.history.title') }))
+
+    const menu = screen.getByRole('dialog', { name: appI18n.t('workbench.history.title') })
+    expect(within(menu).getByRole('option', { name: /Existing conversation/ })).toBeInTheDocument()
+    expect(within(menu).queryByRole('option', { name: /Archived conversation/ })).toBeNull()
+
+    await user.click(within(menu).getByRole('option', { name: /Archived chats/ }))
+
+    const archivedRow = within(menu).getByRole('option', { name: /Archived conversation/ })
+    expect(archivedRow).toBeInTheDocument()
+    await user.click(archivedRow)
+    expect(onSelectSession).toHaveBeenCalledWith(archived)
+  })
 })

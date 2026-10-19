@@ -374,6 +374,32 @@ export const settingsCatalog = {
     '权限设置保存失败，请重试',
     '權限設定儲存失敗，請重試',
   ),
+  'settings.save.sessionsError': setting(
+    'Session settings could not be saved. Please try again.',
+    '会话设置保存失败，请重试',
+    '會話設定儲存失敗，請重試',
+  ),
+  'settings.sessions.title': setting('Chats', '聊天', '聊天'),
+  'settings.sessions.description': setting(
+    'Chat archiving preferences.',
+    '聊天归档偏好设置。',
+    '聊天歸檔偏好設定。',
+  ),
+  'settings.sessions.archive.title': setting(
+    'Auto-archive inactive chats',
+    '自动归档不活跃聊天',
+    '自動歸檔不活躍聊天',
+  ),
+  'settings.sessions.archive.description': setting(
+    'Archive chats with no activity for this long. Chats that are open, pinned, running, or unread are never archived.',
+    '无活动超过该时长的聊天将自动归档。打开中、置顶、运行中或有未读的聊天不会被归档。',
+    '無活動超過該時長的聊天將自動歸檔。開啟中、置頂、執行中或有未讀的聊天不會被歸檔。',
+  ),
+  'settings.sessions.archive.never': setting('Never', '从不', '從不'),
+  'settings.sessions.archive.oneDay': setting('1 day', '1 天', '1 天'),
+  'settings.sessions.archive.twoDays': setting('2 days', '2 天', '2 天'),
+  'settings.sessions.archive.sevenDays': setting('7 days', '7 天', '7 天'),
+  'settings.sessions.archive.fourteenDays': setting('14 days', '14 天', '14 天'),
   'permission.mode.acceptEdits.description': setting(
     'Automatically accept file edits; higher-risk operations may still prompt.',
     '自动接受文件编辑，但其他高风险操作仍可能询问。',
