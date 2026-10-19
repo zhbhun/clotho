@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Skeleton } from '@/shadcn/skeleton'
+import { toast } from '@/shadcn/toast'
 
 import {
   MenuContent,
@@ -40,7 +41,6 @@ export function BranchSwitcherMenuContent({
   const [branches, setBranches] = useState<GitBranchRef[] | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadFailed, setIsLoadFailed] = useState(false)
-  const [switchError, setSwitchError] = useState<string | null>(null)
   const isSwitchingRef = useRef(false)
 
   const loadBranches = useCallback(async () => {
@@ -67,15 +67,24 @@ export function BranchSwitcherMenuContent({
     async (branch: string) => {
       if (isSwitchingRef.current) return
       isSwitchingRef.current = true
-      setSwitchError(null)
       try {
         const result = await claude.switchProjectGitBranch({ branch, projectPath })
         if (!result.branch) {
-          setSwitchError(result.error ?? t('workbench.branch.switchFailed'))
+          toast.add({
+            title: t('workbench.branch.switchFailed'),
+            description: result.error,
+            type: 'error',
+          })
           return
         }
         useWorkbenchStore.getState().setProjectGitBranch(projectId, result.branch)
         onDismiss()
+      } catch (caught) {
+        toast.add({
+          title: t('workbench.branch.switchFailed'),
+          description: caught instanceof Error ? caught.message : String(caught),
+          type: 'error',
+        })
       } finally {
         isSwitchingRef.current = false
       }
@@ -124,11 +133,6 @@ export function BranchSwitcherMenuContent({
           </>
         )}
       </MenuList>
-      {switchError ? (
-        <div className="mx-1 mb-1 line-clamp-2 rounded-md bg-destructive/10 px-2 py-1.5 text-xs/5 text-destructive">
-          {switchError}
-        </div>
-      ) : null}
       {!isLoading && !isLoadFailed ? (
         <>
           <MenuSeparator />
