@@ -16,6 +16,15 @@ export type ApplicationMenuActions = {
   showMainWindow: () => void
 }
 
+/** A focused window's entry in the Window menu's open-window list. */
+export type ApplicationFocusedWindowItem = {
+  /** Stable window id so Electron can find the menu item again. */
+  id: string
+  label: string
+  isActive: boolean
+  show: () => void
+}
+
 export type ApplicationMenuOptions = {
   language: AppLanguage
   isDev: boolean
@@ -26,6 +35,10 @@ export type ApplicationMenuOptions = {
    * entry becomes the menu accelerator.
    */
   commandBindings: (commandId: CommandId) => readonly ShortcutBinding[]
+  /** Whether the main window is the currently focused one. */
+  mainWindowActive: boolean
+  /** The open focused windows, in menu order, below the main window entry. */
+  focusedWindows: ApplicationFocusedWindowItem[]
   actions: ApplicationMenuActions
 }
 
@@ -135,7 +148,20 @@ export function applicationMenuItems(options: ApplicationMenuOptions) {
         { label: labels.minimize, role: 'minimize' },
         { label: labels.zoom, role: 'zoom' },
         { type: 'separator' },
-        { label: labels.mainWindow, click: () => options.actions.showMainWindow() },
+        {
+          id: 'window-main',
+          label: labels.mainWindow,
+          type: 'checkbox',
+          checked: options.mainWindowActive,
+          click: () => options.actions.showMainWindow(),
+        },
+        ...options.focusedWindows.map((item) => ({
+          id: `window-${item.id}`,
+          label: item.label,
+          type: 'checkbox' as const,
+          checked: item.isActive,
+          click: () => item.show(),
+        })),
         ...(isMac
           ? [{ type: 'separator' as const }, { label: labels.front, role: 'front' as const }]
           : []),

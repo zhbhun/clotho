@@ -44,6 +44,8 @@ export interface AppWindowsOptions {
   contextMenuLabels: () => WebviewContextMenuLabels
   /** Per-window wiring that needs the raw web contents (navigation guards, ...). */
   onWindowCreated?: (window: BrowserWindow) => void
+  /** The set of open windows or the focused one changed; rebuilds the Window menu. */
+  onWindowsChanged?: () => void
 }
 
 /**
@@ -87,8 +89,10 @@ export function createAppWindows(options: AppWindowsOptions) {
       send(webContentsOf(window), name, payload)
     }
   }
-  const announceRegistry = () =>
+  const announceRegistry = () => {
+    options.onWindowsChanged?.()
     broadcast('windowRegistryChanged', { focusedProjectIds: registry.focusedProjectIds() })
+  }
 
   const storedWindows = () => sanitizeWindowsState(options.stateStore.get().windowsState)
   const storedUiOf = (windowId: string) => windowUiStateOf(storedWindows(), windowId)
@@ -166,6 +170,7 @@ export function createAppWindows(options: AppWindowsOptions) {
     window.on('resize', captureGeometry)
     window.on('focus', () => {
       setDialogOwnerWindow(window)
+      options.onWindowsChanged?.()
       void transformWindows((windows) => ({
         ...(windows ?? { openedWindows: [] }),
         lastActiveWindow: entry.id,
@@ -345,6 +350,28 @@ export function createAppWindows(options: AppWindowsOptions) {
       if (!holder || !window) return
       closingWindows.add(holder.id)
       window.destroy()
+    },
+
+    mainWindowActive() {
+      const main = registry.main()
+      return main ? (browserWindows.get(main.id)?.isFocused() ?? false) : false
+    },
+
+    focusedWindows() {
+      return registry.focusedWindows().map((entry) => {
+        const window = browserWindows.get(entry.id)
+        return {
+          id: entry.id,
+          projectId: entry.projectId ?? null,
+          isFocused: window?.isFocused() ?? false,
+          title: window?.getTitle() ?? '',
+        }
+      })
+    },
+
+    showWindow(windowId: string) {
+      const window = browserWindows.get(windowId)
+      if (window) bringToFront(window)
     },
   }
 }

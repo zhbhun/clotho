@@ -13,7 +13,7 @@ import type { CommandId } from '@/shared/shortcuts'
 
 import { clothoDir } from './app-data'
 import { createAppWindows } from './app-windows'
-import { applicationMenuItems } from './application-menu'
+import { type ApplicationFocusedWindowItem, applicationMenuItems } from './application-menu'
 import { createClaudeDesktopService } from './claude-service'
 import { loadAttachmentFiles } from './claude/attachments'
 import { createModelProxy } from './claude/model-proxy'
@@ -158,6 +158,7 @@ export async function bootstrap() {
           })
         })
       },
+      onWindowsChanged: () => rebuildApplicationMenu(),
     })
     const sendToActiveWindow = <K extends keyof DesktopRPC['renderer']['messages'] & string>(
       name: K,
@@ -170,30 +171,63 @@ export async function bootstrap() {
         ? overrides
         : (commandCatalog[commandId]?.defaultBindings ?? [])
     }
+    /** Focused-window entries for the Window menu, labelled by the project each one shows. */
+    const resolveFocusedWindows = async (): Promise<ApplicationFocusedWindowItem[]> => {
+      const focused = appWindows.focusedWindows()
+      if (focused.length === 0) return []
+      const projects = await service.listProjects().catch(() => [])
+      return focused.map((window) => {
+        const project = window.projectId
+          ? projects.find((item) => item.id === window.projectId)
+          : undefined
+        // Before a window's renderer has loaded, its title is still the bare
+        // app name; the strip only helps once the project title landed.
+        const fromTitle = window.title.replace(/ — Clotho$/, '')
+        return {
+          id: window.id,
+          label: project
+            ? project.name?.trim() || path.basename(project.path)
+            : fromTitle === window.title
+              ? '…'
+              : fromTitle,
+          isActive: window.isFocused,
+          show: () => appWindows.showWindow(window.id),
+        }
+      })
+    }
+    let menuRebuildSeq = 0
     const rebuildApplicationMenu = () => {
-      Menu.setApplicationMenu(
-        Menu.buildFromTemplate(
-          applicationMenuItems({
-            language: menuLanguage,
-            isDev,
-            isCaptureActive: isMenuCaptureActive,
-            commandBindings: resolveCommandBindings,
-            actions: {
-              dispatchCommand: (commandId) => {
-                sendToActiveWindow('menuCommandDispatch', { commandId })
-              },
-              openShortcutSettings: () => {
-                sendToActiveWindow('menuOpenSettings', { category: 'shortcuts' })
-              },
-              openTroubleshooting: () => {
-                void shell.openExternal(TROUBLESHOOTING_URL)
-              },
-              openTaskManager: () => openTaskManager(),
-              showMainWindow: () => appWindows.openMain(),
-            },
-          }),
-        ),
-      )
+      const seq = ++menuRebuildSeq
+      void resolveFocusedWindows()
+        .catch(() => [])
+        .then((focusedWindows) => {
+          if (seq !== menuRebuildSeq) return
+          Menu.setApplicationMenu(
+            Menu.buildFromTemplate(
+              applicationMenuItems({
+                language: menuLanguage,
+                isDev,
+                isCaptureActive: isMenuCaptureActive,
+                commandBindings: resolveCommandBindings,
+                mainWindowActive: appWindows.mainWindowActive(),
+                focusedWindows,
+                actions: {
+                  dispatchCommand: (commandId) => {
+                    sendToActiveWindow('menuCommandDispatch', { commandId })
+                  },
+                  openShortcutSettings: () => {
+                    sendToActiveWindow('menuOpenSettings', { category: 'shortcuts' })
+                  },
+                  openTroubleshooting: () => {
+                    void shell.openExternal(TROUBLESHOOTING_URL)
+                  },
+                  openTaskManager: () => openTaskManager(),
+                  showMainWindow: () => appWindows.openMain(),
+                },
+              }),
+            ),
+          )
+        })
     }
     rebuildApplicationMenu()
 
