@@ -5,6 +5,8 @@ import type { ClaudeSession } from '@/shared/rpc'
 
 import { claude } from '../../../services/claude/claude'
 import { MOCK_PROJECT_ID } from '../../../services/claude/mock/project'
+import { listenDesktopEvent } from '../../../services/desktop/client'
+import { projectDisplayName } from '../../../utils/project'
 import { workbenchPersistence } from '../services/workbench-persistence'
 import type { SessionControllerRegistry } from '../session/session-controller-registry'
 import type { SessionError } from '../session/stores/runtime-store'
@@ -70,6 +72,11 @@ export function useProjects(
   const setSessionsArchived = useWorkbenchStore((state) => state.setSessionsArchived)
   const togglePinSessionState = useWorkbenchStore((state) => state.togglePinSession)
   const setProjectDefaultModelState = useWorkbenchStore((state) => state.setProjectDefaultModel)
+  const windowKind = useWorkbenchStore((state) => state.windowKind)
+  const focusedProjectId = useWorkbenchStore((state) => state.focusedProjectId)
+  const focusedProjectIds = useWorkbenchStore((state) => state.focusedProjectIds)
+  const setWindowIdentity = useWorkbenchStore((state) => state.setWindowIdentity)
+  const setFocusedProjectIds = useWorkbenchStore((state) => state.setFocusedProjectIds)
 
   const [focusSessionId, setFocusSessionId] = useState<string | null>(currentSessionId)
   const [activeTab, setActiveTab] = useState<SessionSidebarTab>('current')
@@ -254,10 +261,17 @@ export function useProjects(
     try {
       const projects = await claude.listProjects()
       if (requestId !== refreshRequestIdRef.current) return
-      setLoadingProjectSessionIds(new Set(projects.map((project) => project.id)))
-      const [sessionResults, branchEntries, drafts] = await Promise.all([
+      // A focused window only ever shows its own project's conversations; the
+      // other projects are listed for switching and nothing more.
+      const scope = useWorkbenchStore.getState()
+      const sessionProjects =
+        scope.windowKind === 'focused'
+          ? projects.filter((project) => project.id === scope.focusedProjectId)
+          : projects
+      setLoadingProjectSessionIds(new Set(sessionProjects.map((project) => project.id)))
+      const [sessionResults, branchEntries, allDrafts] = await Promise.all([
         Promise.all(
-          projects.map(async (project) => {
+          sessionProjects.map(async (project) => {
             try {
               return {
                 error: null,
@@ -277,7 +291,7 @@ export function useProjects(
           }),
         ),
         Promise.all(
-          projects.map(async (project) => {
+          sessionProjects.map(async (project) => {
             try {
               return [project.id, await claude.getProjectGitBranch(project.path)] as const
             } catch {
@@ -288,6 +302,14 @@ export function useProjects(
         claude.listDraftSessions().catch(() => ({})),
       ])
       if (requestId !== refreshRequestIdRef.current) return
+      const drafts =
+        scope.windowKind === 'focused'
+          ? Object.fromEntries(
+              Object.entries(allDrafts).filter(
+                ([, draft]) => draft.projectId === scope.focusedProjectId,
+              ),
+            )
+          : allDrafts
       const projectSessionErrors = Object.fromEntries(
         sessionResults.flatMap((result) =>
           result.error ? [[result.projectId, result.error] as const] : [],
@@ -317,12 +339,66 @@ export function useProjects(
   }, [ensureInitialSession, replaceCatalog])
 
   useEffect(() => {
-    // The first catalog must land after the persisted window ui so restored
-    // tabs and workspace reconcile against the real session catalog.
-    void workbenchPersistence()
-      .ready.then(() => refreshProjects())
-      .catch(() => {})
-  }, [refreshProjects])
+    // The window identity decides what the catalog loads, and the persisted
+    // window ui must land first so restored tabs reconcile against the real
+    // session catalog. A window that cannot learn its identity still loads,
+    // behaving as the main window.
+    void Promise.all([
+      claude
+        .describeWindow()
+        .then((description) => {
+          setWindowIdentity({ kind: description.kind, projectId: description.projectId })
+          setFocusedProjectIds(description.focusedProjectIds)
+        })
+        .catch(() => {}),
+      workbenchPersistence().ready,
+    ]).then(() => refreshProjects())
+  }, [refreshProjects, setFocusedProjectIds, setWindowIdentity])
+
+  useEffect(() => {
+    let isActive = true
+    const unsubscribers: Array<() => void> = []
+    const track = (subscription: Promise<() => void>) => {
+      void subscription.then((unsubscribe) => {
+        if (isActive) unsubscribers.push(unsubscribe)
+        else unsubscribe()
+      })
+    }
+    track(
+      listenDesktopEvent('window-registry-changed', ({ focusedProjectIds: next }) => {
+        setFocusedProjectIds(next)
+      }),
+    )
+    track(
+      listenDesktopEvent('catalog-changed', () => {
+        void refreshProjects().catch(() => {})
+      }),
+    )
+    return () => {
+      isActive = false
+      for (const unsubscribe of unsubscribers) unsubscribe()
+    }
+  }, [refreshProjects, setFocusedProjectIds])
+
+  // With several windows open, changes made elsewhere surface when this one
+  // comes back to the front.
+  useEffect(() => {
+    if (windowKind !== 'focused' && focusedProjectIds.length === 0) return
+    const handleFocus = () => {
+      void refreshProjects().catch(() => {})
+    }
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [focusedProjectIds.length, refreshProjects, windowKind])
+
+  useEffect(() => {
+    if (windowKind !== 'focused') return
+    const project = focusedProjectId ? projectMap[focusedProjectId] : undefined
+    document.title = project ? `${projectDisplayName(project)} — Clotho` : 'Clotho'
+    return () => {
+      document.title = 'Clotho'
+    }
+  }, [focusedProjectId, projectMap, windowKind])
 
   const selectProject = useCallback(
     (projectId: string | null) => {
@@ -443,6 +519,8 @@ export function useProjects(
     selectSession,
     setSessionActivity,
     togglePinSession,
+    windowKind,
+    focusedProjectId,
     unarchiveSessions,
     workspaceSessions,
   }

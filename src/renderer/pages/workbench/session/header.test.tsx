@@ -7,7 +7,11 @@ import { TooltipProvider } from '@/shadcn/tooltip'
 import { appI18n } from '../../../i18n/runtime'
 import { commandCatalog } from '../../../services/shortcuts/catalog'
 import { ShortcutRuntimeProvider, createShortcutRuntime } from '../../../services/shortcuts/runtime'
-import type { WorkbenchProject, WorkbenchSession } from '../stores/workbench-store'
+import {
+  type WorkbenchProject,
+  type WorkbenchSession,
+  useWorkbenchStore,
+} from '../stores/workbench-store'
 import { ConversationHeader } from './header'
 
 const project: WorkbenchProject = {
@@ -38,6 +42,7 @@ afterEach(() => {
   vi.restoreAllMocks()
   vi.unstubAllGlobals()
   Object.defineProperty(window, 'innerWidth', { value: 1200, configurable: true })
+  useWorkbenchStore.getState().reset()
 })
 
 function HoverPreviewStateProbe() {
@@ -67,6 +72,7 @@ function renderHeader(
   { defaultOpen = true, isMobile = false }: { defaultOpen?: boolean; isMobile?: boolean } = {},
 ) {
   const onSelectProject = vi.fn()
+  const onOpenProjectInNewWindow = vi.fn()
   Object.defineProperty(window, 'innerWidth', {
     value: isMobile ? 500 : 1200,
     configurable: true,
@@ -121,6 +127,7 @@ function renderHeader(
             onAddProject={vi.fn()}
             onCloseSession={vi.fn()}
             onDeleteSession={vi.fn()}
+            onOpenProjectInNewWindow={onOpenProjectInNewWindow}
             onRenameSession={vi.fn()}
             onSelectProject={onSelectProject}
             onSelectSession={vi.fn()}
@@ -132,7 +139,7 @@ function renderHeader(
     </ShortcutRuntimeProvider>,
   )
 
-  return { onSelectProject }
+  return { onOpenProjectInNewWindow, onSelectProject }
 }
 
 describe('ConversationHeader', () => {
@@ -153,6 +160,31 @@ describe('ConversationHeader', () => {
     renderHeader()
 
     expect(screen.queryByRole('button', { name: appI18n.t('workbench.project.exit') })).toBeNull()
+  })
+
+  it('pops the project out to a new window from the button beside the switcher', async () => {
+    await appI18n.changeLanguage('zh-CN')
+    const { onOpenProjectInNewWindow } = renderHeader({
+      projectMode: 'project',
+      selectedProject: project,
+    })
+
+    fireEvent.click(
+      screen.getByRole('button', { name: appI18n.t('workbench.project.openInNewWindow') }),
+    )
+
+    expect(onOpenProjectInNewWindow).toHaveBeenCalledTimes(1)
+  })
+
+  it('offers neither exit nor pop-out inside a focused window', async () => {
+    await appI18n.changeLanguage('zh-CN')
+    useWorkbenchStore.getState().setWindowIdentity({ kind: 'focused', projectId: project.id })
+    renderHeader({ projectMode: 'project', selectedProject: project })
+
+    expect(screen.queryByRole('button', { name: appI18n.t('workbench.project.exit') })).toBeNull()
+    expect(
+      screen.queryByRole('button', { name: appI18n.t('workbench.project.openInNewWindow') }),
+    ).toBeNull()
   })
 
   it('reserves the macOS traffic-light inset when the narrow-window sheet replaces the sidebar', () => {

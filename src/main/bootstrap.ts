@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-import { BrowserWindow, Menu, app, ipcMain, screen, shell } from 'electron'
+import { BrowserWindow, Menu, app, ipcMain, shell } from 'electron'
 import type { WebContents } from 'electron'
 
 import { commandCatalog } from '@/shared/command-catalog'
@@ -12,6 +12,7 @@ import type { AppLanguage, DesktopRPC } from '@/shared/rpc'
 import type { CommandId } from '@/shared/shortcuts'
 
 import { clothoDir } from './app-data'
+import { createAppWindows } from './app-windows'
 import { applicationMenuItems } from './application-menu'
 import { createClaudeDesktopService } from './claude-service'
 import { loadAttachmentFiles } from './claude/attachments'
@@ -19,8 +20,6 @@ import { createModelProxy } from './claude/model-proxy'
 import { ensureWorkProject } from './claude/projects'
 import { projectIdFromPath } from './claude/sessions'
 import { createSettingsStore, defaultSettings, readSettings } from './claude/settings'
-import { textEditMenuItems } from './context-menu'
-import { setDialogOwnerWindow } from './dialogs'
 import { attachExternalNavigation } from './external-navigation'
 import { createFatalErrorHandler, installGlobalErrorHandlers } from './logging/global-errors'
 import { wrapRequestHandlers } from './logging/rpc'
@@ -39,19 +38,8 @@ import { createSessionStorage } from './session-storage'
 import { createShortcutStore, readShortcutOverrides } from './shortcuts'
 import { createStorageStore, readStorage } from './storage'
 import { openTaskManager } from './task-manager'
-import {
-  createMainWindowOptions,
-  showMainWindowWhenReady,
-  toggleMainWindowMaximize,
-} from './window-options'
-import {
-  resolveWindowState,
-  sanitizeWindowsState,
-  windowUiStateOf,
-  withWindowEntry,
-  withWindowUiState,
-} from './window-state'
-import { createWindowStateTracker } from './window-state-tracker'
+import { toggleMainWindowMaximize } from './window-options'
+import { sanitizeWindowsState, windowUiStateOf, withWindowUiState } from './window-state'
 
 const REQUEST_CHANNEL_PREFIX = 'clotho:request:'
 const MESSAGE_CHANNEL_PREFIX = 'clotho:message:'
@@ -60,11 +48,9 @@ type DesktopRequestMap = DesktopRPC['main']['requests']
 type DesktopRequestName = keyof DesktopRequestMap & string
 type DesktopRequestHandler<K extends DesktopRequestName> = (
   params: DesktopRequestMap[K]['params'],
+  sender: WebContents,
 ) => DesktopRequestMap[K]['response'] | Promise<DesktopRequestMap[K]['response']>
 type MainRequestHandlers = { [K in DesktopRequestName]: DesktopRequestHandler<K> }
-
-type WebviewMessageMap = DesktopRPC['renderer']['messages']
-type WebviewMessageName = keyof WebviewMessageMap & string
 
 function appChannel(value: string): AppLogChannel {
   if (value === 'stable' || value === 'canary') return value
@@ -74,14 +60,6 @@ function appChannel(value: string): AppLogChannel {
 /** Packaged builds run on the stable channel unless overridden, dev runs as dev. */
 function resolveAppChannel() {
   return app.isPackaged ? appChannel(process.env.CLOTHO_CHANNEL ?? 'stable') : appChannel('dev')
-}
-
-function sendToMainView<K extends WebviewMessageName>(
-  webview: WebContents | undefined,
-  name: K,
-  payload: WebviewMessageMap[K],
-) {
-  webview?.send(MESSAGE_CHANNEL_PREFIX + name, payload)
 }
 
 export async function bootstrap() {
@@ -164,6 +142,28 @@ export async function bootstrap() {
     const TROUBLESHOOTING_URL = 'https://github.com/zhbhun/clotho/issues'
     let isMenuCaptureActive = false
 
+    const appWindows = createAppWindows({
+      preloadPath: path.join(__dirname, 'preload.js'),
+      appearance: loadedSettings.appearance,
+      target,
+      stateStore,
+      contextMenuLabels: () => menuLabels(menuLanguage),
+      onWindowCreated: (window) => {
+        attachExternalNavigation(window.webContents, target, (url) => {
+          shell.openExternal(url).catch((caught) => {
+            appLogger.error('external_open.failed', 'Failed to open an external link', {
+              error: caught,
+              context: { url },
+            })
+          })
+        })
+      },
+    })
+    const sendToActiveWindow = <K extends keyof DesktopRPC['renderer']['messages'] & string>(
+      name: K,
+      payload: DesktopRPC['renderer']['messages'][K],
+    ) => appWindows.send(appWindows.activeWebContents(), name, payload)
+
     const resolveCommandBindings = (commandId: CommandId) => {
       const overrides = shortcutStore.get()[commandId]
       return overrides && overrides.length > 0
@@ -180,15 +180,16 @@ export async function bootstrap() {
             commandBindings: resolveCommandBindings,
             actions: {
               dispatchCommand: (commandId) => {
-                sendToMainView(mainWindowWebview, 'menuCommandDispatch', { commandId })
+                sendToActiveWindow('menuCommandDispatch', { commandId })
               },
               openShortcutSettings: () => {
-                sendToMainView(mainWindowWebview, 'menuOpenSettings', { category: 'shortcuts' })
+                sendToActiveWindow('menuOpenSettings', { category: 'shortcuts' })
               },
               openTroubleshooting: () => {
                 void shell.openExternal(TROUBLESHOOTING_URL)
               },
               openTaskManager: () => openTaskManager(),
+              showMainWindow: () => appWindows.openMain(),
             },
           }),
         ),
@@ -208,58 +209,25 @@ export async function bootstrap() {
     }
     modelProxyLogger.info('model_proxy.started', 'The local model proxy started')
 
-    const displays = screen.getAllDisplays().map((display) => ({ ...display }))
-    const primaryDisplay = { ...screen.getPrimaryDisplay(), isPrimary: true }
-    const initialWindowState = resolveWindowState(
-      loadedStorage.windowsState,
-      displays,
-      primaryDisplay,
-    )
-    const activeWindowId = initialWindowState.id
-    const mainWindow = new BrowserWindow(
-      createMainWindowOptions(
-        path.join(__dirname, 'preload.js'),
-        initialWindowState.frame,
-        loadedSettings.appearance,
-      ),
-    )
-    const mainWindowWebview = mainWindow.webContents
-    setDialogOwnerWindow(mainWindow)
-    // Electron never shows a default context menu (it reports every one as
-    // handled), so the text-editing menu is built here; silent areas stay
-    // silent, matching the renderer's context-menu gate.
-    mainWindowWebview.on('context-menu', (_event, params) => {
-      const items = textEditMenuItems(params, menuLabels(menuLanguage))
-      if (items) {
-        Menu.buildFromTemplate(items).popup({ window: mainWindow })
-      }
-    })
-    attachExternalNavigation(mainWindowWebview, target, (url) => {
-      shell.openExternal(url).catch((caught) => {
-        appLogger.error('external_open.failed', 'Failed to open an external link', {
-          error: caught,
-          context: { url },
-        })
-      })
-    })
-
     const service = createClaudeDesktopService(
       {
+        // Every window gets every stream event; a renderer only acts on the
+        // streams it owns, so the ones it does not know about are dropped.
         onOutput(streamId, message) {
-          sendToMainView(mainWindowWebview, 'claudeOutput', { streamId, message })
+          appWindows.broadcast('claudeOutput', { streamId, message })
         },
         onError(streamId, message, stack) {
-          sendToMainView(mainWindowWebview, 'claudeError', {
+          appWindows.broadcast('claudeError', {
             streamId,
             message,
             ...(stack ? { stack } : {}),
           })
         },
         onComplete(streamId, success) {
-          sendToMainView(mainWindowWebview, 'claudeComplete', { streamId, success })
+          appWindows.broadcast('claudeComplete', { streamId, success })
         },
         onToolRequest(streamId, request) {
-          sendToMainView(mainWindowWebview, 'claudeToolRequest', { streamId, request })
+          appWindows.broadcast('claudeToolRequest', { streamId, request })
         },
       },
       modelProxy,
@@ -274,10 +242,15 @@ export async function bootstrap() {
       },
       {
         onSessionRecycled: (sessionId) => {
-          sendToMainView(mainWindowWebview, 'claudeSessionRecycled', { sessionId })
+          appWindows.broadcast('claudeSessionRecycled', { sessionId })
         },
       },
     )
+
+    /** Other windows reload the project catalog after one of them changed it. */
+    const announceCatalogChange = (sender: WebContents) =>
+      appWindows.broadcast('catalogChanged', {}, sender.id)
+    const windowOf = (sender: WebContents) => appWindows.windowFor(sender)
 
     const requestHandlers = wrapRequestHandlers(
       {
@@ -321,11 +294,27 @@ export async function bootstrap() {
         claudeSessionQueryClose: (params) => service.sessionQueryClose(params.sessionId),
         claudeSessionPurgeDeadPairs: (params) => service.sessionPurgeDeadPairs(params),
         claudeListProjects: () => service.listProjects(),
-        claudeAddProjectFromFolder: () => service.addProjectFromFolder(),
+        claudeAddProjectFromFolder: async (_params, sender) => {
+          const project = await service.addProjectFromFolder()
+          if (project) announceCatalogChange(sender)
+          return project
+        },
         claudeSelectProjectFolder: (params) => service.selectProjectFolder(params),
-        claudeCreateProject: (params) => service.createProject(params),
-        claudeUpdateProject: (params) => service.updateProject(params),
-        claudeRemoveProject: (params) => service.removeProject(params),
+        claudeCreateProject: async (params, sender) => {
+          const project = await service.createProject(params)
+          announceCatalogChange(sender)
+          return project
+        },
+        claudeUpdateProject: async (params, sender) => {
+          const project = await service.updateProject(params)
+          announceCatalogChange(sender)
+          return project
+        },
+        claudeRemoveProject: async (params, sender) => {
+          await service.removeProject(params)
+          appWindows.closeFocusedForProject(params.projectId)
+          announceCatalogChange(sender)
+        },
         claudeSelectFiles: (params) => service.selectFiles(params),
         claudeGetAttachmentPreview: (params) => service.getAttachmentPreview(params),
         claudeSaveImage: (params) => saveImage(params),
@@ -343,20 +332,47 @@ export async function bootstrap() {
         claudeSetSessionsArchived: (params) => service.setSessionsArchived(params),
         claudeSetSessionsPinned: (params) => service.setSessionsPinned(params),
         claudeSetSessionsUnread: (params) => service.setSessionsUnread(params),
-        windowReadUiState: () => ({
-          ui: windowUiStateOf(sanitizeWindowsState(stateStore.get().windowsState), activeWindowId),
-        }),
-        windowWriteUiState: ({ ui }) =>
-          stateStore
+        windowReadUiState: (_params, sender) => {
+          const window = windowOf(sender)
+          return {
+            ui: window
+              ? windowUiStateOf(sanitizeWindowsState(stateStore.get().windowsState), window.id)
+              : undefined,
+          }
+        },
+        windowWriteUiState: ({ ui }, sender) => {
+          const window = windowOf(sender)
+          if (!window) return
+          return stateStore
             .transform((current) => ({
               ...current,
               windowsState: withWindowUiState(
                 sanitizeWindowsState(current.windowsState),
-                activeWindowId,
+                window,
                 ui,
               ),
             }))
-            .then(() => undefined),
+            .then(() => undefined)
+        },
+        windowDescribe: (_params, sender) => {
+          const window = windowOf(sender)
+          if (!window) throw new Error('The requesting window is not registered')
+          return {
+            id: window.id,
+            kind: window.kind,
+            projectId: window.projectId ?? null,
+            focusedProjectIds: appWindows.registry.focusedProjectIds(),
+          }
+        },
+        windowOpenFocused: ({ projectId, ui }, sender) =>
+          appWindows.openFocused(projectId, ui, sender),
+        windowFocusProject: ({ projectId, session }) => ({
+          focused: appWindows.focusProject(projectId, session),
+        }),
+        windowRefocus: ({ projectId, ui }, sender) => appWindows.refocus(sender, projectId, ui),
+        windowDetachedProject: ({ requestId, ui }) => {
+          appWindows.resolveDetached(requestId, ui)
+        },
         sessionListDrafts: () => sessionStorage.sessionListDrafts(),
         sessionRead: (params) => sessionStorage.sessionRead(params),
         sessionWrite: (params) => sessionStorage.sessionWrite(params),
@@ -376,7 +392,11 @@ export async function bootstrap() {
         claudeSampleContextUsage: (params) => service.sampleContextUsage(params),
         claudeGetProjectGitBranch: (params) => service.getProjectGitBranch(params),
         claudeListProjectGitBranches: (params) => service.listProjectGitBranches(params),
-        claudeSwitchProjectGitBranch: (params) => service.switchProjectGitBranch(params),
+        claudeSwitchProjectGitBranch: async (params, sender) => {
+          const result = await service.switchProjectGitBranch(params)
+          announceCatalogChange(sender)
+          return result
+        },
         claudeRenameSession: (params) => service.renameSession(params),
         claudeDeleteSession: (params) => service.deleteSession(params),
         claudeRespondToolRequest: (params) =>
@@ -387,7 +407,10 @@ export async function bootstrap() {
         claudeUpdateProvider: (params) => service.updateProvider(params),
         claudeDeleteProvider: (params) => service.deleteProvider(params),
         claudeSaveDefaultModel: (params) => service.saveDefaultModel(params),
-        claudeSetProjectModel: (params) => service.setProjectModel(params),
+        claudeSetProjectModel: async (params, sender) => {
+          await service.setProjectModel(params)
+          announceCatalogChange(sender)
+        },
         claudeFetchProviderModels: (params) => service.fetchProviderModels(params),
         claudeGetProviderUsage: (params) => service.getProviderUsage(params),
         shortcutGetOverrides: () => shortcutStore.get(),
@@ -401,8 +424,9 @@ export async function bootstrap() {
           rebuildApplicationMenu()
           return overrides
         },
-        windowToggleMaximize: () => {
-          toggleMainWindowMaximize(mainWindow)
+        windowToggleMaximize: (_params, sender) => {
+          const window = BrowserWindow.fromWebContents(sender)
+          if (window) toggleMainWindowMaximize(window)
         },
       } satisfies MainRequestHandlers,
       (method, caught) => {
@@ -419,49 +443,20 @@ export async function bootstrap() {
     )
 
     for (const [method, handler] of Object.entries(requestHandlers)) {
-      ipcMain.handle(REQUEST_CHANNEL_PREFIX + method, (_event, params: unknown) =>
-        (handler as (requestParams: unknown) => unknown)(params),
+      ipcMain.handle(REQUEST_CHANNEL_PREFIX + method, (event, params: unknown) =>
+        (handler as (requestParams: unknown, sender: WebContents) => unknown)(params, event.sender),
       )
     }
     ipcMain.on(MESSAGE_CHANNEL_PREFIX + 'appLogBatch', (_event, payload) => {
       recordWebviewLogBatch(payload)
     })
 
-    const windowStateTracker = createWindowStateTracker({
-      initialState: initialWindowState,
-      persist: (entry) =>
-        stateStore.transform((current) => ({
-          ...current,
-          windowsState: withWindowEntry(sanitizeWindowsState(current.windowsState), entry),
-        })),
-      onError: (caught) => {
-        appLogger.error('storage.write_failed', 'Failed to save recoverable window state', {
-          error: caught,
-        })
-      },
-    })
-    const captureWindowState = () => {
-      try {
-        windowStateTracker.update({
-          frame: mainWindow.getBounds(),
-          isFullScreen: mainWindow.isFullScreen(),
-          isMaximized: mainWindow.isMaximized(),
-        })
-      } catch (caught) {
-        appLogger.warning('window_state.capture_failed', 'Failed to capture the window state', {
-          errorName: caught instanceof Error ? caught.name : 'Error',
-        })
-      }
-    }
-    mainWindow.on('move', captureWindowState)
-    mainWindow.on('resize', captureWindowState)
-    showMainWindowWhenReady(mainWindow, initialWindowState.isMaximized)
-
     let isStopping = false
-    mainWindow.on('close', (event) => {
+    app.on('before-quit', (event) => {
       if (isStopping) return
       isStopping = true
       event.preventDefault()
+      appWindows.setQuitting()
       appLogger.info('app.stopping', 'Clotho application is stopping')
       const stopModelProxy = modelProxy
         .stop()
@@ -473,24 +468,11 @@ export async function bootstrap() {
             error: caught,
           })
         })
-      const saveWindowState = windowStateTracker
-        .flush()
-        .then(() =>
-          // The window is going away; its per-window ui payload goes with it.
-          stateStore.transform((current) => ({
-            ...current,
-            windowsState: withWindowUiState(
-              sanitizeWindowsState(current.windowsState),
-              activeWindowId,
-              undefined,
-            ),
-          })),
-        )
-        .catch((caught) => {
-          appLogger.error('storage.write_failed', 'Failed to flush recoverable window state', {
-            error: caught,
-          })
+      const saveWindowState = appWindows.flushAll().catch((caught) => {
+        appLogger.error('storage.write_failed', 'Failed to flush recoverable window state', {
+          error: caught,
         })
+      })
       // Resident session queries own CLI subprocesses; quitting tears them down
       // (running background tasks are killed with them by design).
       const stopSessionQueries = service.closeAllSessionQueries().catch((caught) => {
@@ -503,12 +485,12 @@ export async function bootstrap() {
         app.exit(0)
       })
     })
+    // macOS keeps the app alive without windows; the dock icon brings the main window back.
+    app.on('activate', () => appWindows.openMain())
 
-    if (target.kind === 'dev-server') {
-      await mainWindow.loadURL(target.url)
-    } else {
-      await mainWindow.loadFile(target.filePath)
-    }
+    appWindows.openMain()
+    const projectIds = new Set((await service.listProjects()).map((project) => project.id))
+    appWindows.restoreFocused((projectId) => projectIds.has(projectId))
 
     appLogger.info('app.started', 'Clotho application started')
   } catch (caught) {

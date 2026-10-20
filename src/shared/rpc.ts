@@ -8,6 +8,23 @@ import type { ShortcutBinding, ShortcutOverrides } from './shortcuts'
 /** Settings categories the application menu can deep-link into. */
 export type MenuSettingsCategory = 'shortcuts'
 
+/** The one free window that switches projects, or a window bound to a single project. */
+export type WindowKind = 'main' | 'focused'
+
+/** How a renderer learns which window it is running in. */
+export interface WindowDescription {
+  id: string
+  kind: WindowKind
+  /** The bound project of a focused window; null for the main window. */
+  projectId: string | null
+  /** Projects currently shown by focused windows (the main window's included). */
+  focusedProjectIds: string[]
+}
+
+/** The result of asking a focused window to show another project. */
+export type WindowRefocusResult =
+  { outcome: 'refocused'; ui: Record<string, unknown> | null } | { outcome: 'focused-other' }
+
 export type { DraftSession, DraftSessionIndex, LocalSession, SessionInput } from './session'
 
 export type { ProviderModelReasoning } from './provider'
@@ -1052,6 +1069,41 @@ export type DesktopRPC = {
         response: { ui?: Record<string, unknown> }
       }
       windowWriteUiState: { params: { ui: Record<string, unknown> }; response: void }
+      windowDescribe: { params: Record<string, never>; response: WindowDescription }
+      /**
+       * Opens a focused window for a project, seeded with the caller's ui
+       * payload for it. Not opened when a focused window already shows the
+       * project; that window is brought to the front instead.
+       */
+      windowOpenFocused: {
+        params: { projectId: string; ui: Record<string, unknown> }
+        response: { opened: boolean }
+      }
+      /**
+       * Brings the focused window showing a project to the front, if there is
+       * one, and optionally asks it to show a session of that project.
+       */
+      windowFocusProject: {
+        params: {
+          projectId: string
+          session?: { sessionId: string; claudeSessionId: string | null }
+        }
+        response: { focused: boolean }
+      }
+      /**
+       * Rebinds the calling focused window to another project. The ui payload
+       * is the caller's state for its current project, handed back to the main
+       * window; the response carries the main window's state for the new one.
+       */
+      windowRefocus: {
+        params: { projectId: string; ui: Record<string, unknown> }
+        response: WindowRefocusResult
+      }
+      /** Answers a windowDetachProject push with the detached project's ui payload. */
+      windowDetachedProject: {
+        params: { requestId: string; projectId: string; ui: Record<string, unknown> | null }
+        response: void
+      }
       claudeDeleteSession: {
         params: { projectId: string; sessionId: string }
         response: void
@@ -1130,6 +1182,16 @@ export type DesktopRPC = {
       menuCommandDispatch: { commandId: string }
       /** An application menu item asked to open a settings category. */
       menuOpenSettings: { category: MenuSettingsCategory }
+      /** Hand over a project's workspace; answer with windowDetachedProject. */
+      windowDetachProject: { requestId: string; projectId: string }
+      /** Take over a project's workspace moved out of another window. */
+      windowAttachProject: { projectId: string; ui: Record<string, unknown> }
+      /** The set of projects shown by focused windows changed. */
+      windowRegistryChanged: { focusedProjectIds: string[] }
+      /** Show a session of this window's project that another window picked. */
+      windowSelectSession: { sessionId: string; claudeSessionId: string | null }
+      /** Another window changed the project catalog; reload it. */
+      catalogChanged: Record<string, never>
     }
   }>
 }

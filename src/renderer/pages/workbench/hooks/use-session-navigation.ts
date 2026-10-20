@@ -2,6 +2,8 @@ import { useCallback, useEffect } from 'react'
 
 import { toast } from '@/shadcn/toast'
 
+import { claude } from '../../../services/claude/claude'
+import { listenDesktopEvent } from '../../../services/desktop/client'
 import { materializeUnsavedDraft } from '../services/session-records'
 import { draftTitleFromPrompt } from '../session/draft-title'
 import { useSessionControllerRegistry } from '../session/session-controller-context'
@@ -10,6 +12,7 @@ import {
   type WorkbenchSession,
   useWorkbenchStore,
   workspaceKeyForProjectId,
+  workspaceUiState,
 } from '../stores/workbench-store'
 import { findHomeProjectId } from '../utils/home-project'
 import { DEFAULT_SESSION_TITLE } from '../utils/session-list'
@@ -95,13 +98,29 @@ export function useSessionNavigation(workbench: ReturnType<typeof useWorkbench>)
   const handleSelectSession = useCallback(
     (session: WorkbenchSession) => {
       saveTitle()
+      const state = useWorkbenchStore.getState()
+      const projectId = session.project_id || null
+      if (state.windowKind === 'main' && projectId && state.focusedProjectIds.includes(projectId)) {
+        // The project lives in its own window; show the session there instead.
+        void claude
+          .focusProjectWindow(projectId, {
+            sessionId: session.id,
+            claudeSessionId: session.claudeSessionId,
+          })
+          .then(({ focused }) => {
+            if (!focused) workbench.selectSession(session)
+          })
+          .catch(() => workbench.selectSession(session))
+        return
+      }
       workbench.selectSession(session)
     },
     [saveTitle, workbench],
   )
-  const handleSwitchWorkspace = useCallback(
+
+  /** Shows a project in this window; the blank draft keeps an empty workspace usable. */
+  const switchWorkspaceLocally = useCallback(
     (projectId: string | null) => {
-      saveTitle()
       // Exiting to unselected lands on the built-in work default project.
       const state = useWorkbenchStore.getState()
       const targetProjectId = projectId ?? findHomeProjectId(state.projects)
@@ -123,8 +142,82 @@ export function useSessionNavigation(workbench: ReturnType<typeof useWorkbench>)
       // or first send).
       workbench.selectSession(session)
     },
-    [saveTitle, workbench],
+    [workbench],
   )
+
+  /** A focused window switching projects rebinds itself; its old project goes back to the main window. */
+  const refocusWindow = useCallback(
+    async (projectId: string) => {
+      const state = useWorkbenchStore.getState()
+      const currentProjectId = state.focusedProjectId
+      if (!currentProjectId) return
+      const result = await claude.refocusWindow({
+        projectId,
+        ui: workspaceUiState(state, currentProjectId),
+      })
+      if (result.outcome !== 'refocused') return
+      const store = useWorkbenchStore.getState()
+      store.detachWorkspace(currentProjectId)
+      store.setWindowIdentity({ kind: 'focused', projectId })
+      if (result.ui) store.attachWorkspace(projectId, result.ui)
+      // Select before the reload so the catalog lands on the new project
+      // instead of seeding a home draft into a window that has no home.
+      workbench.selectProject(projectId)
+      await workbench.refreshProjects().catch(() => {})
+      switchWorkspaceLocally(projectId)
+    },
+    [switchWorkspaceLocally, workbench],
+  )
+
+  const handleSwitchWorkspace = useCallback(
+    (projectId: string | null) => {
+      saveTitle()
+      const state = useWorkbenchStore.getState()
+      if (state.windowKind === 'focused') {
+        // A focused window has no home; picking another project refocuses it.
+        if (!projectId || projectId === state.focusedProjectId) return
+        void refocusWindow(projectId).catch((error) =>
+          toast.add({
+            title: 'Could not switch project',
+            description: String(error),
+            type: 'error',
+          }),
+        )
+        return
+      }
+      if (projectId && state.focusedProjectIds.includes(projectId)) {
+        // The project lives in its own window; bring that one up instead.
+        void claude
+          .focusProjectWindow(projectId)
+          .then(({ focused }) => {
+            if (!focused) switchWorkspaceLocally(projectId)
+          })
+          .catch(() => switchWorkspaceLocally(projectId))
+        return
+      }
+      switchWorkspaceLocally(projectId)
+    },
+    [refocusWindow, saveTitle, switchWorkspaceLocally],
+  )
+
+  const handleOpenProjectInNewWindow = useCallback(() => {
+    saveTitle()
+    const state = useWorkbenchStore.getState()
+    const projectId = state.currentProjectId
+    if (state.windowKind !== 'main' || !projectId || state.projects[projectId]?.is_home) return
+    void claude
+      .openFocusedWindow({ projectId, ui: workspaceUiState(state, projectId) })
+      .then(({ opened }) => {
+        // Not opened means the project already had a window, now in front.
+        if (!opened) return
+        useWorkbenchStore.getState().detachWorkspace(projectId)
+        switchWorkspaceLocally(null)
+      })
+      .catch((error) =>
+        toast.add({ title: 'Could not open window', description: String(error), type: 'error' }),
+      )
+  }, [saveTitle, switchWorkspaceLocally])
+
   const handleNavigate = useCallback(
     (location: { projectId: string | null; sessionId: string | null }) => {
       const session = location.sessionId
@@ -136,12 +229,76 @@ export function useSessionNavigation(workbench: ReturnType<typeof useWorkbench>)
     [handleSelectSession, handleSwitchWorkspace],
   )
 
+  // Workspace hand-over between windows, driven by the main process.
+  useEffect(() => {
+    let isActive = true
+    const unsubscribers: Array<() => void> = []
+    const track = (subscription: Promise<() => void>) => {
+      void subscription.then((unsubscribe) => {
+        if (isActive) unsubscribers.push(unsubscribe)
+        else unsubscribe()
+      })
+    }
+    track(
+      listenDesktopEvent('window-detach-project', ({ requestId, projectId }) => {
+        saveTitle()
+        const store = useWorkbenchStore.getState()
+        const wasCurrent = store.currentProjectId === projectId
+        const ui = store.detachWorkspace(projectId)
+        void claude.reportDetachedProject({ requestId, projectId, ui }).catch(() => {})
+        if (wasCurrent && store.windowKind === 'main') switchWorkspaceLocally(null)
+      }),
+    )
+    track(
+      listenDesktopEvent('window-attach-project', ({ projectId, ui }) => {
+        // The catalog must know the handed-over sessions before their tabs
+        // land, or the next reconcile would drop the unknown ids.
+        void workbench
+          .refreshProjects()
+          .catch(() => {})
+          .then(() => useWorkbenchStore.getState().attachWorkspace(projectId, ui))
+      }),
+    )
+    track(
+      listenDesktopEvent('window-select-session', ({ sessionId, claudeSessionId }) => {
+        // Another window picked a session of this window's project. A session
+        // it created is only known here by its Claude id.
+        const find = () => {
+          const sessions = useWorkbenchStore.getState().sessions
+          return (
+            sessions[sessionId] ??
+            (claudeSessionId
+              ? Object.values(sessions).find((item) => item.claudeSessionId === claudeSessionId)
+              : undefined)
+          )
+        }
+        const session = find()
+        if (session) {
+          handleSelectSession(session)
+          return
+        }
+        void workbench
+          .refreshProjects()
+          .catch(() => {})
+          .then(() => {
+            const late = find()
+            if (late) handleSelectSession(late)
+          })
+      }),
+    )
+    return () => {
+      isActive = false
+      for (const unsubscribe of unsubscribers) unsubscribe()
+    }
+  }, [handleSelectSession, saveTitle, switchWorkspaceLocally, workbench])
+
   useEffect(
     () => registry.retain(new Set(workbench.tabSessionIds)),
     [registry, workbench.tabSessionIds],
   )
   return {
     handleNavigate,
+    handleOpenProjectInNewWindow,
     handleSelectSession,
     handleStartNewSessionInCurrentWorkspace,
     handleSwitchWorkspace,

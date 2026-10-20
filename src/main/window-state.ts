@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto'
 
 import type { Rectangle } from 'electron'
 
+import type { WindowKind } from '@/shared/rpc'
+
 export type WindowFrame = Rectangle
 /** The display fields the window-state resolution relies on (satisfied by Electron displays). */
 export type WindowDisplay = {
@@ -12,8 +14,13 @@ export type WindowDisplay = {
   isPrimary?: boolean
 }
 
+export type { WindowKind }
+
 export interface StoredWindowState {
   id: string
+  kind: WindowKind
+  /** The project a focused window is bound to; absent on the main window. */
+  projectId?: string
   frame: WindowFrame
   isMaximized: boolean
   /**
@@ -22,6 +29,9 @@ export interface StoredWindowState {
    */
   ui?: Record<string, unknown>
 }
+
+/** What the main process needs to address a window entry without its geometry. */
+export type WindowIdentity = Pick<StoredWindowState, 'id' | 'kind' | 'projectId'>
 
 export interface WindowsState {
   /** Id of the window that had focus, referencing an entry in openedWindows. */
@@ -38,6 +48,7 @@ export interface WindowStateUpdate {
 const DEFAULT_WIDTH = 1280
 const DEFAULT_HEIGHT = 800
 const DEFAULT_WORK_AREA_RATIO = 0.9
+const CASCADE_OFFSET = 40
 const FALLBACK_FRAME: WindowFrame = { x: 120, y: 80, width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT }
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -65,18 +76,23 @@ function isDisplay(value: unknown): value is WindowDisplay {
   return isFiniteNumber(value.id) && isRectangle(value.workArea)
 }
 
+function identityOf(value: Record<string, unknown>): WindowIdentity | undefined {
+  if (typeof value.id !== 'string' || value.id.length === 0) return undefined
+  if (value.kind === 'main') return { id: value.id, kind: 'main' }
+  if (value.kind === 'focused' && typeof value.projectId === 'string' && value.projectId) {
+    return { id: value.id, kind: 'focused', projectId: value.projectId }
+  }
+  return undefined
+}
+
 export function sanitizeWindowState(value: unknown): StoredWindowState | undefined {
-  if (
-    !isObject(value) ||
-    typeof value.id !== 'string' ||
-    value.id.length === 0 ||
-    !isRectangle(value.frame) ||
-    typeof value.isMaximized !== 'boolean'
-  ) {
+  if (!isObject(value) || !isRectangle(value.frame) || typeof value.isMaximized !== 'boolean') {
     return undefined
   }
+  const identity = identityOf(value)
+  if (!identity) return undefined
   return {
-    id: value.id,
+    ...identity,
     frame: { ...value.frame },
     isMaximized: value.isMaximized,
     ...(isObject(value.ui) ? { ui: { ...value.ui } } : {}),
@@ -106,24 +122,28 @@ export function windowUiStateOf(
   return windowsState?.openedWindows.find((entry) => entry.id === windowId)?.ui
 }
 
+export function focusedWindowEntries(windowsState: WindowsState | undefined): StoredWindowState[] {
+  return windowsState?.openedWindows.filter((entry) => entry.kind === 'focused') ?? []
+}
+
 /** Replaces or removes the ui payload of one window entry inside the container. */
 export function withWindowUiState(
   windowsState: WindowsState | undefined,
-  windowId: string,
+  window: WindowIdentity,
   ui: Record<string, unknown> | undefined,
 ): WindowsState {
   const base: WindowsState = windowsState ?? { openedWindows: [] }
   let openedWindows = base.openedWindows
-  if (!openedWindows.some((entry) => entry.id === windowId)) {
+  if (!openedWindows.some((entry) => entry.id === window.id)) {
     openedWindows = [
       ...openedWindows,
-      { id: windowId, frame: { ...FALLBACK_FRAME }, isMaximized: false },
+      { ...window, frame: { ...FALLBACK_FRAME }, isMaximized: false },
     ]
   }
   return {
     ...base,
     openedWindows: openedWindows.map((entry) =>
-      entry.id === windowId
+      entry.id === window.id
         ? ui
           ? { ...entry, ui: { ...ui } }
           : (() => {
@@ -152,6 +172,32 @@ export function withWindowEntry(
             : candidate,
         )
       : [...base.openedWindows, { ...entry }],
+  }
+}
+
+/** Rebinds a focused window entry to another project. */
+export function withWindowProject(
+  windowsState: WindowsState | undefined,
+  windowId: string,
+  projectId: string,
+): WindowsState {
+  const base: WindowsState = windowsState ?? { openedWindows: [] }
+  return {
+    ...base,
+    openedWindows: base.openedWindows.map((entry) =>
+      entry.id === windowId && entry.kind === 'focused' ? { ...entry, projectId } : entry,
+    ),
+  }
+}
+
+export function withoutWindowEntry(
+  windowsState: WindowsState | undefined,
+  windowId: string,
+): WindowsState {
+  const base: WindowsState = windowsState ?? { openedWindows: [] }
+  return {
+    lastActiveWindow: base.lastActiveWindow === windowId ? undefined : base.lastActiveWindow,
+    openedWindows: base.openedWindows.filter((entry) => entry.id !== windowId),
   }
 }
 
@@ -220,31 +266,83 @@ function fitFrame(frame: WindowFrame, workArea: Rectangle): WindowFrame {
   }
 }
 
-export function resolveWindowState(
+/** Moves a stored frame onto the display it overlaps most (the primary one when none). */
+function fitToDisplays(
+  frame: WindowFrame,
+  displays: WindowDisplay[],
+  primaryDisplay: WindowDisplay,
+): WindowFrame {
+  const available = availableDisplays(displays, primaryDisplay)
+  const target = overlappingDisplay(frame, available) ?? primaryFrom(available, primaryDisplay)
+  return target ? fitFrame(frame, target.workArea) : { ...frame }
+}
+
+/** The runtime entry for a stored window: identity and geometry fitted to the current displays. */
+export function fitStoredWindow(
+  entry: StoredWindowState,
+  displays: WindowDisplay[],
+  primaryDisplay: WindowDisplay,
+): StoredWindowState {
+  return {
+    id: entry.id,
+    kind: entry.kind,
+    ...(entry.projectId ? { projectId: entry.projectId } : {}),
+    frame: fitToDisplays(entry.frame, displays, primaryDisplay),
+    isMaximized: entry.isMaximized,
+  }
+}
+
+/** A frame stepped down and right from another window, kept on that window's display. */
+export function cascadeFrame(
+  from: WindowFrame,
+  displays: WindowDisplay[],
+  primaryDisplay: WindowDisplay,
+): WindowFrame {
+  return fitToDisplays(
+    {
+      x: from.x + CASCADE_OFFSET,
+      y: from.y + CASCADE_OFFSET,
+      width: from.width,
+      height: from.height,
+    },
+    displays,
+    primaryDisplay,
+  )
+}
+
+export function resolveMainWindowState(
   value: unknown,
   displays: WindowDisplay[],
   primaryDisplay: WindowDisplay,
 ): StoredWindowState {
+  const saved = sanitizeWindowsState(value)
+  const mainEntries = saved?.openedWindows.filter((entry) => entry.kind === 'main') ?? []
+  const entry =
+    mainEntries.find((candidate) => candidate.id === saved?.lastActiveWindow) ?? mainEntries[0]
+  if (entry) return fitStoredWindow(entry, displays, primaryDisplay)
+
   const available = availableDisplays(displays, primaryDisplay)
   const primary = primaryFrom(available, primaryDisplay)
-  const saved = sanitizeWindowsState(value)
-  const entry = saved
-    ? (saved.openedWindows.find((window) => window.id === saved.lastActiveWindow) ??
-      saved.openedWindows[0])
-    : undefined
-  if (!entry) {
-    return {
-      id: randomUUID(),
-      frame: primary ? centerDefaultFrame(primary.workArea) : { ...FALLBACK_FRAME },
-      isMaximized: false,
-    }
-  }
-
-  const target = overlappingDisplay(entry.frame, available) ?? primary
   return {
-    id: entry.id,
-    frame: target ? fitFrame(entry.frame, target.workArea) : { ...entry.frame },
-    isMaximized: entry.isMaximized,
+    id: randomUUID(),
+    kind: 'main',
+    frame: primary ? centerDefaultFrame(primary.workArea) : { ...FALLBACK_FRAME },
+    isMaximized: false,
+  }
+}
+
+export function newFocusedWindowState(
+  projectId: string,
+  from: WindowFrame,
+  displays: WindowDisplay[],
+  primaryDisplay: WindowDisplay,
+): StoredWindowState {
+  return {
+    id: randomUUID(),
+    kind: 'focused',
+    projectId,
+    frame: cascadeFrame(from, displays, primaryDisplay),
+    isMaximized: false,
   }
 }
 

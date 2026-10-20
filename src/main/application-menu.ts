@@ -12,6 +12,8 @@ export type ApplicationMenuActions = {
   openShortcutSettings: () => void
   openTroubleshooting: () => void
   openTaskManager: () => void
+  /** Bring the main window to the front, recreating it when it was closed. */
+  showMainWindow: () => void
 }
 
 export type ApplicationMenuOptions = {
@@ -132,6 +134,8 @@ export function applicationMenuItems(options: ApplicationMenuOptions) {
       submenu: [
         { label: labels.minimize, role: 'minimize' },
         { label: labels.zoom, role: 'zoom' },
+        { type: 'separator' },
+        { label: labels.mainWindow, click: () => options.actions.showMainWindow() },
         ...(isMac
           ? [{ type: 'separator' as const }, { label: labels.front, role: 'front' as const }]
           : []),

@@ -1,4 +1,4 @@
-import { CircleX, FolderPlus } from 'lucide-react'
+import { AppWindow, CircleX, FolderPlus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -13,6 +13,7 @@ import {
 import { ProjectIcon } from '../../../components/project-icon'
 import type { ClaudeProject } from '../../../services/claude/claude'
 import { isUserProject, projectDisplayName } from '../../../utils/project'
+import { useWorkbenchStore } from '../stores/workbench-store'
 import { tildePath } from '../utils/path-display'
 import { MiddlePath } from './components/middle-path'
 
@@ -34,8 +35,16 @@ export function ProjectSwitcherMenuContent({
   onSelectProject,
 }: ProjectSwitcherMenuContentProps) {
   const { t } = useTranslation()
+  const windowKind = useWorkbenchStore((state) => state.windowKind)
+  const focusedProjectId = useWorkbenchStore((state) => state.focusedProjectId)
+  const focusedProjectIds = useWorkbenchStore((state) => state.focusedProjectIds)
+  // A focused window is bound to its project, so leaving for "no project" is
+  // only offered in the main window.
   const canExitProject =
-    projectMode === 'project' && selectedProject !== undefined && !selectedProject.is_home
+    windowKind === 'main' &&
+    projectMode === 'project' &&
+    selectedProject !== undefined &&
+    !selectedProject.is_home
 
   return (
     <MenuContent
@@ -51,6 +60,8 @@ export function ProjectSwitcherMenuContent({
         <MenuGroup>
           {projects.filter(isUserProject).map((project) => {
             const name = projectDisplayName(project)
+            const isInOtherWindow =
+              project.id !== focusedProjectId && focusedProjectIds.includes(project.id)
 
             return (
               <MenuItem
@@ -68,6 +79,14 @@ export function ProjectSwitcherMenuContent({
                   className="min-w-0 flex-1 text-[12px] text-foreground-subtlest!"
                   path={tildePath(project.path)}
                 />
+                {isInOtherWindow ? (
+                  <span
+                    className="flex shrink-0 items-center text-foreground-subtlest"
+                    title={t('workbench.project.inOtherWindow')}
+                  >
+                    <AppWindow className="size-3.5" strokeWidth={1.5} />
+                  </span>
+                ) : null}
               </MenuItem>
             )
           })}

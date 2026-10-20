@@ -552,4 +552,91 @@ describe('useWorkbenchStore', () => {
       },
     })
   })
+
+  it('detaches a workspace without its blank draft and leaves the window on home', () => {
+    loadCatalog()
+    useWorkbenchStore.getState().selectSession(REMOTE_SESSION.id)
+    const saved = useWorkbenchStore.getState().createDraftSession(PROJECT.id, 'Saved draft')
+    useWorkbenchStore.getState().markDraftSaved(saved)
+    const blank = useWorkbenchStore.getState().createDraftSession(PROJECT.id, 'New Chat')
+    useWorkbenchStore.getState().selectSession(blank)
+
+    const payload = useWorkbenchStore.getState().detachWorkspace(PROJECT.id)
+
+    // The blank draft only existed in this window, so the hand-over skips it
+    // and lands on the first carried tab instead.
+    expect(payload).toEqual({
+      currentWorkspaceKey: 'project:project-workspace',
+      sessionTabsByWorkspace: { 'project:project-workspace': [REMOTE_SESSION.id, saved] },
+      activeSessionByWorkspace: { 'project:project-workspace': REMOTE_SESSION.id },
+    })
+    const state = useWorkbenchStore.getState()
+    expect(state.sessionTabsByWorkspace['project:project-workspace']).toBeUndefined()
+    expect(state.activeSessionByWorkspace['project:project-workspace']).toBeUndefined()
+    expect(state.sessions[blank]).toBeUndefined()
+    expect(state.sessions[saved]).toBeDefined()
+    expect(state).toMatchObject({
+      currentSessionId: null,
+      currentProjectId: null,
+      currentWorkspaceKey: 'claude',
+      projectMode: 'home',
+    })
+  })
+
+  it('keeps the current selection when detaching a background workspace', () => {
+    useWorkbenchStore.getState().replaceCatalog({
+      projects: [PROJECT, SECOND_PROJECT],
+      sessions: {
+        [PROJECT.id]: [REMOTE_SESSION],
+        [SECOND_PROJECT.id]: [SECOND_SESSION],
+      },
+      branches: { [PROJECT.id]: 'main', [SECOND_PROJECT.id]: 'main' },
+    })
+    useWorkbenchStore.getState().selectSession(REMOTE_SESSION.id)
+    useWorkbenchStore.getState().selectSession(SECOND_SESSION.id)
+
+    useWorkbenchStore.getState().detachWorkspace(PROJECT.id)
+
+    expect(useWorkbenchStore.getState()).toMatchObject({
+      currentProjectId: SECOND_PROJECT.id,
+      currentSessionId: SECOND_SESSION.id,
+      sessionTabsByWorkspace: { 'project:second-workspace': [SECOND_SESSION.id] },
+    })
+    expect(
+      useWorkbenchStore.getState().sessionTabsByWorkspace['project:project-workspace'],
+    ).toBeUndefined()
+  })
+
+  it('attaches a handed-over workspace ahead of local tabs and honors its active session', () => {
+    loadCatalog()
+    const local = useWorkbenchStore.getState().createDraftSession(PROJECT.id, 'Local draft')
+
+    useWorkbenchStore.getState().attachWorkspace(PROJECT.id, {
+      currentWorkspaceKey: 'project:project-workspace',
+      sessionTabsByWorkspace: {
+        'project:project-workspace': [REMOTE_SESSION.id, local, 42],
+      },
+      activeSessionByWorkspace: { 'project:project-workspace': REMOTE_SESSION.id },
+    })
+
+    expect(useWorkbenchStore.getState()).toMatchObject({
+      sessionTabsByWorkspace: {
+        'project:project-workspace': [REMOTE_SESSION.id, local],
+      },
+      activeSessionByWorkspace: { 'project:project-workspace': REMOTE_SESSION.id },
+    })
+  })
+
+  it('falls back to the first tab when an attached payload names no usable active session', () => {
+    loadCatalog()
+
+    useWorkbenchStore.getState().attachWorkspace(PROJECT.id, {
+      sessionTabsByWorkspace: { 'project:project-workspace': [REMOTE_SESSION.id] },
+      activeSessionByWorkspace: { 'project:project-workspace': 'not-a-tab' },
+    })
+
+    expect(useWorkbenchStore.getState().activeSessionByWorkspace).toEqual({
+      'project:project-workspace': REMOTE_SESSION.id,
+    })
+  })
 })

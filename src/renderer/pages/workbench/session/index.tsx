@@ -84,6 +84,7 @@ export type SessionAreaProps = {
   onRetryProjectSessions: () => void
   onCloseSession: (session: WorkbenchSession) => void
   onDeleteSession: (session: WorkbenchSession) => void
+  onOpenProjectInNewWindow?: () => void
   onOpenSettings: () => void
   onRenameSession: (session: WorkbenchSession) => void
   onSelectSession: (session: WorkbenchSession) => void
@@ -179,6 +180,7 @@ export function SessionArea(props: SessionAreaProps) {
         onAddProject={props.onAddProject}
         onCloseSession={props.onCloseSession}
         onDeleteSession={props.onDeleteSession}
+        onOpenProjectInNewWindow={props.onOpenProjectInNewWindow}
         onRenameSession={props.onRenameSession}
         onSelectProject={props.setSelectedProjectId}
         onSelectSession={props.onSelectSession}
@@ -274,6 +276,7 @@ function SessionAreaContent({
   onAddProject,
   onContentScrolledChange,
   onDeleteSession,
+  onOpenProjectInNewWindow,
   onOpenSettings,
   onRenameSession,
   onSelectSession,
@@ -818,6 +821,7 @@ function SessionAreaContent({
           sessionActivity={sessionActivity}
           onAddProject={onAddProject}
           onDeleteSession={onDeleteSession}
+          onOpenProjectInNewWindow={onOpenProjectInNewWindow}
           onRenameSession={onRenameSession}
           onSelectProject={setSelectedProjectId}
           onSelectSession={onSelectSession}

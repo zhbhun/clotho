@@ -25,6 +25,7 @@ export type SessionEmptyStateProps = {
   sessionActivity: Record<string, SessionActivity>
   onAddProject: () => void
   onDeleteSession: (session: WorkbenchSession) => void
+  onOpenProjectInNewWindow?: () => void
   onRenameSession: (session: WorkbenchSession) => void
   onSelectProject: (projectId: string | null) => void
   onSelectSession: (session: WorkbenchSession) => void
@@ -48,6 +49,7 @@ export function SessionEmptyState({
   sessionActivity,
   onAddProject,
   onDeleteSession,
+  onOpenProjectInNewWindow,
   onRenameSession,
   onSelectProject,
   onSelectSession,
@@ -95,6 +97,7 @@ export function SessionEmptyState({
                   projects={projects}
                   selectedProject={selectedProject}
                   onAddProject={onAddProject}
+                  onOpenInNewWindow={onOpenProjectInNewWindow}
                   onSelectProject={onSelectProject}
                 />
                 <BranchSwitcherButton

@@ -64,6 +64,8 @@ import type {
   ProviderModelSelection as RpcProviderModelSelection,
   ProviderUsageQuota as RpcProviderUsageQuota,
   ProviderUsageWindow as RpcProviderUsageWindow,
+  WindowDescription,
+  WindowRefocusResult,
 } from '@/shared/rpc'
 import type { DraftSession, DraftSessionIndex, LocalSession } from '@/shared/session'
 
@@ -986,5 +988,44 @@ export const claude = {
   async writeWindowUiState(ui: Record<string, unknown>): Promise<void> {
     if (!isDesktopRuntime()) return
     return requestFromDesktop('windowWriteUiState', { ui })
+  },
+  /** Outside the desktop every renderer is the main window with nothing else open. */
+  async describeWindow(): Promise<WindowDescription> {
+    if (!isDesktopRuntime()) {
+      return { id: 'browser', kind: 'main', projectId: null, focusedProjectIds: [] }
+    }
+    return requestFromDesktop('windowDescribe', {})
+  },
+  async openFocusedWindow(params: {
+    projectId: string
+    ui: Record<string, unknown>
+  }): Promise<{ opened: boolean }> {
+    if (!isDesktopRuntime()) return { opened: false }
+    return requestFromDesktop('windowOpenFocused', params)
+  },
+  async focusProjectWindow(
+    projectId: string,
+    session?: { sessionId: string; claudeSessionId: string | null },
+  ): Promise<{ focused: boolean }> {
+    if (!isDesktopRuntime()) return { focused: false }
+    return requestFromDesktop(
+      'windowFocusProject',
+      session ? { projectId, session } : { projectId },
+    )
+  },
+  async refocusWindow(params: {
+    projectId: string
+    ui: Record<string, unknown>
+  }): Promise<WindowRefocusResult> {
+    if (!isDesktopRuntime()) return { outcome: 'focused-other' }
+    return requestFromDesktop('windowRefocus', params)
+  },
+  async reportDetachedProject(params: {
+    requestId: string
+    projectId: string
+    ui: Record<string, unknown> | null
+  }): Promise<void> {
+    if (!isDesktopRuntime()) return
+    return requestFromDesktop('windowDetachedProject', params)
   },
 }

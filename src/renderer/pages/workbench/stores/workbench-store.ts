@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-import type { ClaudeProject, ClaudeSession } from '@/shared/rpc'
+import type { ClaudeProject, ClaudeSession, WindowKind } from '@/shared/rpc'
 import type { DraftSessionIndex } from '@/shared/session'
 
 import { claude } from '../../../services/claude/claude'
@@ -50,6 +50,11 @@ type WorkbenchDataState = {
   activeSessionByWorkspace: Record<string, string | null>
   projectMode: ProjectMode
   sessionActivity: Record<string, SessionActivity>
+  /** Which desktop window this renderer runs in; a focused window is bound to one project. */
+  windowKind: WindowKind
+  focusedProjectId: string | null
+  /** Projects shown by focused windows, kept current by the main process. */
+  focusedProjectIds: string[]
 }
 
 /** The window-scoped slice persisted with the desktop window (see workbench-persistence). */
@@ -84,6 +89,12 @@ export type WorkbenchState = WorkbenchDataState & {
   setSessionActivity: (sessionId: string, activity: SessionActivityEvent) => void
   bindClaudeSession: (sessionId: string, claudeSessionId: string) => void
   removeSession: (sessionId: string) => void
+  setWindowIdentity: (identity: { kind: WindowKind; projectId: string | null }) => void
+  setFocusedProjectIds: (projectIds: string[]) => void
+  /** Drops a project's workspace from this window and returns the payload describing it. */
+  detachWorkspace: (projectId: string) => WorkbenchWindowUiState
+  /** Takes in a project's workspace handed over by another window. */
+  attachWorkspace: (projectId: string, ui: Record<string, unknown>) => void
   reset: () => void
 }
 
@@ -93,6 +104,30 @@ export function windowUiState(state: WorkbenchState): WorkbenchWindowUiState {
     sessionTabsByWorkspace: state.sessionTabsByWorkspace,
     activeSessionByWorkspace: state.activeSessionByWorkspace,
   }
+}
+
+/** One project's workspace as handed between windows: its tabs and active session only. */
+export function workspaceUiState(
+  state: WorkbenchDataState,
+  projectId: string,
+): WorkbenchWindowUiState {
+  const key = workspaceKeyForProjectId(projectId, state.projects)
+  // A blank draft lives only in this window's memory; there is nothing to carry.
+  const tabs = (state.sessionTabsByWorkspace[key] ?? []).filter(
+    (id) => !state.sessions[id]?.isUnsavedDraft,
+  )
+  const active = state.activeSessionByWorkspace[key] ?? null
+  return {
+    currentWorkspaceKey: key,
+    sessionTabsByWorkspace: { [key]: tabs },
+    activeSessionByWorkspace: {
+      [key]: active && tabs.includes(active) ? active : (tabs[0] ?? null),
+    },
+  }
+}
+
+function stringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item) => typeof item === 'string') : []
 }
 
 function uniqueSessionIds(sessionIds: string[]) {
@@ -242,6 +277,9 @@ function createInitialState(): WorkbenchDataState {
     activeSessionByWorkspace: {},
     projectMode: 'home',
     sessionActivity: {},
+    windowKind: 'main',
+    focusedProjectId: null,
+    focusedProjectIds: [],
   }
 }
 
@@ -859,6 +897,72 @@ export const useWorkbenchStore = create<WorkbenchState>()((set, get) => ({
         ...base,
         ...withDraft,
         ...selectedSessionState({ ...state, ...withDraft }, draft),
+      }
+    }),
+  setWindowIdentity: ({ kind, projectId }) =>
+    set({ windowKind: kind, focusedProjectId: kind === 'focused' ? projectId : null }),
+  setFocusedProjectIds: (focusedProjectIds) => set({ focusedProjectIds }),
+  detachWorkspace: (projectId) => {
+    const payload = workspaceUiState(get(), projectId)
+    set((state) => {
+      const key = payload.currentWorkspaceKey
+      const blankDraftIds = (state.sessionTabsByWorkspace[key] ?? []).filter(
+        (id) => state.sessions[id]?.isUnsavedDraft,
+      )
+      const sessions = { ...state.sessions }
+      for (const id of blankDraftIds) delete sessions[id]
+      const sessionTabsByWorkspace = { ...state.sessionTabsByWorkspace }
+      delete sessionTabsByWorkspace[key]
+      const activeSessionByWorkspace = { ...state.activeSessionByWorkspace }
+      delete activeSessionByWorkspace[key]
+      return {
+        sessions,
+        sessionTabsByWorkspace,
+        activeSessionByWorkspace,
+        sessionActivity: Object.fromEntries(
+          Object.entries(state.sessionActivity).filter(([id]) => !blankDraftIds.includes(id)),
+        ),
+        projects: Object.fromEntries(
+          Object.entries(state.projects).map(([id, project]) => [
+            id,
+            { ...project, sessions: project.sessions.filter((item) => sessions[item]) },
+          ]),
+        ),
+        // The caller picks the next workspace; until then nothing is selected.
+        ...(state.currentWorkspaceKey === key
+          ? {
+              currentSessionId: null,
+              currentProjectId: null,
+              currentWorkspaceKey: 'claude' as const,
+              projectMode: 'home' as const,
+            }
+          : {}),
+      }
+    })
+    return payload
+  },
+  attachWorkspace: (projectId, ui) =>
+    set((state) => {
+      const key = workspaceKeyForProjectId(projectId, state.projects)
+      const incomingTabs =
+        ui.sessionTabsByWorkspace && typeof ui.sessionTabsByWorkspace === 'object'
+          ? stringArray((ui.sessionTabsByWorkspace as Record<string, unknown>)[key])
+          : []
+      const incomingActive =
+        ui.activeSessionByWorkspace && typeof ui.activeSessionByWorkspace === 'object'
+          ? (ui.activeSessionByWorkspace as Record<string, unknown>)[key]
+          : undefined
+      const tabs = uniqueSessionIds([...incomingTabs, ...(state.sessionTabsByWorkspace[key] ?? [])])
+      const existingActive = state.activeSessionByWorkspace[key] ?? null
+      const active =
+        typeof incomingActive === 'string' && tabs.includes(incomingActive)
+          ? incomingActive
+          : existingActive && tabs.includes(existingActive)
+            ? existingActive
+            : (tabs[0] ?? null)
+      return {
+        sessionTabsByWorkspace: { ...state.sessionTabsByWorkspace, [key]: tabs },
+        activeSessionByWorkspace: { ...state.activeSessionByWorkspace, [key]: active },
       }
     }),
   reset: () => set(createInitialState()),

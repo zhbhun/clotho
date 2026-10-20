@@ -102,6 +102,7 @@ function WorkbenchContent() {
   }, [openSettings, t])
   const {
     handleNavigate,
+    handleOpenProjectInNewWindow,
     handleSelectSession,
     handleStartNewSessionInCurrentWorkspace,
     handleSwitchWorkspace,
@@ -185,6 +186,7 @@ function WorkbenchContent() {
     pinnedSessionIds: workbench.pinnedSessionIds,
     onCloseSession: workbench.closeSession,
     onDeleteSession: handleDeleteSession,
+    onOpenProjectInNewWindow: handleOpenProjectInNewWindow,
     onOpenSettings: handleOpenSettings,
     onRenameSession: handleRenameSession,
     onSelectSession: handleSelectSession,

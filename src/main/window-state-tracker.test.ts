@@ -6,6 +6,7 @@ import { createWindowStateTracker } from './window-state-tracker'
 
 const initial: StoredWindowState = {
   id: 'window-a',
+  kind: 'main',
   frame: { x: 160, y: 100, width: 1280, height: 800 },
   isMaximized: false,
 }
@@ -43,6 +44,7 @@ describe('window state tracking', () => {
 
     expect(persisted).toEqual({
       id: 'window-a',
+      kind: 'main',
       frame: { x: 240, y: 120, width: 1100, height: 720 },
       isMaximized: false,
     })

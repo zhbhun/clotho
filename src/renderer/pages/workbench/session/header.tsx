@@ -25,6 +25,7 @@ export function ConversationHeader({
   onAddProject,
   onCloseSession,
   onDeleteSession,
+  onOpenProjectInNewWindow,
   onRenameSession,
   onSelectProject,
   onSelectSession,
@@ -46,6 +47,7 @@ export function ConversationHeader({
   onAddProject: () => void
   onCloseSession: (session: WorkbenchSession) => void
   onDeleteSession: (session: WorkbenchSession) => void
+  onOpenProjectInNewWindow?: () => void
   onRenameSession: (session: WorkbenchSession) => void
   onSelectProject: (projectId: string | null) => void
   onSelectSession: (session: WorkbenchSession) => void
@@ -87,6 +89,7 @@ export function ConversationHeader({
             projects={projects}
             selectedProject={selectedProject}
             onAddProject={onAddProject}
+            onOpenInNewWindow={onOpenProjectInNewWindow}
             onSelectProject={onSelectProject}
           />
         </div>
