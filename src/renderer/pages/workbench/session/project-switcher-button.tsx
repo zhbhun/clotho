@@ -1,4 +1,4 @@
-import { AppWindow, CircleX, FolderKanban } from 'lucide-react'
+import { CircleX, FolderKanban } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -21,7 +21,7 @@ export type ProjectSwitcherButtonProps = {
   projects: WorkbenchProject[]
   selectedProject?: WorkbenchProject
   onAddProject: () => void
-  onOpenInNewWindow?: () => void
+  onOpenProjectInNewWindow?: (projectId: string) => void
   onSelectProject: (projectId: string | null) => void
 }
 
@@ -35,7 +35,7 @@ export function ProjectSwitcherButton({
   projects,
   selectedProject,
   onAddProject,
-  onOpenInNewWindow,
+  onOpenProjectInNewWindow,
   onSelectProject,
 }: ProjectSwitcherButtonProps) {
   const { t } = useTranslation()
@@ -45,12 +45,12 @@ export function ProjectSwitcherButton({
   // Exiting a side project lands back on the home-base project (the built-in
   // homedir project), so while it is the active project the exit affordance
   // would only offer to leave the very place the X exists to return to. A
-  // focused window is bound to its project, so it gets neither the exit nor
-  // the pop-out affordance.
-  const hasSideProject =
-    projectMode === 'project' && selectedProject !== undefined && !selectedProject.is_home
-  const canExitProject = windowKind === 'main' && hasSideProject
-  const canOpenInNewWindow = canExitProject && onOpenInNewWindow !== undefined
+  // focused window is bound to its project and never exits.
+  const canExitProject =
+    windowKind === 'main' &&
+    projectMode === 'project' &&
+    selectedProject !== undefined &&
+    !selectedProject.is_home
 
   const triggerButton = (
     <MenuTrigger
@@ -130,6 +130,7 @@ export function ProjectSwitcherButton({
             projects={projects}
             selectedProject={selectedProject}
             onAddProject={onAddProject}
+            onOpenProjectInNewWindow={onOpenProjectInNewWindow}
             onSelectProject={onSelectProject}
           />
         </Menu>
@@ -168,25 +169,6 @@ export function ProjectSwitcherButton({
           </Tooltip>
         ) : null}
       </div>
-      {canOpenInNewWindow ? (
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <Button
-                aria-label={t('workbench.project.openInNewWindow')}
-                className={cn('ml-0.5 shrink-0', !isHeader && 'rounded-xl')}
-                size="icon-sm"
-                type="button"
-                variant={isHeader ? 'ghost' : 'surface'}
-                onClick={onOpenInNewWindow}
-              >
-                <AppWindow className="size-3.5" strokeWidth={1.5} />
-              </Button>
-            }
-          />
-          <TooltipContent side="bottom">{t('workbench.project.openInNewWindow')}</TooltipContent>
-        </Tooltip>
-      ) : null}
     </div>
   )
 }

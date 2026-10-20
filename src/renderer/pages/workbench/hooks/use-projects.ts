@@ -352,7 +352,9 @@ export function useProjects(
         })
         .catch(() => {}),
       workbenchPersistence().ready,
-    ]).then(() => refreshProjects())
+    ])
+      .then(() => refreshProjects())
+      .catch(() => {})
   }, [refreshProjects, setFocusedProjectIds, setWindowIdentity])
 
   useEffect(() => {

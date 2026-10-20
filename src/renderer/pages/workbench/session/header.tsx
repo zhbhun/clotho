@@ -1,9 +1,19 @@
+import { ExternalLink } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+
+import { Button } from '@/shadcn/button'
 import { SidebarTrigger, useSidebar } from '@/shadcn/sidebar'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip'
 import { cn } from '@/shadcn/utils'
 
 import { SidebarToggleIcon } from '../../../components/sidebar-toggle-icon'
 import { useSidebarHoverPreview } from '../hooks/use-sidebar-hover-preview'
-import type { SessionActivity, WorkbenchProject, WorkbenchSession } from '../stores/workbench-store'
+import {
+  type SessionActivity,
+  type WorkbenchProject,
+  type WorkbenchSession,
+  useWorkbenchStore,
+} from '../stores/workbench-store'
 import { BranchSwitcherButton } from './branch-switcher-button'
 import { ProjectSwitcherButton } from './project-switcher-button'
 import { SessionHistoryButton } from './session-history'
@@ -47,15 +57,18 @@ export function ConversationHeader({
   onAddProject: () => void
   onCloseSession: (session: WorkbenchSession) => void
   onDeleteSession: (session: WorkbenchSession) => void
-  onOpenProjectInNewWindow?: () => void
+  /** Moves a project into its own window; called without an id for the shown project. */
+  onOpenProjectInNewWindow?: (projectId?: string) => void
   onRenameSession: (session: WorkbenchSession) => void
   onSelectProject: (projectId: string | null) => void
   onSelectSession: (session: WorkbenchSession) => void
   onRetryHistory: () => void
   onTogglePinSession: (session: WorkbenchSession) => void
 }) {
+  const { t } = useTranslation()
   const { isMobile, openMobile, state } = useSidebar()
   const hoverPreviewProps = useSidebarHoverPreview()
+  const windowKind = useWorkbenchStore((state) => state.windowKind)
   // The sidebar owns the top-left corner while it covers it; below the
   // breakpoint the drawer stays closed until toggled, freeing the inset.
   const showSidebarTrigger = isMobile ? !openMobile : state === 'collapsed'
@@ -63,6 +76,13 @@ export function ConversationHeader({
   // surface carries the project and history controls above the composer
   // instead; the header keeps them when nothing is selected at all.
   const showHeaderActions = sessions.length > 0 || activeSessionId === null
+  // Only the main window pops a project out; a focused window already is one.
+  const canOpenInNewWindow =
+    windowKind === 'main' &&
+    projectMode === 'project' &&
+    selectedProject !== undefined &&
+    !selectedProject.is_home &&
+    onOpenProjectInNewWindow !== undefined
 
   return (
     <header
@@ -89,7 +109,7 @@ export function ConversationHeader({
             projects={projects}
             selectedProject={selectedProject}
             onAddProject={onAddProject}
-            onOpenInNewWindow={onOpenProjectInNewWindow}
+            onOpenProjectInNewWindow={onOpenProjectInNewWindow}
             onSelectProject={onSelectProject}
           />
         </div>
@@ -126,6 +146,26 @@ export function ConversationHeader({
             onSelectSession={onSelectSession}
             onTogglePinSession={onTogglePinSession}
           />
+        </div>
+      ) : null}
+      {canOpenInNewWindow ? (
+        <div className="app-region-no-drag flex shrink-0 items-center self-center text-foreground-subtlest">
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  aria-label={t('workbench.project.openInNewWindow')}
+                  size="icon-sm"
+                  type="button"
+                  variant="ghost"
+                  onClick={() => onOpenProjectInNewWindow?.()}
+                >
+                  <ExternalLink className="size-3.5" strokeWidth={1.5} />
+                </Button>
+              }
+            />
+            <TooltipContent side="bottom">{t('workbench.project.openInNewWindow')}</TooltipContent>
+          </Tooltip>
         </div>
       ) : null}
     </header>

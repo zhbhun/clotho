@@ -81,6 +81,7 @@ export function SwitcherCommandEmpty({ className, ...props }: ComponentProps<typ
 }
 
 export function SwitcherCommandItem({
+  action,
   className,
   description,
   icon: Icon,
@@ -89,6 +90,8 @@ export function SwitcherCommandItem({
   trailing,
   ...props
 }: Omit<ComponentProps<typeof CommandItem>, 'children'> & {
+  /** Interactive control at the row's end; unlike `trailing` it stays reachable. */
+  action?: ReactNode
   description?: string
   icon?: LucideIcon
   iconElement?: ReactNode
@@ -111,6 +114,11 @@ export function SwitcherCommandItem({
       {trailing ? (
         <span aria-hidden="true" className="spotlight-command-trailing">
           {trailing}
+        </span>
+      ) : null}
+      {action ? (
+        <span className={cn('flex shrink-0 items-center self-center', !trailing && 'ml-auto')}>
+          {action}
         </span>
       ) : null}
     </CommandItem>

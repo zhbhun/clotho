@@ -162,7 +162,7 @@ describe('ConversationHeader', () => {
     expect(screen.queryByRole('button', { name: appI18n.t('workbench.project.exit') })).toBeNull()
   })
 
-  it('pops the project out to a new window from the button beside the switcher', async () => {
+  it('pops the shown project out to a new window from the header corner button', async () => {
     await appI18n.changeLanguage('zh-CN')
     const { onOpenProjectInNewWindow } = renderHeader({
       projectMode: 'project',

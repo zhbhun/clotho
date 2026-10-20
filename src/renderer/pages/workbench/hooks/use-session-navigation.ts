@@ -200,23 +200,34 @@ export function useSessionNavigation(workbench: ReturnType<typeof useWorkbench>)
     [refocusWindow, saveTitle, switchWorkspaceLocally],
   )
 
-  const handleOpenProjectInNewWindow = useCallback(() => {
-    saveTitle()
-    const state = useWorkbenchStore.getState()
-    const projectId = state.currentProjectId
-    if (state.windowKind !== 'main' || !projectId || state.projects[projectId]?.is_home) return
-    void claude
-      .openFocusedWindow({ projectId, ui: workspaceUiState(state, projectId) })
-      .then(({ opened }) => {
-        // Not opened means the project already had a window, now in front.
-        if (!opened) return
-        useWorkbenchStore.getState().detachWorkspace(projectId)
-        switchWorkspaceLocally(null)
-      })
-      .catch((error) =>
-        toast.add({ title: 'Could not open window', description: String(error), type: 'error' }),
-      )
-  }, [saveTitle, switchWorkspaceLocally])
+  /** Moves a project into its own window; without an id, the one shown here. */
+  const handleOpenProjectInNewWindow = useCallback(
+    (projectId?: string) => {
+      saveTitle()
+      const state = useWorkbenchStore.getState()
+      const targetId = projectId ?? state.currentProjectId
+      if (!targetId || state.projects[targetId]?.is_home) return
+      if (state.focusedProjectIds.includes(targetId)) {
+        // The project already has its window; bring that one up.
+        void claude.focusProjectWindow(targetId).catch(() => {})
+        return
+      }
+      const wasCurrent = state.currentProjectId === targetId
+      void claude
+        .openFocusedWindow({ projectId: targetId, ui: workspaceUiState(state, targetId) })
+        .then(({ opened }) => {
+          // Not opened means the project already had a window, now in front.
+          if (!opened) return
+          const next = useWorkbenchStore.getState()
+          next.detachWorkspace(targetId)
+          if (wasCurrent && next.windowKind === 'main') switchWorkspaceLocally(null)
+        })
+        .catch((error) =>
+          toast.add({ title: 'Could not open window', description: String(error), type: 'error' }),
+        )
+    },
+    [saveTitle, switchWorkspaceLocally],
+  )
 
   const handleNavigate = useCallback(
     (location: { projectId: string | null; sessionId: string | null }) => {

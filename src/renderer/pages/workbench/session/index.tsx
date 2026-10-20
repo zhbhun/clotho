@@ -84,7 +84,8 @@ export type SessionAreaProps = {
   onRetryProjectSessions: () => void
   onCloseSession: (session: WorkbenchSession) => void
   onDeleteSession: (session: WorkbenchSession) => void
-  onOpenProjectInNewWindow?: () => void
+  /** Moves a project into its own window; called without an id for the shown project. */
+  onOpenProjectInNewWindow?: (projectId?: string) => void
   onOpenSettings: () => void
   onRenameSession: (session: WorkbenchSession) => void
   onSelectSession: (session: WorkbenchSession) => void
@@ -238,6 +239,7 @@ export function SessionArea(props: SessionAreaProps) {
         projects={props.projects}
         sessionActivity={props.sessionActivity}
         onOpenChange={(isOpen) => (isOpen ? openQuickOpen() : closeQuickOpen())}
+        onOpenProjectInNewWindow={props.onOpenProjectInNewWindow}
         onScrollToMessage={handleScrollToMessage}
         onSelectProject={props.setSelectedProjectId}
         onSelectSession={props.onSelectSession}

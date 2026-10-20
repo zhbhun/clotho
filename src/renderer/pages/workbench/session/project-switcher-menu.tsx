@@ -9,6 +9,7 @@ import {
   MenuList,
   MenuSearch,
   MenuSeparator,
+  useMenuClose,
 } from '../../../components/menu'
 import { ProjectIcon } from '../../../components/project-icon'
 import type { ClaudeProject } from '../../../services/claude/claude'
@@ -16,12 +17,14 @@ import { isUserProject, projectDisplayName } from '../../../utils/project'
 import { useWorkbenchStore } from '../stores/workbench-store'
 import { tildePath } from '../utils/path-display'
 import { MiddlePath } from './components/middle-path'
+import { ProjectWindowAction } from './project-window-action'
 
 export type ProjectSwitcherMenuContentProps = {
   projectMode: 'project' | 'home'
   projects: ClaudeProject[]
   selectedProject?: ClaudeProject
   onAddProject: () => void
+  onOpenProjectInNewWindow?: (projectId: string) => void
   onSelectProject: (projectId: string | null) => void
 }
 
@@ -32,9 +35,11 @@ export function ProjectSwitcherMenuContent({
   projects,
   selectedProject,
   onAddProject,
+  onOpenProjectInNewWindow,
   onSelectProject,
 }: ProjectSwitcherMenuContentProps) {
   const { t } = useTranslation()
+  const closeMenu = useMenuClose()
   const windowKind = useWorkbenchStore((state) => state.windowKind)
   const focusedProjectId = useWorkbenchStore((state) => state.focusedProjectId)
   const focusedProjectIds = useWorkbenchStore((state) => state.focusedProjectIds)
@@ -60,8 +65,8 @@ export function ProjectSwitcherMenuContent({
         <MenuGroup>
           {projects.filter(isUserProject).map((project) => {
             const name = projectDisplayName(project)
-            const isInOtherWindow =
-              project.id !== focusedProjectId && focusedProjectIds.includes(project.id)
+            const isOwnProject = project.id === focusedProjectId
+            const isInOtherWindow = !isOwnProject && focusedProjectIds.includes(project.id)
 
             return (
               <MenuItem
@@ -86,6 +91,15 @@ export function ProjectSwitcherMenuContent({
                   >
                     <AppWindow className="size-3.5" strokeWidth={1.5} />
                   </span>
+                ) : null}
+                {onOpenProjectInNewWindow && !isOwnProject ? (
+                  <ProjectWindowAction
+                    className="-my-1 -mr-1"
+                    onOpen={() => {
+                      closeMenu?.()
+                      onOpenProjectInNewWindow(project.id)
+                    }}
+                  />
                 ) : null}
               </MenuItem>
             )

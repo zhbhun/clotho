@@ -16,6 +16,7 @@ import {
 import { ShortcutKeys } from '../components/shortcut-keys'
 import { SessionStatus } from '../session-status'
 import { PROJECT_PATH_MAX } from '../session/project-switcher'
+import { ProjectWindowAction } from '../session/project-window-action'
 import {
   SwitcherCommand,
   SwitcherCommandDialog,
@@ -82,6 +83,7 @@ export function QuickOpenPanel({
   projects,
   sessionActivity = {},
   onOpenChange,
+  onOpenProjectInNewWindow,
   onScrollToMessage,
   onSelectProject,
   onSelectSession,
@@ -90,6 +92,7 @@ export function QuickOpenPanel({
   projects: WorkbenchProject[]
   sessionActivity?: Record<string, SessionActivity>
   onOpenChange: (isOpen: boolean) => void
+  onOpenProjectInNewWindow?: (projectId: string) => void
   onScrollToMessage: (messageId: string) => void
   onSelectProject: (projectId: string) => void
   onSelectSession: (session: WorkbenchSession) => void
@@ -100,6 +103,7 @@ export function QuickOpenPanel({
   const inputRef = useRef<HTMLInputElement>(null)
   const currentProjectId = useWorkbenchStore((state) => state.currentProjectId)
   const currentSessionId = useWorkbenchStore((state) => state.currentSessionId)
+  const focusedProjectId = useWorkbenchStore((state) => state.focusedProjectId)
   const {
     allArchivedSessions,
     allSessions,
@@ -193,6 +197,16 @@ export function QuickOpenPanel({
   const renderProjectItem = (project: WorkbenchProject) => (
     <SwitcherCommandItem
       key={project.id}
+      action={
+        onOpenProjectInNewWindow && project.id !== focusedProjectId ? (
+          <ProjectWindowAction
+            onOpen={() => {
+              onOpenChange(false)
+              onOpenProjectInNewWindow(project.id)
+            }}
+          />
+        ) : undefined
+      }
       description={shortMiddlePath(tildePath(project.path), PROJECT_PATH_MAX)}
       iconElement={<ProjectIcon className="size-auto" plain icon={project.icon} size="default" />}
       label={projectDisplayName(project)}

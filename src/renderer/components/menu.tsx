@@ -307,6 +307,11 @@ function MenuGroup({
   )
 }
 
-export { Menu, MenuTrigger, MenuContent, MenuItem, MenuLabel, MenuGroup, MenuSearch }
+/** Closes the enclosing Menu; for controls inside an item that act without selecting it. */
+function useMenuClose() {
+  return React.useContext(CloseContext)
+}
+
+export { Menu, MenuTrigger, MenuContent, MenuItem, MenuLabel, MenuGroup, MenuSearch, useMenuClose }
 
 export { CommandEmpty as MenuEmpty, CommandList as MenuList, CommandSeparator as MenuSeparator }
