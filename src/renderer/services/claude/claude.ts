@@ -956,4 +956,35 @@ export const claude = {
 
     return requestFromDesktop('claudeSetSessionsArchived', params)
   },
+  async setSessionsPinned(params: {
+    sessions: Array<{ projectId: string | null; sessionId: string; claudeSessionId: string | null }>
+    pinned: boolean
+  }) {
+    if (!isTauriRuntime() || params.sessions.length === 0) {
+      return
+    }
+
+    return requestFromDesktop('claudeSetSessionsPinned', params)
+  },
+  async setSessionsUnread(params: {
+    sessions: Array<{ projectId: string | null; sessionId: string; claudeSessionId: string | null }>
+    unread: 'success' | 'error' | null
+  }) {
+    if (!isTauriRuntime() || params.sessions.length === 0) {
+      return
+    }
+
+    return requestFromDesktop('claudeSetSessionsUnread', params)
+  },
+  async readWindowUiState(): Promise<Record<string, unknown> | undefined> {
+    if (!isDesktopRuntime()) return undefined
+    const payload = (await requestFromDesktop('windowReadUiState', {})) as {
+      ui?: Record<string, unknown>
+    } | null
+    return payload?.ui
+  },
+  async writeWindowUiState(ui: Record<string, unknown>): Promise<void> {
+    if (!isDesktopRuntime()) return
+    return requestFromDesktop('windowWriteUiState', { ui })
+  },
 }

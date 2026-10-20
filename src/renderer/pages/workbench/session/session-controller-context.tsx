@@ -36,8 +36,8 @@ export function SessionControllerRegistryProvider({ children }: { children: Reac
     // retained controller once no tab still shows the session. A session with
     // an open tab keeps its controller — its next send just rebuilds.
     void listenDesktopEvent('claude-session-recycled', ({ sessionId }) => {
-      const { tabsByWorkspace } = useWorkbenchStore.getState()
-      const openTabs = new Set(Object.values(tabsByWorkspace).flat())
+      const { sessionTabsByWorkspace } = useWorkbenchStore.getState()
+      const openTabs = new Set(Object.values(sessionTabsByWorkspace).flat())
       if (openTabs.has(sessionId)) return
       void registry.release(sessionId)
     }).then(

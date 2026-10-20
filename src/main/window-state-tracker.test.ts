@@ -1,21 +1,12 @@
 // @vitest-environment node
 import { describe, expect, test } from 'vitest'
 
-import type { StoredWindowState, WindowDisplay } from './window-state'
+import type { StoredWindowState } from './window-state'
 import { createWindowStateTracker } from './window-state-tracker'
 
-const primary: WindowDisplay = {
-  id: 1,
-  bounds: { x: 0, y: 0, width: 1600, height: 1000 },
-  workArea: { x: 0, y: 0, width: 1600, height: 1000 },
-  scaleFactor: 1,
-  isPrimary: true,
-}
-
 const initial: StoredWindowState = {
-  version: 1,
+  id: 'window-a',
   frame: { x: 160, y: 100, width: 1280, height: 800 },
-  display: { id: 1, workArea: primary.workArea },
   isMaximized: false,
 }
 
@@ -24,8 +15,6 @@ describe('window state tracking', () => {
     let persisted: StoredWindowState | undefined
     const tracker = createWindowStateTracker({
       initialState: initial,
-      getDisplays: () => [primary],
-      getPrimaryDisplay: () => primary,
       persist: async (state) => {
         persisted = state
       },
@@ -40,8 +29,6 @@ describe('window state tracking', () => {
     let persisted: StoredWindowState | undefined
     const tracker = createWindowStateTracker({
       initialState: initial,
-      getDisplays: () => [primary],
-      getPrimaryDisplay: () => primary,
       persist: async (state) => {
         persisted = state
       },
@@ -55,9 +42,8 @@ describe('window state tracking', () => {
     await tracker.flush()
 
     expect(persisted).toEqual({
-      version: 1,
+      id: 'window-a',
       frame: { x: 240, y: 120, width: 1100, height: 720 },
-      display: { id: 1, workArea: primary.workArea },
       isMaximized: false,
     })
   })
@@ -66,8 +52,6 @@ describe('window state tracking', () => {
     let persisted: StoredWindowState | undefined
     const tracker = createWindowStateTracker({
       initialState: initial,
-      getDisplays: () => [primary],
-      getPrimaryDisplay: () => primary,
       persist: async (state) => {
         persisted = state
       },

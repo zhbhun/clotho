@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { partializeWorkbenchState, useWorkbenchStore } from './workbench-store'
+import { useWorkbenchStore, windowUiState } from './workbench-store'
 
 const PROJECT = {
   id: 'project-1',
@@ -67,10 +67,10 @@ describe('useWorkbenchStore', () => {
       id: REMOTE_SESSION.id,
       claudeSessionId: REMOTE_SESSION.id,
     })
-    const persisted = partializeWorkbenchState(state)
+    const persisted = windowUiState(state)
     expect(persisted).toMatchObject({
       currentWorkspaceKey: 'project:project-workspace',
-      tabsByWorkspace: {
+      sessionTabsByWorkspace: {
         'project:project-workspace': [REMOTE_SESSION.id],
       },
       activeSessionByWorkspace: {
@@ -83,17 +83,16 @@ describe('useWorkbenchStore', () => {
     expect(persisted).not.toHaveProperty('runtimeStatus')
   })
 
-  it('persists pinned session ids and toggles them without duplicates', () => {
+  it('pins sessions without duplicates and marks them on the session itself', () => {
     loadCatalog()
 
     togglePin(REMOTE_SESSION.id)
     togglePin(REMOTE_SESSION.id)
     togglePin(REMOTE_SESSION.id)
 
-    expect(useWorkbenchStore.getState().pinnedSessionIds).toEqual([REMOTE_SESSION.id])
-    expect(partializeWorkbenchState(useWorkbenchStore.getState()).pinnedSessionIds).toEqual([
-      REMOTE_SESSION.id,
-    ])
+    const state = useWorkbenchStore.getState()
+    expect(state.pinnedSessionIds).toEqual([REMOTE_SESSION.id])
+    expect(state.sessions[REMOTE_SESSION.id].pinned_at).toEqual(expect.any(Number))
   })
 
   it('drops stale pinned ids when the refreshed catalog no longer contains a session', () => {
@@ -117,7 +116,7 @@ describe('useWorkbenchStore', () => {
     useWorkbenchStore.getState().selectSession(claudeDraft)
 
     expect(useWorkbenchStore.getState()).toMatchObject({
-      tabsByWorkspace: {
+      sessionTabsByWorkspace: {
         'project:project-workspace': [REMOTE_SESSION.id],
         claude: [claudeDraft],
       },
@@ -168,7 +167,7 @@ describe('useWorkbenchStore', () => {
 
     expect(useWorkbenchStore.getState()).toMatchObject({
       currentSessionId: third,
-      tabsByWorkspace: {
+      sessionTabsByWorkspace: {
         'project:project-workspace': [REMOTE_SESSION.id, third],
       },
       activeSessionByWorkspace: {
@@ -191,7 +190,7 @@ describe('useWorkbenchStore', () => {
       project_id: PROJECT.id,
       title: 'New Chat',
     })
-    expect(state.tabsByWorkspace['project:project-workspace']).toEqual([draftId])
+    expect(state.sessionTabsByWorkspace['project:project-workspace']).toEqual([draftId])
     expect(state.activeSessionByWorkspace['project:project-workspace']).toBe(draftId)
     // Closing keeps the session card itself in the history list.
     expect(state.sessions[REMOTE_SESSION.id]).toBeDefined()
@@ -238,9 +237,9 @@ describe('useWorkbenchStore', () => {
       claudeSessionId: REMOTE_SESSION.id,
     })
     expect(useWorkbenchStore.getState().projects[PROJECT.id].sessions).toEqual([draftId])
-    expect(useWorkbenchStore.getState().tabsByWorkspace['project:project-workspace']).toEqual([
-      draftId,
-    ])
+    expect(
+      useWorkbenchStore.getState().sessionTabsByWorkspace['project:project-workspace'],
+    ).toEqual([draftId])
   })
 
   it('preserves independent drafts with the same title when a session binds', () => {
@@ -275,7 +274,7 @@ describe('useWorkbenchStore', () => {
 
     expect(useWorkbenchStore.getState()).toMatchObject({
       currentSessionId: null,
-      tabsByWorkspace: {
+      sessionTabsByWorkspace: {
         'project:project-workspace': [draftId],
       },
     })
@@ -347,7 +346,7 @@ describe('useWorkbenchStore', () => {
 
     expect(useWorkbenchStore.getState()).toMatchObject({
       currentSessionId: first,
-      tabsByWorkspace: { claude: [first] },
+      sessionTabsByWorkspace: { claude: [first] },
     })
   })
 
@@ -382,7 +381,10 @@ describe('useWorkbenchStore', () => {
     useWorkbenchStore.getState().selectHome(secondDraft)
     useWorkbenchStore.getState().selectSession(firstDraft)
 
-    expect(useWorkbenchStore.getState().tabsByWorkspace.claude).toEqual([firstDraft, secondDraft])
+    expect(useWorkbenchStore.getState().sessionTabsByWorkspace.claude).toEqual([
+      firstDraft,
+      secondDraft,
+    ])
   })
 
   it('keeps background outcomes unread until the session is selected', () => {
@@ -426,7 +428,9 @@ describe('useWorkbenchStore', () => {
 
     useWorkbenchStore.getState().closeSession(backgroundDraft)
 
-    expect(useWorkbenchStore.getState().tabsByWorkspace.claude).not.toContain(backgroundDraft)
+    expect(useWorkbenchStore.getState().sessionTabsByWorkspace.claude).not.toContain(
+      backgroundDraft,
+    )
     expect(useWorkbenchStore.getState().sessions[backgroundDraft]).toBeDefined()
     expect(useWorkbenchStore.getState().sessionActivity[backgroundDraft]).toBe('unread-error')
   })
@@ -440,22 +444,42 @@ describe('useWorkbenchStore', () => {
 
     useWorkbenchStore.getState().closeSession(backgroundDraft)
 
-    expect(useWorkbenchStore.getState().tabsByWorkspace.claude).not.toContain(backgroundDraft)
+    expect(useWorkbenchStore.getState().sessionTabsByWorkspace.claude).not.toContain(
+      backgroundDraft,
+    )
     expect(useWorkbenchStore.getState().sessionActivity[backgroundDraft]).toBe('processing')
   })
 
-  it('persists only unread activity', () => {
+  it('keeps the window payload free of transient activity and unread state', () => {
     loadCatalog()
     useWorkbenchStore.getState().selectSession(REMOTE_SESSION.id)
     useWorkbenchStore.getState().setSessionActivity(REMOTE_SESSION.id, 'awaiting-user')
 
-    expect(partializeWorkbenchState(useWorkbenchStore.getState()).unreadSessionActivity).toEqual({})
+    expect(Object.keys(windowUiState(useWorkbenchStore.getState())).sort()).toEqual([
+      'activeSessionByWorkspace',
+      'currentWorkspaceKey',
+      'sessionTabsByWorkspace',
+    ])
 
     useWorkbenchStore.getState().selectWorkspace(null)
     useWorkbenchStore.getState().setSessionActivity(REMOTE_SESSION.id, 'error')
-    expect(partializeWorkbenchState(useWorkbenchStore.getState()).unreadSessionActivity).toEqual({
-      [REMOTE_SESSION.id]: 'unread-error',
+    expect(useWorkbenchStore.getState().sessionActivity[REMOTE_SESSION.id]).toBe('unread-error')
+  })
+
+  it('derives pinned ids and unread activity from the refreshed catalog', () => {
+    useWorkbenchStore.getState().replaceCatalog({
+      projects: [PROJECT],
+      sessions: {
+        [PROJECT.id]: [
+          { ...REMOTE_SESSION, pinned_at: 20 },
+          { ...SECOND_SESSION, unread: 'error' },
+        ],
+      },
+      branches: { [PROJECT.id]: 'main' },
     })
+
+    expect(useWorkbenchStore.getState().pinnedSessionIds).toEqual([REMOTE_SESSION.id])
+    expect(useWorkbenchStore.getState().sessionActivity[SECOND_SESSION.id]).toBe('unread-error')
   })
 
   it('keeps a home conversation that session ownership excludes from every project catalog', () => {
@@ -477,7 +501,7 @@ describe('useWorkbenchStore', () => {
       currentSessionId: homeSession.id,
       currentWorkspaceKey: 'claude',
       projectMode: 'home',
-      tabsByWorkspace: {
+      sessionTabsByWorkspace: {
         'project:project-workspace': [REMOTE_SESSION.id],
         claude: [homeSession.id],
       },
@@ -491,7 +515,7 @@ describe('useWorkbenchStore', () => {
 
     expect(useWorkbenchStore.getState().sessions[homeSession.id]).toBeDefined()
     expect(useWorkbenchStore.getState().currentSessionId).toBe(homeSession.id)
-    expect(useWorkbenchStore.getState().tabsByWorkspace.claude).toContain(homeSession.id)
+    expect(useWorkbenchStore.getState().sessionTabsByWorkspace.claude).toContain(homeSession.id)
   })
 
   it('removes missing tabs during catalog refresh and selects a remaining neighbor', () => {
@@ -508,7 +532,7 @@ describe('useWorkbenchStore', () => {
       currentSessionId: missingSession.id,
       currentWorkspaceKey: 'project:project-workspace',
       projectMode: 'project',
-      tabsByWorkspace: {
+      sessionTabsByWorkspace: {
         'project:project-workspace': [REMOTE_SESSION.id, missingSession.id],
       },
       activeSessionByWorkspace: {
@@ -520,7 +544,7 @@ describe('useWorkbenchStore', () => {
 
     expect(useWorkbenchStore.getState()).toMatchObject({
       currentSessionId: REMOTE_SESSION.id,
-      tabsByWorkspace: {
+      sessionTabsByWorkspace: {
         'project:project-workspace': [REMOTE_SESSION.id],
       },
       activeSessionByWorkspace: {

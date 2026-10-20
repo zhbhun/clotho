@@ -12,7 +12,6 @@ import { appI18n, initializeAppI18n } from '../../i18n/runtime'
 import { requestFromDesktop } from '../../services/desktop/client'
 import { commandCatalog } from '../../services/shortcuts/catalog'
 import { ShortcutRuntimeProvider, createShortcutRuntime } from '../../services/shortcuts/runtime'
-import { updateUiState } from '../../services/ui-storage'
 import { WorkbenchPage } from './index'
 import { sessionPersistence } from './services/session-persistence'
 import { useWorkbenchStore } from './stores/workbench-store'
@@ -89,17 +88,13 @@ describe('composer draft restore on startup', () => {
       },
     )
 
-    // The previous run left the historical session open and active.
-    updateUiState({
+    // The previous run left the historical session open and active; a fresh
+    // start applies the persisted window ui before the first catalog lands.
+    useWorkbenchStore.setState({
       currentWorkspaceKey: `project:${PROJECT.id}`,
-      tabsByWorkspace: { [`project:${PROJECT.id}`]: ['hist-1'] },
+      sessionTabsByWorkspace: { [`project:${PROJECT.id}`]: ['hist-1'] },
       activeSessionByWorkspace: { [`project:${PROJECT.id}`]: 'hist-1' },
-      pinnedSessionIds: [],
-      unreadSessionActivity: {},
     })
-    // The store singleton rehydrated at import time; replay rehydration the
-    // way a fresh app start applies the persisted UI state.
-    await useWorkbenchStore.persist.rehydrate()
 
     vi.mocked(requestFromDesktop).mockImplementation(async (command, params) => {
       if (command === 'claudeListProjects') return [PROJECT]

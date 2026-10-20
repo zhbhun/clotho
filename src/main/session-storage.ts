@@ -5,9 +5,9 @@ import type {
   DraftSession,
   DraftSessionIndex,
   LocalSession,
-  SessionArchiveFlags,
   SessionIndex,
   SessionIndexEntry,
+  SessionListFlags,
 } from '@/shared/session'
 
 import { projectIdFromPath } from './claude/sessions'
@@ -66,7 +66,10 @@ function validEntry(v: unknown): v is SessionIndexEntry {
     (x.updatedAt === undefined || typeof x.updatedAt === 'number') &&
     (x.archived === undefined || typeof x.archived === 'boolean') &&
     (x.archivedAt === undefined || typeof x.archivedAt === 'number') &&
-    (x.unarchivedAt === undefined || typeof x.unarchivedAt === 'number')
+    (x.unarchivedAt === undefined || typeof x.unarchivedAt === 'number') &&
+    (x.pinnedAt === undefined || typeof x.pinnedAt === 'number') &&
+    (x.unread === undefined || x.unread === 'success' || x.unread === 'error') &&
+    (x.unreadAt === undefined || typeof x.unreadAt === 'number')
   )
 }
 function validSession(v: unknown): v is LocalSession {
@@ -112,7 +115,17 @@ export interface SessionStorage {
     archived: boolean
   }): Promise<void>
   /** Archive marks by claude session id, merged into listed sessions. */
-  sessionArchiveFlags(): Promise<Record<string, SessionArchiveFlags>>
+  sessionListFlags(): Promise<Record<string, SessionListFlags>>
+  /** Pin or unpin sessions, creating marker entries when never opened in clotho. */
+  sessionSetPinned(params: {
+    sessions: Array<{ projectId: string | null; sessionId: string; claudeSessionId: string | null }>
+    pinned: boolean
+  }): Promise<void>
+  /** Record or clear the unread mark of sessions that finished a run unseen. */
+  sessionSetUnread(params: {
+    sessions: Array<{ projectId: string | null; sessionId: string; claudeSessionId: string | null }>
+    unread: 'success' | 'error' | null
+  }): Promise<void>
   /** Move a project entry's session references (index and stored input files) to a new id. */
   sessionRebindProject(params: { fromProjectId: string; toProjectId: string }): Promise<void>
   sessionDelete(params: { sessionId: string }): Promise<void>
@@ -204,22 +217,80 @@ export function createSessionStorage(rootDir: string, homeProjectId?: string): S
     index[sessionId] = entry
     await atomic(indexPath, JSON.stringify(index))
   }
+  const indexByClaudeId = (index: SessionIndex) => {
+    const byClaudeId = new Map<string, string[]>()
+    for (const [id, entry] of Object.entries(index)) {
+      if (!entry.claudeSessionId) continue
+      const ids = byClaudeId.get(entry.claudeSessionId)
+      if (ids) ids.push(id)
+      else byClaudeId.set(entry.claudeSessionId, [id])
+    }
+    return byClaudeId
+  }
+  const withPinned = (
+    entry: SessionIndexEntry,
+    pinned: boolean,
+    now: number,
+  ): SessionIndexEntry => {
+    if (pinned) {
+      return entry.pinnedAt !== undefined ? entry : { ...entry, pinnedAt: now }
+    }
+    if (entry.pinnedAt === undefined) return entry
+    const next = { ...entry }
+    delete next.pinnedAt
+    return next
+  }
+  const withUnread = (
+    entry: SessionIndexEntry,
+    unread: 'success' | 'error' | null,
+    now: number,
+  ): SessionIndexEntry => {
+    if (unread) {
+      if (entry.unread === unread && entry.unreadAt !== undefined) return entry
+      return { ...entry, unread, unreadAt: now }
+    }
+    if (entry.unread === undefined && entry.unreadAt === undefined) return entry
+    const next = { ...entry }
+    delete next.unread
+    delete next.unreadAt
+    return next
+  }
+  /** A claude-id marker exists only to carry list marks; drop it once bare. */
+  const pruneMarker = (entry: SessionIndexEntry, markerId: string) => {
+    if (!markerId.startsWith(MARKER_PREFIX)) return entry
+    if (
+      entry.archived ||
+      entry.unarchivedAt !== undefined ||
+      entry.pinnedAt !== undefined ||
+      entry.unread !== undefined
+    ) {
+      return entry
+    }
+    return undefined
+  }
   /**
-   * Archive fields of an index entry; every path that rebuilds an existing
+   * List-state fields of an index entry; every path that rebuilds an existing
    * entry (draft completion, ownership binding, draft rewrite) must spread
-   * them back in or an archived session silently loses its mark.
+   * them back in or an archived, pinned, or unread session silently loses
+   * its mark.
    */
-  const archiveFieldsOf = (entry: SessionIndexEntry | undefined) =>
+  const listFlagFieldsOf = (entry: SessionIndexEntry | undefined) =>
     ({
       ...(entry?.archived ? { archived: true } : {}),
       ...(entry?.archivedAt !== undefined ? { archivedAt: entry.archivedAt } : {}),
       ...(entry?.unarchivedAt !== undefined ? { unarchivedAt: entry.unarchivedAt } : {}),
-    }) as Pick<SessionIndexEntry, 'archived' | 'archivedAt' | 'unarchivedAt'>
+      ...(entry?.pinnedAt !== undefined ? { pinnedAt: entry.pinnedAt } : {}),
+      ...(entry?.unread !== undefined ? { unread: entry.unread } : {}),
+      ...(entry?.unreadAt !== undefined ? { unreadAt: entry.unreadAt } : {}),
+    }) as Pick<
+      SessionIndexEntry,
+      'archived' | 'archivedAt' | 'unarchivedAt' | 'pinnedAt' | 'unread' | 'unreadAt'
+    >
   /** A started conversation keeps its ownership and drops the draft bookkeeping. */
   const startedEntry = (entry: SessionIndexEntry | undefined): SessionIndexEntry => ({
     projectId: entry?.projectId ?? null,
     ...(entry?.claudeSessionId ? { claudeSessionId: entry.claudeSessionId } : {}),
-    ...archiveFieldsOf(entry),
+    ...listFlagFieldsOf(entry),
   })
   const atomic = async (file: string, content: string) => {
     await mkdir(dir, { recursive: true })
@@ -240,6 +311,7 @@ export function createSessionStorage(rootDir: string, homeProjectId?: string): S
             updatedAt: entry.updatedAt ?? 0,
             projectId: resolveProjectId(entry.projectId),
             projectPath: entry.projectPath ?? null,
+            ...(entry.pinnedAt !== undefined ? { pinnedAt: entry.pinnedAt } : {}),
           }
         }
         return drafts
@@ -284,7 +356,7 @@ export function createSessionStorage(rootDir: string, homeProjectId?: string): S
             ...draft,
             isDraft: true,
             ...(previous?.claudeSessionId ? { claudeSessionId: previous.claudeSessionId } : {}),
-            ...archiveFieldsOf(previous),
+            ...listFlagFieldsOf(previous),
           }
           await atomic(indexPath, JSON.stringify(index))
         }
@@ -327,13 +399,7 @@ export function createSessionStorage(rootDir: string, homeProjectId?: string): S
         const index = await readIndex()
         const now = Math.floor(Date.now() / 1000)
         const staleUnarchivedBefore = Date.now() - UNARCHIVED_AT_TTL_MS
-        const byClaudeId = new Map<string, string[]>()
-        for (const [id, entry] of Object.entries(index)) {
-          if (!entry.claudeSessionId) continue
-          const ids = byClaudeId.get(entry.claudeSessionId)
-          if (ids) ids.push(id)
-          else byClaudeId.set(entry.claudeSessionId, [id])
-        }
+        const byClaudeId = indexByClaudeId(index)
         for (const { projectId, sessionId } of sessions) {
           const boundIds = byClaudeId.get(sessionId) ?? []
           if (boundIds.length > 0) {
@@ -374,10 +440,10 @@ export function createSessionStorage(rootDir: string, homeProjectId?: string): S
         }
         await atomic(indexPath, JSON.stringify(index))
       }),
-    sessionArchiveFlags: () =>
+    sessionListFlags: () =>
       run(async () => {
         const index = await readIndex()
-        const flags: Record<string, SessionArchiveFlags> = {}
+        const flags: Record<string, SessionListFlags> = {}
         for (const entry of Object.values(index)) {
           if (!entry.claudeSessionId) continue
           const flag = flags[entry.claudeSessionId] ?? { archived: false }
@@ -391,6 +457,19 @@ export function createSessionStorage(rootDir: string, homeProjectId?: string): S
           ) {
             flag.unarchivedAt = entry.unarchivedAt
           }
+          if (
+            entry.pinnedAt !== undefined &&
+            (flag.pinnedAt === undefined || entry.pinnedAt > flag.pinnedAt)
+          ) {
+            flag.pinnedAt = entry.pinnedAt
+          }
+          if (
+            entry.unread !== undefined &&
+            (flag.unreadAt === undefined || (entry.unreadAt ?? 0) >= flag.unreadAt)
+          ) {
+            flag.unread = entry.unread
+            flag.unreadAt = entry.unreadAt
+          }
           flags[entry.claudeSessionId] = flag
         }
         for (const flag of Object.values(flags)) {
@@ -400,6 +479,97 @@ export function createSessionStorage(rootDir: string, homeProjectId?: string): S
           }
         }
         return flags
+      }),
+    sessionSetPinned: ({ sessions, pinned }) =>
+      run(async () => {
+        const index = await readIndex()
+        const byClaudeId = indexByClaudeId(index)
+        const now = Math.floor(Date.now() / 1000)
+        let changed = false
+        for (const { projectId, sessionId, claudeSessionId } of sessions) {
+          const boundIds = claudeSessionId ? (byClaudeId.get(claudeSessionId) ?? []) : []
+          if (boundIds.length > 0) {
+            for (const id of boundIds) {
+              const current = index[id]
+              if (!current) continue
+              const next = withPinned(current, pinned, now)
+              if (next === current) continue
+              // A marker reached through its claude id must not linger bare.
+              const settled = pruneMarker(next, id)
+              if (settled) index[id] = settled
+              else delete index[id]
+              changed = true
+            }
+            continue
+          }
+          // Marks for sessions without a bound entry live on a marker keyed by
+          // the claude id; drafts (no claude id yet) mark their own entry.
+          const markerId = claudeSessionId ? `${MARKER_PREFIX}${sessionId}` : sessionId
+          const previous = index[markerId]
+          if (pinned) {
+            if (previous?.pinnedAt !== undefined) continue
+            index[markerId] = {
+              ...(previous ?? {}),
+              projectId: previous?.projectId ?? projectId,
+              ...(claudeSessionId && !previous?.claudeSessionId ? { claudeSessionId } : {}),
+              pinnedAt: now,
+            }
+          } else {
+            if (previous?.pinnedAt === undefined) continue
+            const next = { ...previous }
+            delete next.pinnedAt
+            const settled = pruneMarker(next, markerId)
+            if (settled) index[markerId] = settled
+            else delete index[markerId]
+          }
+          changed = true
+        }
+        if (changed) await atomic(indexPath, JSON.stringify(index))
+      }),
+    sessionSetUnread: ({ sessions, unread }) =>
+      run(async () => {
+        const index = await readIndex()
+        const byClaudeId = indexByClaudeId(index)
+        const now = Math.floor(Date.now() / 1000)
+        let changed = false
+        for (const { projectId, sessionId, claudeSessionId } of sessions) {
+          const boundIds = claudeSessionId ? (byClaudeId.get(claudeSessionId) ?? []) : []
+          if (boundIds.length > 0) {
+            for (const id of boundIds) {
+              const current = index[id]
+              if (!current) continue
+              const next = withUnread(current, unread, now)
+              if (next === current) continue
+              const settled = pruneMarker(next, id)
+              if (settled) index[id] = settled
+              else delete index[id]
+              changed = true
+            }
+            continue
+          }
+          const markerId = claudeSessionId ? `${MARKER_PREFIX}${sessionId}` : sessionId
+          const previous = index[markerId]
+          if (unread) {
+            if (previous?.unread === unread && previous.unreadAt !== undefined) continue
+            index[markerId] = {
+              ...(previous ?? {}),
+              projectId: previous?.projectId ?? projectId,
+              ...(claudeSessionId && !previous?.claudeSessionId ? { claudeSessionId } : {}),
+              unread,
+              unreadAt: now,
+            }
+          } else {
+            if (previous?.unread === undefined && previous?.unreadAt === undefined) continue
+            const next = { ...previous }
+            delete next.unread
+            delete next.unreadAt
+            const settled = pruneMarker(next, markerId)
+            if (settled) index[markerId] = settled
+            else delete index[markerId]
+          }
+          changed = true
+        }
+        if (changed) await atomic(indexPath, JSON.stringify(index))
       }),
     sessionRebindProject: ({ fromProjectId, toProjectId }) =>
       run(async () => {

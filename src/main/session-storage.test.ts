@@ -458,7 +458,7 @@ test('archive marks ride on bound entries and survive draft rebuilds', async () 
   const archivedEntry = JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'))['s1']
   expect(archivedEntry).toMatchObject({ projectId, claudeSessionId: 'claude-1', archived: true })
   expect(typeof archivedEntry.archivedAt).toBe('number')
-  await expect(store.sessionArchiveFlags()).resolves.toEqual({
+  await expect(store.sessionListFlags()).resolves.toEqual({
     'claude-1': { archived: true, archivedAt: archivedEntry.archivedAt },
   })
 
@@ -495,7 +495,7 @@ test('archive marks ride on bound entries and survive draft rebuilds', async () 
   expect(unarchivedEntry).toMatchObject({ projectId, claudeSessionId: 'claude-1' })
   expect(unarchivedEntry.archived).toBeUndefined()
   expect(typeof unarchivedEntry.unarchivedAt).toBe('number')
-  await expect(store.sessionArchiveFlags()).resolves.toEqual({
+  await expect(store.sessionListFlags()).resolves.toEqual({
     'claude-1': { archived: false, unarchivedAt: unarchivedEntry.unarchivedAt },
   })
 })
@@ -519,7 +519,7 @@ test('archiving a never-opened session writes a marker entry that project deleti
   })
   // A marker carries no stored conversation payload.
   await expect(store.sessionRead({ sessionId: markerId })).resolves.toBeNull()
-  await expect(store.sessionArchiveFlags()).resolves.toEqual({
+  await expect(store.sessionListFlags()).resolves.toEqual({
     [claudeId]: { archived: true, archivedAt: expect.any(Number) },
   })
 
@@ -534,7 +534,7 @@ test('archiving a never-opened session writes a marker entry that project deleti
     unarchivedAt: expect.any(Number),
   })
   // The pure marker stays: its unarchivedAt is the auto-archive grace record.
-  await expect(store.sessionArchiveFlags()).resolves.toEqual({
+  await expect(store.sessionListFlags()).resolves.toEqual({
     [claudeId]: { archived: false, unarchivedAt: marker.unarchivedAt },
   })
 
@@ -571,4 +571,149 @@ test('stale unarchive grace is pruned and pure markers dropped', async () => {
   expect(index).not.toHaveProperty('claude-id-claude-2')
   expect(index.kept).toMatchObject({ claudeSessionId: 'id-claude-3', archived: true })
   expect(index.kept.archivedAt).toBeGreaterThan(1)
+})
+
+test('pin marks ride on bound entries and survive draft rebuilds', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'clotho-session-'))
+  const store = createSessionStorage(dir)
+  const projectId = projectIdFromPath('/p')
+  await store.sessionBindOwner({ sessionId: 's1', projectId, claudeSessionId: 'claude-1' })
+  const target = { projectId, sessionId: 'claude-1', claudeSessionId: 'claude-1' }
+
+  await store.sessionSetPinned({ sessions: [target], pinned: true })
+  const pinnedEntry = JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'))['s1']
+  expect(pinnedEntry).toMatchObject({ projectId, claudeSessionId: 'claude-1' })
+  expect(typeof pinnedEntry.pinnedAt).toBe('number')
+  await expect(store.sessionListFlags()).resolves.toEqual({
+    'claude-1': { archived: false, pinnedAt: pinnedEntry.pinnedAt },
+  })
+
+  // A draft write and its completion rebuild the entry; the pin must survive.
+  await store.sessionWrite({
+    sessionId: 's1',
+    data: {
+      id: 's1',
+      projectId,
+      projectPath: '/p',
+      claudeSessionId: 'claude-1',
+      input: {
+        prompt: 'hi',
+        attachments: [],
+        model: null,
+        permissionMode: 'default' as const,
+        agent: null,
+      },
+    },
+    draft: { title: 'T', createdAt: 1, updatedAt: 2, projectId, projectPath: '/p' },
+  })
+  await store.sessionCompleteDraft({ sessionId: 's1' })
+  expect(JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'))['s1']).toMatchObject({
+    projectId,
+    claudeSessionId: 'claude-1',
+    pinnedAt: pinnedEntry.pinnedAt,
+  })
+
+  await store.sessionSetPinned({ sessions: [target], pinned: false })
+  const unpinnedEntry = JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'))['s1']
+  expect(unpinnedEntry).toMatchObject({ projectId, claudeSessionId: 'claude-1' })
+  expect(unpinnedEntry.pinnedAt).toBeUndefined()
+  await expect(store.sessionListFlags()).resolves.toEqual({ 'claude-1': { archived: false } })
+})
+
+test('pinning a never-started history session records a marker and unpinning drops it', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'clotho-session-'))
+  const store = createSessionStorage(dir)
+  const projectId = projectIdFromPath('/p')
+  const target = { projectId, sessionId: 'claude-9', claudeSessionId: 'claude-9' }
+
+  await store.sessionSetPinned({ sessions: [target], pinned: true })
+  const marker = JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'))['claude-claude-9']
+  expect(marker).toMatchObject({ projectId, claudeSessionId: 'claude-9' })
+  expect(typeof marker.pinnedAt).toBe('number')
+  await expect(store.sessionListFlags()).resolves.toEqual({
+    'claude-9': { archived: false, pinnedAt: marker.pinnedAt },
+  })
+
+  await store.sessionSetPinned({ sessions: [target], pinned: false })
+  const index = JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'))
+  expect(index).not.toHaveProperty('claude-claude-9')
+  await expect(store.sessionListFlags()).resolves.toEqual({})
+})
+
+test('unread marks set, switch, and clear on bound entries', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'clotho-session-'))
+  const store = createSessionStorage(dir)
+  const projectId = projectIdFromPath('/p')
+  await store.sessionBindOwner({ sessionId: 's1', projectId, claudeSessionId: 'claude-1' })
+  const target = { projectId, sessionId: 'claude-1', claudeSessionId: 'claude-1' }
+
+  await store.sessionSetUnread({ sessions: [target], unread: 'success' })
+  const successEntry = JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'))['s1']
+  expect(successEntry.unread).toBe('success')
+  expect(typeof successEntry.unreadAt).toBe('number')
+
+  await store.sessionSetUnread({ sessions: [target], unread: 'error' })
+  const errorEntry = JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'))['s1']
+  expect(errorEntry.unread).toBe('error')
+  expect(errorEntry.unreadAt).toBeGreaterThanOrEqual(successEntry.unreadAt)
+  await expect(store.sessionListFlags()).resolves.toEqual({
+    'claude-1': { archived: false, unread: 'error', unreadAt: errorEntry.unreadAt },
+  })
+
+  await store.sessionSetUnread({ sessions: [target], unread: null })
+  const clearedEntry = JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'))['s1']
+  expect(clearedEntry.unread).toBeUndefined()
+  expect(clearedEntry.unreadAt).toBeUndefined()
+  await expect(store.sessionListFlags()).resolves.toEqual({ 'claude-1': { archived: false } })
+})
+
+test('a draft pin lands on the draft entry and rides through ownership binding', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'clotho-session-'))
+  const store = createSessionStorage(dir)
+  const projectId = projectIdFromPath('/p')
+  await store.sessionWrite({
+    sessionId: 's2',
+    data: {
+      id: 's2',
+      projectId,
+      projectPath: '/p',
+      claudeSessionId: null,
+      input: {
+        prompt: 'hi',
+        attachments: [],
+        model: null,
+        permissionMode: 'default' as const,
+        agent: null,
+      },
+    },
+    draft: { title: 'Draft', createdAt: 1, updatedAt: 2, projectId, projectPath: '/p' },
+  })
+
+  await store.sessionSetPinned({
+    sessions: [{ projectId, sessionId: 's2', claudeSessionId: null }],
+    pinned: true,
+  })
+  const draftEntry = JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'))['s2']
+  expect(draftEntry).toMatchObject({ isDraft: true })
+  expect(typeof draftEntry.pinnedAt).toBe('number')
+  await expect(store.sessionListDrafts()).resolves.toEqual({
+    s2: {
+      title: 'Draft',
+      createdAt: 1,
+      updatedAt: 2,
+      projectId,
+      projectPath: '/p',
+      pinnedAt: draftEntry.pinnedAt,
+    },
+  })
+
+  // Binding a claude id keeps the pin on the same entry.
+  await store.sessionBindOwner({ sessionId: 's2', projectId, claudeSessionId: 'claude-2' })
+  expect(JSON.parse(await readFile(path.join(dir, 'index.json'), 'utf8'))['s2']).toMatchObject({
+    claudeSessionId: 'claude-2',
+    pinnedAt: draftEntry.pinnedAt,
+  })
+  await expect(store.sessionListFlags()).resolves.toEqual({
+    'claude-2': { archived: false, pinnedAt: draftEntry.pinnedAt },
+  })
 })

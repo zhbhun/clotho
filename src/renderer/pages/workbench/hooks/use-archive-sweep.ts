@@ -38,7 +38,7 @@ export function useArchiveSweep() {
     const candidates = pickAutoArchiveCandidates({
       currentSessionId: state.currentSessionId,
       days,
-      openSessionIds: Object.values(state.tabsByWorkspace).flat(),
+      openSessionIds: Object.values(state.sessionTabsByWorkspace).flat(),
       pinnedSessionIds: new Set(state.pinnedSessionIds),
       sessionActivity: state.sessionActivity,
       sessions: state.sessions,

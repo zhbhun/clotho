@@ -32,6 +32,8 @@ export interface DraftSession {
   updatedAt: number
   projectId: string | null
   projectPath: string | null
+  /** When the session was pinned (seconds); presence marks it pinned. */
+  pinnedAt?: number
 }
 
 export type DraftSessionIndex = Record<string, DraftSession>
@@ -56,13 +58,25 @@ export interface SessionIndexEntry {
   archivedAt?: number
   /** When the user last unarchived the session (seconds); grants one auto-archive grace period. */
   unarchivedAt?: number
+  /** When the session was pinned (seconds); presence marks it pinned. */
+  pinnedAt?: number
+  /** Unread activity kind recorded when a run finished while the session was not active. */
+  unread?: 'success' | 'error'
+  /** When the unread mark was recorded (seconds). */
+  unreadAt?: number
 }
 
 export type SessionIndex = Record<string, SessionIndexEntry>
 
-/** Archive state of one claude session, gathered from the index by claudeSessionId. */
-export interface SessionArchiveFlags {
+/**
+ * List state of one claude session (archive, pin, unread), gathered from the
+ * index by claudeSessionId and merged into listed sessions.
+ */
+export interface SessionListFlags {
   archived: boolean
   archivedAt?: number
   unarchivedAt?: number
+  pinnedAt?: number
+  unread?: 'success' | 'error'
+  unreadAt?: number
 }

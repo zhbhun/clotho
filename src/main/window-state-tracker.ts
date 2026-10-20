@@ -1,14 +1,7 @@
-import {
-  type StoredWindowState,
-  type WindowDisplay,
-  type WindowStateUpdate,
-  updateWindowState,
-} from './window-state'
+import { type StoredWindowState, type WindowStateUpdate, updateWindowState } from './window-state'
 
 interface WindowStateTrackerOptions {
   initialState: StoredWindowState
-  getDisplays: () => WindowDisplay[]
-  getPrimaryDisplay: () => WindowDisplay
   persist: (state: StoredWindowState) => Promise<unknown>
   onError?: (caught: unknown) => void
   debounceMs?: number
@@ -30,10 +23,9 @@ function rectanglesEqual(
 
 function statesEqual(left: StoredWindowState, right: StoredWindowState) {
   return (
+    left.id === right.id &&
     left.isMaximized === right.isMaximized &&
-    left.display.id === right.display.id &&
-    rectanglesEqual(left.frame, right.frame) &&
-    rectanglesEqual(left.display.workArea, right.display.workArea)
+    rectanglesEqual(left.frame, right.frame)
   )
 }
 
@@ -70,12 +62,7 @@ export function createWindowStateTracker(options: WindowStateTrackerOptions) {
 
   return {
     update(update: WindowStateUpdate) {
-      const next = updateWindowState(
-        current,
-        update,
-        options.getDisplays(),
-        options.getPrimaryDisplay(),
-      )
+      const next = updateWindowState(current, update)
       if (statesEqual(current, next)) return
       current = next
       isDirty = true

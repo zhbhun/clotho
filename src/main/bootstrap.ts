@@ -37,14 +37,20 @@ import { openLink } from './open-link'
 import { saveImage } from './save-image'
 import { createSessionStorage } from './session-storage'
 import { createShortcutStore, readShortcutOverrides } from './shortcuts'
-import { createStateStore, readState } from './state'
+import { createStorageStore, readStorage } from './storage'
 import { openTaskManager } from './task-manager'
 import {
   createMainWindowOptions,
   showMainWindowWhenReady,
   toggleMainWindowMaximize,
 } from './window-options'
-import { createWindowState, resolveWindowState } from './window-state'
+import {
+  resolveWindowState,
+  sanitizeWindowsState,
+  windowUiStateOf,
+  withWindowEntry,
+  withWindowUiState,
+} from './window-state'
 import { createWindowStateTracker } from './window-state-tracker'
 
 const REQUEST_CHANNEL_PREFIX = 'clotho:request:'
@@ -115,16 +121,16 @@ export async function bootstrap() {
     const isDev = devServerUrl !== undefined
     let menuLanguage: AppLanguage = 'en'
 
-    let loadedState
+    let loadedStorage
     try {
-      loadedState = await readState()
+      loadedStorage = await readStorage()
     } catch (caught) {
-      loadedState = {}
-      appLogger.warning('state.read_failed', 'Failed to read recoverable application state', {
+      loadedStorage = {}
+      appLogger.warning('storage.read_failed', 'Failed to read recoverable application storage', {
         errorName: caught instanceof Error ? caught.name : 'Error',
       })
     }
-    const stateStore = createStateStore(loadedState)
+    const stateStore = createStorageStore(loadedStorage)
     // The homedir-backed work project owns home-mode conversations; make sure
     // it is registered before anything reads projects or session ownership.
     await ensureWorkProject()
@@ -204,7 +210,12 @@ export async function bootstrap() {
 
     const displays = screen.getAllDisplays().map((display) => ({ ...display }))
     const primaryDisplay = { ...screen.getPrimaryDisplay(), isPrimary: true }
-    const initialWindowState = resolveWindowState(loadedState.window, displays, primaryDisplay)
+    const initialWindowState = resolveWindowState(
+      loadedStorage.windowsState,
+      displays,
+      primaryDisplay,
+    )
+    const activeWindowId = initialWindowState.id
     const mainWindow = new BrowserWindow(
       createMainWindowOptions(
         path.join(__dirname, 'preload.js'),
@@ -257,7 +268,9 @@ export async function bootstrap() {
         sessionOwnership: () => sessionStorage.sessionOwnership(),
         sessionRebindProject: (ids) => sessionStorage.sessionRebindProject(ids),
         sessionSetArchived: (params) => sessionStorage.sessionSetArchived(params),
-        sessionArchiveFlags: () => sessionStorage.sessionArchiveFlags(),
+        sessionSetPinned: (params) => sessionStorage.sessionSetPinned(params),
+        sessionSetUnread: (params) => sessionStorage.sessionSetUnread(params),
+        sessionListFlags: () => sessionStorage.sessionListFlags(),
       },
       {
         onSessionRecycled: (sessionId) => {
@@ -328,6 +341,22 @@ export async function bootstrap() {
         claudeSetProjectLastOpened: (params) => service.setProjectLastOpened(params),
         claudeListSessions: (params) => service.listSessions(params),
         claudeSetSessionsArchived: (params) => service.setSessionsArchived(params),
+        claudeSetSessionsPinned: (params) => service.setSessionsPinned(params),
+        claudeSetSessionsUnread: (params) => service.setSessionsUnread(params),
+        windowReadUiState: () => ({
+          ui: windowUiStateOf(sanitizeWindowsState(stateStore.get().windowsState), activeWindowId),
+        }),
+        windowWriteUiState: ({ ui }) =>
+          stateStore
+            .transform((current) => ({
+              ...current,
+              windowsState: withWindowUiState(
+                sanitizeWindowsState(current.windowsState),
+                activeWindowId,
+                ui,
+              ),
+            }))
+            .then(() => undefined),
         sessionListDrafts: () => sessionStorage.sessionListDrafts(),
         sessionRead: (params) => sessionStorage.sessionRead(params),
         sessionWrite: (params) => sessionStorage.sessionWrite(params),
@@ -399,17 +428,14 @@ export async function bootstrap() {
     })
 
     const windowStateTracker = createWindowStateTracker({
-      initialState: createWindowState(
-        initialWindowState.frame,
-        displays,
-        primaryDisplay,
-        initialWindowState.isMaximized,
-      ),
-      getDisplays: () => screen.getAllDisplays().map((display) => ({ ...display })),
-      getPrimaryDisplay: () => ({ ...screen.getPrimaryDisplay(), isPrimary: true }),
-      persist: (window) => stateStore.update({ window }),
+      initialState: initialWindowState,
+      persist: (entry) =>
+        stateStore.transform((current) => ({
+          ...current,
+          windowsState: withWindowEntry(sanitizeWindowsState(current.windowsState), entry),
+        })),
       onError: (caught) => {
-        appLogger.error('state.write_failed', 'Failed to save recoverable window state', {
+        appLogger.error('storage.write_failed', 'Failed to save recoverable window state', {
           error: caught,
         })
       },
@@ -447,11 +473,24 @@ export async function bootstrap() {
             error: caught,
           })
         })
-      const saveWindowState = windowStateTracker.flush().catch((caught) => {
-        appLogger.error('state.write_failed', 'Failed to flush recoverable window state', {
-          error: caught,
+      const saveWindowState = windowStateTracker
+        .flush()
+        .then(() =>
+          // The window is going away; its per-window ui payload goes with it.
+          stateStore.transform((current) => ({
+            ...current,
+            windowsState: withWindowUiState(
+              sanitizeWindowsState(current.windowsState),
+              activeWindowId,
+              undefined,
+            ),
+          })),
+        )
+        .catch((caught) => {
+          appLogger.error('storage.write_failed', 'Failed to flush recoverable window state', {
+            error: caught,
+          })
         })
-      })
       // Resident session queries own CLI subprocesses; quitting tears them down
       // (running background tasks are killed with them by design).
       const stopSessionQueries = service.closeAllSessionQueries().catch((caught) => {

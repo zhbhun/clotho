@@ -5,6 +5,7 @@ import type { ClaudeSession } from '@/shared/rpc'
 
 import { claude } from '../../../services/claude/claude'
 import { MOCK_PROJECT_ID } from '../../../services/claude/mock/project'
+import { workbenchPersistence } from '../services/workbench-persistence'
 import type { SessionControllerRegistry } from '../session/session-controller-registry'
 import type { SessionError } from '../session/stores/runtime-store'
 import { createProjectModelSaveQueue } from '../stores/project-model-save'
@@ -53,7 +54,7 @@ export function useProjects(
   const sessionMap = useWorkbenchStore((state) => state.sessions)
   const currentProjectId = useWorkbenchStore((state) => state.currentProjectId)
   const currentSessionId = useWorkbenchStore((state) => state.currentSessionId)
-  const tabsByWorkspace = useWorkbenchStore((state) => state.tabsByWorkspace)
+  const sessionTabsByWorkspace = useWorkbenchStore((state) => state.sessionTabsByWorkspace)
   const projectMode = useWorkbenchStore((state) => state.projectMode)
   const sessionActivity = useWorkbenchStore((state) => state.sessionActivity)
   const pinnedSessionIds = useWorkbenchStore((state) => state.pinnedSessionIds)
@@ -112,11 +113,11 @@ export function useProjects(
   const workSessions = useMemo(
     () =>
       pickOpenOrPinnedSessions({
-        openSessionIds: Object.values(tabsByWorkspace).flat(),
+        openSessionIds: Object.values(sessionTabsByWorkspace).flat(),
         pinnedSessionIds: pinnedSessionIdSet,
         sessions: sessionMap,
       }),
-    [pinnedSessionIdSet, sessionMap, tabsByWorkspace],
+    [pinnedSessionIdSet, sessionMap, sessionTabsByWorkspace],
   )
   const workTimeline = useMemo(
     () =>
@@ -154,13 +155,13 @@ export function useProjects(
   const currentWorkspaceKey = selectedProject ? workspaceKeyForProject(selectedProject) : 'claude'
   const tabSessions = useMemo(
     () =>
-      (tabsByWorkspace[currentWorkspaceKey] ?? []).flatMap((sessionId) => {
+      (sessionTabsByWorkspace[currentWorkspaceKey] ?? []).flatMap((sessionId) => {
         const session = sessionMap[sessionId]
         // A blank unsaved draft is the open new-chat surface itself; it only
         // joins the tab bar once it becomes a stored draft or real session.
         return session && !session.isUnsavedDraft ? [session] : []
       }),
-    [currentWorkspaceKey, sessionMap, tabsByWorkspace],
+    [currentWorkspaceKey, sessionMap, sessionTabsByWorkspace],
   )
   const workspaceSessions = useMemo(
     () =>
@@ -181,8 +182,8 @@ export function useProjects(
     [currentProjectId, sessionMap],
   )
   const tabSessionIds = useMemo(
-    () => [...new Set(Object.values(tabsByWorkspace).flat())].filter((id) => sessionMap[id]),
-    [sessionMap, tabsByWorkspace],
+    () => [...new Set(Object.values(sessionTabsByWorkspace).flat())].filter((id) => sessionMap[id]),
+    [sessionMap, sessionTabsByWorkspace],
   )
   const projectModelSaveQueue = useMemo(
     () =>
@@ -316,7 +317,11 @@ export function useProjects(
   }, [ensureInitialSession, replaceCatalog])
 
   useEffect(() => {
-    void refreshProjects().catch(() => {})
+    // The first catalog must land after the persisted window ui so restored
+    // tabs and workspace reconcile against the real session catalog.
+    void workbenchPersistence()
+      .ready.then(() => refreshProjects())
+      .catch(() => {})
   }, [refreshProjects])
 
   const selectProject = useCallback(

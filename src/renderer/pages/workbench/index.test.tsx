@@ -354,7 +354,7 @@ function setupShortcutSessions() {
   useWorkbenchStore.setState({
     currentProjectId: project.id,
     currentSessionId: sessions[0].id,
-    tabsByWorkspace: { [`project:${project.id}`]: sessions.map((session) => session.id) },
+    sessionTabsByWorkspace: { [`project:${project.id}`]: sessions.map((session) => session.id) },
     activeSessionByWorkspace: { [`project:${project.id}`]: sessions[0].id },
     projectMode: 'project',
     projects: { [project.id]: project },
@@ -742,9 +742,9 @@ describe('workbench shortcuts', () => {
     fireEvent.keyDown(document, { key: 'w', metaKey: true })
 
     await waitFor(() => {
-      expect(useWorkbenchStore.getState().tabsByWorkspace[`project:${project.id}`]).not.toContain(
-        sessions[0].id,
-      )
+      expect(
+        useWorkbenchStore.getState().sessionTabsByWorkspace[`project:${project.id}`],
+      ).not.toContain(sessions[0].id)
     })
     expect(useWorkbenchStore.getState().sessions[sessions[0].id]).toBeDefined()
   })
@@ -1159,7 +1159,7 @@ describe('prompt composer surface', () => {
       title: 'New Chat',
       isDraft: true,
     })
-    expect(useWorkbenchStore.getState().tabsByWorkspace.claude).toContain(draftId)
+    expect(useWorkbenchStore.getState().sessionTabsByWorkspace.claude).toContain(draftId)
   })
 
   it('keeps the current project when starting a new conversation from the sidebar', async () => {
@@ -1245,7 +1245,7 @@ describe('prompt composer surface', () => {
       expect(drafts.map((draft) => draft.title)).toEqual(
         expect.arrayContaining(['Review the API migration', 'New Chat']),
       )
-      expect(useWorkbenchStore.getState().tabsByWorkspace.claude).toEqual(
+      expect(useWorkbenchStore.getState().sessionTabsByWorkspace.claude).toEqual(
         expect.arrayContaining(drafts.map((draft) => draft.id)),
       )
       expect(useWorkbenchStore.getState().currentSessionId).toBe(
@@ -1307,7 +1307,7 @@ describe('prompt composer surface', () => {
     useWorkbenchStore.setState({
       currentProjectId: project.id,
       currentSessionId: null,
-      tabsByWorkspace: { 'project:project-1': [firstSession.id, secondSession.id] },
+      sessionTabsByWorkspace: { 'project:project-1': [firstSession.id, secondSession.id] },
       activeSessionByWorkspace: { 'project:project-1': null },
       projectMode: 'project',
       projects: { [project.id]: project },
@@ -1852,7 +1852,7 @@ describe('prompt composer surface', () => {
     useWorkbenchStore.setState({
       currentProjectId: 'project-1',
       currentSessionId: 'session-1',
-      tabsByWorkspace: { 'project:project-1': ['session-1'] },
+      sessionTabsByWorkspace: { 'project:project-1': ['session-1'] },
       activeSessionByWorkspace: { 'project:project-1': 'session-1' },
       projectMode: 'project',
       projects: {
@@ -2626,7 +2626,7 @@ describe('session list item', () => {
     useWorkbenchStore.setState({
       currentProjectId: 'work-project',
       currentSessionId: 'local:home',
-      tabsByWorkspace: { 'project:work-project': ['local:home'] },
+      sessionTabsByWorkspace: { 'project:work-project': ['local:home'] },
       activeSessionByWorkspace: { 'project:work-project': 'local:home' },
       projectMode: 'project',
       projects: {
@@ -2942,7 +2942,7 @@ describe('session actions', () => {
 
     expect(useWorkbenchStore.getState()).toMatchObject({
       currentSessionId: sessions[1].id,
-      tabsByWorkspace: {
+      sessionTabsByWorkspace: {
         [`project:${project.id}`]: [sessions[1].id],
       },
     })
@@ -2983,7 +2983,7 @@ describe('sidebar initial reveal', () => {
       sessions: Object.fromEntries(
         catalogSessions.map((session) => [session.id, { ...session, claudeSessionId: session.id }]),
       ),
-      tabsByWorkspace: { 'project:project-1': ['focused-session', 'selected-session'] },
+      sessionTabsByWorkspace: { 'project:project-1': ['focused-session', 'selected-session'] },
       activeSessionByWorkspace: { 'project:project-1': currentSessionId },
     })
   }
@@ -3174,7 +3174,7 @@ describe('mock project history', () => {
     useWorkbenchStore.setState({
       currentProjectId: MOCK_PROJECT_ID,
       currentSessionId: 'mock-web',
-      tabsByWorkspace: { [`project:${MOCK_PROJECT_ID}`]: ['mock-web'] },
+      sessionTabsByWorkspace: { [`project:${MOCK_PROJECT_ID}`]: ['mock-web'] },
       activeSessionByWorkspace: { [`project:${MOCK_PROJECT_ID}`]: 'mock-web' },
       projectMode: 'project',
       projects: {
@@ -3252,7 +3252,7 @@ describe('mock project history', () => {
     useWorkbenchStore.setState({
       currentProjectId: MOCK_PROJECT_ID,
       currentSessionId: 'mock-web',
-      tabsByWorkspace: { [`project:${MOCK_PROJECT_ID}`]: ['mock-web'] },
+      sessionTabsByWorkspace: { [`project:${MOCK_PROJECT_ID}`]: ['mock-web'] },
       activeSessionByWorkspace: { [`project:${MOCK_PROJECT_ID}`]: 'mock-web' },
       projectMode: 'project',
       projects: {
@@ -3306,7 +3306,7 @@ describe('Claude runtime claudeStartup', () => {
     useWorkbenchStore.setState({
       currentProjectId: 'project-1',
       currentSessionId: 'source-session',
-      tabsByWorkspace: { 'project:project-1': ['source-session'] },
+      sessionTabsByWorkspace: { 'project:project-1': ['source-session'] },
       activeSessionByWorkspace: { 'project:project-1': 'source-session' },
       projectMode: 'project',
       projects: {
@@ -3594,7 +3594,7 @@ describe('Claude runtime claudeStartup', () => {
     useWorkbenchStore.setState({
       currentProjectId: project.id,
       currentSessionId: firstSession.id,
-      tabsByWorkspace: { 'project:project-1': [firstSession.id, secondSession.id] },
+      sessionTabsByWorkspace: { 'project:project-1': [firstSession.id, secondSession.id] },
       activeSessionByWorkspace: { 'project:project-1': firstSession.id },
       projectMode: 'project',
       projects: { [project.id]: project },
@@ -3638,7 +3638,7 @@ describe('Claude runtime claudeStartup', () => {
     useWorkbenchStore.setState({
       currentProjectId: 'project-1',
       currentSessionId: 'session-1',
-      tabsByWorkspace: { 'project:project-1': ['session-1', 'session-2'] },
+      sessionTabsByWorkspace: { 'project:project-1': ['session-1', 'session-2'] },
       activeSessionByWorkspace: { 'project:project-1': 'session-1' },
       projectMode: 'project',
       projects: {

@@ -1,13 +1,10 @@
 import { create } from 'zustand'
-import { createJSONStorage, persist } from 'zustand/middleware'
 
 import type { ClaudeProject, ClaudeSession } from '@/shared/rpc'
 import type { DraftSessionIndex } from '@/shared/session'
 
 import { claude } from '../../../services/claude/claude'
 import { getLogger } from '../../../services/logging'
-import { UI_STORAGE_KEY } from '../../../services/ui-storage'
-import { createWorkbenchUiStorage } from '../services/workbench-ui-storage'
 import { DEFAULT_SESSION_TITLE } from '../utils/session-list'
 
 export type ProjectMode = 'project' | 'home'
@@ -49,18 +46,17 @@ type WorkbenchDataState = {
   currentWorkspaceKey: WorkspaceKey
   currentProjectId: string | null
   currentSessionId: string | null
-  tabsByWorkspace: Record<string, string[]>
+  sessionTabsByWorkspace: Record<string, string[]>
   activeSessionByWorkspace: Record<string, string | null>
   projectMode: ProjectMode
   sessionActivity: Record<string, SessionActivity>
 }
 
-export type WorkbenchPersistedState = {
+/** The window-scoped slice persisted with the desktop window (see workbench-persistence). */
+export type WorkbenchWindowUiState = {
   currentWorkspaceKey: WorkspaceKey
-  tabsByWorkspace: Record<string, string[]>
+  sessionTabsByWorkspace: Record<string, string[]>
   activeSessionByWorkspace: Record<string, string | null>
-  pinnedSessionIds: string[]
-  unreadSessionActivity: Record<string, 'unread-success' | 'unread-error'>
 }
 
 export type WorkbenchState = WorkbenchDataState & {
@@ -91,19 +87,11 @@ export type WorkbenchState = WorkbenchDataState & {
   reset: () => void
 }
 
-export function partializeWorkbenchState(state: WorkbenchState): WorkbenchPersistedState {
-  const unreadSessionActivity = Object.fromEntries(
-    Object.entries(state.sessionActivity).filter(
-      ([, activity]) => activity === 'unread-success' || activity === 'unread-error',
-    ),
-  ) as Record<string, 'unread-success' | 'unread-error'>
-
+export function windowUiState(state: WorkbenchState): WorkbenchWindowUiState {
   return {
     currentWorkspaceKey: state.currentWorkspaceKey,
-    tabsByWorkspace: state.tabsByWorkspace,
+    sessionTabsByWorkspace: state.sessionTabsByWorkspace,
     activeSessionByWorkspace: state.activeSessionByWorkspace,
-    pinnedSessionIds: state.pinnedSessionIds,
-    unreadSessionActivity,
   }
 }
 
@@ -156,17 +144,17 @@ function reconcileWorkspaceTabs({
   currentSessionId,
   projects,
   sessions,
-  tabsByWorkspace = {},
+  sessionTabsByWorkspace = {},
 }: {
   activeSessionByWorkspace?: Record<string, string | null>
   currentSessionId: string | null
   projects: Record<string, WorkbenchProject>
   sessions: Record<string, WorkbenchSession>
-  tabsByWorkspace?: Record<string, string[]>
+  sessionTabsByWorkspace?: Record<string, string[]>
 }) {
   const reconciledTabs: Record<string, string[]> = {}
   const sourceSessionIds = uniqueSessionIds([
-    ...Object.values(tabsByWorkspace).flat(),
+    ...Object.values(sessionTabsByWorkspace).flat(),
     ...(currentSessionId ? [currentSessionId] : []),
   ])
   for (const sessionId of sourceSessionIds) {
@@ -190,13 +178,13 @@ function reconcileWorkspaceTabs({
       currentSessionId
   }
 
-  return { tabsByWorkspace: reconciledTabs, activeSessionByWorkspace: reconciledActive }
+  return { sessionTabsByWorkspace: reconciledTabs, activeSessionByWorkspace: reconciledActive }
 }
 
 function selectedSessionState(
   state: Pick<
     WorkbenchDataState,
-    'activeSessionByWorkspace' | 'projects' | 'sessionActivity' | 'tabsByWorkspace'
+    'activeSessionByWorkspace' | 'projects' | 'sessionActivity' | 'sessionTabsByWorkspace'
   >,
   session: WorkbenchSession,
 ): Pick<
@@ -207,7 +195,7 @@ function selectedSessionState(
   | 'currentWorkspaceKey'
   | 'projectMode'
   | 'sessionActivity'
-  | 'tabsByWorkspace'
+  | 'sessionTabsByWorkspace'
 > {
   const currentActivity = state.sessionActivity[session.id]
   const activity: SessionActivity =
@@ -219,9 +207,9 @@ function selectedSessionState(
     currentProjectId: session.project_id || null,
     currentSessionId: session.id,
     currentWorkspaceKey: workspaceKey,
-    tabsByWorkspace: {
-      ...state.tabsByWorkspace,
-      [workspaceKey]: putSessionLast(state.tabsByWorkspace[workspaceKey] ?? [], session.id),
+    sessionTabsByWorkspace: {
+      ...state.sessionTabsByWorkspace,
+      [workspaceKey]: putSessionLast(state.sessionTabsByWorkspace[workspaceKey] ?? [], session.id),
     },
     activeSessionByWorkspace: {
       ...state.activeSessionByWorkspace,
@@ -250,7 +238,7 @@ function createInitialState(): WorkbenchDataState {
     currentWorkspaceKey: 'claude',
     currentProjectId: null,
     currentSessionId: null,
-    tabsByWorkspace: {},
+    sessionTabsByWorkspace: {},
     activeSessionByWorkspace: {},
     projectMode: 'home',
     sessionActivity: {},
@@ -272,7 +260,7 @@ function catalogState(
   | 'pinnedSessionIds'
   | 'projectMode'
   | 'sessionActivity'
-  | 'tabsByWorkspace'
+  | 'sessionTabsByWorkspace'
 > {
   const existingByClaudeId = new Map<string, WorkbenchSession>()
   for (const session of Object.values(current.sessions)) {
@@ -322,6 +310,7 @@ function catalogState(
       title: draft.title,
       claudeSessionId: null,
       isDraft: true,
+      ...(draft.pinnedAt !== undefined ? { pinned_at: draft.pinnedAt } : {}),
     }
   }
 
@@ -364,7 +353,7 @@ function catalogState(
     currentSessionId: catalogCurrentSessionId,
     projects,
     sessions,
-    tabsByWorkspace: current.tabsByWorkspace,
+    sessionTabsByWorkspace: current.sessionTabsByWorkspace,
   })
   const catalogCurrentSession = catalogCurrentSessionId
     ? sessions[catalogCurrentSessionId]
@@ -386,14 +375,27 @@ function catalogState(
   const currentProjectId = currentSession
     ? currentSession.project_id || null
     : (restoredProject?.id ?? null)
-  const sessionActivity = Object.fromEntries(
+  const sessionActivity: Record<string, SessionActivity> = Object.fromEntries(
     Object.entries(current.sessionActivity).filter(([sessionId]) => sessions[sessionId]),
   )
+  // Unread marks arrive with the catalog; seed only sessions the runtime has
+  // no opinion about yet so a slow mark-seen round trip never re-flags them.
+  for (const session of Object.values(sessions)) {
+    if (session.unread && !sessionActivity[session.id]) {
+      sessionActivity[session.id] = session.unread === 'error' ? 'unread-error' : 'unread-success'
+    }
+  }
+  // The pin marks on the sessions themselves are the source of truth; the id
+  // list follows in pin order.
+  const pinnedSessionIds = Object.values(sessions)
+    .filter((session) => session.pinned_at !== undefined)
+    .sort((left, right) => (left.pinned_at ?? 0) - (right.pinned_at ?? 0))
+    .map((session) => session.id)
 
   return {
     projects,
     sessions,
-    pinnedSessionIds: current.pinnedSessionIds.filter((sessionId) => sessions[sessionId]),
+    pinnedSessionIds,
     currentProjectId,
     currentSessionId,
     currentWorkspaceKey,
@@ -425,16 +427,22 @@ function buildDraftSession(
 }
 
 function addedSessionState(
-  state: Pick<WorkbenchDataState, 'projects' | 'sessionActivity' | 'sessions' | 'tabsByWorkspace'>,
+  state: Pick<
+    WorkbenchDataState,
+    'projects' | 'sessionActivity' | 'sessions' | 'sessionTabsByWorkspace'
+  >,
   session: WorkbenchSession,
-): Pick<WorkbenchDataState, 'projects' | 'sessionActivity' | 'sessions' | 'tabsByWorkspace'> {
+): Pick<
+  WorkbenchDataState,
+  'projects' | 'sessionActivity' | 'sessions' | 'sessionTabsByWorkspace'
+> {
   const workspaceKey = workspaceKeyForSession(session, state.projects)
   const project = session.project_id ? state.projects[session.project_id] : undefined
   return {
     sessions: { ...state.sessions, [session.id]: session },
-    tabsByWorkspace: {
-      ...state.tabsByWorkspace,
-      [workspaceKey]: putSessionLast(state.tabsByWorkspace[workspaceKey] ?? [], session.id),
+    sessionTabsByWorkspace: {
+      ...state.sessionTabsByWorkspace,
+      [workspaceKey]: putSessionLast(state.sessionTabsByWorkspace[workspaceKey] ?? [], session.id),
     },
     sessionActivity: { ...state.sessionActivity, [session.id]: 'idle' },
     projects:
@@ -452,380 +460,406 @@ function addedSessionState(
   }
 }
 
-export const useWorkbenchStore = create<WorkbenchState>()(
-  persist(
-    (set, get) => ({
-      ...initialState,
-      setProjectDefaultModel: (projectId, providerId, modelId) =>
-        set((state) => {
-          const project = state.projects[projectId]
-          if (!project) return state
-          return {
-            projects: {
-              ...state.projects,
-              [projectId]: {
-                ...project,
-                default_provider_id: providerId,
-                default_model_id: modelId,
-              },
-            },
-          }
-        }),
-      setProjectGitBranch: (projectId, branch) =>
-        set((state) => {
-          const project = state.projects[projectId]
-          if (!project || project.gitBranch === branch) return state
-          return {
-            projects: {
-              ...state.projects,
-              [projectId]: { ...project, gitBranch: branch },
-            },
-          }
-        }),
-      replaceCatalog: (catalog) =>
-        set((state) => ({
-          ...catalogState(state, catalog),
-        })),
-      createDraftSession: (projectId, title = DEFAULT_SESSION_TITLE) => {
-        const id = createLocalSessionId()
-        set((state) =>
-          addedSessionState(state, buildDraftSession(id, projectId, title, state.projects)),
-        )
-        return id
-      },
-      touchDraftSession: (sessionId) => {
-        const session = get().sessions[sessionId]
-        const editedAt = Math.floor(Date.now() / 1000)
-        if (!session?.isDraft || session.updated_at === editedAt) return
-        set((state) => {
-          const current = state.sessions[sessionId]
-          if (!current?.isDraft || current.updated_at === editedAt) return state
-          return {
-            sessions: {
-              ...state.sessions,
-              [sessionId]: { ...current, updated_at: editedAt },
-            },
-          }
-        })
-      },
-      markSessionStarted: (sessionId) =>
-        set((state) => {
-          const session = state.sessions[sessionId]
-          if (!session || session.isDraft === false) return state
-          return {
-            sessions: {
-              ...state.sessions,
-              [sessionId]: { ...session, isDraft: false, isUnsavedDraft: false },
-            },
-          }
-        }),
-      markDraftSaved: (sessionId) =>
-        set((state) => {
-          const session = state.sessions[sessionId]
-          if (!session?.isUnsavedDraft) return state
-          return {
-            sessions: {
-              ...state.sessions,
-              [sessionId]: { ...session, isUnsavedDraft: false },
-            },
-          }
-        }),
-      markSessionDraft: (sessionId) =>
-        set((state) => {
-          const session = state.sessions[sessionId]
-          if (!session || session.isDraft === true) return state
-          return { sessions: { ...state.sessions, [sessionId]: { ...session, isDraft: true } } }
-        }),
-      selectWorkspace: (projectId) =>
-        set((state) => {
-          const validProjectId = projectId && state.projects[projectId] ? projectId : null
-          const workspaceKey = workspaceKeyForProjectId(validProjectId, state.projects)
-          const activeSessionId = state.activeSessionByWorkspace[workspaceKey]
-          const firstTabId = state.tabsByWorkspace[workspaceKey]?.[0]
-          const sessionId = activeSessionId === undefined ? firstTabId : activeSessionId
-          const session = sessionId ? state.sessions[sessionId] : undefined
+function pinSessionPayload(session: WorkbenchSession): {
+  projectId: string | null
+  sessionId: string
+  claudeSessionId: string | null
+} {
+  return {
+    projectId: session.project_id || null,
+    sessionId: session.id,
+    claudeSessionId: session.claudeSessionId,
+  }
+}
 
-          if (session) return selectedSessionState(state, session)
+export const useWorkbenchStore = create<WorkbenchState>()((set, get) => ({
+  ...initialState,
+  setProjectDefaultModel: (projectId, providerId, modelId) =>
+    set((state) => {
+      const project = state.projects[projectId]
+      if (!project) return state
+      return {
+        projects: {
+          ...state.projects,
+          [projectId]: {
+            ...project,
+            default_provider_id: providerId,
+            default_model_id: modelId,
+          },
+        },
+      }
+    }),
+  setProjectGitBranch: (projectId, branch) =>
+    set((state) => {
+      const project = state.projects[projectId]
+      if (!project || project.gitBranch === branch) return state
+      return {
+        projects: {
+          ...state.projects,
+          [projectId]: { ...project, gitBranch: branch },
+        },
+      }
+    }),
+  replaceCatalog: (catalog) =>
+    set((state) => ({
+      ...catalogState(state, catalog),
+    })),
+  createDraftSession: (projectId, title = DEFAULT_SESSION_TITLE) => {
+    const id = createLocalSessionId()
+    set((state) =>
+      addedSessionState(state, buildDraftSession(id, projectId, title, state.projects)),
+    )
+    return id
+  },
+  touchDraftSession: (sessionId) => {
+    const session = get().sessions[sessionId]
+    const editedAt = Math.floor(Date.now() / 1000)
+    if (!session?.isDraft || session.updated_at === editedAt) return
+    set((state) => {
+      const current = state.sessions[sessionId]
+      if (!current?.isDraft || current.updated_at === editedAt) return state
+      return {
+        sessions: {
+          ...state.sessions,
+          [sessionId]: { ...current, updated_at: editedAt },
+        },
+      }
+    })
+  },
+  markSessionStarted: (sessionId) =>
+    set((state) => {
+      const session = state.sessions[sessionId]
+      if (!session || session.isDraft === false) return state
+      return {
+        sessions: {
+          ...state.sessions,
+          [sessionId]: { ...session, isDraft: false, isUnsavedDraft: false },
+        },
+      }
+    }),
+  markDraftSaved: (sessionId) =>
+    set((state) => {
+      const session = state.sessions[sessionId]
+      if (!session?.isUnsavedDraft) return state
+      return {
+        sessions: {
+          ...state.sessions,
+          [sessionId]: { ...session, isUnsavedDraft: false },
+        },
+      }
+    }),
+  markSessionDraft: (sessionId) =>
+    set((state) => {
+      const session = state.sessions[sessionId]
+      if (!session || session.isDraft === true) return state
+      return { sessions: { ...state.sessions, [sessionId]: { ...session, isDraft: true } } }
+    }),
+  selectWorkspace: (projectId) =>
+    set((state) => {
+      const validProjectId = projectId && state.projects[projectId] ? projectId : null
+      const workspaceKey = workspaceKeyForProjectId(validProjectId, state.projects)
+      const activeSessionId = state.activeSessionByWorkspace[workspaceKey]
+      const firstTabId = state.sessionTabsByWorkspace[workspaceKey]?.[0]
+      const sessionId = activeSessionId === undefined ? firstTabId : activeSessionId
+      const session = sessionId ? state.sessions[sessionId] : undefined
 
-          return {
-            currentProjectId: validProjectId,
-            currentSessionId: null,
-            currentWorkspaceKey: workspaceKey,
-            projectMode: validProjectId ? ('project' as const) : ('home' as const),
-          }
-        }),
-      selectHome: (currentSessionId) =>
-        set((state) => {
-          const session = state.sessions[currentSessionId]
-          return session ? selectedSessionState(state, session) : state
-        }),
-      selectProject: (_currentProjectId, currentSessionId) =>
-        set((state) => {
-          const session = state.sessions[currentSessionId]
-          return session ? selectedSessionState(state, session) : state
-        }),
-      selectSession: (currentSessionId) =>
-        set((state) => {
-          const session = state.sessions[currentSessionId]
-          if (!session) return state
-          return selectedSessionState(state, session)
-        }),
-      closeSession: (sessionId) =>
-        set((state) => {
-          const session = state.sessions[sessionId]
-          if (!session) return state
-          const workspaceKey = workspaceKeyForSession(session, state.projects)
-          const { sessionIds: workspaceTabs, neighborId } = removedTabState(
-            state.tabsByWorkspace[workspaceKey],
-            sessionId,
-          )
-          // The session keeps running in the background with its tab closed,
-          // so its activity stays as-is instead of snapping back to idle.
-          const tabsByWorkspace = {
-            ...state.tabsByWorkspace,
-            [workspaceKey]: workspaceTabs,
-          }
-          const wasWorkspaceActive = state.activeSessionByWorkspace[workspaceKey] === sessionId
-          const activeSessionByWorkspace = wasWorkspaceActive
-            ? { ...state.activeSessionByWorkspace, [workspaceKey]: neighborId }
-            : state.activeSessionByWorkspace
-          const base = {
-            activeSessionByWorkspace,
-            tabsByWorkspace,
-          }
-          if (state.currentSessionId !== sessionId) return base
+      if (session) return selectedSessionState(state, session)
 
-          const nextSession = neighborId ? state.sessions[neighborId] : undefined
-          if (nextSession) {
-            return selectedSessionState({ ...state, ...base }, nextSession)
-          }
+      return {
+        currentProjectId: validProjectId,
+        currentSessionId: null,
+        currentWorkspaceKey: workspaceKey,
+        projectMode: validProjectId ? ('project' as const) : ('home' as const),
+      }
+    }),
+  selectHome: (currentSessionId) =>
+    set((state) => {
+      const session = state.sessions[currentSessionId]
+      return session ? selectedSessionState(state, session) : state
+    }),
+  selectProject: (_currentProjectId, currentSessionId) =>
+    set((state) => {
+      const session = state.sessions[currentSessionId]
+      return session ? selectedSessionState(state, session) : state
+    }),
+  selectSession: (currentSessionId) =>
+    set((state) => {
+      const session = state.sessions[currentSessionId]
+      if (!session) return state
+      return selectedSessionState(state, session)
+    }),
+  closeSession: (sessionId) =>
+    set((state) => {
+      const session = state.sessions[sessionId]
+      if (!session) return state
+      const workspaceKey = workspaceKeyForSession(session, state.projects)
+      const { sessionIds: workspaceTabs, neighborId } = removedTabState(
+        state.sessionTabsByWorkspace[workspaceKey],
+        sessionId,
+      )
+      // The session keeps running in the background with its tab closed,
+      // so its activity stays as-is instead of snapping back to idle.
+      const sessionTabsByWorkspace = {
+        ...state.sessionTabsByWorkspace,
+        [workspaceKey]: workspaceTabs,
+      }
+      const wasWorkspaceActive = state.activeSessionByWorkspace[workspaceKey] === sessionId
+      const activeSessionByWorkspace = wasWorkspaceActive
+        ? { ...state.activeSessionByWorkspace, [workspaceKey]: neighborId }
+        : state.activeSessionByWorkspace
+      const base = {
+        activeSessionByWorkspace,
+        sessionTabsByWorkspace,
+      }
+      if (state.currentSessionId !== sessionId) return base
 
-          // The workspace's last tab closed: land on a fresh blank new-chat
-          // draft instead of a dead surface, matching the startup state. It
-          // stays in memory until it gains content.
-          const draft = buildDraftSession(
-            createLocalSessionId(),
-            session.project_id || null,
-            DEFAULT_SESSION_TITLE,
-            state.projects,
-          )
-          const withDraft = addedSessionState({ ...state, ...base }, draft)
-          return {
-            ...base,
-            ...withDraft,
-            ...selectedSessionState({ ...state, ...withDraft }, draft),
-          }
-        }),
-      setSessionTitle: (sessionId, title) =>
-        set((state) => {
-          const session = state.sessions[sessionId]
-          if (!session) return state
-          return {
-            sessions: {
-              ...state.sessions,
-              [sessionId]: { ...session, custom_title: title, title },
-            },
-          }
-        }),
-      // Derived titles must not touch custom_title: a session with one keeps its
-      // local title across catalog refreshes, which would pin the placeholder
-      // over the title the SDK later returns for a started session.
-      setLocalTitle: (sessionId, title) =>
-        set((state) => {
-          const session = state.sessions[sessionId]
-          if (!session) return state
-          return {
-            sessions: {
-              ...state.sessions,
-              [sessionId]: { ...session, title },
-            },
-          }
-        }),
-      togglePinSession: (sessionId) =>
-        set((state) => {
-          if (!state.sessions[sessionId]) return state
-          return {
-            pinnedSessionIds: state.pinnedSessionIds.includes(sessionId)
-              ? state.pinnedSessionIds.filter((id) => id !== sessionId)
-              : [...state.pinnedSessionIds, sessionId],
-          }
-        }),
-      setSessionsArchived: (sessionIds, archived) =>
-        set((state) => {
-          const idSet = new Set(sessionIds)
-          const sessions = { ...state.sessions }
-          let touched = false
-          for (const id of sessionIds) {
-            const session = sessions[id]
-            if (!session) continue
-            touched = true
-            const now = Math.floor(Date.now() / 1000)
-            sessions[id] = archived
-              ? { ...session, archived: true, archived_at: now }
-              : { ...session, archived: undefined, archived_at: undefined, unarchived_at: now }
-          }
-          if (!touched) return state
-          // Archiving unpins: an archived session must not keep claiming a
-          // slot in the "current" tab's pinned group.
-          const pinnedSessionIds = archived
-            ? state.pinnedSessionIds.filter((id) => !idSet.has(id))
-            : state.pinnedSessionIds
-          return { sessions, pinnedSessionIds }
-        }),
-      setSessionActivity: (sessionId, activity) =>
-        set((state) => {
-          if (!state.sessions[sessionId]) return state
-          let next: SessionActivity
-          if (activity === 'processing') next = 'processing'
-          else if (activity === 'awaiting-user') next = 'awaiting-user'
-          else if (activity === 'success') {
-            next = state.currentSessionId === sessionId ? 'idle' : 'unread-success'
-          } else if (activity === 'error') {
-            next = state.currentSessionId === sessionId ? 'idle' : 'unread-error'
-          } else next = 'idle'
+      const nextSession = neighborId ? state.sessions[neighborId] : undefined
+      if (nextSession) {
+        return selectedSessionState({ ...state, ...base }, nextSession)
+      }
 
-          return { sessionActivity: { ...state.sessionActivity, [sessionId]: next } }
-        }),
-      bindClaudeSession: (sessionId, claudeSessionId) => {
-        const bound = get().sessions[sessionId]
-        set((state) => {
-          const session = state.sessions[sessionId]
-          if (!session || session.claudeSessionId === claudeSessionId) return state
-          const duplicateIds = Object.values(state.sessions)
-            .filter(
-              (candidate) =>
-                candidate.id !== sessionId && candidate.claudeSessionId === claudeSessionId,
-            )
-            .map((candidate) => candidate.id)
-          const sessions = {
-            ...state.sessions,
-            [sessionId]: { ...session, claudeSessionId },
-          }
-          for (const duplicateId of duplicateIds) delete sessions[duplicateId]
-          const replaceDuplicate = (id: string) => (duplicateIds.includes(id) ? sessionId : id)
-          return {
-            sessions,
-            projects: Object.fromEntries(
-              Object.entries(state.projects).map(([id, project]) => [
-                id,
-                { ...project, sessions: [...new Set(project.sessions.map(replaceDuplicate))] },
-              ]),
-            ),
-            tabsByWorkspace: Object.fromEntries(
-              Object.entries(state.tabsByWorkspace).map(([key, ids]) => [
-                key,
-                [...new Set(ids.map(replaceDuplicate))],
-              ]),
-            ),
-            pinnedSessionIds: state.pinnedSessionIds
-              .map(replaceDuplicate)
-              .filter((id, index, ids) => ids.indexOf(id) === index),
-            currentSessionId: duplicateIds.includes(state.currentSessionId ?? '')
-              ? sessionId
-              : state.currentSessionId,
-            activeSessionByWorkspace: Object.fromEntries(
-              Object.entries(state.activeSessionByWorkspace).map(([key, id]) => [
-                key,
-                duplicateIds.includes(id ?? '') ? sessionId : id,
-              ]),
-            ),
-          }
-        })
-        // Pin the conversation to its project entry so folder / workspace
-        // entries of one directory keep separate histories.
+      // The workspace's last tab closed: land on a fresh blank new-chat
+      // draft instead of a dead surface, matching the startup state. It
+      // stays in memory until it gains content.
+      const draft = buildDraftSession(
+        createLocalSessionId(),
+        session.project_id || null,
+        DEFAULT_SESSION_TITLE,
+        state.projects,
+      )
+      const withDraft = addedSessionState({ ...state, ...base }, draft)
+      return {
+        ...base,
+        ...withDraft,
+        ...selectedSessionState({ ...state, ...withDraft }, draft),
+      }
+    }),
+  setSessionTitle: (sessionId, title) =>
+    set((state) => {
+      const session = state.sessions[sessionId]
+      if (!session) return state
+      return {
+        sessions: {
+          ...state.sessions,
+          [sessionId]: { ...session, custom_title: title, title },
+        },
+      }
+    }),
+  // Derived titles must not touch custom_title: a session with one keeps its
+  // local title across catalog refreshes, which would pin the placeholder
+  // over the title the SDK later returns for a started session.
+  setLocalTitle: (sessionId, title) =>
+    set((state) => {
+      const session = state.sessions[sessionId]
+      if (!session) return state
+      return {
+        sessions: {
+          ...state.sessions,
+          [sessionId]: { ...session, title },
+        },
+      }
+    }),
+  togglePinSession: (sessionId) => {
+    const target = get().sessions[sessionId]
+    if (!target) return
+    const pinned = !get().pinnedSessionIds.includes(sessionId)
+    const now = Math.floor(Date.now() / 1000)
+    set((state) => {
+      const session = state.sessions[sessionId]
+      if (!session) return state
+      const isPinned = state.pinnedSessionIds.includes(sessionId)
+      return {
+        pinnedSessionIds: isPinned
+          ? state.pinnedSessionIds.filter((id) => id !== sessionId)
+          : [...state.pinnedSessionIds, sessionId],
+        sessions: {
+          ...state.sessions,
+          [sessionId]: { ...session, pinned_at: isPinned ? undefined : now },
+        },
+      }
+    })
+    void claude
+      .setSessionsPinned({ sessions: [pinSessionPayload(target)], pinned })
+      .catch((error) =>
+        getLogger('persistence').error(
+          'session.pin_write_failed',
+          'Failed to record the session pin',
+          { error },
+        ),
+      )
+  },
+  setSessionsArchived: (sessionIds, archived) =>
+    set((state) => {
+      const idSet = new Set(sessionIds)
+      const sessions = { ...state.sessions }
+      let touched = false
+      for (const id of sessionIds) {
+        const session = sessions[id]
+        if (!session) continue
+        touched = true
+        const now = Math.floor(Date.now() / 1000)
+        sessions[id] = archived
+          ? { ...session, archived: true, archived_at: now, pinned_at: undefined }
+          : { ...session, archived: undefined, archived_at: undefined, unarchived_at: now }
+      }
+      if (!touched) return state
+      // Archiving unpins: an archived session must not keep claiming a
+      // slot in the "current" tab's pinned group.
+      const pinnedSessionIds = archived
+        ? state.pinnedSessionIds.filter((id) => !idSet.has(id))
+        : state.pinnedSessionIds
+      if (archived) {
+        const payload = sessionIds
+          .map((id) => sessions[id])
+          .filter((session): session is WorkbenchSession => Boolean(session))
+          .map(pinSessionPayload)
         void claude
-          .bindSessionOwner({
-            sessionId,
-            claudeSessionId,
-            projectId: bound?.project_id || null,
-          })
+          .setSessionsPinned({ sessions: payload, pinned: false })
           .catch((error) =>
             getLogger('persistence').error(
-              'session.ownership_write_failed',
-              'Failed to record the session owner',
+              'session.pin_write_failed',
+              'Failed to record the session pin',
               { error },
             ),
           )
-      },
-      removeSession: (sessionId) =>
-        set((state) => {
-          const removedSession = state.sessions[sessionId]
-          if (!removedSession) return state
-          const sessions = { ...state.sessions }
-          delete sessions[sessionId]
-          const workspaceKey = workspaceKeyForSession(removedSession, state.projects)
-          const { sessionIds: workspaceTabs, neighborId } = removedTabState(
-            state.tabsByWorkspace[workspaceKey],
-            sessionId,
-          )
-          const tabsByWorkspace = {
-            ...state.tabsByWorkspace,
-            [workspaceKey]: workspaceTabs,
-          }
-          const activeSessionByWorkspace =
-            state.activeSessionByWorkspace[workspaceKey] === sessionId
-              ? { ...state.activeSessionByWorkspace, [workspaceKey]: neighborId }
-              : state.activeSessionByWorkspace
-          const sessionActivity = Object.fromEntries(
-            Object.entries(state.sessionActivity).filter(([id]) => id !== sessionId),
-          )
-          const projects = Object.fromEntries(
-            Object.entries(state.projects).map(([id, project]) => [
-              id,
-              { ...project, sessions: project.sessions.filter((item) => item !== sessionId) },
-            ]),
-          )
-          const base = {
-            sessions,
-            projects,
-            activeSessionByWorkspace,
-            pinnedSessionIds: state.pinnedSessionIds.filter((id) => id !== sessionId),
-            sessionActivity,
-            tabsByWorkspace,
-          }
-          if (state.currentSessionId !== sessionId) return base
-
-          const nextSession = neighborId ? sessions[neighborId] : undefined
-          if (nextSession) {
-            return {
-              ...base,
-              ...selectedSessionState({ ...state, ...base }, nextSession),
-            }
-          }
-
-          // Same as closeSession: removing the workspace's last session keeps
-          // an empty conversation surface through a fresh blank draft.
-          const draft = buildDraftSession(
-            createLocalSessionId(),
-            removedSession.project_id || null,
-            DEFAULT_SESSION_TITLE,
-            state.projects,
-          )
-          const withDraft = addedSessionState({ ...state, ...base }, draft)
-          return {
-            ...base,
-            ...withDraft,
-            ...selectedSessionState({ ...state, ...withDraft }, draft),
-          }
-        }),
-      reset: () => set(createInitialState()),
+      }
+      return { sessions, pinnedSessionIds }
     }),
-    {
-      name: UI_STORAGE_KEY,
-      version: 1,
-      storage: createJSONStorage(createWorkbenchUiStorage),
-      partialize: partializeWorkbenchState,
-      merge: (persisted, current) => {
-        const restored = persisted as Partial<WorkbenchPersistedState>
+  setSessionActivity: (sessionId, activity) =>
+    set((state) => {
+      if (!state.sessions[sessionId]) return state
+      let next: SessionActivity
+      if (activity === 'processing') next = 'processing'
+      else if (activity === 'awaiting-user') next = 'awaiting-user'
+      else if (activity === 'success') {
+        next = state.currentSessionId === sessionId ? 'idle' : 'unread-success'
+      } else if (activity === 'error') {
+        next = state.currentSessionId === sessionId ? 'idle' : 'unread-error'
+      } else next = 'idle'
+
+      return { sessionActivity: { ...state.sessionActivity, [sessionId]: next } }
+    }),
+  bindClaudeSession: (sessionId, claudeSessionId) => {
+    const bound = get().sessions[sessionId]
+    set((state) => {
+      const session = state.sessions[sessionId]
+      if (!session || session.claudeSessionId === claudeSessionId) return state
+      const duplicateIds = Object.values(state.sessions)
+        .filter(
+          (candidate) =>
+            candidate.id !== sessionId && candidate.claudeSessionId === claudeSessionId,
+        )
+        .map((candidate) => candidate.id)
+      const sessions = {
+        ...state.sessions,
+        [sessionId]: { ...session, claudeSessionId },
+      }
+      for (const duplicateId of duplicateIds) delete sessions[duplicateId]
+      const replaceDuplicate = (id: string) => (duplicateIds.includes(id) ? sessionId : id)
+      return {
+        sessions,
+        projects: Object.fromEntries(
+          Object.entries(state.projects).map(([id, project]) => [
+            id,
+            { ...project, sessions: [...new Set(project.sessions.map(replaceDuplicate))] },
+          ]),
+        ),
+        sessionTabsByWorkspace: Object.fromEntries(
+          Object.entries(state.sessionTabsByWorkspace).map(([key, ids]) => [
+            key,
+            [...new Set(ids.map(replaceDuplicate))],
+          ]),
+        ),
+        pinnedSessionIds: state.pinnedSessionIds
+          .map(replaceDuplicate)
+          .filter((id, index, ids) => ids.indexOf(id) === index),
+        currentSessionId: duplicateIds.includes(state.currentSessionId ?? '')
+          ? sessionId
+          : state.currentSessionId,
+        activeSessionByWorkspace: Object.fromEntries(
+          Object.entries(state.activeSessionByWorkspace).map(([key, id]) => [
+            key,
+            duplicateIds.includes(id ?? '') ? sessionId : id,
+          ]),
+        ),
+      }
+    })
+    // Pin the conversation to its project entry so folder / workspace
+    // entries of one directory keep separate histories.
+    void claude
+      .bindSessionOwner({
+        sessionId,
+        claudeSessionId,
+        projectId: bound?.project_id || null,
+      })
+      .catch((error) =>
+        getLogger('persistence').error(
+          'session.ownership_write_failed',
+          'Failed to record the session owner',
+          { error },
+        ),
+      )
+  },
+  removeSession: (sessionId) =>
+    set((state) => {
+      const removedSession = state.sessions[sessionId]
+      if (!removedSession) return state
+      const sessions = { ...state.sessions }
+      delete sessions[sessionId]
+      const workspaceKey = workspaceKeyForSession(removedSession, state.projects)
+      const { sessionIds: workspaceTabs, neighborId } = removedTabState(
+        state.sessionTabsByWorkspace[workspaceKey],
+        sessionId,
+      )
+      const sessionTabsByWorkspace = {
+        ...state.sessionTabsByWorkspace,
+        [workspaceKey]: workspaceTabs,
+      }
+      const activeSessionByWorkspace =
+        state.activeSessionByWorkspace[workspaceKey] === sessionId
+          ? { ...state.activeSessionByWorkspace, [workspaceKey]: neighborId }
+          : state.activeSessionByWorkspace
+      const sessionActivity = Object.fromEntries(
+        Object.entries(state.sessionActivity).filter(([id]) => id !== sessionId),
+      )
+      const projects = Object.fromEntries(
+        Object.entries(state.projects).map(([id, project]) => [
+          id,
+          { ...project, sessions: project.sessions.filter((item) => item !== sessionId) },
+        ]),
+      )
+      const base = {
+        sessions,
+        projects,
+        activeSessionByWorkspace,
+        pinnedSessionIds: state.pinnedSessionIds.filter((id) => id !== sessionId),
+        sessionActivity,
+        sessionTabsByWorkspace,
+      }
+      if (state.currentSessionId !== sessionId) return base
+
+      const nextSession = neighborId ? sessions[neighborId] : undefined
+      if (nextSession) {
         return {
-          ...current,
-          currentWorkspaceKey: restored.currentWorkspaceKey ?? 'claude',
-          tabsByWorkspace: restored.tabsByWorkspace ?? {},
-          activeSessionByWorkspace: restored.activeSessionByWorkspace ?? {},
-          pinnedSessionIds: restored.pinnedSessionIds ?? [],
-          sessionActivity: restored.unreadSessionActivity ?? {},
+          ...base,
+          ...selectedSessionState({ ...state, ...base }, nextSession),
         }
-      },
-    },
-  ),
-)
+      }
+
+      // Same as closeSession: removing the workspace's last session keeps
+      // an empty conversation surface through a fresh blank draft.
+      const draft = buildDraftSession(
+        createLocalSessionId(),
+        removedSession.project_id || null,
+        DEFAULT_SESSION_TITLE,
+        state.projects,
+      )
+      const withDraft = addedSessionState({ ...state, ...base }, draft)
+      return {
+        ...base,
+        ...withDraft,
+        ...selectedSessionState({ ...state, ...withDraft }, draft),
+      }
+    }),
+  reset: () => set(createInitialState()),
+}))

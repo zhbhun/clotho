@@ -50,7 +50,7 @@ export function useSessionNavigation(workbench: ReturnType<typeof useWorkbench>)
         // A blank new chat is the session a second "new chat" asks for: keep
         // the existing one instead of stacking identical empty tabs.
         const workspaceKey = workspaceKeyForProjectId(projectId, state.projects)
-        const blankDraftId = state.tabsByWorkspace[workspaceKey]?.find(
+        const blankDraftId = state.sessionTabsByWorkspace[workspaceKey]?.find(
           (id) => state.sessions[id]?.isUnsavedDraft,
         )
         if (blankDraftId) {

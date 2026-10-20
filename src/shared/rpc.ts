@@ -153,6 +153,10 @@ export interface ClaudeSession {
   archived?: boolean
   archived_at?: number
   unarchived_at?: number
+  /** When the session was pinned (seconds); presence marks it pinned. */
+  pinned_at?: number
+  /** Unread activity kind recorded when a run finished while the session was not active. */
+  unread?: 'success' | 'error'
 }
 
 export interface GitBranchRef {
@@ -1021,6 +1025,33 @@ export type DesktopRPC = {
         params: { sessions: Array<{ projectId: string; sessionId: string }>; archived: boolean }
         response: void
       }
+      claudeSetSessionsPinned: {
+        params: {
+          sessions: Array<{
+            projectId: string | null
+            sessionId: string
+            claudeSessionId: string | null
+          }>
+          pinned: boolean
+        }
+        response: void
+      }
+      claudeSetSessionsUnread: {
+        params: {
+          sessions: Array<{
+            projectId: string | null
+            sessionId: string
+            claudeSessionId: string | null
+          }>
+          unread: 'success' | 'error' | null
+        }
+        response: void
+      }
+      windowReadUiState: {
+        params: Record<string, never>
+        response: { ui?: Record<string, unknown> }
+      }
+      windowWriteUiState: { params: { ui: Record<string, unknown> }; response: void }
       claudeDeleteSession: {
         params: { projectId: string; sessionId: string }
         response: void

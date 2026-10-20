@@ -15,7 +15,7 @@ import type {
   GetProviderUsageParams,
   ModelProvider,
 } from '@/shared/rpc'
-import type { SessionArchiveFlags } from '@/shared/session'
+import type { SessionListFlags } from '@/shared/session'
 
 import { getAttachmentPreview, snapshotAttachments } from './claude/attachments'
 import { getProjectGitBranch, listProjectGitBranches, switchProjectGitBranch } from './claude/git'
@@ -97,7 +97,23 @@ export function createClaudeDesktopService(
       sessions: Array<{ projectId: string; sessionId: string }>
       archived: boolean
     }) => Promise<void>
-    sessionArchiveFlags: () => Promise<Record<string, SessionArchiveFlags>>
+    sessionSetPinned: (params: {
+      sessions: Array<{
+        projectId: string | null
+        sessionId: string
+        claudeSessionId: string | null
+      }>
+      pinned: boolean
+    }) => Promise<void>
+    sessionSetUnread: (params: {
+      sessions: Array<{
+        projectId: string | null
+        sessionId: string
+        claudeSessionId: string | null
+      }>
+      unread: 'success' | 'error' | null
+    }) => Promise<void>
+    sessionListFlags: () => Promise<Record<string, SessionListFlags>>
   },
   sessionHooks?: {
     /** Fired after a session query was closed because it went idle or was recycled. */
@@ -165,7 +181,7 @@ export function createClaudeDesktopService(
             .sessionOwnership()
             .then((ownership) => getProjectSessions({ ...params, ownership }))
             .then((sessions) =>
-              sessionStore.sessionArchiveFlags().then((flags) =>
+              sessionStore.sessionListFlags().then((flags) =>
                 sessions.map((session) => {
                   const flag = flags[session.id]
                   if (!flag) return session
@@ -174,6 +190,8 @@ export function createClaudeDesktopService(
                     archived: flag.archived || undefined,
                     archived_at: flag.archived ? flag.archivedAt : undefined,
                     unarchived_at: flag.unarchivedAt,
+                    pinned_at: flag.pinnedAt,
+                    unread: flag.unread,
                   }
                 }),
               ),
@@ -185,6 +203,28 @@ export function createClaudeDesktopService(
     }) => {
       if (!sessionStore) throw new Error('Session storage is unavailable')
       return sessionStore.sessionSetArchived(params)
+    },
+    setSessionsPinned: (params: {
+      sessions: Array<{
+        projectId: string | null
+        sessionId: string
+        claudeSessionId: string | null
+      }>
+      pinned: boolean
+    }) => {
+      if (!sessionStore) throw new Error('Session storage is unavailable')
+      return sessionStore.sessionSetPinned(params)
+    },
+    setSessionsUnread: (params: {
+      sessions: Array<{
+        projectId: string | null
+        sessionId: string
+        claudeSessionId: string | null
+      }>
+      unread: 'success' | 'error' | null
+    }) => {
+      if (!sessionStore) throw new Error('Session storage is unavailable')
+      return sessionStore.sessionSetUnread(params)
     },
     getSessionMessages: loadSessionHistory,
     getWorkflowRuns: loadWorkflowRuns,
