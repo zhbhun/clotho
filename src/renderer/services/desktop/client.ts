@@ -31,6 +31,7 @@ type DesktopEventMap = {
   'claude-complete': DesktopMessageMap['claudeComplete']
   'claude-tool-request': DesktopMessageMap['claudeToolRequest']
   'claude-session-recycled': DesktopMessageMap['claudeSessionRecycled']
+  'claude-session-runtime-changed': DesktopMessageMap['claudeSessionRuntimeChanged']
   'menu-command-dispatch': DesktopMessageMap['menuCommandDispatch']
   'menu-open-settings': DesktopMessageMap['menuOpenSettings']
   'window-registry-changed': DesktopMessageMap['windowRegistryChanged']
@@ -48,6 +49,7 @@ const PUSH_EVENT_BINDINGS: Array<[keyof DesktopMessageMap & string, DesktopEvent
   ['claudeComplete', 'claude-complete'],
   ['claudeToolRequest', 'claude-tool-request'],
   ['claudeSessionRecycled', 'claude-session-recycled'],
+  ['claudeSessionRuntimeChanged', 'claude-session-runtime-changed'],
   ['menuCommandDispatch', 'menu-command-dispatch'],
   ['menuOpenSettings', 'menu-open-settings'],
   ['windowRegistryChanged', 'window-registry-changed'],
@@ -63,6 +65,7 @@ const eventListeners: {
   'claude-complete': new Set(),
   'claude-tool-request': new Set(),
   'claude-session-recycled': new Set(),
+  'claude-session-runtime-changed': new Set(),
   'menu-command-dispatch': new Set(),
   'menu-open-settings': new Set(),
   'window-registry-changed': new Set(),

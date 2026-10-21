@@ -9,7 +9,10 @@ import type {
   ClaudeSessionQueryRebuildParams,
   ClaudeSessionQueryRecycleCheckParams,
   ClaudeSessionQuerySetModelParams,
+  ClaudeSessionRuntimeChanged,
   ClaudeStartupParams,
+  ClaudeStreamId,
+  ClaudeToolResult,
   ClaudeUpdateProjectParams,
   FetchProviderModelsParams,
   GetProviderUsageParams,
@@ -29,7 +32,6 @@ import { normalizeProvider } from './claude/providers'
 import {
   type ClaudeEventSink,
   controlQuery,
-  respondToolRequest,
   rewindSessionFiles,
   sampleSessionContextUsage,
   startup,
@@ -118,10 +120,13 @@ export function createClaudeDesktopService(
   sessionHooks?: {
     /** Fired after a session query was closed because it went idle or was recycled. */
     onSessionRecycled?: (sessionId: string) => void
+    /** Fired on every live-shape change of a session query; broadcast to all windows. */
+    onSessionRuntimeChanged?: (change: ClaudeSessionRuntimeChanged) => void
   },
 ) {
   const sessionRegistry = createSessionQueryRegistry(events, proxy, {
     onRecycled: sessionHooks?.onSessionRecycled,
+    onRuntimeChanged: sessionHooks?.onSessionRuntimeChanged,
   })
 
   async function persistProvider(provider: ModelProvider, operation: 'create' | 'update') {
@@ -300,13 +305,23 @@ export function createClaudeDesktopService(
     setProjectModel: (params: { projectId: string; providerId: string; modelId: string }) =>
       setProjectDefaultModel(params),
     controlQuery,
-    respondToolRequest,
     sessionQueryEnsure: (params: ClaudeSessionQueryEnsureParams) => sessionRegistry.ensure(params),
+    sessionQueryAttach: (params: { sessionId: string }) => sessionRegistry.attach(params),
     sessionQueryPush: (params: ClaudeSessionQueryPushParams) => sessionRegistry.push(params),
     sessionQueryRebuild: (params: ClaudeSessionQueryRebuildParams) =>
       sessionRegistry.rebuild(params),
     sessionQueryRecycleCheck: (params: ClaudeSessionQueryRecycleCheckParams) =>
       sessionRegistry.recycleCheck(params),
+    sessionRespondTool: (params: {
+      streamId: ClaudeStreamId
+      toolUseId: string
+      result: ClaudeToolResult
+    }) => sessionRegistry.respondTool(params),
+    sessionViewOpened: (params: { sessionId: string; windowId: string }) =>
+      sessionRegistry.viewOpened(params.sessionId, params.windowId),
+    sessionViewClosed: (params: { sessionId: string; windowId: string }) =>
+      sessionRegistry.viewClosed(params.sessionId, params.windowId),
+    sessionDropWindow: (windowId: string) => sessionRegistry.dropWindow(windowId),
     sessionQuerySetModel: (params: ClaudeSessionQuerySetModelParams) =>
       sessionRegistry.setModel(params),
     sessionQueryClose: (sessionId: string) => sessionRegistry.close(sessionId),

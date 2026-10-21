@@ -48,6 +48,9 @@ export function createSessionControllerRegistry(
       for (const [sessionId, controller] of controllers) {
         if (sessionIds.has(sessionId)) continue
         if (controller.sendService.hasResidentQuery()) {
+          // This window stopped showing the session first, so a warm query is
+          // only kept when another window's view still holds it.
+          void claude.sessionViewClosed(sessionId).catch(() => {})
           void claude.recycleCheckSessionQuery(sessionId).catch(() => {})
           continue
         }

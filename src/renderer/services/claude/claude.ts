@@ -247,6 +247,11 @@ export interface ClaudeSessionStream extends AsyncGenerator<SDKMessage, void> {
   applyFlagSettings(settings: Record<string, unknown>): Promise<void>
   getContextUsage(): Promise<ClaudeContextUsageSnapshot | null>
   stopTask(taskId: string): Promise<void>
+  /**
+   * Resolves once the attach reply lands: true when the query is live, false
+   * when the main process reported none — a viewer attach then detaches.
+   */
+  whenAttached(): Promise<boolean>
   /** Stop consuming and unsubscribe; the query keeps running in the main process. */
   detach(): void
 }
@@ -450,6 +455,12 @@ function createSessionStream(
       const { streamId: id } = await attached
       await controlRequest<void>(id, 'stopTask', [taskId])
     },
+    whenAttached() {
+      return attached.then(
+        () => true,
+        () => false,
+      )
+    },
     detach() {
       detach()
     },
@@ -499,6 +510,33 @@ export const claude = {
       params.sessionId,
       requestFromDesktop('claudeSessionQueryRebuild', params),
     )
+  },
+  /**
+   * Attach to the session's live query without ever creating one, so another
+   * window's running turn can be watched. The stream's listeners subscribe
+   * immediately and buffer until the attach reply lands; `whenAttached`
+   * resolves false when no query is live and the caller detaches.
+   */
+  attachSessionStream(sessionId: string): ClaudeSessionStream {
+    const attach = isTauriRuntime()
+      ? requestFromDesktop('claudeSessionQueryAttach', { sessionId })
+      : Promise.resolve(null)
+    return createSessionStream(
+      sessionId,
+      attach.then((result) => {
+        if (!result) throw new Error('The session has no live query')
+        return result
+      }),
+    )
+  },
+  /** Reports this window as watching the session so a tab close elsewhere cannot recycle it. */
+  async sessionViewOpened(sessionId: string) {
+    if (!isTauriRuntime()) return
+    await requestFromDesktop('claudeSessionViewOpened', { sessionId })
+  },
+  async sessionViewClosed(sessionId: string) {
+    if (!isTauriRuntime()) return
+    await requestFromDesktop('claudeSessionViewClosed', { sessionId })
   },
   async recycleCheckSessionQuery(sessionId: string) {
     if (!isTauriRuntime()) return { recycled: true, busy: [] as string[] }

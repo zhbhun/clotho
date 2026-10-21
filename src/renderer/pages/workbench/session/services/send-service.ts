@@ -1,7 +1,7 @@
 import type { SDKMessage, SDKResultMessage } from '@anthropic-ai/claude-agent-sdk'
 
 import { toast } from '@/shadcn/toast'
-import type { ClaudeAttachment, ClaudeOptions } from '@/shared/rpc'
+import type { ClaudeAttachment, ClaudeOptions, ClaudeSessionRuntimeChanged } from '@/shared/rpc'
 
 import { appI18n } from '../../../../i18n/runtime'
 import type {
@@ -88,8 +88,13 @@ export class SendService {
   /** What the resident query was created (or last switched) to run with. */
   private streamModel: string | undefined
   private streamAgent: string | undefined
-  /** A background task's auto-continued turn is running with no user send. */
-  private backgroundTurnActive = false
+  /**
+   * A turn is running with no local send: a background task's auto-continuation
+   * here, or a turn another window started in the same session. The runtime
+   * chrome (streaming state, timer, stop button) tracks it while it lasts.
+   */
+  private isPassiveTurn = false
+  private passiveTimer: ReturnType<typeof setInterval> | null = null
   private turnEndWaiters: Array<() => void> = []
   private turnOutcome: SessionActivityEvent = 'idle'
   private turnPrompt = ''
@@ -378,7 +383,11 @@ export class SendService {
     this.controller.options.onActivityChange?.(sessionId, 'awaiting-user')
   }
 
-  private adoptStream(stream: ClaudeSessionStream, model: string, agent: string | undefined) {
+  private adoptStream(
+    stream: ClaudeSessionStream,
+    model: string | undefined,
+    agent: string | undefined,
+  ) {
     this.detachStream()
     this.stream = stream
     this.streamModel = model
@@ -416,7 +425,7 @@ export class SendService {
   }
 
   private handleStreamFrame(message: SDKMessage) {
-    if (this.sendLifecycle.phase === 'idle') this.trackBackgroundTurn(message)
+    if (this.sendLifecycle.phase === 'idle') this.trackPassiveTurn(message)
     if (!this.hasSampledContextUsage) {
       // The first streamed message proves the CLI transport is live; sample
       // the real context usage (reflects the history as of the previous
@@ -451,25 +460,129 @@ export class SendService {
   }
 
   /**
-   * A finished background task auto-continues as a turn with no user send:
-   * the lifecycle stays idle, so the activity state alone tracks it — the
-   * session shows as processing while it runs and settles on the result.
+   * A turn with no local send — a background task's auto-continuation here, or
+   * a turn another window started in the same session — still drives the
+   * runtime chrome: the session shows as processing with a live timer while it
+   * runs, and settles on the result frame.
    */
-  private trackBackgroundTurn(message: SDKMessage) {
+  private trackPassiveTurn(message: SDKMessage) {
     const isTurnFrame =
       message.type === 'user' || message.type === 'assistant' || message.type === 'stream_event'
-    if (isTurnFrame && !this.backgroundTurnActive) {
-      this.backgroundTurnActive = true
-      const { sessionId } = this.controller.contextStore.getState()
-      this.controller.options.onActivityChange?.(sessionId, 'processing')
+    if (isTurnFrame) {
+      this.activatePassiveTurn()
       return
     }
-    if (message.type === 'result' && this.backgroundTurnActive) {
-      this.backgroundTurnActive = false
-      const { sessionId } = this.controller.contextStore.getState()
-      const outcome = message.subtype === 'success' ? 'success' : 'error'
-      this.controller.options.onActivityChange?.(sessionId, outcome)
+    if (message.type === 'result' && this.isPassiveTurn) {
+      this.deactivatePassiveTurn(message.subtype === 'success' ? 'success' : 'error')
     }
+  }
+
+  /** Shows the streaming chrome for a turn this window did not start. */
+  private activatePassiveTurn() {
+    if (this.isPassiveTurn) return
+    this.isPassiveTurn = true
+    const { sessionId } = this.controller.contextStore.getState()
+    this.controller.runtimeStore.setState({
+      isStreaming: true,
+      runtimeStatus: 'streaming',
+      runtimeError: null,
+      streamingElapsed: this.passiveElapsedSeconds(),
+    })
+    this.controller.options.onActivityChange?.(sessionId, 'processing')
+    this.passiveTimer = setInterval(() => {
+      this.controller.runtimeStore.setState({ streamingElapsed: this.passiveElapsedSeconds() })
+    }, 200)
+  }
+
+  private deactivatePassiveTurn(outcome: SessionActivityEvent = 'idle') {
+    if (this.passiveTimer) clearInterval(this.passiveTimer)
+    this.passiveTimer = null
+    if (!this.isPassiveTurn) return
+    this.isPassiveTurn = false
+    if (this.controller.isDisposed) return
+    // The settled conversation lands with the chrome reset instead of a frame
+    // later — an occluded window has no animation frames to batch on.
+    this.controller.historyService.flushPendingPublish()
+    const { sessionId } = this.controller.contextStore.getState()
+    this.controller.runtimeStore.setState((current) => ({
+      isStreaming: false,
+      streamingElapsed: 0,
+      runtimeStatus: current.runtimeError ? 'error' : 'ready',
+      pendingToolRequests: {},
+    }))
+    this.controller.options.onActivityChange?.(sessionId, outcome)
+  }
+
+  /**
+   * The passive timer's origin: the latest root user prompt in history — the
+   * window that sent the turn ticks from the same timestamp — or the moment
+   * the passive turn was noticed.
+   */
+  private passiveElapsedSeconds(): number {
+    const messages = this.controller.historyService.messages()
+    for (let index = messages.length - 1; index >= 0; index--) {
+      const message = messages[index]
+      if (isUserPromptMessage(message) && !message.parentToolUseId) {
+        const startedAt = Date.parse(message.timestamp ?? '')
+        if (Number.isFinite(startedAt)) {
+          return Math.max(0, Math.floor((Date.now() - startedAt) / 1000))
+        }
+        break
+      }
+    }
+    return 0
+  }
+
+  /**
+   * Watch the session's live query when one is already running — opened in
+   * another window, or kept warm while this tab was closed. Never creates a
+   * query; a viewer attaches to whatever is, and its send paths still ensure
+   * or rebuild when a turn of its own comes along.
+   */
+  async attachIfActive() {
+    if (this.controller.isDisposed || this.stream) return
+    const context = this.controller.contextStore.getState()
+    if (context.isMockProject) return
+    try {
+      // Listeners subscribe synchronously and buffer frames until the attach
+      // reply lands, so nothing broadcast in between is lost.
+      const stream = this.controller.claudeService.attachSessionStream(context.sessionId)
+      const attached = await stream.whenAttached()
+      if (!attached || this.controller.isDisposed || this.stream) {
+        stream.detach()
+        return
+      }
+      const state = stream.getState()
+      this.adoptStream(stream, state.model, state.agent)
+      if (state.turnInFlight) this.activatePassiveTurn()
+    } catch {
+      // Attaching is best-effort; the next send ensures or rebuilds as usual.
+    }
+  }
+
+  /**
+   * The main process reports another live-shape change of this session's
+   * query: a new stream to follow (rebuild, recycle), or its removal.
+   */
+  onRuntimeChanged(change: ClaudeSessionRuntimeChanged) {
+    const { sessionId } = this.controller.contextStore.getState()
+    if (change.sessionId !== sessionId) return
+    if (change.streamId) {
+      if (this.stream?.streamId === change.streamId) return
+      // A rebuild or recycle elsewhere replaced the query: a watching window
+      // re-attaches so the next turn keeps flowing. A window mid-turn keeps
+      // its own stream — the replaced query's end settles that turn.
+      if (this.sendLifecycle.phase === 'idle') {
+        this.detachStream()
+        void this.attachIfActive().then(() => {
+          if (this.stream?.getState().turnInFlight) this.activatePassiveTurn()
+        })
+      }
+      return
+    }
+    // The query is gone. A watching window resets its streaming chrome; a
+    // window mid-turn learns of the death through its own stream ending.
+    if (this.sendLifecycle.phase === 'idle') this.deactivatePassiveTurn('idle')
   }
 
   private handleStreamDeath(stream: ClaudeSessionStream, error: unknown) {
@@ -531,7 +644,16 @@ export class SendService {
           : error instanceof Error
             ? error.message
             : 'Failed to execute Claude'
-    const queryFailure = isUserCancel ? null : wireFailure
+    // Another window stopped this turn: the interruption marker precedes the
+    // failing result frame, so the same stop UX applies as a local cancel.
+    const interruptedElsewhere =
+      !isUserCancel &&
+      wireFailure !== null &&
+      latestTurnWasInterrupted(
+        this.controller.historyService.messages(),
+        this.controller.conversationStore.getState().interruptedTurnIds,
+      )
+    const queryFailure = isUserCancel || interruptedElsewhere ? null : wireFailure
     if (queryFailure) {
       this.logger.error('query.stream_failed', 'The Claude turn failed', {
         context: { phase: this.sendLifecycle.phase },
@@ -936,6 +1058,9 @@ export class SendService {
   dispose() {
     this.stopToolSubscription?.()
     this.stopToolSubscription = null
+    if (this.passiveTimer) clearInterval(this.passiveTimer)
+    this.passiveTimer = null
+    this.isPassiveTurn = false
     this.turnStream.stop()
     // The resident query keeps running in the main process after the consumer
     // walks away; recycling (idle/tab close) and session deletion decide when

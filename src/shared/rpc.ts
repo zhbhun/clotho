@@ -589,6 +589,19 @@ export interface ClaudeSessionStreamState {
   pendingToolRequests: ClaudeToolRequest[]
   /** Live non-ambient background task ids (the CLI's level signal). */
   backgroundTaskIds: string[]
+  /** The qualified model the query was created with (or last switched to). */
+  model?: string
+  /** The agent the query was created with, when one was picked. */
+  agent?: string
+}
+
+/** Broadcast whenever a session query's live shape changes in the main process. */
+export type ClaudeSessionRuntimeChanged = {
+  sessionId: string
+  /** Null once the query is gone (recycled, rebuilt, or ended). */
+  streamId: ClaudeStreamId | null
+  turnInFlight: boolean
+  pendingToolRequestIds: string[]
 }
 
 export type ClaudeSessionQueryEnsureParams = {
@@ -628,6 +641,13 @@ export type ClaudeSessionQueryRebuildParams = {
 }
 
 export type ClaudeSessionQueryRecycleCheckParams = {
+  sessionId: string
+  /** The window asking; other windows holding the session view block the recycle. */
+  windowId?: string
+}
+
+/** Params for attaching to (never creating) a session's live query. */
+export type ClaudeSessionQueryAttachParams = {
   sessionId: string
 }
 
@@ -859,6 +879,19 @@ export type DesktopRPC = {
       claudeSessionQueryRebuild: {
         params: ClaudeSessionQueryRebuildParams
         response: ClaudeSessionQueryEnsureResult
+      }
+      claudeSessionQueryAttach: {
+        params: ClaudeSessionQueryAttachParams
+        /** The live query's snapshot, or null when none is running — never spawns one. */
+        response: ClaudeSessionQueryEnsureResult | null
+      }
+      claudeSessionViewOpened: {
+        params: ClaudeSessionQueryAttachParams
+        response: void
+      }
+      claudeSessionViewClosed: {
+        params: ClaudeSessionQueryAttachParams
+        response: void
       }
       claudeSessionQueryRecycleCheck: {
         params: ClaudeSessionQueryRecycleCheckParams
@@ -1179,6 +1212,8 @@ export type DesktopRPC = {
       claudeToolRequest: { streamId: ClaudeStreamId; request: ClaudeToolRequest }
       /** A session's idle query was recycled; its stream has (or will) end. */
       claudeSessionRecycled: { sessionId: string }
+      /** A session query's live shape changed; viewers re-attach or reset on it. */
+      claudeSessionRuntimeChanged: ClaudeSessionRuntimeChanged
       /** An application menu item triggered a shortcut command. */
       menuCommandDispatch: { commandId: string }
       /** An application menu item asked to open a settings category. */

@@ -6,6 +6,7 @@ import type {
   ClaudeSessionEditAnchor,
   ClaudeToolResult,
 } from '../../../services/claude/claude'
+import { listenDesktopEvent } from '../../../services/desktop/client'
 import { getLogger } from '../../../services/logging'
 import { createModelConfigurationStore } from '../../../stores/model-configuration-store'
 import { sessionPersistence } from '../services/session-persistence'
@@ -82,6 +83,7 @@ export class SessionController {
   private hasLoadedHistory: boolean
   private disposed = false
   private readonly unsubscribeUsageSnapshot: () => void
+  private stopRuntimeChanges: (() => void) | null = null
 
   constructor(options: SessionControllerOptions) {
     this.options = { ...options }
@@ -117,6 +119,16 @@ export class SessionController {
       this.persistContextUsageSnapshot(current.snapshot)
     })
     this.hasLoadedHistory = !options.claudeSessionId
+    // The query's live shape is owned by the main process: a rebuild or recycle
+    // in another window (or after this tab slept) re-attaches or resets here.
+    let runtimeStop: (() => void) | null = null
+    void listenDesktopEvent('claude-session-runtime-changed', (change) => {
+      this.sendService.onRuntimeChanged(change)
+    }).then((stop) => {
+      if (this.disposed) stop()
+      else runtimeStop = stop
+    })
+    this.stopRuntimeChanges = () => runtimeStop?.()
   }
 
   get isDisposed() {
@@ -258,8 +270,13 @@ export class SessionController {
     const promise = this.hydratePromise
       .then(async () => {
         await this.startHistoryLoad()
-        if (!this.disposed)
-          this.runtimeStore.setState({ isHistoryLoading: false, runtimeStatus: 'ready' })
+        if (this.disposed) return
+        this.runtimeStore.setState({ isHistoryLoading: false, runtimeStatus: 'ready' })
+        // Another window may be running this session's turn right now: watch
+        // it live. The view report also keeps an idle warm query from being
+        // recycled while this window shows the session.
+        void claude.sessionViewOpened(this.contextStore.getState().sessionId).catch(() => {})
+        void this.sendService.attachIfActive()
       })
       .catch((error) => {
         this.runtimeStore.setState({
@@ -382,6 +399,10 @@ export class SessionController {
     if (this.disposed) return Promise.resolve()
     this.disposed = true
     this.unsubscribeUsageSnapshot()
+    this.stopRuntimeChanges?.()
+    this.stopRuntimeChanges = null
+    // This window no longer shows the session; its hold on a warm query goes.
+    void claude.sessionViewClosed(this.contextStore.getState().sessionId).catch(() => {})
     this.messageEditService.dispose()
     return this.sendService.dispose()
   }

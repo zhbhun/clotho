@@ -159,6 +159,8 @@ export async function bootstrap() {
         })
       },
       onWindowsChanged: () => rebuildApplicationMenu(),
+      // A closed window's session views die with it; its holds on warm queries go too.
+      onWindowClosed: (windowId) => service.sessionDropWindow(windowId),
     })
     const sendToActiveWindow = <K extends keyof DesktopRPC['renderer']['messages'] & string>(
       name: K,
@@ -282,6 +284,9 @@ export async function bootstrap() {
         onSessionRecycled: (sessionId) => {
           appWindows.broadcast('claudeSessionRecycled', { sessionId })
         },
+        onSessionRuntimeChanged: (change) => {
+          appWindows.broadcast('claudeSessionRuntimeChanged', change)
+        },
       },
     )
 
@@ -325,9 +330,19 @@ export async function bootstrap() {
         claudeStartup: (params) => service.startup(params),
         claudeQueryControl: (params) => service.controlQuery(params),
         claudeSessionQueryEnsure: (params) => service.sessionQueryEnsure(params),
+        claudeSessionQueryAttach: (params) => service.sessionQueryAttach(params),
+        claudeSessionViewOpened: (params, sender) => {
+          const window = windowOf(sender)
+          if (window) service.sessionViewOpened({ ...params, windowId: window.id })
+        },
+        claudeSessionViewClosed: (params, sender) => {
+          const window = windowOf(sender)
+          if (window) service.sessionViewClosed({ ...params, windowId: window.id })
+        },
         claudeSessionQueryPush: (params) => service.sessionQueryPush(params),
         claudeSessionQueryRebuild: (params) => service.sessionQueryRebuild(params),
-        claudeSessionQueryRecycleCheck: (params) => service.sessionQueryRecycleCheck(params),
+        claudeSessionQueryRecycleCheck: (params, sender) =>
+          service.sessionQueryRecycleCheck({ ...params, windowId: windowOf(sender)?.id }),
         claudeSessionQuerySetModel: (params) => service.sessionQuerySetModel(params),
         claudeSessionQueryClose: (params) => service.sessionQueryClose(params.sessionId),
         claudeSessionPurgeDeadPairs: (params) => service.sessionPurgeDeadPairs(params),
@@ -445,8 +460,13 @@ export async function bootstrap() {
         },
         claudeRenameSession: (params) => service.renameSession(params),
         claudeDeleteSession: (params) => service.deleteSession(params),
-        claudeRespondToolRequest: (params) =>
-          service.respondToolRequest(params.streamId, params.toolUseId, params.result),
+        claudeRespondToolRequest: (params) => {
+          service.sessionRespondTool({
+            streamId: params.streamId,
+            toolUseId: params.toolUseId,
+            result: params.result,
+          })
+        },
         claudeListProviders: () => service.listProviders(),
         claudeGetDefaultModel: () => service.getDefaultModel(),
         claudeCreateProvider: (params) => service.createProvider(params),

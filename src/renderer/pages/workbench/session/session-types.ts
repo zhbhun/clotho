@@ -60,6 +60,7 @@ export type TurnFailure = {
 
 export type SessionClient = Pick<
   typeof claude,
+  | 'attachSessionStream'
   | 'deleteSession'
   | 'dropTrailingTurn'
   | 'getSessionEditAnchor'

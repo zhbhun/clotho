@@ -57,6 +57,9 @@ function createClient() {
     openSessionStream: vi.fn(() => {
       throw new Error('openSessionStream is not expected in this test')
     }),
+    attachSessionStream: vi.fn(() => {
+      throw new Error('attachSessionStream is not expected in this test')
+    }),
     rebuildSessionStream: vi.fn(() => {
       throw new Error('rebuildSessionStream is not expected in this test')
     }),
@@ -172,6 +175,7 @@ function createStreamHarness(
     applyFlagSettings: vi.fn(async () => {}),
     getContextUsage: vi.fn(async (): Promise<ClaudeContextUsageSnapshot | null> => null),
     stopTask: vi.fn(async () => {}),
+    whenAttached: vi.fn(async () => true),
     detach: vi.fn(() => {
       deliver({ done: true })
     }),

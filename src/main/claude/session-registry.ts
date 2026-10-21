@@ -7,6 +7,7 @@ import type {
   ClaudeOptions,
   ClaudePurgeDeadPairsResult,
   ClaudeSampleContextUsageParams,
+  ClaudeSessionQueryAttachParams,
   ClaudeSessionQueryEnsureParams,
   ClaudeSessionQueryEnsureResult,
   ClaudeSessionQueryPushParams,
@@ -15,8 +16,10 @@ import type {
   ClaudeSessionQueryRecycleCheckResult,
   ClaudeSessionQuerySetModelParams,
   ClaudeSessionQuerySetModelResult,
+  ClaudeSessionRuntimeChanged,
   ClaudeStreamId,
   ClaudeToolRequest,
+  ClaudeToolResult,
 } from '@/shared/rpc'
 
 import { getLogger } from '../logging/runtime'
@@ -50,6 +53,8 @@ interface SessionQueryEntry {
   idleTimer: ReturnType<typeof setTimeout> | null
   /** The qualified model the query was created with (or last switched to). */
   model: string | undefined
+  /** The agent the query was created with, when one was picked. */
+  agent: string | undefined
   state: {
     claudeSessionId: string | null
     status: 'starting' | 'ready' | 'dead'
@@ -63,9 +68,17 @@ interface SessionQueryEntry {
 
 export interface SessionQueryRegistry {
   ensure(params: ClaudeSessionQueryEnsureParams): Promise<ClaudeSessionQueryEnsureResult>
+  /** The live query's snapshot, or null when none is running — never spawns one. */
+  attach(params: ClaudeSessionQueryAttachParams): ClaudeSessionQueryEnsureResult | null
   push(params: ClaudeSessionQueryPushParams): Promise<void>
   rebuild(params: ClaudeSessionQueryRebuildParams): Promise<ClaudeSessionQueryEnsureResult>
   recycleCheck(params: ClaudeSessionQueryRecycleCheckParams): ClaudeSessionQueryRecycleCheckResult
+  /** Answers a tool request through the query and reports the runtime change. */
+  respondTool(params: {
+    streamId: ClaudeStreamId
+    toolUseId: string
+    result: ClaudeToolResult
+  }): boolean
   /**
    * Switch the live query to another model of the same class; cross-class
    * switches (claude ↔ proxy) report back so the caller rebuilds instead.
@@ -73,6 +86,12 @@ export interface SessionQueryRegistry {
   setModel(params: ClaudeSessionQuerySetModelParams): Promise<ClaudeSessionQuerySetModelResult>
   /** Force-close the session's query regardless of liveness (session deletion). */
   close(sessionId: string): Promise<void>
+  /** A renderer window started showing the session; its close no longer recycles idle queries. */
+  viewOpened(sessionId: string, windowId: string): void
+  /** A renderer window stopped showing the session. */
+  viewClosed(sessionId: string, windowId: string): void
+  /** Forgets every session view a (closed) window held. */
+  dropWindow(windowId: string): void
   sampleContextUsage(
     params: ClaudeSampleContextUsageParams,
   ): Promise<ClaudeContextUsageSnapshot | null>
@@ -125,6 +144,8 @@ function snapshot(entry: SessionQueryEntry): ClaudeSessionQueryEnsureResult {
       turnInFlight: entry.state.turnInFlight,
       pendingToolRequests: liveToolRequests(entry),
       backgroundTaskIds: [...entry.state.backgroundTaskIds],
+      ...(entry.model ? { model: entry.model } : {}),
+      ...(entry.agent ? { agent: entry.agent } : {}),
     },
     replay: [...entry.replay],
   }
@@ -159,10 +180,31 @@ function applyFrame(entry: SessionQueryEntry, message: SDKMessage) {
 export function createSessionQueryRegistry(
   events: ClaudeEventSink,
   proxy: ModelProxy,
-  hooks: { onRecycled?: (sessionId: string) => void } = {},
+  hooks: {
+    onRecycled?: (sessionId: string) => void
+    /** Fired on every live-shape change: new query, turn flips, tool requests, teardown. */
+    onRuntimeChanged?: (change: ClaudeSessionRuntimeChanged) => void
+  } = {},
 ): SessionQueryRegistry {
   const entries = new Map<string, SessionQueryEntry>()
   const chains = new Map<string, Promise<unknown>>()
+  /** Windows currently showing a session; keeps an idle query alive across tab closes. */
+  const holders = new Map<string, Set<string>>()
+
+  const emitRuntime = (entry: SessionQueryEntry) =>
+    hooks.onRuntimeChanged?.({
+      sessionId: entry.sessionId,
+      streamId: entry.streamId,
+      turnInFlight: entry.state.turnInFlight,
+      pendingToolRequestIds: liveToolRequests(entry).map((request) => request.toolUseId),
+    })
+  const emitGone = (sessionId: string) =>
+    hooks.onRuntimeChanged?.({
+      sessionId,
+      streamId: null,
+      turnInFlight: false,
+      pendingToolRequestIds: [],
+    })
 
   /** Serialize lifecycle operations per session so ensure/rebuild cannot interleave. */
   function chain<T>(sessionId: string, run: () => Promise<T>): Promise<T> {
@@ -219,6 +261,7 @@ export function createSessionQueryRegistry(
     } catch (caught) {
       logger.error('session.close_failed', 'Failed to close a session query', { error: caught })
     }
+    emitGone(entry.sessionId)
     if (notifyRecycled) hooks.onRecycled?.(entry.sessionId)
   }
 
@@ -232,8 +275,10 @@ export function createSessionQueryRegistry(
   function decorateSink(entry: SessionQueryEntry): ClaudeEventSink {
     return {
       onOutput(streamId, message) {
+        const wasInFlight = entry.state.turnInFlight
         applyFrame(entry, message)
         armIdleTimer(entry)
+        if (entry.state.turnInFlight !== wasInFlight) emitRuntime(entry)
         events.onOutput(streamId, message)
       },
       onError(streamId, message, stack) {
@@ -251,6 +296,7 @@ export function createSessionQueryRegistry(
           entry.queue.finish()
           // Same signal as an explicit recycle: a renderer holding a closed
           // tab's controller in the background releases it on this push.
+          emitGone(entry.sessionId)
           hooks.onRecycled?.(entry.sessionId)
         }
         events.onComplete(streamId, success)
@@ -258,6 +304,7 @@ export function createSessionQueryRegistry(
       onToolRequest(streamId, request) {
         entry.state.toolRequests.set(request.toolUseId, request)
         armIdleTimer(entry)
+        emitRuntime(entry)
         events.onToolRequest(streamId, request)
       },
     }
@@ -281,6 +328,7 @@ export function createSessionQueryRegistry(
       abort: new AbortController(),
       idleTimer: null,
       model: options?.model,
+      agent: options?.agent,
       state: {
         claudeSessionId: claudeSessionId ?? null,
         status: 'starting',
@@ -308,6 +356,7 @@ export function createSessionQueryRegistry(
       promptQueue: queue,
     })
     armIdleTimer(entry)
+    emitRuntime(entry)
     return snapshot(entry)
   }
 
@@ -329,7 +378,7 @@ export function createSessionQueryRegistry(
       content.push(...(await prepareAttachments(attachments, entry.abort.signal)))
     // The CLI rewrites synthetic messages as non-user-source frames and
     // persists them with isMeta, so they stay out of rendered history.
-    entry.queue.push({
+    const userMessage: SDKUserMessage = {
       type: 'user',
       ...(userMessageUuid ? { uuid: userMessageUuid as SDKUserMessage['uuid'] } : {}),
       parent_tool_use_id: null,
@@ -338,7 +387,13 @@ export function createSessionQueryRegistry(
         ? ({ kind: syntheticOrigin } as SDKUserMessage['origin'])
         : { kind: 'human' },
       message: { role: 'user', content },
-    })
+    }
+    entry.queue.push(userMessage)
+    // The CLI never echoes the pushed prompt back as output, so the broadcast
+    // is the only way windows watching this session (including the sender's
+    // own stream) see the new user turn; uuid dedup absorbs the sender's
+    // optimistic copy.
+    events.onOutput(streamId, userMessage)
   }
 
   async function rebuildRaw({
@@ -392,15 +447,49 @@ export function createSessionQueryRegistry(
 
   return {
     ensure: (params) => chain(params.sessionId, () => ensureRaw(params)),
+    attach({ sessionId }) {
+      const entry = entries.get(sessionId)
+      return entry && entry.state.status !== 'dead' ? snapshot(entry) : null
+    },
     push: pushRaw,
     rebuild: (params) => chain(params.sessionId, () => rebuildRaw(params)),
-    recycleCheck({ sessionId }) {
+    recycleCheck({ sessionId, windowId }) {
       const entry = entries.get(sessionId)
       if (!entry) return { recycled: true, busy: [] }
       const gate = gateFor(entry)
       if (!gate.canRecycle) return { recycled: false, busy: gate.busy }
+      // Another window still shows the session: its view keeps the warm query
+      // so it does not watch a live turn die under it.
+      const viewers = holders.get(sessionId)
+      if (viewers && [...viewers].some((holder) => holder !== windowId)) {
+        return { recycled: false, busy: ['open-elsewhere'] }
+      }
       void recycle(entry)
       return { recycled: true, busy: [] }
+    },
+    respondTool({ streamId, toolUseId, result }) {
+      const entry = entryByStreamId(streamId)
+      respondToolRequest(streamId, toolUseId, result)
+      if (!entry) return false
+      emitRuntime(entry)
+      return true
+    },
+    viewOpened(sessionId, windowId) {
+      const viewers = holders.get(sessionId) ?? new Set<string>()
+      viewers.add(windowId)
+      holders.set(sessionId, viewers)
+    },
+    viewClosed(sessionId, windowId) {
+      const viewers = holders.get(sessionId)
+      if (!viewers) return
+      viewers.delete(windowId)
+      if (viewers.size === 0) holders.delete(sessionId)
+    },
+    dropWindow(windowId) {
+      for (const [sessionId, viewers] of holders) {
+        viewers.delete(windowId)
+        if (viewers.size === 0) holders.delete(sessionId)
+      }
     },
     async setModel({
       sessionId,
