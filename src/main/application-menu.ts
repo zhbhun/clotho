@@ -12,12 +12,12 @@ export type ApplicationMenuActions = {
   openShortcutSettings: () => void
   openTroubleshooting: () => void
   openTaskManager: () => void
-  /** Bring the main window to the front, recreating it when it was closed. */
-  showMainWindow: () => void
+  /** Opens another free window, cascaded from the focused one. */
+  openNewWindow: () => void
 }
 
-/** A focused window's entry in the Window menu's open-window list. */
-export type ApplicationFocusedWindowItem = {
+/** One open window's entry in the Window menu. */
+export type ApplicationWindowItem = {
   /** Stable window id so Electron can find the menu item again. */
   id: string
   label: string
@@ -35,10 +35,8 @@ export type ApplicationMenuOptions = {
    * entry becomes the menu accelerator.
    */
   commandBindings: (commandId: CommandId) => readonly ShortcutBinding[]
-  /** Whether the main window is the currently focused one. */
-  mainWindowActive: boolean
-  /** The open focused windows, in menu order, below the main window entry. */
-  focusedWindows: ApplicationFocusedWindowItem[]
+  /** Every open window, free and project alike, in menu order. */
+  windows: ApplicationWindowItem[]
   actions: ApplicationMenuActions
 }
 
@@ -114,7 +112,15 @@ export function applicationMenuItems(options: ApplicationMenuOptions) {
     },
     {
       label: labels.file,
-      submenu: [commandMenuItem(labels.close, 'workbench.session.close', options)],
+      submenu: [
+        {
+          label: labels.newWindow,
+          accelerator: 'CmdOrCtrl+N',
+          click: () => options.actions.openNewWindow(),
+        },
+        { type: 'separator' },
+        commandMenuItem(labels.close, 'workbench.session.close', options),
+      ],
     },
     {
       label: labels.edit,
@@ -148,14 +154,7 @@ export function applicationMenuItems(options: ApplicationMenuOptions) {
         { label: labels.minimize, role: 'minimize' },
         { label: labels.zoom, role: 'zoom' },
         { type: 'separator' },
-        {
-          id: 'window-main',
-          label: labels.mainWindow,
-          type: 'checkbox',
-          checked: options.mainWindowActive,
-          click: () => options.actions.showMainWindow(),
-        },
-        ...options.focusedWindows.map((item) => ({
+        ...options.windows.map((item) => ({
           id: `window-${item.id}`,
           label: item.label,
           type: 'checkbox' as const,

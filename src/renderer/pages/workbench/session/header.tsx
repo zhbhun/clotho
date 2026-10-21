@@ -76,9 +76,9 @@ export function ConversationHeader({
   // surface carries the project and history controls above the composer
   // instead; the header keeps them when nothing is selected at all.
   const showHeaderActions = sessions.length > 0 || activeSessionId === null
-  // Only the main window pops a project out; a focused window already is one.
+  // Only a free window pops a project out; a project window already is one.
   const canOpenInNewWindow =
-    windowKind === 'main' &&
+    windowKind === 'free' &&
     projectMode === 'project' &&
     selectedProject !== undefined &&
     !selectedProject.is_home &&

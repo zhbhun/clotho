@@ -103,7 +103,7 @@ export function QuickOpenPanel({
   const inputRef = useRef<HTMLInputElement>(null)
   const currentProjectId = useWorkbenchStore((state) => state.currentProjectId)
   const currentSessionId = useWorkbenchStore((state) => state.currentSessionId)
-  const focusedProjectId = useWorkbenchStore((state) => state.focusedProjectId)
+  const pinnedProjectId = useWorkbenchStore((state) => state.pinnedProjectId)
   const {
     allArchivedSessions,
     allSessions,
@@ -198,7 +198,7 @@ export function QuickOpenPanel({
     <SwitcherCommandItem
       key={project.id}
       action={
-        onOpenProjectInNewWindow && project.id !== focusedProjectId ? (
+        onOpenProjectInNewWindow && project.id !== pinnedProjectId ? (
           <ProjectWindowAction
             onOpen={() => {
               onOpenChange(false)

@@ -73,10 +73,10 @@ export function useProjects(
   const togglePinSessionState = useWorkbenchStore((state) => state.togglePinSession)
   const setProjectDefaultModelState = useWorkbenchStore((state) => state.setProjectDefaultModel)
   const windowKind = useWorkbenchStore((state) => state.windowKind)
-  const focusedProjectId = useWorkbenchStore((state) => state.focusedProjectId)
-  const focusedProjectIds = useWorkbenchStore((state) => state.focusedProjectIds)
+  const pinnedProjectId = useWorkbenchStore((state) => state.pinnedProjectId)
+  const pinnedProjectIds = useWorkbenchStore((state) => state.pinnedProjectIds)
   const setWindowIdentity = useWorkbenchStore((state) => state.setWindowIdentity)
-  const setFocusedProjectIds = useWorkbenchStore((state) => state.setFocusedProjectIds)
+  const setPinnedProjectIds = useWorkbenchStore((state) => state.setPinnedProjectIds)
 
   const [focusSessionId, setFocusSessionId] = useState<string | null>(currentSessionId)
   const [activeTab, setActiveTab] = useState<SessionSidebarTab>('current')
@@ -261,12 +261,12 @@ export function useProjects(
     try {
       const projects = await claude.listProjects()
       if (requestId !== refreshRequestIdRef.current) return
-      // A focused window only ever shows its own project's conversations; the
+      // A project window only ever shows its own project's conversations; the
       // other projects are listed for switching and nothing more.
       const scope = useWorkbenchStore.getState()
       const sessionProjects =
-        scope.windowKind === 'focused'
-          ? projects.filter((project) => project.id === scope.focusedProjectId)
+        scope.windowKind === 'project'
+          ? projects.filter((project) => project.id === scope.pinnedProjectId)
           : projects
       setLoadingProjectSessionIds(new Set(sessionProjects.map((project) => project.id)))
       const [sessionResults, branchEntries, allDrafts] = await Promise.all([
@@ -303,10 +303,10 @@ export function useProjects(
       ])
       if (requestId !== refreshRequestIdRef.current) return
       const drafts =
-        scope.windowKind === 'focused'
+        scope.windowKind === 'project'
           ? Object.fromEntries(
               Object.entries(allDrafts).filter(
-                ([, draft]) => draft.projectId === scope.focusedProjectId,
+                ([, draft]) => draft.projectId === scope.pinnedProjectId,
               ),
             )
           : allDrafts
@@ -348,14 +348,14 @@ export function useProjects(
         .describeWindow()
         .then((description) => {
           setWindowIdentity({ kind: description.kind, projectId: description.projectId })
-          setFocusedProjectIds(description.focusedProjectIds)
+          setPinnedProjectIds(description.pinnedProjectIds)
         })
         .catch(() => {}),
       workbenchPersistence().ready,
     ])
       .then(() => refreshProjects())
       .catch(() => {})
-  }, [refreshProjects, setFocusedProjectIds, setWindowIdentity])
+  }, [refreshProjects, setPinnedProjectIds, setWindowIdentity])
 
   useEffect(() => {
     let isActive = true
@@ -367,8 +367,8 @@ export function useProjects(
       })
     }
     track(
-      listenDesktopEvent('window-registry-changed', ({ focusedProjectIds: next }) => {
-        setFocusedProjectIds(next)
+      listenDesktopEvent('window-registry-changed', ({ pinnedProjectIds: next }) => {
+        setPinnedProjectIds(next)
       }),
     )
     track(
@@ -380,27 +380,30 @@ export function useProjects(
       isActive = false
       for (const unsubscribe of unsubscribers) unsubscribe()
     }
-  }, [refreshProjects, setFocusedProjectIds])
+  }, [refreshProjects, setPinnedProjectIds])
 
   // With several windows open, changes made elsewhere surface when this one
   // comes back to the front.
   useEffect(() => {
-    if (windowKind !== 'focused' && focusedProjectIds.length === 0) return
+    if (windowKind !== 'project' && pinnedProjectIds.length === 0) return
     const handleFocus = () => {
       void refreshProjects().catch(() => {})
     }
     window.addEventListener('focus', handleFocus)
     return () => window.removeEventListener('focus', handleFocus)
-  }, [focusedProjectIds.length, refreshProjects, windowKind])
+  }, [pinnedProjectIds.length, refreshProjects, windowKind])
 
+  // Every window titles itself by the project it shows so the Window menu and
+  // task switcher can tell them apart.
   useEffect(() => {
-    if (windowKind !== 'focused') return
-    const project = focusedProjectId ? projectMap[focusedProjectId] : undefined
-    document.title = project ? `${projectDisplayName(project)} — Clotho` : 'Clotho'
+    const boundProjectId = windowKind === 'project' ? pinnedProjectId : currentProjectId
+    const project = boundProjectId ? projectMap[boundProjectId] : undefined
+    document.title =
+      project && !project.is_home ? `${projectDisplayName(project)} — Clotho` : 'Clotho'
     return () => {
       document.title = 'Clotho'
     }
-  }, [focusedProjectId, projectMap, windowKind])
+  }, [currentProjectId, pinnedProjectId, projectMap, windowKind])
 
   const selectProject = useCallback(
     (projectId: string | null) => {
@@ -522,7 +525,6 @@ export function useProjects(
     setSessionActivity,
     togglePinSession,
     windowKind,
-    focusedProjectId,
     unarchiveSessions,
     workspaceSessions,
   }

@@ -989,19 +989,19 @@ export const claude = {
     if (!isDesktopRuntime()) return
     return requestFromDesktop('windowWriteUiState', { ui })
   },
-  /** Outside the desktop every renderer is the main window with nothing else open. */
+  /** Outside the desktop every renderer is a free window with nothing else open. */
   async describeWindow(): Promise<WindowDescription> {
     if (!isDesktopRuntime()) {
-      return { id: 'browser', kind: 'main', projectId: null, focusedProjectIds: [] }
+      return { id: 'browser', kind: 'free', projectId: null, pinnedProjectIds: [] }
     }
     return requestFromDesktop('windowDescribe', {})
   },
-  async openFocusedWindow(params: {
+  async openProjectWindow(params: {
     projectId: string
-    ui: Record<string, unknown>
+    ui?: Record<string, unknown>
   }): Promise<{ opened: boolean }> {
     if (!isDesktopRuntime()) return { opened: false }
-    return requestFromDesktop('windowOpenFocused', params)
+    return requestFromDesktop('windowOpenProject', params)
   },
   async focusProjectWindow(
     projectId: string,
@@ -1017,15 +1017,12 @@ export const claude = {
     projectId: string
     ui: Record<string, unknown>
   }): Promise<WindowRefocusResult> {
-    if (!isDesktopRuntime()) return { outcome: 'focused-other' }
+    if (!isDesktopRuntime()) return { outcome: 'shown-elsewhere' }
     return requestFromDesktop('windowRefocus', params)
   },
-  async reportDetachedProject(params: {
-    requestId: string
-    projectId: string
-    ui: Record<string, unknown> | null
-  }): Promise<void> {
-    if (!isDesktopRuntime()) return
-    return requestFromDesktop('windowDetachedProject', params)
+  /** A project's persisted workspace ui (tabs and active session), when any. */
+  async readProjectState(projectId: string): Promise<{ ui: Record<string, unknown> } | null> {
+    if (!isDesktopRuntime()) return null
+    return requestFromDesktop('windowReadProjectState', { projectId })
   },
 }

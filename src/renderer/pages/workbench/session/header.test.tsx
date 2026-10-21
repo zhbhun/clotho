@@ -176,9 +176,9 @@ describe('ConversationHeader', () => {
     expect(onOpenProjectInNewWindow).toHaveBeenCalledTimes(1)
   })
 
-  it('offers neither exit nor pop-out inside a focused window', async () => {
+  it('offers neither exit nor pop-out inside a project window', async () => {
     await appI18n.changeLanguage('zh-CN')
-    useWorkbenchStore.getState().setWindowIdentity({ kind: 'focused', projectId: project.id })
+    useWorkbenchStore.getState().setWindowIdentity({ kind: 'project', projectId: project.id })
     renderHeader({ projectMode: 'project', selectedProject: project })
 
     expect(screen.queryByRole('button', { name: appI18n.t('workbench.project.exit') })).toBeNull()

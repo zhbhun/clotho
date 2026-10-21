@@ -3,39 +3,48 @@ import { expect, test } from 'vitest'
 
 import { createWindowRegistry } from './window-registry'
 
-test('allows one main window and one focused window per project', () => {
+test('allows many free windows but one project window per project', () => {
   const registry = createWindowRegistry()
 
-  expect(registry.register({ id: 'main', kind: 'main', webContentsId: 1 })).toBe(true)
-  expect(registry.register({ id: 'main-2', kind: 'main', webContentsId: 2 })).toBe(false)
-  expect(registry.register({ id: 'f1', kind: 'focused', projectId: 'p', webContentsId: 3 })).toBe(
+  expect(registry.register({ id: 'free-1', kind: 'free', webContentsId: 1 })).toBe(true)
+  expect(registry.register({ id: 'free-2', kind: 'free', webContentsId: 2 })).toBe(true)
+  expect(registry.register({ id: 'p1', kind: 'project', projectId: 'p', webContentsId: 3 })).toBe(
     true,
   )
-  expect(registry.register({ id: 'f2', kind: 'focused', projectId: 'p', webContentsId: 4 })).toBe(
+  expect(registry.register({ id: 'p2', kind: 'project', projectId: 'p', webContentsId: 4 })).toBe(
     false,
   )
-  expect(registry.register({ id: 'f3', kind: 'focused', webContentsId: 5 })).toBe(false)
+  expect(registry.register({ id: 'bad', kind: 'project', webContentsId: 5 })).toBe(false)
 
-  expect(registry.main()?.id).toBe('main')
-  expect(registry.focusedFor('p')?.id).toBe('f1')
-  expect(registry.byWebContents(3)?.id).toBe('f1')
-  expect(registry.focusedProjectIds()).toEqual(['p'])
+  expect(registry.freeWindows().map((window) => window.id)).toEqual(['free-1', 'free-2'])
+  expect(registry.projectFor('p')?.id).toBe('p1')
+  expect(registry.projectFor('q')).toBeUndefined()
+  expect(registry.byWebContents(3)?.id).toBe('p1')
+  expect(registry.pinnedProjectIds()).toEqual(['p'])
 })
 
 test('rebinding and unregistering release the project for another window', () => {
   const registry = createWindowRegistry()
-  registry.register({ id: 'f1', kind: 'focused', projectId: 'p', webContentsId: 1 })
-  registry.register({ id: 'f2', kind: 'focused', projectId: 'q', webContentsId: 2 })
+  registry.register({ id: 'p1', kind: 'project', projectId: 'p', webContentsId: 1 })
+  registry.register({ id: 'p2', kind: 'project', projectId: 'q', webContentsId: 2 })
 
-  expect(registry.rebind('f1', 'q')).toBe(false)
-  expect(registry.rebind('f1', 'p')).toBe(true)
-  expect(registry.rebind('f1', 'r')).toBe(true)
-  expect(registry.focusedFor('p')).toBeUndefined()
-  expect(registry.focusedFor('r')?.id).toBe('f1')
+  expect(registry.rebind('p1', 'q')).toBe(false)
+  expect(registry.rebind('p1', 'p')).toBe(true)
+  expect(registry.rebind('p1', 'r')).toBe(true)
+  expect(registry.projectFor('p')).toBeUndefined()
+  expect(registry.projectFor('r')?.id).toBe('p1')
 
-  expect(registry.unregister('f2')?.projectId).toBe('q')
-  expect(registry.register({ id: 'f3', kind: 'focused', projectId: 'q', webContentsId: 3 })).toBe(
+  expect(registry.unregister('p2')?.projectId).toBe('q')
+  expect(registry.register({ id: 'p3', kind: 'project', projectId: 'q', webContentsId: 3 })).toBe(
     true,
   )
-  expect(registry.focusedProjectIds().sort()).toEqual(['q', 'r'])
+  expect(registry.pinnedProjectIds().sort()).toEqual(['q', 'r'])
+})
+
+test('rebinding rejects a free window', () => {
+  const registry = createWindowRegistry()
+  registry.register({ id: 'free-1', kind: 'free', webContentsId: 1 })
+
+  expect(registry.rebind('free-1', 'p')).toBe(false)
+  expect(registry.projectFor('p')).toBeUndefined()
 })

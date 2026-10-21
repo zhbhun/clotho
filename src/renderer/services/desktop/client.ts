@@ -33,8 +33,6 @@ type DesktopEventMap = {
   'claude-session-recycled': DesktopMessageMap['claudeSessionRecycled']
   'menu-command-dispatch': DesktopMessageMap['menuCommandDispatch']
   'menu-open-settings': DesktopMessageMap['menuOpenSettings']
-  'window-detach-project': DesktopMessageMap['windowDetachProject']
-  'window-attach-project': DesktopMessageMap['windowAttachProject']
   'window-registry-changed': DesktopMessageMap['windowRegistryChanged']
   'window-select-session': DesktopMessageMap['windowSelectSession']
   'catalog-changed': DesktopMessageMap['catalogChanged']
@@ -52,8 +50,6 @@ const PUSH_EVENT_BINDINGS: Array<[keyof DesktopMessageMap & string, DesktopEvent
   ['claudeSessionRecycled', 'claude-session-recycled'],
   ['menuCommandDispatch', 'menu-command-dispatch'],
   ['menuOpenSettings', 'menu-open-settings'],
-  ['windowDetachProject', 'window-detach-project'],
-  ['windowAttachProject', 'window-attach-project'],
   ['windowRegistryChanged', 'window-registry-changed'],
   ['windowSelectSession', 'window-select-session'],
   ['catalogChanged', 'catalog-changed'],
@@ -69,8 +65,6 @@ const eventListeners: {
   'claude-session-recycled': new Set(),
   'menu-command-dispatch': new Set(),
   'menu-open-settings': new Set(),
-  'window-detach-project': new Set(),
-  'window-attach-project': new Set(),
   'window-registry-changed': new Set(),
   'window-select-session': new Set(),
   'catalog-changed': new Set(),

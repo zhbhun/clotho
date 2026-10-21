@@ -50,11 +50,11 @@ type WorkbenchDataState = {
   activeSessionByWorkspace: Record<string, string | null>
   projectMode: ProjectMode
   sessionActivity: Record<string, SessionActivity>
-  /** Which desktop window this renderer runs in; a focused window is bound to one project. */
+  /** Which desktop window this renderer runs in; a project window is bound to one project. */
   windowKind: WindowKind
-  focusedProjectId: string | null
-  /** Projects shown by focused windows, kept current by the main process. */
-  focusedProjectIds: string[]
+  pinnedProjectId: string | null
+  /** Projects shown by a project window, kept current by the main process. */
+  pinnedProjectIds: string[]
 }
 
 /** The window-scoped slice persisted with the desktop window (see workbench-persistence). */
@@ -90,7 +90,7 @@ export type WorkbenchState = WorkbenchDataState & {
   bindClaudeSession: (sessionId: string, claudeSessionId: string) => void
   removeSession: (sessionId: string) => void
   setWindowIdentity: (identity: { kind: WindowKind; projectId: string | null }) => void
-  setFocusedProjectIds: (projectIds: string[]) => void
+  setPinnedProjectIds: (projectIds: string[]) => void
   /** Drops a project's workspace from this window and returns the payload describing it. */
   detachWorkspace: (projectId: string) => WorkbenchWindowUiState
   /** Takes in a project's workspace handed over by another window. */
@@ -277,9 +277,9 @@ function createInitialState(): WorkbenchDataState {
     activeSessionByWorkspace: {},
     projectMode: 'home',
     sessionActivity: {},
-    windowKind: 'main',
-    focusedProjectId: null,
-    focusedProjectIds: [],
+    windowKind: 'free',
+    pinnedProjectId: null,
+    pinnedProjectIds: [],
   }
 }
 
@@ -900,8 +900,8 @@ export const useWorkbenchStore = create<WorkbenchState>()((set, get) => ({
       }
     }),
   setWindowIdentity: ({ kind, projectId }) =>
-    set({ windowKind: kind, focusedProjectId: kind === 'focused' ? projectId : null }),
-  setFocusedProjectIds: (focusedProjectIds) => set({ focusedProjectIds }),
+    set({ windowKind: kind, pinnedProjectId: kind === 'project' ? projectId : null }),
+  setPinnedProjectIds: (pinnedProjectIds) => set({ pinnedProjectIds }),
   detachWorkspace: (projectId) => {
     const payload = workspaceUiState(get(), projectId)
     set((state) => {

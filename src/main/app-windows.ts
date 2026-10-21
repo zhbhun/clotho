@@ -1,5 +1,3 @@
-import { randomUUID } from 'node:crypto'
-
 import { BrowserWindow, Menu, screen } from 'electron'
 import type { WebContents } from 'electron'
 
@@ -13,28 +11,35 @@ import type { createStorageStore } from './storage'
 import { createMainWindowOptions, showMainWindowWhenReady } from './window-options'
 import { type RegisteredWindow, createWindowRegistry } from './window-registry'
 import {
+  type ProjectWindowState,
   type StoredWindowState,
   type WindowDisplay,
   type WindowsState,
   fitStoredWindow,
-  focusedWindowEntries,
-  newFocusedWindowState,
-  resolveMainWindowState,
+  newFreeWindowState,
+  newProjectWindowState,
+  projectWindowEntries,
+  resolveFreeWindowState,
+  sanitizeProjectStates,
   sanitizeWindowsState,
-  windowUiStateOf,
+  withProjectState,
   withWindowEntry,
   withWindowProject,
-  withWindowUiState,
+  withoutProjectState,
   withoutWindowEntry,
 } from './window-state'
 import { createWindowStateTracker } from './window-state-tracker'
 
 const MESSAGE_CHANNEL_PREFIX = 'clotho:message:'
-/** How long a renderer gets to hand over a project before its stored ui is used instead. */
-const DETACH_TIMEOUT_MS = 3_000
 
 type WebviewMessageMap = DesktopRPC['renderer']['messages']
 type WebviewMessageName = keyof WebviewMessageMap & string
+
+/** The two persisted documents a window mutation may touch. */
+type StorageDocs = {
+  windowsState: WindowsState | undefined
+  projectState: Record<string, ProjectWindowState>
+}
 
 export interface AppWindowsOptions {
   preloadPath: string
@@ -44,13 +49,17 @@ export interface AppWindowsOptions {
   contextMenuLabels: () => WebviewContextMenuLabels
   /** Per-window wiring that needs the raw web contents (navigation guards, ...). */
   onWindowCreated?: (window: BrowserWindow) => void
-  /** The set of open windows or the focused one changed; rebuilds the Window menu. */
+  /** The set of open windows or their focus changed; rebuilds the Window menu. */
   onWindowsChanged?: () => void
+  /** A window went away; claims it held (session views) die with it. */
+  onWindowClosed?: (windowId: string) => void
 }
 
 /**
  * Owns every BrowserWindow: creation, geometry tracking, the project-to-window
- * mapping, and the hand-over of a project's workspace between windows.
+ * mapping, and each project's persisted workspace. A project window's tabs live
+ * in projectState, so closing the window keeps them on disk for the project's
+ * next opening instead of handing them back to another window.
  */
 export function createAppWindows(options: AppWindowsOptions) {
   const logger = getLogger('window')
@@ -58,10 +67,6 @@ export function createAppWindows(options: AppWindowsOptions) {
   const browserWindows = new Map<string, BrowserWindow>()
   const trackers = new Map<string, ReturnType<typeof createWindowStateTracker>>()
   const closingWindows = new Set<string>()
-  const pendingDetaches = new Map<
-    string,
-    { resolve: (ui: Record<string, unknown> | null) => void; timer: ReturnType<typeof setTimeout> }
-  >()
   let isQuitting = false
 
   const displays = () => ({
@@ -91,20 +96,30 @@ export function createAppWindows(options: AppWindowsOptions) {
   }
   const announceRegistry = () => {
     options.onWindowsChanged?.()
-    broadcast('windowRegistryChanged', { focusedProjectIds: registry.focusedProjectIds() })
+    broadcast('windowRegistryChanged', { pinnedProjectIds: registry.pinnedProjectIds() })
   }
 
   const storedWindows = () => sanitizeWindowsState(options.stateStore.get().windowsState)
-  const storedUiOf = (windowId: string) => windowUiStateOf(storedWindows(), windowId)
-  const transformWindows = (transform: (windowsState: WindowsState | undefined) => WindowsState) =>
+  const storedProjectStates = () => sanitizeProjectStates(options.stateStore.get().projectState)
+  /** One queued read-modify-write over both persisted documents. */
+  const transformStorage = (transform: (docs: StorageDocs) => Partial<StorageDocs>) =>
     options.stateStore
-      .transform((current) => ({
-        ...current,
-        windowsState: transform(sanitizeWindowsState(current.windowsState)),
-      }))
+      .transform((current) => {
+        const next = transform({
+          windowsState: sanitizeWindowsState(current.windowsState),
+          projectState: sanitizeProjectStates(current.projectState),
+        })
+        return {
+          ...current,
+          ...(next.windowsState ? { windowsState: next.windowsState } : {}),
+          ...(next.projectState ? { projectState: next.projectState } : {}),
+        }
+      })
       .catch((caught) => {
         logger.error('storage.write_failed', 'Failed to save the window state', { error: caught })
       })
+  const transformWindows = (transform: (windowsState: WindowsState | undefined) => WindowsState) =>
+    transformStorage((docs) => ({ windowsState: transform(docs.windowsState) }))
 
   const bringToFront = (window: BrowserWindow) => {
     if (window.isMinimized()) window.restore()
@@ -112,20 +127,12 @@ export function createAppWindows(options: AppWindowsOptions) {
     window.focus()
   }
 
-  /** Asks the window showing a project to hand over that project's workspace. */
-  const detachFrom = (window: RegisteredWindow, projectId: string) =>
-    new Promise<Record<string, unknown> | null>((resolve) => {
-      const requestId = randomUUID()
-      const timer = setTimeout(() => {
-        pendingDetaches.delete(requestId)
-        logger.warning('window.detach_timeout', 'A window did not hand over a project in time', {
-          context: { projectId, windowId: window.id },
-        })
-        resolve(null)
-      }, DETACH_TIMEOUT_MS)
-      pendingDetaches.set(requestId, { resolve, timer })
-      send(webContentsOf(window), 'windowDetachProject', { requestId, projectId })
-    })
+  /** The free window that was active last, else any free window. */
+  const lastActiveFree = () => {
+    const lastActiveId = storedWindows()?.lastActiveWindow
+    const free = registry.freeWindows()
+    return free.find((window) => window.id === lastActiveId) ?? free[0]
+  }
 
   function createWindow(entry: StoredWindowState) {
     const window = new BrowserWindow(
@@ -145,7 +152,17 @@ export function createAppWindows(options: AppWindowsOptions) {
 
     const tracker = createWindowStateTracker({
       initialState: entry,
-      persist: (state) => transformWindows((windows) => withWindowEntry(windows, state)),
+      persist: (state) =>
+        transformStorage((docs) => ({
+          windowsState: withWindowEntry(docs.windowsState, state),
+          // A project window's geometry doubles as the project's reopen geometry.
+          projectState:
+            state.kind === 'project' && state.projectId
+              ? withProjectState(docs.projectState, state.projectId, {
+                  window: { frame: state.frame, isMaximized: state.isMaximized },
+                })
+              : docs.projectState,
+        })),
       onError: (caught) => {
         logger.error('storage.write_failed', 'Failed to save the window geometry', {
           error: caught,
@@ -187,20 +204,15 @@ export function createAppWindows(options: AppWindowsOptions) {
 
     window.on('close', (event) => {
       const current = registry.byId(entry.id)
-      if (isQuitting || closingWindows.has(entry.id) || current?.kind !== 'focused') {
+      if (isQuitting || closingWindows.has(entry.id) || current?.kind !== 'project') {
         void tracker.flush()
         return
       }
-      // A focused window hands its project back to the main window first.
+      // A project window leaves its workspace in projectState for the next
+      // time the project opens; nothing is handed back to another window.
       event.preventDefault()
       closingWindows.add(entry.id)
       void (async () => {
-        const projectId = current.projectId
-        const main = registry.main()
-        if (projectId && main) {
-          const ui = (await detachFrom(current, projectId)) ?? storedUiOf(entry.id) ?? null
-          if (ui) send(webContentsOf(main), 'windowAttachProject', { projectId, ui })
-        }
         await tracker.flush()
         if (!window.isDestroyed()) window.destroy()
       })()
@@ -210,11 +222,12 @@ export function createAppWindows(options: AppWindowsOptions) {
       browserWindows.delete(entry.id)
       trackers.delete(entry.id)
       closingWindows.delete(entry.id)
-      // Focused windows are restored on the next launch only when the app
+      // Project windows are restored on the next launch only when the app
       // quit with them open; one closed by hand is gone for good.
-      if (closed?.kind === 'focused' && !isQuitting) {
+      if (closed?.kind === 'project' && !isQuitting) {
         void transformWindows((windows) => withoutWindowEntry(windows, entry.id))
       }
+      options.onWindowClosed?.(entry.id)
       announceRegistry()
     })
 
@@ -234,33 +247,81 @@ export function createAppWindows(options: AppWindowsOptions) {
     send,
     windowFor: (webContents: WebContents) => registry.byWebContents(webContents.id),
     browserWindowOf: (windowId: string) => browserWindows.get(windowId),
-    /** The web contents that menu commands should reach: the focused window's, else the main one's. */
+    /** The web contents that menu commands should reach: the focused window's, else the last active free one's. */
     activeWebContents: () =>
-      BrowserWindow.getFocusedWindow()?.webContents ?? webContentsOf(registry.main()),
+      BrowserWindow.getFocusedWindow()?.webContents ??
+      webContentsOf(lastActiveFree()) ??
+      webContentsOf(registry.all()[0]),
     setQuitting: () => {
       isQuitting = true
     },
     flushAll: () => Promise.all([...trackers.values()].map((tracker) => tracker.flush())),
 
-    openMain() {
-      const existing = registry.main()
-      if (existing) {
-        const window = browserWindows.get(existing.id)
-        if (window) bringToFront(window)
+    /** The project window's stored ui, mirrored on every workspace write. */
+    projectUiOf: (projectId: string) => storedProjectStates()[projectId]?.ui,
+    /** Replaces one project's persisted workspace ui. */
+    persistProjectUi(projectId: string, ui: Record<string, unknown>) {
+      return transformStorage((docs) => ({
+        projectState: withProjectState(docs.projectState, projectId, { ui }),
+      }))
+    },
+    /** Drops a project's persisted workspace (project removed). */
+    forgetProjectState(projectId: string) {
+      return transformStorage((docs) => ({
+        projectState: withoutProjectState(docs.projectState, projectId),
+      }))
+    },
+
+    /** Brings the last active free window to the front, creating one when none is open. */
+    openFree() {
+      const existing = lastActiveFree()
+      const window = existing ? browserWindows.get(existing.id) : undefined
+      if (window) {
+        bringToFront(window)
         return
       }
       const { all, primary } = displays()
-      createWindow(resolveMainWindowState(options.stateStore.get().windowsState, all, primary))
+      createWindow(resolveFreeWindowState(options.stateStore.get().windowsState, all, primary))
     },
 
-    /** Reopens the focused windows the app quit with; entries whose project vanished are dropped. */
-    restoreFocused(projectExists: (projectId: string) => boolean) {
+    /** Opens another free window, cascaded from the opener or the last active one. */
+    openNewFree(opener?: WebContents) {
       const { all, primary } = displays()
-      for (const entry of focusedWindowEntries(storedWindows())) {
+      const openerWindow = opener ? BrowserWindow.fromWebContents(opener) : undefined
+      const active = lastActiveFree()
+      const activeWindow = active ? browserWindows.get(active.id) : undefined
+      const from = openerWindow?.getBounds() ?? activeWindow?.getBounds() ?? primary.workArea
+      const entry = newFreeWindowState(from, all, primary)
+      void transformWindows((windows) => withWindowEntry(windows, entry))
+      createWindow(entry)
+    },
+
+    /** Reopens every free window the app quit with, last active last so it ends up focused. */
+    restoreFreeWindows() {
+      const saved = storedWindows()
+      const entries = saved?.openedWindows.filter((entry) => entry.kind === 'free') ?? []
+      if (entries.length === 0) {
+        const { all, primary } = displays()
+        createWindow(resolveFreeWindowState(options.stateStore.get().windowsState, all, primary))
+        return
+      }
+      const lastActiveId = saved?.lastActiveWindow
+      const { all, primary } = displays()
+      const ordered = [
+        ...entries.filter((entry) => entry.id !== lastActiveId),
+        ...entries.filter((entry) => entry.id === lastActiveId),
+      ]
+      for (const entry of ordered) createWindow(fitStoredWindow(entry, all, primary))
+    },
+
+    /** Reopens the project windows the app quit with; entries whose project vanished are dropped. */
+    restoreProjectWindows(projectExists: (projectId: string) => boolean) {
+      const { all, primary } = displays()
+      for (const entry of projectWindowEntries(storedWindows())) {
         if (
           entry.projectId &&
           projectExists(entry.projectId) &&
-          !registry.focusedFor(entry.projectId)
+          !registry.projectFor(entry.projectId)
         ) {
           createWindow(fitStoredWindow(entry, all, primary))
           continue
@@ -269,8 +330,12 @@ export function createAppWindows(options: AppWindowsOptions) {
       }
     },
 
-    async openFocused(projectId: string, ui: Record<string, unknown>, opener: WebContents) {
-      const holder = registry.focusedFor(projectId)
+    async openProjectWindow(
+      projectId: string,
+      ui: Record<string, unknown> | undefined,
+      opener: WebContents,
+    ) {
+      const holder = registry.projectFor(projectId)
       if (holder) {
         const window = browserWindows.get(holder.id)
         if (window) bringToFront(window)
@@ -279,12 +344,21 @@ export function createAppWindows(options: AppWindowsOptions) {
       const { all, primary } = displays()
       const openerWindow = BrowserWindow.fromWebContents(opener)
       const from = openerWindow?.getBounds() ?? primary.workArea
-      const entry = newFocusedWindowState(projectId, from, all, primary)
-      // The seed must be stored before the window loads so the renderer's
-      // first windowReadUiState already finds its workspace.
-      await transformWindows((windows) =>
-        withWindowUiState(withWindowEntry(windows, entry), entry, ui),
+      const entry = newProjectWindowState(
+        projectId,
+        from,
+        all,
+        primary,
+        storedProjectStates()[projectId]?.window,
       )
+      // The seed must be stored before the window loads so the renderer's
+      // first windowReadUiState already finds its workspace in projectState.
+      await transformStorage((docs) => ({
+        windowsState: withWindowEntry(docs.windowsState, entry),
+        projectState: ui
+          ? withProjectState(docs.projectState, projectId, { ui })
+          : docs.projectState,
+      }))
       createWindow(entry)
       return { opened: true }
     },
@@ -293,7 +367,7 @@ export function createAppWindows(options: AppWindowsOptions) {
       projectId: string,
       session?: { sessionId: string; claudeSessionId: string | null },
     ) {
-      const holder = registry.focusedFor(projectId)
+      const holder = registry.projectFor(projectId)
       const window = holder ? browserWindows.get(holder.id) : undefined
       if (!window) return false
       bringToFront(window)
@@ -307,61 +381,51 @@ export function createAppWindows(options: AppWindowsOptions) {
       uiForCurrent: Record<string, unknown>,
     ): Promise<WindowRefocusResult> {
       const window = registry.byWebContents(requester.id)
-      if (!window || window.kind !== 'focused' || !window.projectId) {
-        return { outcome: 'focused-other' }
+      if (!window || window.kind !== 'project' || !window.projectId) {
+        return { outcome: 'shown-elsewhere' }
       }
-      const holder = registry.focusedFor(projectId)
+      const holder = registry.projectFor(projectId)
       if (holder && holder.id !== window.id) {
         const target = browserWindows.get(holder.id)
         if (target) bringToFront(target)
-        return { outcome: 'focused-other' }
+        return { outcome: 'shown-elsewhere' }
       }
       if (holder) return { outcome: 'refocused', ui: null }
 
       const previousProjectId = window.projectId
-      const main = registry.main()
-      // The main window holds every project no focused window shows, so it is
-      // the only place the new project's tabs can come from.
-      const uiForNew = main ? await detachFrom(main, projectId) : null
+      // Both sides of the switch live in projectState: the old project keeps
+      // the caller's workspace, the new one yields its persisted tabs.
+      const uiForNew = storedProjectStates()[projectId]?.ui ?? null
       registry.rebind(window.id, projectId)
-      await transformWindows((windows) => withWindowProject(windows, window.id, projectId))
-      if (main) {
-        send(webContentsOf(main), 'windowAttachProject', {
-          projectId: previousProjectId,
+      await transformStorage((docs) => ({
+        windowsState: withWindowProject(docs.windowsState, window.id, projectId),
+        projectState: withProjectState(docs.projectState, previousProjectId, {
           ui: uiForCurrent,
-        })
-      }
+        }),
+      }))
       announceRegistry()
       return { outcome: 'refocused', ui: uiForNew }
     },
 
-    resolveDetached(requestId: string, ui: Record<string, unknown> | null) {
-      const pending = pendingDetaches.get(requestId)
-      if (!pending) return
-      clearTimeout(pending.timer)
-      pendingDetaches.delete(requestId)
-      pending.resolve(ui)
-    },
-
-    /** A removed project takes its focused window with it; nothing to hand back. */
-    closeFocusedForProject(projectId: string) {
-      const holder = registry.focusedFor(projectId)
+    /** A removed project takes its project window and persisted state with it. */
+    closeProjectWindow(projectId: string) {
+      const holder = registry.projectFor(projectId)
+      void transformStorage((docs) => ({
+        projectState: withoutProjectState(docs.projectState, projectId),
+      }))
       const window = holder ? browserWindows.get(holder.id) : undefined
       if (!holder || !window) return
       closingWindows.add(holder.id)
       window.destroy()
     },
 
-    mainWindowActive() {
-      const main = registry.main()
-      return main ? (browserWindows.get(main.id)?.isFocused() ?? false) : false
-    },
-
-    focusedWindows() {
-      return registry.focusedWindows().map((entry) => {
+    /** Every open window, for the Window menu list. */
+    windows() {
+      return registry.all().map((entry) => {
         const window = browserWindows.get(entry.id)
         return {
           id: entry.id,
+          kind: entry.kind,
           projectId: entry.projectId ?? null,
           isFocused: window?.isFocused() ?? false,
           title: window?.getTitle() ?? '',

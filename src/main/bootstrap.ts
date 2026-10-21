@@ -13,7 +13,7 @@ import type { CommandId } from '@/shared/shortcuts'
 
 import { clothoDir } from './app-data'
 import { createAppWindows } from './app-windows'
-import { type ApplicationFocusedWindowItem, applicationMenuItems } from './application-menu'
+import { type ApplicationWindowItem, applicationMenuItems } from './application-menu'
 import { createClaudeDesktopService } from './claude-service'
 import { loadAttachmentFiles } from './claude/attachments'
 import { createModelProxy } from './claude/model-proxy'
@@ -171,25 +171,30 @@ export async function bootstrap() {
         ? overrides
         : (commandCatalog[commandId]?.defaultBindings ?? [])
     }
-    /** Focused-window entries for the Window menu, labelled by the project each one shows. */
-    const resolveFocusedWindows = async (): Promise<ApplicationFocusedWindowItem[]> => {
-      const focused = appWindows.focusedWindows()
-      if (focused.length === 0) return []
-      const projects = await service.listProjects().catch(() => [])
-      return focused.map((window) => {
+    /** Window-menu entries for every open window, labelled by the project each one shows. */
+    const resolveWindows = async (): Promise<ApplicationWindowItem[]> => {
+      const windows = appWindows.windows()
+      const projectWindows = windows.filter((window) => window.kind === 'project')
+      const projects =
+        projectWindows.length === 0 ? [] : await service.listProjects().catch(() => [])
+      let freeIndex = 0
+      return windows.map((window) => {
         const project = window.projectId
           ? projects.find((item) => item.id === window.projectId)
           : undefined
         // Before a window's renderer has loaded, its title is still the bare
         // app name; the strip only helps once the project title landed.
         const fromTitle = window.title.replace(/ — Clotho$/, '')
+        const label = project
+          ? project.name?.trim() || path.basename(project.path)
+          : window.kind === 'project'
+            ? fromTitle === window.title
+              ? '…'
+              : fromTitle
+            : `Clotho ${++freeIndex}`
         return {
           id: window.id,
-          label: project
-            ? project.name?.trim() || path.basename(project.path)
-            : fromTitle === window.title
-              ? '…'
-              : fromTitle,
+          label,
           isActive: window.isFocused,
           show: () => appWindows.showWindow(window.id),
         }
@@ -198,9 +203,9 @@ export async function bootstrap() {
     let menuRebuildSeq = 0
     const rebuildApplicationMenu = () => {
       const seq = ++menuRebuildSeq
-      void resolveFocusedWindows()
+      void resolveWindows()
         .catch(() => [])
-        .then((focusedWindows) => {
+        .then((windows) => {
           if (seq !== menuRebuildSeq) return
           Menu.setApplicationMenu(
             Menu.buildFromTemplate(
@@ -209,8 +214,7 @@ export async function bootstrap() {
                 isDev,
                 isCaptureActive: isMenuCaptureActive,
                 commandBindings: resolveCommandBindings,
-                mainWindowActive: appWindows.mainWindowActive(),
-                focusedWindows,
+                windows,
                 actions: {
                   dispatchCommand: (commandId) => {
                     sendToActiveWindow('menuCommandDispatch', { commandId })
@@ -222,7 +226,7 @@ export async function bootstrap() {
                     void shell.openExternal(TROUBLESHOOTING_URL)
                   },
                   openTaskManager: () => openTaskManager(),
-                  showMainWindow: () => appWindows.openMain(),
+                  openNewWindow: () => appWindows.openNewFree(),
                 },
               }),
             ),
@@ -346,7 +350,8 @@ export async function bootstrap() {
         },
         claudeRemoveProject: async (params, sender) => {
           await service.removeProject(params)
-          appWindows.closeFocusedForProject(params.projectId)
+          void appWindows.forgetProjectState(params.projectId)
+          appWindows.closeProjectWindow(params.projectId)
           announceCatalogChange(sender)
         },
         claudeSelectFiles: (params) => service.selectFiles(params),
@@ -368,15 +373,21 @@ export async function bootstrap() {
         claudeSetSessionsUnread: (params) => service.setSessionsUnread(params),
         windowReadUiState: (_params, sender) => {
           const window = windowOf(sender)
+          if (!window) return { ui: undefined }
+          // A project window's workspace lives in projectState, not on its entry.
+          if (window.kind === 'project' && window.projectId) {
+            return { ui: appWindows.projectUiOf(window.projectId) }
+          }
           return {
-            ui: window
-              ? windowUiStateOf(sanitizeWindowsState(stateStore.get().windowsState), window.id)
-              : undefined,
+            ui: windowUiStateOf(sanitizeWindowsState(stateStore.get().windowsState), window.id),
           }
         },
         windowWriteUiState: ({ ui }, sender) => {
           const window = windowOf(sender)
           if (!window) return
+          if (window.kind === 'project' && window.projectId) {
+            return appWindows.persistProjectUi(window.projectId, ui).then(() => undefined)
+          }
           return stateStore
             .transform((current) => ({
               ...current,
@@ -395,17 +406,18 @@ export async function bootstrap() {
             id: window.id,
             kind: window.kind,
             projectId: window.projectId ?? null,
-            focusedProjectIds: appWindows.registry.focusedProjectIds(),
+            pinnedProjectIds: appWindows.registry.pinnedProjectIds(),
           }
         },
-        windowOpenFocused: ({ projectId, ui }, sender) =>
-          appWindows.openFocused(projectId, ui, sender),
+        windowOpenProject: ({ projectId, ui }, sender) =>
+          appWindows.openProjectWindow(projectId, ui, sender),
         windowFocusProject: ({ projectId, session }) => ({
           focused: appWindows.focusProject(projectId, session),
         }),
         windowRefocus: ({ projectId, ui }, sender) => appWindows.refocus(sender, projectId, ui),
-        windowDetachedProject: ({ requestId, ui }) => {
-          appWindows.resolveDetached(requestId, ui)
+        windowReadProjectState: ({ projectId }) => {
+          const ui = appWindows.projectUiOf(projectId)
+          return ui ? { ui } : null
         },
         sessionListDrafts: () => sessionStorage.sessionListDrafts(),
         sessionRead: (params) => sessionStorage.sessionRead(params),
@@ -519,12 +531,12 @@ export async function bootstrap() {
         app.exit(0)
       })
     })
-    // macOS keeps the app alive without windows; the dock icon brings the main window back.
-    app.on('activate', () => appWindows.openMain())
+    // macOS keeps the app alive without windows; the dock icon brings a free window back.
+    app.on('activate', () => appWindows.openFree())
 
-    appWindows.openMain()
+    appWindows.restoreFreeWindows()
     const projectIds = new Set((await service.listProjects()).map((project) => project.id))
-    appWindows.restoreFocused((projectId) => projectIds.has(projectId))
+    appWindows.restoreProjectWindows((projectId) => projectIds.has(projectId))
 
     appLogger.info('app.started', 'Clotho application started')
   } catch (caught) {

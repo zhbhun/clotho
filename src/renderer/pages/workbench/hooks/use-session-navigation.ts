@@ -98,21 +98,6 @@ export function useSessionNavigation(workbench: ReturnType<typeof useWorkbench>)
   const handleSelectSession = useCallback(
     (session: WorkbenchSession) => {
       saveTitle()
-      const state = useWorkbenchStore.getState()
-      const projectId = session.project_id || null
-      if (state.windowKind === 'main' && projectId && state.focusedProjectIds.includes(projectId)) {
-        // The project lives in its own window; show the session there instead.
-        void claude
-          .focusProjectWindow(projectId, {
-            sessionId: session.id,
-            claudeSessionId: session.claudeSessionId,
-          })
-          .then(({ focused }) => {
-            if (!focused) workbench.selectSession(session)
-          })
-          .catch(() => workbench.selectSession(session))
-        return
-      }
       workbench.selectSession(session)
     },
     [saveTitle, workbench],
@@ -145,11 +130,11 @@ export function useSessionNavigation(workbench: ReturnType<typeof useWorkbench>)
     [workbench],
   )
 
-  /** A focused window switching projects rebinds itself; its old project goes back to the main window. */
+  /** A project window switching projects rebinds itself; each side keeps its workspace in projectState. */
   const refocusWindow = useCallback(
     async (projectId: string) => {
       const state = useWorkbenchStore.getState()
-      const currentProjectId = state.focusedProjectId
+      const currentProjectId = state.pinnedProjectId
       if (!currentProjectId) return
       const result = await claude.refocusWindow({
         projectId,
@@ -158,7 +143,7 @@ export function useSessionNavigation(workbench: ReturnType<typeof useWorkbench>)
       if (result.outcome !== 'refocused') return
       const store = useWorkbenchStore.getState()
       store.detachWorkspace(currentProjectId)
-      store.setWindowIdentity({ kind: 'focused', projectId })
+      store.setWindowIdentity({ kind: 'project', projectId })
       if (result.ui) store.attachWorkspace(projectId, result.ui)
       // Select before the reload so the catalog lands on the new project
       // instead of seeding a home draft into a window that has no home.
@@ -169,13 +154,36 @@ export function useSessionNavigation(workbench: ReturnType<typeof useWorkbench>)
     [switchWorkspaceLocally, workbench],
   )
 
+  /** Enters a project from its persisted workspace when this window has none of it open. */
+  const openWithProjectState = useCallback(
+    async (projectId: string) => {
+      const state = useWorkbenchStore.getState()
+      const key = workspaceKeyForProjectId(projectId, state.projects)
+      if ((state.sessionTabsByWorkspace[key] ?? []).length > 0) {
+        switchWorkspaceLocally(projectId)
+        return
+      }
+      const stored = await claude.readProjectState(projectId).catch(() => null)
+      const next = useWorkbenchStore.getState()
+      const nextKey = workspaceKeyForProjectId(projectId, next.projects)
+      if (!stored || (next.sessionTabsByWorkspace[nextKey] ?? []).length > 0) {
+        switchWorkspaceLocally(projectId)
+        return
+      }
+      next.attachWorkspace(projectId, stored.ui)
+      workbench.selectProject(projectId)
+      switchWorkspaceLocally(projectId)
+    },
+    [switchWorkspaceLocally, workbench],
+  )
+
   const handleSwitchWorkspace = useCallback(
     (projectId: string | null) => {
       saveTitle()
       const state = useWorkbenchStore.getState()
-      if (state.windowKind === 'focused') {
-        // A focused window has no home; picking another project refocuses it.
-        if (!projectId || projectId === state.focusedProjectId) return
+      if (state.windowKind === 'project') {
+        // A project window has no home; picking another project rebinds it.
+        if (!projectId || projectId === state.pinnedProjectId) return
         void refocusWindow(projectId).catch((error) =>
           toast.add({
             title: 'Could not switch project',
@@ -185,19 +193,15 @@ export function useSessionNavigation(workbench: ReturnType<typeof useWorkbench>)
         )
         return
       }
-      if (projectId && state.focusedProjectIds.includes(projectId)) {
-        // The project lives in its own window; bring that one up instead.
-        void claude
-          .focusProjectWindow(projectId)
-          .then(({ focused }) => {
-            if (!focused) switchWorkspaceLocally(projectId)
-          })
-          .catch(() => switchWorkspaceLocally(projectId))
+      // A free window restores the project's last workspace when it has none
+      // of it open; the two windows showing one project is fine now.
+      if (projectId) {
+        void openWithProjectState(projectId).catch(() => switchWorkspaceLocally(projectId))
         return
       }
-      switchWorkspaceLocally(projectId)
+      switchWorkspaceLocally(null)
     },
-    [refocusWindow, saveTitle, switchWorkspaceLocally],
+    [openWithProjectState, refocusWindow, saveTitle, switchWorkspaceLocally],
   )
 
   /** Moves a project into its own window; without an id, the one shown here. */
@@ -207,20 +211,20 @@ export function useSessionNavigation(workbench: ReturnType<typeof useWorkbench>)
       const state = useWorkbenchStore.getState()
       const targetId = projectId ?? state.currentProjectId
       if (!targetId || state.projects[targetId]?.is_home) return
-      if (state.focusedProjectIds.includes(targetId)) {
+      if (state.pinnedProjectIds.includes(targetId)) {
         // The project already has its window; bring that one up.
         void claude.focusProjectWindow(targetId).catch(() => {})
         return
       }
       const wasCurrent = state.currentProjectId === targetId
       void claude
-        .openFocusedWindow({ projectId: targetId, ui: workspaceUiState(state, targetId) })
+        .openProjectWindow({ projectId: targetId, ui: workspaceUiState(state, targetId) })
         .then(({ opened }) => {
           // Not opened means the project already had a window, now in front.
           if (!opened) return
           const next = useWorkbenchStore.getState()
           next.detachWorkspace(targetId)
-          if (wasCurrent && next.windowKind === 'main') switchWorkspaceLocally(null)
+          if (wasCurrent && next.windowKind === 'free') switchWorkspaceLocally(null)
         })
         .catch((error) =>
           toast.add({ title: 'Could not open window', description: String(error), type: 'error' }),
@@ -240,7 +244,7 @@ export function useSessionNavigation(workbench: ReturnType<typeof useWorkbench>)
     [handleSelectSession, handleSwitchWorkspace],
   )
 
-  // Workspace hand-over between windows, driven by the main process.
+  // Cross-window session routing, driven by the main process.
   useEffect(() => {
     let isActive = true
     const unsubscribers: Array<() => void> = []
@@ -250,26 +254,6 @@ export function useSessionNavigation(workbench: ReturnType<typeof useWorkbench>)
         else unsubscribe()
       })
     }
-    track(
-      listenDesktopEvent('window-detach-project', ({ requestId, projectId }) => {
-        saveTitle()
-        const store = useWorkbenchStore.getState()
-        const wasCurrent = store.currentProjectId === projectId
-        const ui = store.detachWorkspace(projectId)
-        void claude.reportDetachedProject({ requestId, projectId, ui }).catch(() => {})
-        if (wasCurrent && store.windowKind === 'main') switchWorkspaceLocally(null)
-      }),
-    )
-    track(
-      listenDesktopEvent('window-attach-project', ({ projectId, ui }) => {
-        // The catalog must know the handed-over sessions before their tabs
-        // land, or the next reconcile would drop the unknown ids.
-        void workbench
-          .refreshProjects()
-          .catch(() => {})
-          .then(() => useWorkbenchStore.getState().attachWorkspace(projectId, ui))
-      }),
-    )
     track(
       listenDesktopEvent('window-select-session', ({ sessionId, claudeSessionId }) => {
         // Another window picked a session of this window's project. A session
@@ -301,7 +285,7 @@ export function useSessionNavigation(workbench: ReturnType<typeof useWorkbench>)
       isActive = false
       for (const unsubscribe of unsubscribers) unsubscribe()
     }
-  }, [handleSelectSession, saveTitle, switchWorkspaceLocally, workbench])
+  }, [handleSelectSession, workbench])
 
   useEffect(
     () => registry.retain(new Set(workbench.tabSessionIds)),

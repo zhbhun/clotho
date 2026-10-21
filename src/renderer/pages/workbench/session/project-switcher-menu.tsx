@@ -41,12 +41,12 @@ export function ProjectSwitcherMenuContent({
   const { t } = useTranslation()
   const closeMenu = useMenuClose()
   const windowKind = useWorkbenchStore((state) => state.windowKind)
-  const focusedProjectId = useWorkbenchStore((state) => state.focusedProjectId)
-  const focusedProjectIds = useWorkbenchStore((state) => state.focusedProjectIds)
-  // A focused window is bound to its project, so leaving for "no project" is
-  // only offered in the main window.
+  const pinnedProjectId = useWorkbenchStore((state) => state.pinnedProjectId)
+  const pinnedProjectIds = useWorkbenchStore((state) => state.pinnedProjectIds)
+  // A project window is bound to its project, so leaving for "no project" is
+  // only offered in a free window.
   const canExitProject =
-    windowKind === 'main' &&
+    windowKind === 'free' &&
     projectMode === 'project' &&
     selectedProject !== undefined &&
     !selectedProject.is_home
@@ -65,8 +65,8 @@ export function ProjectSwitcherMenuContent({
         <MenuGroup>
           {projects.filter(isUserProject).map((project) => {
             const name = projectDisplayName(project)
-            const isOwnProject = project.id === focusedProjectId
-            const isInOtherWindow = !isOwnProject && focusedProjectIds.includes(project.id)
+            const isOwnProject = project.id === pinnedProjectId
+            const isInOtherWindow = !isOwnProject && pinnedProjectIds.includes(project.id)
 
             return (
               <MenuItem

@@ -45,9 +45,9 @@ export function ProjectSwitcherButton({
   // Exiting a side project lands back on the home-base project (the built-in
   // homedir project), so while it is the active project the exit affordance
   // would only offer to leave the very place the X exists to return to. A
-  // focused window is bound to its project and never exits.
+  // project window is bound to its project and never exits.
   const canExitProject =
-    windowKind === 'main' &&
+    windowKind === 'free' &&
     projectMode === 'project' &&
     selectedProject !== undefined &&
     !selectedProject.is_home

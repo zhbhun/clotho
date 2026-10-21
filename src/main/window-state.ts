@@ -19,15 +19,24 @@ export type { WindowKind }
 export interface StoredWindowState {
   id: string
   kind: WindowKind
-  /** The project a focused window is bound to; absent on the main window. */
+  /** The project a project window is bound to; absent on a free window. */
   projectId?: string
   frame: WindowFrame
   isMaximized: boolean
   /**
    * Opaque per-window payload owned by the renderer (open tabs, active
-   * session, ...); the main process stores and returns it verbatim.
+   * session, ...); the main process stores and returns it verbatim. Free
+   * windows only — a project window's workspace lives in projectState.
    */
   ui?: Record<string, unknown>
+}
+
+/** A project's persisted workspace, kept even while no project window is open. */
+export interface ProjectWindowState {
+  /** The project window's last geometry, reused when the project reopens. */
+  window: { frame: WindowFrame; isMaximized: boolean }
+  /** The renderer-owned workspace ui (tabs and active session) last shown. */
+  ui: Record<string, unknown>
 }
 
 /** What the main process needs to address a window entry without its geometry. */
@@ -78,9 +87,9 @@ function isDisplay(value: unknown): value is WindowDisplay {
 
 function identityOf(value: Record<string, unknown>): WindowIdentity | undefined {
   if (typeof value.id !== 'string' || value.id.length === 0) return undefined
-  if (value.kind === 'main') return { id: value.id, kind: 'main' }
-  if (value.kind === 'focused' && typeof value.projectId === 'string' && value.projectId) {
-    return { id: value.id, kind: 'focused', projectId: value.projectId }
+  if (value.kind === 'free') return { id: value.id, kind: 'free' }
+  if (value.kind === 'project' && typeof value.projectId === 'string' && value.projectId) {
+    return { id: value.id, kind: 'project', projectId: value.projectId }
   }
   return undefined
 }
@@ -95,8 +104,50 @@ export function sanitizeWindowState(value: unknown): StoredWindowState | undefin
     ...identity,
     frame: { ...value.frame },
     isMaximized: value.isMaximized,
-    ...(isObject(value.ui) ? { ui: { ...value.ui } } : {}),
+    // A project window's workspace is projectState's business, not the entry's.
+    ...(identity.kind === 'free' && isObject(value.ui) ? { ui: { ...value.ui } } : {}),
   }
+}
+
+export function sanitizeProjectStates(value: unknown): Record<string, ProjectWindowState> {
+  if (!isObject(value)) return {}
+  const states: Record<string, ProjectWindowState> = {}
+  for (const [projectId, entry] of Object.entries(value)) {
+    if (!isObject(entry) || !isObject(entry.window)) continue
+    const window = entry.window
+    if (!isRectangle(window.frame) || typeof window.isMaximized !== 'boolean') continue
+    states[projectId] = {
+      window: { frame: { ...window.frame }, isMaximized: window.isMaximized },
+      ui: isObject(entry.ui) ? { ...entry.ui } : {},
+    }
+  }
+  return states
+}
+
+/** Merges a geometry and/or ui patch into one project's persisted state. */
+export function withProjectState(
+  states: Record<string, ProjectWindowState>,
+  projectId: string,
+  patch: { window?: ProjectWindowState['window']; ui?: Record<string, unknown> },
+): Record<string, ProjectWindowState> {
+  const previous = states[projectId]
+  return {
+    ...states,
+    [projectId]: {
+      window: patch.window ??
+        previous?.window ?? { frame: { ...FALLBACK_FRAME }, isMaximized: false },
+      ui: patch.ui ? { ...patch.ui } : (previous?.ui ?? {}),
+    },
+  }
+}
+
+export function withoutProjectState(
+  states: Record<string, ProjectWindowState>,
+  projectId: string,
+): Record<string, ProjectWindowState> {
+  const next = { ...states }
+  delete next[projectId]
+  return next
 }
 
 export function sanitizeWindowsState(value: unknown): WindowsState | undefined {
@@ -122,8 +173,8 @@ export function windowUiStateOf(
   return windowsState?.openedWindows.find((entry) => entry.id === windowId)?.ui
 }
 
-export function focusedWindowEntries(windowsState: WindowsState | undefined): StoredWindowState[] {
-  return windowsState?.openedWindows.filter((entry) => entry.kind === 'focused') ?? []
+export function projectWindowEntries(windowsState: WindowsState | undefined): StoredWindowState[] {
+  return windowsState?.openedWindows.filter((entry) => entry.kind === 'project') ?? []
 }
 
 /** Replaces or removes the ui payload of one window entry inside the container. */
@@ -175,7 +226,7 @@ export function withWindowEntry(
   }
 }
 
-/** Rebinds a focused window entry to another project. */
+/** Rebinds a project window entry to another project. */
 export function withWindowProject(
   windowsState: WindowsState | undefined,
   windowId: string,
@@ -185,7 +236,7 @@ export function withWindowProject(
   return {
     ...base,
     openedWindows: base.openedWindows.map((entry) =>
-      entry.id === windowId && entry.kind === 'focused' ? { ...entry, projectId } : entry,
+      entry.id === windowId && entry.kind === 'project' ? { ...entry, projectId } : entry,
     ),
   }
 }
@@ -310,39 +361,58 @@ export function cascadeFrame(
   )
 }
 
-export function resolveMainWindowState(
+/** The stored free window to reopen (last active, else the only one), or a fresh centered one. */
+export function resolveFreeWindowState(
   value: unknown,
   displays: WindowDisplay[],
   primaryDisplay: WindowDisplay,
 ): StoredWindowState {
   const saved = sanitizeWindowsState(value)
-  const mainEntries = saved?.openedWindows.filter((entry) => entry.kind === 'main') ?? []
+  const freeEntries = saved?.openedWindows.filter((entry) => entry.kind === 'free') ?? []
   const entry =
-    mainEntries.find((candidate) => candidate.id === saved?.lastActiveWindow) ?? mainEntries[0]
+    freeEntries.find((candidate) => candidate.id === saved?.lastActiveWindow) ?? freeEntries[0]
   if (entry) return fitStoredWindow(entry, displays, primaryDisplay)
 
   const available = availableDisplays(displays, primaryDisplay)
   const primary = primaryFrom(available, primaryDisplay)
   return {
     id: randomUUID(),
-    kind: 'main',
+    kind: 'free',
     frame: primary ? centerDefaultFrame(primary.workArea) : { ...FALLBACK_FRAME },
     isMaximized: false,
   }
 }
 
-export function newFocusedWindowState(
-  projectId: string,
+/** A new free window's entry, stepped down and right from `from`. */
+export function newFreeWindowState(
   from: WindowFrame,
   displays: WindowDisplay[],
   primaryDisplay: WindowDisplay,
 ): StoredWindowState {
   return {
     id: randomUUID(),
-    kind: 'focused',
-    projectId,
+    kind: 'free',
     frame: cascadeFrame(from, displays, primaryDisplay),
     isMaximized: false,
+  }
+}
+
+export function newProjectWindowState(
+  projectId: string,
+  from: WindowFrame,
+  displays: WindowDisplay[],
+  primaryDisplay: WindowDisplay,
+  /** The project's persisted geometry; reused instead of cascading from `from`. */
+  stored?: { frame: WindowFrame; isMaximized: boolean },
+): StoredWindowState {
+  return {
+    id: randomUUID(),
+    kind: 'project',
+    projectId,
+    frame: stored
+      ? fitToDisplays(stored.frame, displays, primaryDisplay)
+      : cascadeFrame(from, displays, primaryDisplay),
+    isMaximized: stored?.isMaximized ?? false,
   }
 }
 

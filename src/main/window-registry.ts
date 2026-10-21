@@ -5,26 +5,26 @@ export interface RegisteredWindow extends WindowIdentity {
 }
 
 /**
- * Which windows are open and what each one shows. Enforces the two window
- * invariants: a single main window, and at most one focused window per project.
+ * Which windows are open and what each one shows. Enforces the window
+ * invariant: at most one project window per project; free windows are unlimited.
  */
 export function createWindowRegistry() {
   const windows = new Map<string, RegisteredWindow>()
 
-  const main = () => [...windows.values()].find((window) => window.kind === 'main')
-  const focusedFor = (projectId: string) =>
+  const freeWindows = () => [...windows.values()].filter((window) => window.kind === 'free')
+  const projectFor = (projectId: string) =>
     [...windows.values()].find(
-      (window) => window.kind === 'focused' && window.projectId === projectId,
+      (window) => window.kind === 'project' && window.projectId === projectId,
     )
 
   return {
-    main,
-    focusedFor,
+    freeWindows,
+    projectFor,
     all: () => [...windows.values()],
-    focusedWindows: () => [...windows.values()].filter((window) => window.kind === 'focused'),
-    focusedProjectIds: () =>
+    projectWindows: () => [...windows.values()].filter((window) => window.kind === 'project'),
+    pinnedProjectIds: () =>
       [...windows.values()].flatMap((window) =>
-        window.kind === 'focused' && window.projectId ? [window.projectId] : [],
+        window.kind === 'project' && window.projectId ? [window.projectId] : [],
       ),
     byId: (id: string) => windows.get(id),
     byWebContents: (webContentsId: number) =>
@@ -32,8 +32,7 @@ export function createWindowRegistry() {
     /** False when the window would break an invariant; nothing is registered then. */
     register(window: RegisteredWindow): boolean {
       if (windows.has(window.id)) return false
-      if (window.kind === 'main' && main()) return false
-      if (window.kind === 'focused' && (!window.projectId || focusedFor(window.projectId))) {
+      if (window.kind === 'project' && (!window.projectId || projectFor(window.projectId))) {
         return false
       }
       windows.set(window.id, { ...window })
@@ -44,11 +43,11 @@ export function createWindowRegistry() {
       windows.delete(id)
       return window
     },
-    /** Points a focused window at another project; false when that project is taken. */
+    /** Points a project window at another project; false when that project is taken. */
     rebind(id: string, projectId: string): boolean {
       const window = windows.get(id)
-      if (!window || window.kind !== 'focused') return false
-      const holder = focusedFor(projectId)
+      if (!window || window.kind !== 'project') return false
+      const holder = projectFor(projectId)
       if (holder && holder.id !== id) return false
       windows.set(id, { ...window, projectId })
       return true
