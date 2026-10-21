@@ -566,9 +566,8 @@ describe('useWorkbenchStore', () => {
     // The blank draft only existed in this window, so the hand-over skips it
     // and lands on the first carried tab instead.
     expect(payload).toEqual({
-      currentWorkspaceKey: 'project:project-workspace',
-      sessionTabsByWorkspace: { 'project:project-workspace': [REMOTE_SESSION.id, saved] },
-      activeSessionByWorkspace: { 'project:project-workspace': REMOTE_SESSION.id },
+      sessionIds: [REMOTE_SESSION.id, saved],
+      activeSessionId: REMOTE_SESSION.id,
     })
     const state = useWorkbenchStore.getState()
     expect(state.sessionTabsByWorkspace['project:project-workspace']).toBeUndefined()
@@ -612,11 +611,8 @@ describe('useWorkbenchStore', () => {
     const local = useWorkbenchStore.getState().createDraftSession(PROJECT.id, 'Local draft')
 
     useWorkbenchStore.getState().attachWorkspace(PROJECT.id, {
-      currentWorkspaceKey: 'project:project-workspace',
-      sessionTabsByWorkspace: {
-        'project:project-workspace': [REMOTE_SESSION.id, local, 42],
-      },
-      activeSessionByWorkspace: { 'project:project-workspace': REMOTE_SESSION.id },
+      sessionIds: [REMOTE_SESSION.id, local],
+      activeSessionId: REMOTE_SESSION.id,
     })
 
     expect(useWorkbenchStore.getState()).toMatchObject({
@@ -631,12 +627,38 @@ describe('useWorkbenchStore', () => {
     loadCatalog()
 
     useWorkbenchStore.getState().attachWorkspace(PROJECT.id, {
-      sessionTabsByWorkspace: { 'project:project-workspace': [REMOTE_SESSION.id] },
-      activeSessionByWorkspace: { 'project:project-workspace': 'not-a-tab' },
+      sessionIds: [REMOTE_SESSION.id],
+      activeSessionId: 'not-a-tab',
     })
 
     expect(useWorkbenchStore.getState().activeSessionByWorkspace).toEqual({
       'project:project-workspace': REMOTE_SESSION.id,
     })
+  })
+
+  it('restores a project workspace before the catalog and re-keys it once the catalog lands', () => {
+    useWorkbenchStore.getState().restoreProjectWorkspace(PROJECT.id, {
+      sessionIds: [REMOTE_SESSION.id, 'gone-session'],
+      activeSessionId: REMOTE_SESSION.id,
+    })
+
+    // Without the catalog the workspace is keyed by the project id; the
+    // current project is what lets replaceCatalog find the real key.
+    expect(useWorkbenchStore.getState()).toMatchObject({
+      currentProjectId: PROJECT.id,
+      currentWorkspaceKey: 'project:project-1',
+      sessionTabsByWorkspace: { 'project:project-1': [REMOTE_SESSION.id, 'gone-session'] },
+    })
+
+    loadCatalog()
+
+    const state = useWorkbenchStore.getState()
+    expect(state.currentWorkspaceKey).toBe('project:project-workspace')
+    expect(state.currentProjectId).toBe(PROJECT.id)
+    expect(state.currentSessionId).toBe(REMOTE_SESSION.id)
+    expect(state.sessionTabsByWorkspace).toEqual({
+      'project:project-workspace': [REMOTE_SESSION.id],
+    })
+    expect(state.activeSessionByWorkspace['project:project-workspace']).toBe(REMOTE_SESSION.id)
   })
 })

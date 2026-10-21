@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 
 import type { Rectangle } from 'electron'
 
-import type { WindowKind } from '@/shared/rpc'
+import type { ProjectUiState, WindowKind, WorkbenchWindowUiState, WorkspaceKey } from '@/shared/rpc'
 
 export type WindowFrame = Rectangle
 /** The display fields the window-state resolution relies on (satisfied by Electron displays). */
@@ -24,19 +24,24 @@ export interface StoredWindowState {
   frame: WindowFrame
   isMaximized: boolean
   /**
-   * Opaque per-window payload owned by the renderer (open tabs, active
-   * session, ...); the main process stores and returns it verbatim. Free
-   * windows only — a project window's workspace lives in projectState.
+   * The renderer-owned ui payload of a free window (open workspaces, tabs,
+   * active session); stored verbatim after a shape check. Free windows only —
+   * a project window's workspace lives in projectState.
    */
-  ui?: Record<string, unknown>
+  ui?: WorkbenchWindowUiState
 }
 
-/** A project's persisted workspace, kept even while no project window is open. */
+/**
+ * A project's persisted state, kept even while no project window is open.
+ * `frame`/`isMaximized` mirror the project window entry's geometry — the
+ * entry is the live geometry while the window exists (one writer: the
+ * window tracker persist), this one survives it for the next opening.
+ */
 export interface ProjectWindowState {
-  /** The project window's last geometry, reused when the project reopens. */
-  window: { frame: WindowFrame; isMaximized: boolean }
+  frame: WindowFrame
+  isMaximized: boolean
   /** The renderer-owned workspace ui (tabs and active session) last shown. */
-  ui: Record<string, unknown>
+  ui: ProjectUiState
 }
 
 /** What the main process needs to address a window entry without its geometry. */
@@ -85,6 +90,57 @@ function isDisplay(value: unknown): value is WindowDisplay {
   return isFiniteNumber(value.id) && isRectangle(value.workArea)
 }
 
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === 'string')
+}
+
+function stringRecordOf<T>(value: unknown, item: (entry: unknown) => T | undefined) {
+  if (!isObject(value)) return undefined
+  const entries = Object.entries(value).flatMap(([key, entry]) => {
+    const valid = item(entry)
+    return valid === undefined ? [] : [[key, valid] as const]
+  })
+  return Object.fromEntries(entries)
+}
+
+function nullableString(value: unknown): string | null | undefined {
+  return value === null || typeof value === 'string' ? value : undefined
+}
+
+/** Shape-checks a free window's ui payload; malformed payloads lose their ui. */
+function sanitizeWindowUi(value: unknown): WorkbenchWindowUiState | undefined {
+  if (
+    !isObject(value) ||
+    typeof value.currentWorkspaceKey !== 'string' ||
+    !value.currentWorkspaceKey
+  ) {
+    return undefined
+  }
+  const sessionTabsByWorkspace = stringRecordOf(value.sessionTabsByWorkspace, (entry) =>
+    isStringArray(entry) ? [...entry] : undefined,
+  )
+  const activeSessionByWorkspace = stringRecordOf(value.activeSessionByWorkspace, nullableString)
+  if (!sessionTabsByWorkspace || !activeSessionByWorkspace) return undefined
+  return {
+    currentWorkspaceKey: value.currentWorkspaceKey as WorkspaceKey,
+    sessionTabsByWorkspace,
+    activeSessionByWorkspace,
+  }
+}
+
+/** Shape-checks a project's ui payload, dropping an active id outside the tabs. */
+function sanitizeProjectUi(value: unknown): ProjectUiState {
+  if (!isObject(value) || !isStringArray(value.sessionIds)) {
+    return { sessionIds: [], activeSessionId: null }
+  }
+  const sessionIds = [...new Set(value.sessionIds)]
+  const activeSessionId =
+    typeof value.activeSessionId === 'string' && sessionIds.includes(value.activeSessionId)
+      ? value.activeSessionId
+      : null
+  return { sessionIds, activeSessionId }
+}
+
 function identityOf(value: Record<string, unknown>): WindowIdentity | undefined {
   if (typeof value.id !== 'string' || value.id.length === 0) return undefined
   if (value.kind === 'free') return { id: value.id, kind: 'free' }
@@ -100,12 +156,13 @@ export function sanitizeWindowState(value: unknown): StoredWindowState | undefin
   }
   const identity = identityOf(value)
   if (!identity) return undefined
+  const ui = identity.kind === 'free' ? sanitizeWindowUi(value.ui) : undefined
   return {
     ...identity,
     frame: { ...value.frame },
     isMaximized: value.isMaximized,
     // A project window's workspace is projectState's business, not the entry's.
-    ...(identity.kind === 'free' && isObject(value.ui) ? { ui: { ...value.ui } } : {}),
+    ...(ui ? { ui } : {}),
   }
 }
 
@@ -113,12 +170,13 @@ export function sanitizeProjectStates(value: unknown): Record<string, ProjectWin
   if (!isObject(value)) return {}
   const states: Record<string, ProjectWindowState> = {}
   for (const [projectId, entry] of Object.entries(value)) {
-    if (!isObject(entry) || !isObject(entry.window)) continue
-    const window = entry.window
-    if (!isRectangle(window.frame) || typeof window.isMaximized !== 'boolean') continue
+    if (!isObject(entry) || !isRectangle(entry.frame) || typeof entry.isMaximized !== 'boolean') {
+      continue
+    }
     states[projectId] = {
-      window: { frame: { ...window.frame }, isMaximized: window.isMaximized },
-      ui: isObject(entry.ui) ? { ...entry.ui } : {},
+      frame: { ...entry.frame },
+      isMaximized: entry.isMaximized,
+      ui: sanitizeProjectUi(entry.ui),
     }
   }
   return states
@@ -128,15 +186,15 @@ export function sanitizeProjectStates(value: unknown): Record<string, ProjectWin
 export function withProjectState(
   states: Record<string, ProjectWindowState>,
   projectId: string,
-  patch: { window?: ProjectWindowState['window']; ui?: Record<string, unknown> },
+  patch: { frame?: WindowFrame; isMaximized?: boolean; ui?: ProjectUiState },
 ): Record<string, ProjectWindowState> {
   const previous = states[projectId]
   return {
     ...states,
     [projectId]: {
-      window: patch.window ??
-        previous?.window ?? { frame: { ...FALLBACK_FRAME }, isMaximized: false },
-      ui: patch.ui ? { ...patch.ui } : (previous?.ui ?? {}),
+      frame: patch.frame ?? previous?.frame ?? { ...FALLBACK_FRAME },
+      isMaximized: patch.isMaximized ?? previous?.isMaximized ?? false,
+      ui: patch.ui ?? previous?.ui ?? { sessionIds: [], activeSessionId: null },
     },
   }
 }
@@ -169,7 +227,7 @@ export function sanitizeWindowsState(value: unknown): WindowsState | undefined {
 export function windowUiStateOf(
   windowsState: WindowsState | undefined,
   windowId: string,
-): Record<string, unknown> | undefined {
+): WorkbenchWindowUiState | undefined {
   return windowsState?.openedWindows.find((entry) => entry.id === windowId)?.ui
 }
 
@@ -181,7 +239,7 @@ export function projectWindowEntries(windowsState: WindowsState | undefined): St
 export function withWindowUiState(
   windowsState: WindowsState | undefined,
   window: WindowIdentity,
-  ui: Record<string, unknown> | undefined,
+  ui: WorkbenchWindowUiState | undefined,
 ): WindowsState {
   const base: WindowsState = windowsState ?? { openedWindows: [] }
   let openedWindows = base.openedWindows
@@ -402,8 +460,8 @@ export function newProjectWindowState(
   from: WindowFrame,
   displays: WindowDisplay[],
   primaryDisplay: WindowDisplay,
-  /** The project's persisted geometry; reused instead of cascading from `from`. */
-  stored?: { frame: WindowFrame; isMaximized: boolean },
+  /** The project's persisted state; its geometry is reused instead of cascading from `from`. */
+  stored?: Pick<ProjectWindowState, 'frame' | 'isMaximized'>,
 ): StoredWindowState {
   return {
     id: randomUUID(),

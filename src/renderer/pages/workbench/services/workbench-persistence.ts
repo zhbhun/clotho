@@ -1,59 +1,30 @@
+import type { ProjectUiState, WindowDescription, WorkbenchWindowUiState } from '@/shared/rpc'
+
 import { claude } from '../../../services/claude/claude'
 import { getLogger } from '../../../services/logging'
 import {
   type SessionActivity,
-  type WorkspaceKey,
   useWorkbenchStore,
   windowUiState,
+  workspaceUiState,
 } from '../stores/workbench-store'
 
 const WINDOW_UI_DEBOUNCE_MS = 250
 
-type WindowUiPayload = {
-  currentWorkspaceKey?: WorkspaceKey
-  sessionTabsByWorkspace?: Record<string, string[]>
-  activeSessionByWorkspace?: Record<string, string | null>
-}
-
-function stringArray(value: unknown): string[] | undefined {
-  return Array.isArray(value) && value.every((item) => typeof item === 'string')
-    ? [...new Set(value)]
-    : undefined
-}
-
-function stringArrayRecord(value: unknown): Record<string, string[]> | undefined {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined
-  const entries = Object.entries(value).flatMap(([key, item]) => {
-    const values = stringArray(item)
-    return values ? [[key, values] as const] : []
-  })
-  return Object.fromEntries(entries)
-}
-
-function nullableStringRecord(value: unknown): Record<string, string | null> | undefined {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined
-  return Object.fromEntries(
-    Object.entries(value).flatMap(([key, item]) =>
-      item === null || typeof item === 'string' ? [[key, item] as const] : [],
-    ),
-  )
-}
-
-function windowUiPayload(value: Record<string, unknown>): WindowUiPayload {
-  const sessionTabsByWorkspace = stringArrayRecord(value.sessionTabsByWorkspace)
-  const activeSessionByWorkspace = nullableStringRecord(value.activeSessionByWorkspace)
-  return {
-    ...(typeof value.currentWorkspaceKey === 'string'
-      ? { currentWorkspaceKey: value.currentWorkspaceKey as WorkspaceKey }
-      : {}),
-    ...(sessionTabsByWorkspace ? { sessionTabsByWorkspace } : {}),
-    ...(activeSessionByWorkspace ? { activeSessionByWorkspace } : {}),
-  }
+/** A window that cannot learn its identity persists as a free window. */
+const FALLBACK_IDENTITY: WindowDescription = {
+  id: 'unknown',
+  kind: 'free',
+  projectId: null,
+  pinnedProjectIds: [],
 }
 
 export interface WorkbenchPersistenceOptions {
-  readWindowUi?: () => Promise<Record<string, unknown> | undefined>
-  writeWindowUi?: (ui: Record<string, unknown>) => Promise<void>
+  describeWindow?: () => Promise<WindowDescription>
+  readWindowUi?: () => Promise<WorkbenchWindowUiState | undefined>
+  writeWindowUi?: (ui: WorkbenchWindowUiState) => Promise<void>
+  readProjectUi?: (projectId: string) => Promise<ProjectUiState | null>
+  writeProjectUi?: (ui: ProjectUiState) => Promise<void>
   setSessionsUnread?: (
     sessions: Array<{
       projectId: string | null
@@ -66,27 +37,53 @@ export interface WorkbenchPersistenceOptions {
 }
 
 /**
- * Keeps the desktop storage as the durable home of the workbench state:
- * window-scoped fields ride the window entry and unread marks sync to the
- * session index as they change.
+ * Keeps the desktop storage as the durable home of the workbench state: a
+ * free window's workspaces ride its window entry, a project window's tabs
+ * ride its project's state, and unread marks sync to the session index as
+ * they change.
  */
 export function startWorkbenchPersistence(options: WorkbenchPersistenceOptions = {}) {
+  const describeWindow = options.describeWindow ?? (() => claude.describeWindow())
   const readWindowUi = options.readWindowUi ?? (() => claude.readWindowUiState())
   const writeWindowUi = options.writeWindowUi ?? ((ui) => claude.writeWindowUiState(ui))
+  const readProjectUi =
+    options.readProjectUi ??
+    ((projectId: string) => claude.readProjectState(projectId).then((stored) => stored?.ui ?? null))
+  const writeProjectUi = options.writeProjectUi ?? ((ui) => claude.writeProjectState(ui))
   const setSessionsUnread =
     options.setSessionsUnread ??
     ((sessions, unread) => claude.setSessionsUnread({ sessions, unread }))
   const debounceMs = options.debounceMs ?? WINDOW_UI_DEBOUNCE_MS
   const logger = getLogger('persistence')
 
+  // Which document the ui goes to depends on the window kind; a write asked
+  // for before the identity is known waits for it.
+  let identity: WindowDescription | undefined
+  let hasPendingWrite = false
+  const writeUi = () => {
+    if (!identity) {
+      hasPendingWrite = true
+      return
+    }
+    const state = useWorkbenchStore.getState()
+    const projectId = identity.kind === 'project' ? identity.projectId : null
+    // A project workspace keyed before the catalog landed reads as empty and
+    // would wipe the stored tabs; the next change writes it.
+    if (projectId && !state.projects[projectId]) return
+    const request = projectId
+      ? writeProjectUi(workspaceUiState(state, projectId))
+      : writeWindowUi(windowUiState(state))
+    request.catch((error) =>
+      logger.error('window_ui.write_failed', 'Failed to save the window ui state', { error }),
+    )
+  }
+
   let timer: ReturnType<typeof setTimeout> | undefined
   const scheduleWindowUiWrite = () => {
     if (timer !== undefined) clearTimeout(timer)
     timer = setTimeout(() => {
       timer = undefined
-      writeWindowUi(windowUiState(useWorkbenchStore.getState())).catch((error) =>
-        logger.error('window_ui.write_failed', 'Failed to save the window ui state', { error }),
-      )
+      writeUi()
     }, debounceMs)
   }
 
@@ -128,15 +125,32 @@ export function startWorkbenchPersistence(options: WorkbenchPersistenceOptions =
     scheduleWindowUiWrite()
   })
 
-  const ready = readWindowUi()
-    .then((ui) => {
-      if (!ui) return
-      const restored = windowUiPayload(ui)
-      if (Object.keys(restored).length === 0) return
-      useWorkbenchStore.setState((state) => ({ ...state, ...restored }))
-    })
+  const restore = async () => {
+    identity = await describeWindow().catch(() => FALLBACK_IDENTITY)
+    const projectId = identity.kind === 'project' ? identity.projectId : null
+    if (projectId) {
+      const ui = await readProjectUi(projectId)
+      if (ui) useWorkbenchStore.getState().restoreProjectWorkspace(projectId, ui)
+      return
+    }
+    const ui = await readWindowUi()
+    if (!ui) return
+    useWorkbenchStore.setState((state) => ({
+      ...state,
+      currentWorkspaceKey: ui.currentWorkspaceKey,
+      sessionTabsByWorkspace: ui.sessionTabsByWorkspace,
+      activeSessionByWorkspace: ui.activeSessionByWorkspace,
+    }))
+  }
+
+  const ready = restore()
     .catch((error) => {
       logger.warning('window_ui.read_failed', 'Failed to restore the window ui state', { error })
+    })
+    .then(() => {
+      if (!hasPendingWrite) return
+      hasPendingWrite = false
+      scheduleWindowUiWrite()
     })
 
   return {

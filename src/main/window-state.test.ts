@@ -215,6 +215,12 @@ describe('window state resolution', () => {
 })
 
 describe('window state container', () => {
+  const freeUi = {
+    currentWorkspaceKey: 'claude' as const,
+    sessionTabsByWorkspace: { claude: ['s1'] },
+    activeSessionByWorkspace: { claude: 's1' },
+  }
+
   test('drops legacy and invalid entries, and strips ui from project entries', () => {
     const sanitized = sanitizeWindowsState({
       lastActiveWindow: 'a',
@@ -224,7 +230,7 @@ describe('window state container', () => {
           kind: 'free',
           frame: { x: 10, y: 10, width: 800, height: 600 },
           isMaximized: false,
-          ui: { currentWorkspaceKey: 'home' },
+          ui: freeUi,
         },
         {
           id: 'p',
@@ -232,7 +238,15 @@ describe('window state container', () => {
           projectId: 'proj',
           frame: { x: 10, y: 10, width: 800, height: 600 },
           isMaximized: false,
-          ui: { currentWorkspaceKey: 'project:proj' },
+          ui: freeUi,
+        },
+        // A free entry whose ui lost its shape keeps the window, not the ui.
+        {
+          id: 'm',
+          kind: 'free',
+          frame: { x: 10, y: 10, width: 800, height: 600 },
+          isMaximized: false,
+          ui: { currentWorkspaceKey: 'claude', sessionTabsByWorkspace: 'junk' },
         },
         // Legacy kinds from before free windows existed.
         {
@@ -275,12 +289,18 @@ describe('window state container', () => {
           kind: 'free',
           frame: { x: 10, y: 10, width: 800, height: 600 },
           isMaximized: false,
-          ui: { currentWorkspaceKey: 'home' },
+          ui: freeUi,
         },
         {
           id: 'p',
           kind: 'project',
           projectId: 'proj',
+          frame: { x: 10, y: 10, width: 800, height: 600 },
+          isMaximized: false,
+        },
+        {
+          id: 'm',
+          kind: 'free',
           frame: { x: 10, y: 10, width: 800, height: 600 },
           isMaximized: false,
         },
@@ -302,42 +322,72 @@ describe('window state container', () => {
   test('project state is sanitized per project and tolerates junk', () => {
     const states = sanitizeProjectStates({
       p: {
-        window: { frame: { x: 10, y: 10, width: 800, height: 600 }, isMaximized: true },
-        ui: { currentWorkspaceKey: 'project:p' },
+        frame: { x: 10, y: 10, width: 800, height: 600 },
+        isMaximized: true,
+        ui: { sessionIds: ['s1', 's2', 's1'], activeSessionId: 's2' },
       },
-      q: { window: { frame: { x: 0, y: 0, width: 0, height: 0 }, isMaximized: false } },
-      r: { ui: {} },
-      s: 'junk',
+      // An active id outside the tabs and a shapeless ui both normalize.
+      q: {
+        frame: { x: 10, y: 10, width: 800, height: 600 },
+        isMaximized: false,
+        ui: { sessionIds: ['s1'], activeSessionId: 'gone' },
+      },
+      r: { frame: { x: 10, y: 10, width: 800, height: 600 }, isMaximized: false, ui: 'junk' },
+      // A zero frame, a missing frame, the pre-flat nested shape, and junk.
+      s: { frame: { x: 0, y: 0, width: 0, height: 0 }, isMaximized: false },
+      t: { ui: { sessionIds: [] } },
+      u: {
+        window: { frame: { x: 10, y: 10, width: 800, height: 600 }, isMaximized: false },
+        ui: { sessionIds: [] },
+      },
+      v: 'junk',
     })
 
     expect(states).toEqual({
       p: {
-        window: { frame: { x: 10, y: 10, width: 800, height: 600 }, isMaximized: true },
-        ui: { currentWorkspaceKey: 'project:p' },
+        frame: { x: 10, y: 10, width: 800, height: 600 },
+        isMaximized: true,
+        ui: { sessionIds: ['s1', 's2'], activeSessionId: 's2' },
+      },
+      q: {
+        frame: { x: 10, y: 10, width: 800, height: 600 },
+        isMaximized: false,
+        ui: { sessionIds: ['s1'], activeSessionId: null },
+      },
+      r: {
+        frame: { x: 10, y: 10, width: 800, height: 600 },
+        isMaximized: false,
+        ui: { sessionIds: [], activeSessionId: null },
       },
     })
     expect(sanitizeProjectStates('junk')).toEqual({})
   })
 
   test('project state patches merge, and a fresh project falls back to a default frame', () => {
-    const seeded = withProjectState({}, 'p', { ui: { tabs: ['s1'] } })
+    const seeded = withProjectState({}, 'p', { ui: { sessionIds: ['s1'], activeSessionId: 's1' } })
     expect(seeded.p).toEqual({
-      window: { frame: { x: 120, y: 80, width: 1280, height: 800 }, isMaximized: false },
-      ui: { tabs: ['s1'] },
+      frame: { x: 120, y: 80, width: 1280, height: 800 },
+      isMaximized: false,
+      ui: { sessionIds: ['s1'], activeSessionId: 's1' },
     })
 
     const moved = withProjectState(seeded, 'p', {
-      window: { frame: { x: 50, y: 50, width: 900, height: 700 }, isMaximized: true },
+      frame: { x: 50, y: 50, width: 900, height: 700 },
+      isMaximized: true,
     })
     expect(moved.p).toEqual({
-      window: { frame: { x: 50, y: 50, width: 900, height: 700 }, isMaximized: true },
-      ui: { tabs: ['s1'] },
+      frame: { x: 50, y: 50, width: 900, height: 700 },
+      isMaximized: true,
+      ui: { sessionIds: ['s1'], activeSessionId: 's1' },
     })
 
-    const retabbed = withProjectState(moved, 'p', { ui: { tabs: ['s2'] } })
+    const retabbed = withProjectState(moved, 'p', {
+      ui: { sessionIds: ['s2'], activeSessionId: null },
+    })
     expect(retabbed.p).toEqual({
-      window: { frame: { x: 50, y: 50, width: 900, height: 700 }, isMaximized: true },
-      ui: { tabs: ['s2'] },
+      frame: { x: 50, y: 50, width: 900, height: 700 },
+      isMaximized: true,
+      ui: { sessionIds: ['s2'], activeSessionId: null },
     })
     expect(Object.keys(retabbed)).toEqual(['p'])
 
@@ -350,7 +400,7 @@ describe('window state container', () => {
       kind: 'free',
       frame: { x: 10, y: 10, width: 800, height: 600 },
       isMaximized: false,
-      ui: { currentWorkspaceKey: 'home' },
+      ui: freeUi,
     }
     const moved = withWindowEntry(windowsState('x', [free]), {
       ...free,
@@ -358,7 +408,7 @@ describe('window state container', () => {
     })
     expect(moved.openedWindows[0]).toMatchObject({
       frame: { x: 50, y: 50, width: 900, height: 700 },
-      ui: { currentWorkspaceKey: 'home' },
+      ui: freeUi,
     })
     expect(moved.lastActiveWindow).toBe('a')
 

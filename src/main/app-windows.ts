@@ -1,7 +1,12 @@
 import { BrowserWindow, Menu, screen } from 'electron'
 import type { WebContents } from 'electron'
 
-import type { AppAppearancePreferences, DesktopRPC, WindowRefocusResult } from '@/shared/rpc'
+import type {
+  AppAppearancePreferences,
+  DesktopRPC,
+  ProjectUiState,
+  WindowRefocusResult,
+} from '@/shared/rpc'
 
 import { type WebviewContextMenuLabels, textEditMenuItems } from './context-menu'
 import { setDialogOwnerWindow } from './dialogs'
@@ -159,7 +164,8 @@ export function createAppWindows(options: AppWindowsOptions) {
           projectState:
             state.kind === 'project' && state.projectId
               ? withProjectState(docs.projectState, state.projectId, {
-                  window: { frame: state.frame, isMaximized: state.isMaximized },
+                  frame: state.frame,
+                  isMaximized: state.isMaximized,
                 })
               : docs.projectState,
         })),
@@ -258,9 +264,10 @@ export function createAppWindows(options: AppWindowsOptions) {
     flushAll: () => Promise.all([...trackers.values()].map((tracker) => tracker.flush())),
 
     /** The project window's stored ui, mirrored on every workspace write. */
-    projectUiOf: (projectId: string) => storedProjectStates()[projectId]?.ui,
+    projectUiOf: (projectId: string): ProjectUiState | undefined =>
+      storedProjectStates()[projectId]?.ui,
     /** Replaces one project's persisted workspace ui. */
-    persistProjectUi(projectId: string, ui: Record<string, unknown>) {
+    persistProjectUi(projectId: string, ui: ProjectUiState) {
       return transformStorage((docs) => ({
         projectState: withProjectState(docs.projectState, projectId, { ui }),
       }))
@@ -332,7 +339,7 @@ export function createAppWindows(options: AppWindowsOptions) {
 
     async openProjectWindow(
       projectId: string,
-      ui: Record<string, unknown> | undefined,
+      ui: ProjectUiState | undefined,
       opener: WebContents,
     ) {
       const holder = registry.projectFor(projectId)
@@ -349,7 +356,7 @@ export function createAppWindows(options: AppWindowsOptions) {
         from,
         all,
         primary,
-        storedProjectStates()[projectId]?.window,
+        storedProjectStates()[projectId],
       )
       // The seed must be stored before the window loads so the renderer's
       // first windowReadUiState already finds its workspace in projectState.
@@ -378,7 +385,7 @@ export function createAppWindows(options: AppWindowsOptions) {
     async refocus(
       requester: WebContents,
       projectId: string,
-      uiForCurrent: Record<string, unknown>,
+      uiForCurrent: ProjectUiState,
     ): Promise<WindowRefocusResult> {
       const window = registry.byWebContents(requester.id)
       if (!window || window.kind !== 'project' || !window.projectId) {

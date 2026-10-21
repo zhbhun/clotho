@@ -21,9 +21,25 @@ export interface WindowDescription {
   pinnedProjectIds: string[]
 }
 
+/** A renderer workspace context: the home surface or one project's surface. */
+export type WorkspaceKey = 'claude' | `project:${string}`
+
+/** A free window's persisted ui: every workspace it holds and which one is showing. */
+export interface WorkbenchWindowUiState {
+  currentWorkspaceKey: WorkspaceKey
+  sessionTabsByWorkspace: Record<string, string[]>
+  activeSessionByWorkspace: Record<string, string | null>
+}
+
+/** A project's persisted workspace: its open session tabs and the active one. */
+export interface ProjectUiState {
+  sessionIds: string[]
+  activeSessionId: string | null
+}
+
 /** The result of asking a project window to show another project. */
 export type WindowRefocusResult =
-  { outcome: 'refocused'; ui: Record<string, unknown> | null } | { outcome: 'shown-elsewhere' }
+  { outcome: 'refocused'; ui: ProjectUiState | null } | { outcome: 'shown-elsewhere' }
 
 export type { DraftSession, DraftSessionIndex, LocalSession, SessionInput } from './session'
 
@@ -1097,11 +1113,17 @@ export type DesktopRPC = {
         }
         response: void
       }
+      /** A free window's whole-window ui payload; project windows use the projectState surfaces. */
       windowReadUiState: {
         params: Record<string, never>
-        response: { ui?: Record<string, unknown> }
+        response: { ui?: WorkbenchWindowUiState }
       }
-      windowWriteUiState: { params: { ui: Record<string, unknown> }; response: void }
+      windowWriteUiState: { params: { ui: WorkbenchWindowUiState }; response: void }
+      /**
+       * Stores the calling project window's workspace ui in its project's
+       * persisted state. The project is derived from the calling window.
+       */
+      windowWriteProjectState: { params: { ui: ProjectUiState }; response: void }
       windowDescribe: { params: Record<string, never>; response: WindowDescription }
       /**
        * Opens a project window for a project. When `ui` is given (a pop-out),
@@ -1110,7 +1132,7 @@ export type DesktopRPC = {
        * project; that window is brought to the front instead.
        */
       windowOpenProject: {
-        params: { projectId: string; ui?: Record<string, unknown> }
+        params: { projectId: string; ui?: ProjectUiState }
         response: { opened: boolean }
       }
       /**
@@ -1130,13 +1152,13 @@ export type DesktopRPC = {
        * project's state; the response carries the new project's persisted ui.
        */
       windowRefocus: {
-        params: { projectId: string; ui: Record<string, unknown> }
+        params: { projectId: string; ui: ProjectUiState }
         response: WindowRefocusResult
       }
       /** A project's persisted workspace ui (tabs and active session), when any. */
       windowReadProjectState: {
         params: { projectId: string }
-        response: { ui: Record<string, unknown> } | null
+        response: { ui: ProjectUiState } | null
       }
       claudeDeleteSession: {
         params: { projectId: string; sessionId: string }

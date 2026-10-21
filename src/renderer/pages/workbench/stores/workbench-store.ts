@@ -1,14 +1,22 @@
 import { create } from 'zustand'
 
-import type { ClaudeProject, ClaudeSession, WindowKind } from '@/shared/rpc'
+import type {
+  ClaudeProject,
+  ClaudeSession,
+  ProjectUiState,
+  WindowKind,
+  WorkbenchWindowUiState,
+  WorkspaceKey,
+} from '@/shared/rpc'
 import type { DraftSessionIndex } from '@/shared/session'
 
 import { claude } from '../../../services/claude/claude'
 import { getLogger } from '../../../services/logging'
 import { DEFAULT_SESSION_TITLE } from '../utils/session-list'
 
+export type { ProjectUiState, WorkbenchWindowUiState, WorkspaceKey }
+
 export type ProjectMode = 'project' | 'home'
-export type WorkspaceKey = 'claude' | `project:${string}`
 export type SessionActivity =
   'idle' | 'processing' | 'awaiting-user' | 'unread-success' | 'unread-error'
 export type SessionActivityEvent = 'idle' | 'processing' | 'awaiting-user' | 'success' | 'error'
@@ -57,13 +65,6 @@ type WorkbenchDataState = {
   pinnedProjectIds: string[]
 }
 
-/** The window-scoped slice persisted with the desktop window (see workbench-persistence). */
-export type WorkbenchWindowUiState = {
-  currentWorkspaceKey: WorkspaceKey
-  sessionTabsByWorkspace: Record<string, string[]>
-  activeSessionByWorkspace: Record<string, string | null>
-}
-
 export type WorkbenchState = WorkbenchDataState & {
   setProjectDefaultModel: (
     projectId: string,
@@ -92,12 +93,19 @@ export type WorkbenchState = WorkbenchDataState & {
   setWindowIdentity: (identity: { kind: WindowKind; projectId: string | null }) => void
   setPinnedProjectIds: (projectIds: string[]) => void
   /** Drops a project's workspace from this window and returns the payload describing it. */
-  detachWorkspace: (projectId: string) => WorkbenchWindowUiState
+  detachWorkspace: (projectId: string) => ProjectUiState
   /** Takes in a project's workspace handed over by another window. */
-  attachWorkspace: (projectId: string, ui: Record<string, unknown>) => void
+  attachWorkspace: (projectId: string, ui: ProjectUiState) => void
+  /**
+   * Seeds a project window with its persisted workspace before the catalog
+   * lands; replaceCatalog re-keys the tabs and the current workspace from the
+   * real project.
+   */
+  restoreProjectWorkspace: (projectId: string, ui: ProjectUiState) => void
   reset: () => void
 }
 
+/** The whole-window payload a free window persists with its window entry. */
 export function windowUiState(state: WorkbenchState): WorkbenchWindowUiState {
   return {
     currentWorkspaceKey: state.currentWorkspaceKey,
@@ -106,28 +114,18 @@ export function windowUiState(state: WorkbenchState): WorkbenchWindowUiState {
   }
 }
 
-/** One project's workspace as handed between windows: its tabs and active session only. */
-export function workspaceUiState(
-  state: WorkbenchDataState,
-  projectId: string,
-): WorkbenchWindowUiState {
+/** One project's workspace as persisted or handed between windows: its tabs and active session. */
+export function workspaceUiState(state: WorkbenchDataState, projectId: string): ProjectUiState {
   const key = workspaceKeyForProjectId(projectId, state.projects)
   // A blank draft lives only in this window's memory; there is nothing to carry.
-  const tabs = (state.sessionTabsByWorkspace[key] ?? []).filter(
+  const sessionIds = (state.sessionTabsByWorkspace[key] ?? []).filter(
     (id) => !state.sessions[id]?.isUnsavedDraft,
   )
   const active = state.activeSessionByWorkspace[key] ?? null
   return {
-    currentWorkspaceKey: key,
-    sessionTabsByWorkspace: { [key]: tabs },
-    activeSessionByWorkspace: {
-      [key]: active && tabs.includes(active) ? active : (tabs[0] ?? null),
-    },
+    sessionIds,
+    activeSessionId: active && sessionIds.includes(active) ? active : (sessionIds[0] ?? null),
   }
-}
-
-function stringArray(value: unknown): string[] {
-  return Array.isArray(value) ? value.filter((item) => typeof item === 'string') : []
 }
 
 function uniqueSessionIds(sessionIds: string[]) {
@@ -905,7 +903,7 @@ export const useWorkbenchStore = create<WorkbenchState>()((set, get) => ({
   detachWorkspace: (projectId) => {
     const payload = workspaceUiState(get(), projectId)
     set((state) => {
-      const key = payload.currentWorkspaceKey
+      const key = workspaceKeyForProjectId(projectId, state.projects)
       const blankDraftIds = (state.sessionTabsByWorkspace[key] ?? []).filter(
         (id) => state.sessions[id]?.isUnsavedDraft,
       )
@@ -944,25 +942,40 @@ export const useWorkbenchStore = create<WorkbenchState>()((set, get) => ({
   attachWorkspace: (projectId, ui) =>
     set((state) => {
       const key = workspaceKeyForProjectId(projectId, state.projects)
-      const incomingTabs =
-        ui.sessionTabsByWorkspace && typeof ui.sessionTabsByWorkspace === 'object'
-          ? stringArray((ui.sessionTabsByWorkspace as Record<string, unknown>)[key])
-          : []
-      const incomingActive =
-        ui.activeSessionByWorkspace && typeof ui.activeSessionByWorkspace === 'object'
-          ? (ui.activeSessionByWorkspace as Record<string, unknown>)[key]
-          : undefined
-      const tabs = uniqueSessionIds([...incomingTabs, ...(state.sessionTabsByWorkspace[key] ?? [])])
+      const tabs = uniqueSessionIds([
+        ...ui.sessionIds,
+        ...(state.sessionTabsByWorkspace[key] ?? []),
+      ])
       const existingActive = state.activeSessionByWorkspace[key] ?? null
       const active =
-        typeof incomingActive === 'string' && tabs.includes(incomingActive)
-          ? incomingActive
+        ui.activeSessionId && tabs.includes(ui.activeSessionId)
+          ? ui.activeSessionId
           : existingActive && tabs.includes(existingActive)
             ? existingActive
             : (tabs[0] ?? null)
       return {
         sessionTabsByWorkspace: { ...state.sessionTabsByWorkspace, [key]: tabs },
         activeSessionByWorkspace: { ...state.activeSessionByWorkspace, [key]: active },
+      }
+    }),
+  restoreProjectWorkspace: (projectId, ui) =>
+    set((state) => {
+      // Before the catalog the key falls back to the project id; replaceCatalog
+      // re-homes the tabs by session and derives the real key from the
+      // current project, which is why that one is seeded too.
+      const key = workspaceKeyForProjectId(projectId, state.projects)
+      const tabs = uniqueSessionIds(ui.sessionIds)
+      return {
+        currentProjectId: projectId,
+        currentWorkspaceKey: key,
+        sessionTabsByWorkspace: { ...state.sessionTabsByWorkspace, [key]: tabs },
+        activeSessionByWorkspace: {
+          ...state.activeSessionByWorkspace,
+          [key]:
+            ui.activeSessionId && tabs.includes(ui.activeSessionId)
+              ? ui.activeSessionId
+              : (tabs[0] ?? null),
+        },
       }
     }),
   reset: () => set(createInitialState()),

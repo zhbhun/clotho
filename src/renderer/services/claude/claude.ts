@@ -2,6 +2,7 @@ import type { SDKMessage, SDKUserMessage } from '@anthropic-ai/claude-agent-sdk'
 
 import type { ProviderApiType as RpcProviderApiType } from '@/shared/provider'
 import type {
+  ProjectUiState,
   ClaudeAgentInfo as RpcClaudeAgentInfo,
   ClaudeAttachment as RpcClaudeAttachment,
   ClaudeAttachmentPreview as RpcClaudeAttachmentPreview,
@@ -66,6 +67,7 @@ import type {
   ProviderUsageWindow as RpcProviderUsageWindow,
   WindowDescription,
   WindowRefocusResult,
+  WorkbenchWindowUiState,
 } from '@/shared/rpc'
 import type { DraftSession, DraftSessionIndex, LocalSession } from '@/shared/session'
 
@@ -1016,16 +1018,21 @@ export const claude = {
 
     return requestFromDesktop('claudeSetSessionsUnread', params)
   },
-  async readWindowUiState(): Promise<Record<string, unknown> | undefined> {
+  async readWindowUiState(): Promise<WorkbenchWindowUiState | undefined> {
     if (!isDesktopRuntime()) return undefined
     const payload = (await requestFromDesktop('windowReadUiState', {})) as {
-      ui?: Record<string, unknown>
+      ui?: WorkbenchWindowUiState
     } | null
     return payload?.ui
   },
-  async writeWindowUiState(ui: Record<string, unknown>): Promise<void> {
+  async writeWindowUiState(ui: WorkbenchWindowUiState): Promise<void> {
     if (!isDesktopRuntime()) return
     return requestFromDesktop('windowWriteUiState', { ui })
+  },
+  /** Stores the calling project window's workspace ui in its project's state. */
+  async writeProjectState(ui: ProjectUiState): Promise<void> {
+    if (!isDesktopRuntime()) return
+    return requestFromDesktop('windowWriteProjectState', { ui })
   },
   /** Outside the desktop every renderer is a free window with nothing else open. */
   async describeWindow(): Promise<WindowDescription> {
@@ -1036,7 +1043,7 @@ export const claude = {
   },
   async openProjectWindow(params: {
     projectId: string
-    ui?: Record<string, unknown>
+    ui?: ProjectUiState
   }): Promise<{ opened: boolean }> {
     if (!isDesktopRuntime()) return { opened: false }
     return requestFromDesktop('windowOpenProject', params)
@@ -1053,13 +1060,13 @@ export const claude = {
   },
   async refocusWindow(params: {
     projectId: string
-    ui: Record<string, unknown>
+    ui: ProjectUiState
   }): Promise<WindowRefocusResult> {
     if (!isDesktopRuntime()) return { outcome: 'shown-elsewhere' }
     return requestFromDesktop('windowRefocus', params)
   },
   /** A project's persisted workspace ui (tabs and active session), when any. */
-  async readProjectState(projectId: string): Promise<{ ui: Record<string, unknown> } | null> {
+  async readProjectState(projectId: string): Promise<{ ui: ProjectUiState } | null> {
     if (!isDesktopRuntime()) return null
     return requestFromDesktop('windowReadProjectState', { projectId })
   },

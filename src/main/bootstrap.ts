@@ -388,21 +388,16 @@ export async function bootstrap() {
         claudeSetSessionsUnread: (params) => service.setSessionsUnread(params),
         windowReadUiState: (_params, sender) => {
           const window = windowOf(sender)
-          if (!window) return { ui: undefined }
-          // A project window's workspace lives in projectState, not on its entry.
-          if (window.kind === 'project' && window.projectId) {
-            return { ui: appWindows.projectUiOf(window.projectId) }
-          }
+          // A project window's workspace lives in projectState, read through
+          // windowReadProjectState; its entry carries no ui.
+          if (!window || window.kind !== 'free') return { ui: undefined }
           return {
             ui: windowUiStateOf(sanitizeWindowsState(stateStore.get().windowsState), window.id),
           }
         },
         windowWriteUiState: ({ ui }, sender) => {
           const window = windowOf(sender)
-          if (!window) return
-          if (window.kind === 'project' && window.projectId) {
-            return appWindows.persistProjectUi(window.projectId, ui).then(() => undefined)
-          }
+          if (!window || window.kind !== 'free') return
           return stateStore
             .transform((current) => ({
               ...current,
@@ -413,6 +408,11 @@ export async function bootstrap() {
               ),
             }))
             .then(() => undefined)
+        },
+        windowWriteProjectState: ({ ui }, sender) => {
+          const window = windowOf(sender)
+          if (!window || window.kind !== 'project' || !window.projectId) return
+          return appWindows.persistProjectUi(window.projectId, ui).then(() => undefined)
         },
         windowDescribe: (_params, sender) => {
           const window = windowOf(sender)
