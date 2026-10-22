@@ -49,13 +49,19 @@ export interface StoredProjectWindowState extends WindowIdentity {
 export type StoredWindowState = StoredFreeWindowState | StoredProjectWindowState
 
 /**
- * A project's persisted state, kept even while no project window is open:
- * the reopen geometry plus the renderer-owned workspace ui last shown.
+ * A project window's persisted ui, kept even while no project window is
+ * open: the reopen geometry plus the workspace (tabs and active session)
+ * last shown. The tracker writes the geometry fields, the renderer writes
+ * the workspace fields; withProjectState merges them field by field.
  */
-export interface ProjectWindowState {
+export interface ProjectWindowState extends ProjectUiState {
   frame: WindowFrame
   isMaximized: boolean
-  ui: ProjectUiState
+}
+
+/** One project's record in projectState: everything its window restores from. */
+export interface ProjectStateRecord {
+  ui: ProjectWindowState
 }
 
 /** What the main process needs to address a window entry without its geometry. */
@@ -191,43 +197,53 @@ export function sanitizeWindowState(value: unknown): StoredWindowState | undefin
   }
 }
 
-export function sanitizeProjectStates(value: unknown): Record<string, ProjectWindowState> {
+export function sanitizeProjectStates(value: unknown): Record<string, ProjectStateRecord> {
   if (!isObject(value)) return {}
-  const states: Record<string, ProjectWindowState> = {}
+  const states: Record<string, ProjectStateRecord> = {}
   for (const [projectId, entry] of Object.entries(value)) {
-    if (!isObject(entry) || !isRectangle(entry.frame) || typeof entry.isMaximized !== 'boolean') {
-      continue
-    }
+    if (!isObject(entry) || !isObject(entry.ui)) continue
+    const ui = entry.ui
+    if (!isRectangle(ui.frame) || typeof ui.isMaximized !== 'boolean') continue
     states[projectId] = {
-      frame: { ...entry.frame },
-      isMaximized: entry.isMaximized,
-      ui: sanitizeProjectUi(entry.ui),
+      ui: {
+        frame: { ...ui.frame },
+        isMaximized: ui.isMaximized,
+        ...sanitizeProjectUi(ui),
+      },
     }
   }
   return states
 }
 
-/** Merges a geometry and/or ui patch into one project's persisted state. */
+/** Merges a geometry and/or ui patch into one project's persisted state, field by field. */
 export function withProjectState(
-  states: Record<string, ProjectWindowState>,
+  states: Record<string, ProjectStateRecord>,
   projectId: string,
   patch: { frame?: WindowFrame; isMaximized?: boolean; ui?: ProjectUiState },
-): Record<string, ProjectWindowState> {
-  const previous = states[projectId]
+): Record<string, ProjectStateRecord> {
+  const previous = states[projectId]?.ui
   return {
     ...states,
     [projectId]: {
-      frame: patch.frame ?? previous?.frame ?? { ...FALLBACK_FRAME },
-      isMaximized: patch.isMaximized ?? previous?.isMaximized ?? false,
-      ui: patch.ui ?? previous?.ui ?? { sessionIds: [], activeSessionId: null },
+      ui: {
+        frame: patch.frame ?? previous?.frame ?? { ...FALLBACK_FRAME },
+        isMaximized: patch.isMaximized ?? previous?.isMaximized ?? false,
+        // The workspace fields travel as one payload: `activeSessionId: null`
+        // is a real value (no active tab), not an absent one.
+        sessionIds: patch.ui?.sessionIds ?? previous?.sessionIds ?? [],
+        activeSessionId:
+          patch.ui !== undefined
+            ? (patch.ui.activeSessionId ?? null)
+            : (previous?.activeSessionId ?? null),
+      },
     },
   }
 }
 
 export function withoutProjectState(
-  states: Record<string, ProjectWindowState>,
+  states: Record<string, ProjectStateRecord>,
   projectId: string,
-): Record<string, ProjectWindowState> {
+): Record<string, ProjectStateRecord> {
   const next = { ...states }
   delete next[projectId]
   return next

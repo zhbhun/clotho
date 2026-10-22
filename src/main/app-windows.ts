@@ -16,7 +16,7 @@ import type { createStorageStore } from './storage'
 import { createMainWindowOptions, showMainWindowWhenReady } from './window-options'
 import { type RegisteredWindow, createWindowRegistry } from './window-registry'
 import {
-  type ProjectWindowState,
+  type ProjectStateRecord,
   type StoredFreeWindowState,
   type WindowDisplay,
   type WindowSpec,
@@ -45,7 +45,7 @@ type WebviewMessageName = keyof WebviewMessageMap & string
 /** The two persisted documents a window mutation may touch. */
 type StorageDocs = {
   windowsState: WindowsState | undefined
-  projectState: Record<string, ProjectWindowState>
+  projectState: Record<string, ProjectStateRecord>
 }
 
 export interface AppWindowsOptions {
@@ -345,7 +345,7 @@ export function createAppWindows(options: AppWindowsOptions) {
           primary.workArea,
           all,
           primary,
-          storedProjectStates()[projectId],
+          storedProjectStates()[projectId]?.ui,
         )
         // A restored window gets a fresh id; move the persisted identity
         // record with it so closing it later removes exactly this entry.
@@ -379,7 +379,7 @@ export function createAppWindows(options: AppWindowsOptions) {
         from,
         all,
         primary,
-        storedProjectStates()[projectId],
+        storedProjectStates()[projectId]?.ui,
       )
       // The seed must be stored before the window loads so the renderer's
       // first windowReadProjectState already finds its workspace in
