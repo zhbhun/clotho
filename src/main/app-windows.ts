@@ -17,8 +17,9 @@ import { createMainWindowOptions, showMainWindowWhenReady } from './window-optio
 import { type RegisteredWindow, createWindowRegistry } from './window-registry'
 import {
   type ProjectWindowState,
-  type StoredWindowState,
+  type StoredFreeWindowState,
   type WindowDisplay,
+  type WindowSpec,
   type WindowsState,
   fitStoredWindow,
   newFreeWindowState,
@@ -27,8 +28,9 @@ import {
   resolveFreeWindowState,
   sanitizeProjectStates,
   sanitizeWindowsState,
+  withFreeWindowEntry,
   withProjectState,
-  withWindowEntry,
+  withProjectWindowEntry,
   withWindowProject,
   withoutProjectState,
   withoutWindowEntry,
@@ -139,7 +141,7 @@ export function createAppWindows(options: AppWindowsOptions) {
     return free.find((window) => window.id === lastActiveId) ?? free[0]
   }
 
-  function createWindow(entry: StoredWindowState) {
+  function createWindow(entry: WindowSpec) {
     const window = new BrowserWindow(
       createMainWindowOptions(options.preloadPath, entry.frame, options.appearance),
     )
@@ -157,18 +159,26 @@ export function createAppWindows(options: AppWindowsOptions) {
 
     const tracker = createWindowStateTracker({
       initialState: entry,
-      persist: (state) =>
-        transformStorage((docs) => ({
-          windowsState: withWindowEntry(docs.windowsState, state),
-          // A project window's geometry doubles as the project's reopen geometry.
-          projectState:
-            state.kind === 'project' && state.projectId
-              ? withProjectState(docs.projectState, state.projectId, {
-                  frame: state.frame,
-                  isMaximized: state.isMaximized,
-                })
-              : docs.projectState,
-        })),
+      persist: (state) => {
+        if (state.kind === 'project' && state.projectId) {
+          const { projectId, frame, isMaximized } = state
+          // The projectState record is the window's only persisted state.
+          return transformStorage((docs) => ({
+            projectState: withProjectState(docs.projectState, projectId, {
+              frame,
+              isMaximized,
+            }),
+          }))
+        }
+        const free: Pick<StoredFreeWindowState, 'id' | 'frame' | 'isMaximized'> = {
+          id: state.id,
+          frame: state.frame,
+          isMaximized: state.isMaximized,
+        }
+        return transformStorage((docs) => ({
+          windowsState: withFreeWindowEntry(docs.windowsState, free),
+        }))
+      },
       onError: (caught) => {
         logger.error('storage.write_failed', 'Failed to save the window geometry', {
           error: caught,
@@ -299,7 +309,7 @@ export function createAppWindows(options: AppWindowsOptions) {
       const activeWindow = active ? browserWindows.get(active.id) : undefined
       const from = openerWindow?.getBounds() ?? activeWindow?.getBounds() ?? primary.workArea
       const entry = newFreeWindowState(from, all, primary)
-      void transformWindows((windows) => withWindowEntry(windows, entry))
+      void transformWindows((windows) => withFreeWindowEntry(windows, entry))
       createWindow(entry)
     },
 
@@ -324,16 +334,29 @@ export function createAppWindows(options: AppWindowsOptions) {
     /** Reopens the project windows the app quit with; entries whose project vanished are dropped. */
     restoreProjectWindows(projectExists: (projectId: string) => boolean) {
       const { all, primary } = displays()
-      for (const entry of projectWindowEntries(storedWindows())) {
-        if (
-          entry.projectId &&
-          projectExists(entry.projectId) &&
-          !registry.projectFor(entry.projectId)
-        ) {
-          createWindow(fitStoredWindow(entry, all, primary))
+      for (const record of projectWindowEntries(storedWindows())) {
+        const projectId = record.projectId
+        if (!projectId || !projectExists(projectId) || registry.projectFor(projectId)) {
+          void transformWindows((windows) => withoutWindowEntry(windows, record.id))
           continue
         }
-        void transformWindows((windows) => withoutWindowEntry(windows, entry.id))
+        const entry = newProjectWindowState(
+          projectId,
+          primary.workArea,
+          all,
+          primary,
+          storedProjectStates()[projectId],
+        )
+        // A restored window gets a fresh id; move the persisted identity
+        // record with it so closing it later removes exactly this entry.
+        void transformWindows((windows) =>
+          withProjectWindowEntry(withoutWindowEntry(windows, record.id), {
+            id: entry.id,
+            kind: 'project',
+            projectId,
+          }),
+        )
+        createWindow(entry)
       }
     },
 
@@ -359,12 +382,20 @@ export function createAppWindows(options: AppWindowsOptions) {
         storedProjectStates()[projectId],
       )
       // The seed must be stored before the window loads so the renderer's
-      // first windowReadUiState already finds its workspace in projectState.
+      // first windowReadProjectState already finds its workspace in
+      // projectState; the initial geometry rides along so a never-moved
+      // window still reopens where it was created.
       await transformStorage((docs) => ({
-        windowsState: withWindowEntry(docs.windowsState, entry),
-        projectState: ui
-          ? withProjectState(docs.projectState, projectId, { ui })
-          : docs.projectState,
+        windowsState: withProjectWindowEntry(docs.windowsState, {
+          id: entry.id,
+          kind: 'project',
+          projectId,
+        }),
+        projectState: withProjectState(docs.projectState, projectId, {
+          frame: entry.frame,
+          isMaximized: entry.isMaximized,
+          ...(ui ? { ui } : {}),
+        }),
       }))
       createWindow(entry)
       return { opened: true }

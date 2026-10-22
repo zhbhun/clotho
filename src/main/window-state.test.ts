@@ -2,8 +2,10 @@
 import { describe, expect, test } from 'vitest'
 
 import {
+  type StoredFreeWindowState,
   type StoredWindowState,
   type WindowDisplay,
+  type WindowFrame,
   type WindowsState,
   cascadeFrame,
   newFreeWindowState,
@@ -13,8 +15,9 @@ import {
   sanitizeProjectStates,
   sanitizeWindowsState,
   updateWindowState,
+  withFreeWindowEntry,
   withProjectState,
-  withWindowEntry,
+  withProjectWindowEntry,
   withWindowProject,
   withoutProjectState,
   withoutWindowEntry,
@@ -28,7 +31,7 @@ const primary: WindowDisplay = {
   isPrimary: true,
 }
 
-function freeWindow(id: string, frame: StoredWindowState['frame'], isMaximized = false) {
+function freeWindow(id: string, frame: WindowFrame, isMaximized = false) {
   return { id, kind: 'free' as const, frame, isMaximized }
 }
 
@@ -87,13 +90,8 @@ describe('window state resolution', () => {
 
   test('skips project entries and falls back to the stored free window', () => {
     const windows = windowsState('project-1', [
-      {
-        id: 'project-1',
-        kind: 'project',
-        projectId: 'p',
-        frame: { x: 50, y: 50, width: 800, height: 600 },
-        isMaximized: false,
-      },
+      // A project entry is identity only; geometry lives in projectState.
+      { id: 'project-1', kind: 'project', projectId: 'p' },
       freeWindow('a', { x: 10, y: 10, width: 800, height: 600 }),
     ])
 
@@ -221,7 +219,7 @@ describe('window state container', () => {
     activeSessionByWorkspace: { claude: 's1' },
   }
 
-  test('drops legacy and invalid entries, and strips ui from project entries', () => {
+  test('drops legacy and invalid entries, and keeps project entries as identity', () => {
     const sanitized = sanitizeWindowsState({
       lastActiveWindow: 'a',
       openedWindows: [
@@ -232,6 +230,8 @@ describe('window state container', () => {
           isMaximized: false,
           ui: freeUi,
         },
+        // A project entry carries identity only; stored geometry and ui are
+        // stripped — that state lives in projectState.
         {
           id: 'p',
           kind: 'project',
@@ -291,13 +291,7 @@ describe('window state container', () => {
           isMaximized: false,
           ui: freeUi,
         },
-        {
-          id: 'p',
-          kind: 'project',
-          projectId: 'proj',
-          frame: { x: 10, y: 10, width: 800, height: 600 },
-          isMaximized: false,
-        },
+        { id: 'p', kind: 'project', projectId: 'proj' },
         {
           id: 'm',
           kind: 'free',
@@ -394,15 +388,15 @@ describe('window state container', () => {
     expect(withoutProjectState(retabbed, 'p')).toEqual({})
   })
 
-  test('geometry updates keep the ui payload and rebinding keeps the geometry', () => {
-    const free: StoredWindowState = {
+  test('free window records keep their ui through geometry updates', () => {
+    const free: StoredFreeWindowState = {
       id: 'a',
       kind: 'free',
       frame: { x: 10, y: 10, width: 800, height: 600 },
       isMaximized: false,
       ui: freeUi,
     }
-    const moved = withWindowEntry(windowsState('x', [free]), {
+    const moved = withFreeWindowEntry(windowsState('x', [free]), {
       ...free,
       frame: { x: 50, y: 50, width: 900, height: 700 },
     })
@@ -412,19 +406,34 @@ describe('window state container', () => {
     })
     expect(moved.lastActiveWindow).toBe('a')
 
-    const project: StoredWindowState = {
+    // A free window unknown to the container gets a geometry-only record.
+    const created = withFreeWindowEntry(windowsState('x', []), {
+      id: 'n',
+      frame: { x: 60, y: 60, width: 800, height: 600 },
+      isMaximized: false,
+    })
+    expect(created.openedWindows[0]).toEqual({
+      id: 'n',
+      kind: 'free',
+      frame: { x: 60, y: 60, width: 800, height: 600 },
+      isMaximized: false,
+    })
+  })
+
+  test('project window identity records create, rebind, and drop cleanly', () => {
+    const created = withProjectWindowEntry(windowsState('x', []), {
       id: 'f',
       kind: 'project',
       projectId: 'p',
-      frame: { x: 10, y: 10, width: 800, height: 600 },
-      isMaximized: false,
-    }
-    const rebound = withWindowProject(windowsState('f', [project]), 'f', 'q')
-    expect(rebound.openedWindows[0]).toMatchObject({
-      projectId: 'q',
-      frame: { x: 10, y: 10, width: 800, height: 600 },
     })
-    expect(projectWindowEntries(rebound)).toHaveLength(1)
+    expect(created).toEqual({
+      lastActiveWindow: 'f',
+      openedWindows: [{ id: 'f', kind: 'project', projectId: 'p' }],
+    })
+
+    const rebound = withWindowProject(created, 'f', 'q')
+    expect(rebound.openedWindows[0]).toEqual({ id: 'f', kind: 'project', projectId: 'q' })
+    expect(projectWindowEntries(rebound)).toEqual([{ id: 'f', kind: 'project', projectId: 'q' }])
 
     const removed = withoutWindowEntry(rebound, 'f')
     expect(removed).toEqual({ lastActiveWindow: undefined, openedWindows: [] })

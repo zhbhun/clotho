@@ -1,10 +1,10 @@
 // @vitest-environment node
 import { describe, expect, test } from 'vitest'
 
-import type { StoredWindowState } from './window-state'
+import type { WindowSpec } from './window-state'
 import { createWindowStateTracker } from './window-state-tracker'
 
-const initial: StoredWindowState = {
+const initial: WindowSpec = {
   id: 'window-a',
   kind: 'free',
   frame: { x: 160, y: 100, width: 1280, height: 800 },
@@ -13,7 +13,7 @@ const initial: StoredWindowState = {
 
 describe('window state tracking', () => {
   test('persists the initial frame on shutdown without requiring a window event', async () => {
-    let persisted: StoredWindowState | undefined
+    let persisted: WindowSpec | undefined
     const tracker = createWindowStateTracker({
       initialState: initial,
       persist: async (state) => {
@@ -27,7 +27,7 @@ describe('window state tracking', () => {
   })
 
   test('flushes the latest normal frame before application shutdown', async () => {
-    let persisted: StoredWindowState | undefined
+    let persisted: WindowSpec | undefined
     const tracker = createWindowStateTracker({
       initialState: initial,
       persist: async (state) => {
@@ -51,7 +51,7 @@ describe('window state tracking', () => {
   })
 
   test('persists maximized state without replacing the last normal frame', async () => {
-    let persisted: StoredWindowState | undefined
+    let persisted: WindowSpec | undefined
     const tracker = createWindowStateTracker({
       initialState: initial,
       persist: async (state) => {

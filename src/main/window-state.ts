@@ -16,36 +16,55 @@ export type WindowDisplay = {
 
 export type { WindowKind }
 
-export interface StoredWindowState {
+/** The runtime spec of an open window: identity plus live geometry. */
+export interface WindowSpec {
   id: string
   kind: WindowKind
   /** The project a project window is bound to; absent on a free window. */
   projectId?: string
   frame: WindowFrame
   isMaximized: boolean
+}
+
+/** A free window's persisted record: geometry plus the renderer-owned ui payload. */
+export interface StoredFreeWindowState extends WindowSpec {
+  kind: 'free'
   /**
-   * The renderer-owned ui payload of a free window (open workspaces, tabs,
-   * active session); stored verbatim after a shape check. Free windows only —
-   * a project window's workspace lives in projectState.
+   * The renderer-owned ui payload (open workspaces, tabs, active session);
+   * stored verbatim after a shape check. A project window's workspace lives
+   * in projectState, not on the entry.
    */
   ui?: WorkbenchWindowUiState
 }
 
 /**
- * A project's persisted state, kept even while no project window is open.
- * `frame`/`isMaximized` mirror the project window entry's geometry — the
- * entry is the live geometry while the window exists (one writer: the
- * window tracker persist), this one survives it for the next opening.
+ * A project window persists identity only: its geometry and workspace ui
+ * live in projectState keyed by projectId, outliving the window itself.
+ */
+export interface StoredProjectWindowState extends WindowIdentity {
+  kind: 'project'
+  projectId: string
+}
+
+export type StoredWindowState = StoredFreeWindowState | StoredProjectWindowState
+
+/**
+ * A project's persisted state, kept even while no project window is open:
+ * the reopen geometry plus the renderer-owned workspace ui last shown.
  */
 export interface ProjectWindowState {
   frame: WindowFrame
   isMaximized: boolean
-  /** The renderer-owned workspace ui (tabs and active session) last shown. */
   ui: ProjectUiState
 }
 
 /** What the main process needs to address a window entry without its geometry. */
-export type WindowIdentity = Pick<StoredWindowState, 'id' | 'kind' | 'projectId'>
+export interface WindowIdentity {
+  id: string
+  kind: WindowKind
+  /** The project a project window is bound to; absent on a free window. */
+  projectId?: string
+}
 
 export interface WindowsState {
   /** Id of the window that had focus, referencing an entry in openedWindows. */
@@ -141,7 +160,9 @@ function sanitizeProjectUi(value: unknown): ProjectUiState {
   return { sessionIds, activeSessionId }
 }
 
-function identityOf(value: Record<string, unknown>): WindowIdentity | undefined {
+function identityOf(
+  value: Record<string, unknown>,
+): { id: string; kind: 'free' } | StoredProjectWindowState | undefined {
   if (typeof value.id !== 'string' || value.id.length === 0) return undefined
   if (value.kind === 'free') return { id: value.id, kind: 'free' }
   if (value.kind === 'project' && typeof value.projectId === 'string' && value.projectId) {
@@ -151,17 +172,21 @@ function identityOf(value: Record<string, unknown>): WindowIdentity | undefined 
 }
 
 export function sanitizeWindowState(value: unknown): StoredWindowState | undefined {
-  if (!isObject(value) || !isRectangle(value.frame) || typeof value.isMaximized !== 'boolean') {
-    return undefined
-  }
+  if (!isObject(value)) return undefined
   const identity = identityOf(value)
   if (!identity) return undefined
-  const ui = identity.kind === 'free' ? sanitizeWindowUi(value.ui) : undefined
+  // A project entry carries identity only; its geometry and ui live in
+  // projectState, so anything else stored alongside is stripped.
+  if (identity.kind === 'project') return identity
+  if (!isRectangle(value.frame) || typeof value.isMaximized !== 'boolean') {
+    return undefined
+  }
+  const ui = sanitizeWindowUi(value.ui)
   return {
-    ...identity,
+    id: identity.id,
+    kind: 'free',
     frame: { ...value.frame },
     isMaximized: value.isMaximized,
-    // A project window's workspace is projectState's business, not the entry's.
     ...(ui ? { ui } : {}),
   }
 }
@@ -228,17 +253,25 @@ export function windowUiStateOf(
   windowsState: WindowsState | undefined,
   windowId: string,
 ): WorkbenchWindowUiState | undefined {
-  return windowsState?.openedWindows.find((entry) => entry.id === windowId)?.ui
+  return windowsState?.openedWindows.find(
+    (entry): entry is StoredFreeWindowState => entry.id === windowId && entry.kind === 'free',
+  )?.ui
 }
 
-export function projectWindowEntries(windowsState: WindowsState | undefined): StoredWindowState[] {
-  return windowsState?.openedWindows.filter((entry) => entry.kind === 'project') ?? []
+export function projectWindowEntries(
+  windowsState: WindowsState | undefined,
+): StoredProjectWindowState[] {
+  return (
+    windowsState?.openedWindows.filter(
+      (entry): entry is StoredProjectWindowState => entry.kind === 'project',
+    ) ?? []
+  )
 }
 
-/** Replaces or removes the ui payload of one window entry inside the container. */
+/** Replaces or removes the ui payload of one free window entry inside the container. */
 export function withWindowUiState(
   windowsState: WindowsState | undefined,
-  window: WindowIdentity,
+  window: { id: string },
   ui: WorkbenchWindowUiState | undefined,
 ): WindowsState {
   const base: WindowsState = windowsState ?? { openedWindows: [] }
@@ -246,13 +279,13 @@ export function withWindowUiState(
   if (!openedWindows.some((entry) => entry.id === window.id)) {
     openedWindows = [
       ...openedWindows,
-      { ...window, frame: { ...FALLBACK_FRAME }, isMaximized: false },
+      { id: window.id, kind: 'free', frame: { ...FALLBACK_FRAME }, isMaximized: false },
     ]
   }
   return {
     ...base,
     openedWindows: openedWindows.map((entry) =>
-      entry.id === window.id
+      entry.id === window.id && entry.kind === 'free'
         ? ui
           ? { ...entry, ui: { ...ui } }
           : (() => {
@@ -265,10 +298,10 @@ export function withWindowUiState(
   }
 }
 
-/** Replaces one window's geometry in the container, keeping every other field (ui included). */
-export function withWindowEntry(
+/** Inserts or refreshes one free window's record, keeping its ui payload. */
+export function withFreeWindowEntry(
   windowsState: WindowsState | undefined,
-  entry: StoredWindowState,
+  entry: Pick<StoredFreeWindowState, 'id' | 'frame' | 'isMaximized'>,
 ): WindowsState {
   const base: WindowsState = windowsState ?? { openedWindows: [] }
   const exists = base.openedWindows.some((candidate) => candidate.id === entry.id)
@@ -276,8 +309,27 @@ export function withWindowEntry(
     lastActiveWindow: entry.id,
     openedWindows: exists
       ? base.openedWindows.map((candidate) =>
-          candidate.id === entry.id
+          candidate.id === entry.id && candidate.kind === 'free'
             ? { ...candidate, frame: { ...entry.frame }, isMaximized: entry.isMaximized }
+            : candidate,
+        )
+      : [...base.openedWindows, { ...entry, kind: 'free' as const }],
+  }
+}
+
+/** Inserts or refreshes a project window's identity record; its state lives in projectState. */
+export function withProjectWindowEntry(
+  windowsState: WindowsState | undefined,
+  entry: StoredProjectWindowState,
+): WindowsState {
+  const base: WindowsState = windowsState ?? { openedWindows: [] }
+  const exists = base.openedWindows.some((candidate) => candidate.id === entry.id)
+  return {
+    lastActiveWindow: entry.id,
+    openedWindows: exists
+      ? base.openedWindows.map((candidate) =>
+          candidate.id === entry.id && candidate.kind === 'project'
+            ? { ...candidate, projectId: entry.projectId }
             : candidate,
         )
       : [...base.openedWindows, { ...entry }],
@@ -386,19 +438,13 @@ function fitToDisplays(
   return target ? fitFrame(frame, target.workArea) : { ...frame }
 }
 
-/** The runtime entry for a stored window: identity and geometry fitted to the current displays. */
+/** The runtime record for a stored free window, its geometry fitted to the current displays. */
 export function fitStoredWindow(
-  entry: StoredWindowState,
+  entry: StoredFreeWindowState,
   displays: WindowDisplay[],
   primaryDisplay: WindowDisplay,
-): StoredWindowState {
-  return {
-    id: entry.id,
-    kind: entry.kind,
-    ...(entry.projectId ? { projectId: entry.projectId } : {}),
-    frame: fitToDisplays(entry.frame, displays, primaryDisplay),
-    isMaximized: entry.isMaximized,
-  }
+): StoredFreeWindowState {
+  return { ...entry, frame: fitToDisplays(entry.frame, displays, primaryDisplay) }
 }
 
 /** A frame stepped down and right from another window, kept on that window's display. */
@@ -424,9 +470,11 @@ export function resolveFreeWindowState(
   value: unknown,
   displays: WindowDisplay[],
   primaryDisplay: WindowDisplay,
-): StoredWindowState {
+): StoredFreeWindowState {
   const saved = sanitizeWindowsState(value)
-  const freeEntries = saved?.openedWindows.filter((entry) => entry.kind === 'free') ?? []
+  const freeEntries =
+    saved?.openedWindows.filter((entry): entry is StoredFreeWindowState => entry.kind === 'free') ??
+    []
   const entry =
     freeEntries.find((candidate) => candidate.id === saved?.lastActiveWindow) ?? freeEntries[0]
   if (entry) return fitStoredWindow(entry, displays, primaryDisplay)
@@ -446,7 +494,7 @@ export function newFreeWindowState(
   from: WindowFrame,
   displays: WindowDisplay[],
   primaryDisplay: WindowDisplay,
-): StoredWindowState {
+): StoredFreeWindowState {
   return {
     id: randomUUID(),
     kind: 'free',
@@ -462,7 +510,7 @@ export function newProjectWindowState(
   primaryDisplay: WindowDisplay,
   /** The project's persisted state; its geometry is reused instead of cascading from `from`. */
   stored?: Pick<ProjectWindowState, 'frame' | 'isMaximized'>,
-): StoredWindowState {
+): WindowSpec {
   return {
     id: randomUUID(),
     kind: 'project',
@@ -474,10 +522,7 @@ export function newProjectWindowState(
   }
 }
 
-export function updateWindowState(
-  previous: StoredWindowState,
-  update: WindowStateUpdate,
-): StoredWindowState {
+export function updateWindowState(previous: WindowSpec, update: WindowStateUpdate): WindowSpec {
   if (update.isFullScreen) return previous
   if (update.isMaximized) return { ...previous, isMaximized: true }
   if (!isRectangle(update.frame)) return previous

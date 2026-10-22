@@ -1,8 +1,8 @@
-import { type StoredWindowState, type WindowStateUpdate, updateWindowState } from './window-state'
+import { type WindowSpec, type WindowStateUpdate, updateWindowState } from './window-state'
 
 interface WindowStateTrackerOptions {
-  initialState: StoredWindowState
-  persist: (state: StoredWindowState) => Promise<unknown>
+  initialState: WindowSpec
+  persist: (state: WindowSpec) => Promise<unknown>
   onError?: (caught: unknown) => void
   debounceMs?: number
 }
@@ -21,7 +21,7 @@ function rectanglesEqual(
   )
 }
 
-function statesEqual(left: StoredWindowState, right: StoredWindowState) {
+function statesEqual(left: WindowSpec, right: WindowSpec) {
   return (
     left.id === right.id &&
     left.isMaximized === right.isMaximized &&
