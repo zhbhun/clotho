@@ -17,7 +17,6 @@ import { createMainWindowOptions, showMainWindowWhenReady } from './window-optio
 import { type RegisteredWindow, createWindowRegistry } from './window-registry'
 import {
   type ProjectStateRecord,
-  type StoredFreeWindowState,
   type WindowDisplay,
   type WindowSpec,
   type WindowsState,
@@ -170,7 +169,7 @@ export function createAppWindows(options: AppWindowsOptions) {
             }),
           }))
         }
-        const free: Pick<StoredFreeWindowState, 'id' | 'frame' | 'isMaximized'> = {
+        const free: Pick<WindowSpec, 'id' | 'frame' | 'isMaximized'> = {
           id: state.id,
           frame: state.frame,
           isMaximized: state.isMaximized,

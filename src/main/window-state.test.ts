@@ -1,11 +1,14 @@
 // @vitest-environment node
 import { describe, expect, test } from 'vitest'
 
+import type { WorkbenchWindowUiState } from '@/shared/rpc'
+
 import {
   type StoredFreeWindowState,
   type StoredWindowState,
   type WindowDisplay,
   type WindowFrame,
+  type WindowSpec,
   type WindowsState,
   cascadeFrame,
   newFreeWindowState,
@@ -15,10 +18,12 @@ import {
   sanitizeProjectStates,
   sanitizeWindowsState,
   updateWindowState,
+  windowUiStateOf,
   withFreeWindowEntry,
   withProjectState,
   withProjectWindowEntry,
   withWindowProject,
+  withWindowUiState,
   withoutProjectState,
   withoutWindowEntry,
 } from './window-state'
@@ -31,8 +36,17 @@ const primary: WindowDisplay = {
   isPrimary: true,
 }
 
-function freeWindow(id: string, frame: WindowFrame, isMaximized = false) {
-  return { id, kind: 'free' as const, frame, isMaximized }
+function freeSpec(id: string, frame: WindowFrame, isMaximized = false): WindowSpec {
+  return { id, kind: 'free', frame, isMaximized }
+}
+
+function freeEntry(
+  id: string,
+  frame: WindowFrame,
+  isMaximized = false,
+  ui?: WorkbenchWindowUiState,
+): StoredFreeWindowState {
+  return { id, kind: 'free', ui: { frame, isMaximized, ...(ui ?? {}) } }
 }
 
 function windowsState(
@@ -69,8 +83,8 @@ describe('window state resolution', () => {
 
   test('restores the free window referenced by lastActiveWindow', () => {
     const windows = windowsState('b', [
-      freeWindow('a', { x: 10, y: 10, width: 800, height: 600 }),
-      freeWindow('b', { x: 1520, y: 60, width: 1000, height: 700 }, true),
+      freeEntry('a', { x: 10, y: 10, width: 800, height: 600 }),
+      freeEntry('b', { x: 1520, y: 60, width: 1000, height: 700 }, true),
     ])
     const secondary: WindowDisplay = {
       id: 2,
@@ -92,16 +106,14 @@ describe('window state resolution', () => {
     const windows = windowsState('project-1', [
       // A project entry is identity only; geometry lives in projectState.
       { id: 'project-1', kind: 'project', projectId: 'p' },
-      freeWindow('a', { x: 10, y: 10, width: 800, height: 600 }),
+      freeEntry('a', { x: 10, y: 10, width: 800, height: 600 }),
     ])
 
     expect(resolveFreeWindowState(windows, [primary], primary).id).toBe('a')
   })
 
   test('moves a stored frame onto the primary display when it overlaps nothing', () => {
-    const windows = windowsState('a', [
-      freeWindow('a', { x: 4000, y: 60, width: 900, height: 600 }),
-    ])
+    const windows = windowsState('a', [freeEntry('a', { x: 4000, y: 60, width: 900, height: 600 })])
 
     expect(resolveFreeWindowState(windows, [primary], primary).frame).toEqual({
       x: 700,
@@ -120,7 +132,7 @@ describe('window state resolution', () => {
       isPrimary: false,
     }
     const windows = windowsState('a', [
-      freeWindow('a', { x: -1500, y: -100, width: 1400, height: 900 }),
+      freeEntry('a', { x: -1500, y: -100, width: 1400, height: 900 }),
     ])
 
     expect(resolveFreeWindowState(windows, [primary, secondary], primary).frame).toEqual({
@@ -182,7 +194,7 @@ describe('window state resolution', () => {
   })
 
   test('does not replace the normal frame while the window is maximized or fullscreen', () => {
-    const normal = freeWindow('a', { x: 160, y: 100, width: 1280, height: 800 })
+    const normal = freeSpec('a', { x: 160, y: 100, width: 1280, height: 800 })
     const maximized = updateWindowState(normal, {
       frame: { x: 0, y: 0, width: 1600, height: 1000 },
       isFullScreen: false,
@@ -200,7 +212,7 @@ describe('window state resolution', () => {
   })
 
   test('does not replace the last valid frame with a zero-sized native close frame', () => {
-    const normal = freeWindow('a', { x: 160, y: 100, width: 1280, height: 800 })
+    const normal = freeSpec('a', { x: 160, y: 100, width: 1280, height: 800 })
 
     expect(
       updateWindowState(normal, {
@@ -220,90 +232,52 @@ describe('window state container', () => {
   }
 
   test('drops legacy and invalid entries, and keeps project entries as identity', () => {
+    const frame = { x: 10, y: 10, width: 800, height: 600 }
     const sanitized = sanitizeWindowsState({
       lastActiveWindow: 'a',
       openedWindows: [
-        {
-          id: 'a',
-          kind: 'free',
-          frame: { x: 10, y: 10, width: 800, height: 600 },
-          isMaximized: false,
-          ui: freeUi,
-        },
+        { id: 'a', kind: 'free', ui: { frame, isMaximized: false, ...freeUi } },
         // A project entry carries identity only; stored geometry and ui are
         // stripped — that state lives in projectState.
         {
           id: 'p',
           kind: 'project',
           projectId: 'proj',
-          frame: { x: 10, y: 10, width: 800, height: 600 },
-          isMaximized: false,
-          ui: freeUi,
+          ui: { frame, isMaximized: false, ...freeUi },
         },
-        // A free entry whose ui lost its shape keeps the window, not the ui.
+        // A free entry whose workspace payload lost its shape keeps the
+        // window, not the payload.
         {
           id: 'm',
           kind: 'free',
-          frame: { x: 10, y: 10, width: 800, height: 600 },
-          isMaximized: false,
-          ui: { currentWorkspaceKey: 'claude', sessionTabsByWorkspace: 'junk' },
+          ui: {
+            frame,
+            isMaximized: false,
+            currentWorkspaceKey: 'claude',
+            sessionTabsByWorkspace: 'junk',
+          },
         },
+        // A free entry without geometry inside ui has nothing to restore.
+        { id: 'w', kind: 'free', ui: { ...freeUi } },
         // Legacy kinds from before free windows existed.
-        {
-          id: 'legacy',
-          kind: 'main',
-          frame: { x: 10, y: 10, width: 800, height: 600 },
-          isMaximized: false,
-        },
+        { id: 'legacy', kind: 'main', ui: { frame, isMaximized: false } },
         'junk',
         // No kind, an empty id, a project entry without a project, and a
         // free entry claiming a project.
-        { id: 'b', frame: { x: 10, y: 10, width: 800, height: 600 }, isMaximized: false },
-        {
-          id: '',
-          kind: 'free',
-          frame: { x: 10, y: 10, width: 800, height: 600 },
-          isMaximized: false,
-        },
-        {
-          id: 'g',
-          kind: 'project',
-          frame: { x: 10, y: 10, width: 800, height: 600 },
-          isMaximized: false,
-        },
-        {
-          id: 'h',
-          kind: 'free',
-          projectId: 'proj',
-          frame: { x: 10, y: 10, width: 800, height: 600 },
-          isMaximized: false,
-        },
+        { id: 'b', ui: { frame, isMaximized: false } },
+        { id: '', kind: 'free', ui: { frame, isMaximized: false } },
+        { id: 'g', kind: 'project', ui: { frame, isMaximized: false } },
+        { id: 'h', kind: 'free', projectId: 'proj', ui: { frame, isMaximized: false } },
       ],
     })
 
     expect(sanitized).toEqual({
       lastActiveWindow: 'a',
       openedWindows: [
-        {
-          id: 'a',
-          kind: 'free',
-          frame: { x: 10, y: 10, width: 800, height: 600 },
-          isMaximized: false,
-          ui: freeUi,
-        },
+        { id: 'a', kind: 'free', ui: { frame, isMaximized: false, ...freeUi } },
         { id: 'p', kind: 'project', projectId: 'proj' },
-        {
-          id: 'm',
-          kind: 'free',
-          frame: { x: 10, y: 10, width: 800, height: 600 },
-          isMaximized: false,
-        },
-        {
-          id: 'h',
-          kind: 'free',
-          frame: { x: 10, y: 10, width: 800, height: 600 },
-          isMaximized: false,
-        },
+        { id: 'm', kind: 'free', ui: { frame, isMaximized: false } },
+        { id: 'h', kind: 'free', ui: { frame, isMaximized: false } },
       ],
     })
     expect(sanitizeWindowsState({ openedWindows: [] })).toEqual({
@@ -388,20 +362,14 @@ describe('window state container', () => {
   })
 
   test('free window records keep their ui through geometry updates', () => {
-    const free: StoredFreeWindowState = {
-      id: 'a',
-      kind: 'free',
-      frame: { x: 10, y: 10, width: 800, height: 600 },
-      isMaximized: false,
-      ui: freeUi,
-    }
+    const free = freeEntry('a', { x: 10, y: 10, width: 800, height: 600 }, false, freeUi)
     const moved = withFreeWindowEntry(windowsState('x', [free]), {
-      ...free,
+      id: 'a',
       frame: { x: 50, y: 50, width: 900, height: 700 },
+      isMaximized: true,
     })
     expect(moved.openedWindows[0]).toMatchObject({
-      frame: { x: 50, y: 50, width: 900, height: 700 },
-      ui: freeUi,
+      ui: { frame: { x: 50, y: 50, width: 900, height: 700 }, isMaximized: true, ...freeUi },
     })
     expect(moved.lastActiveWindow).toBe('a')
 
@@ -414,9 +382,25 @@ describe('window state container', () => {
     expect(created.openedWindows[0]).toEqual({
       id: 'n',
       kind: 'free',
-      frame: { x: 60, y: 60, width: 800, height: 600 },
-      isMaximized: false,
+      ui: { frame: { x: 60, y: 60, width: 800, height: 600 }, isMaximized: false },
     })
+  })
+
+  test('free window workspace writes keep the geometry, and clearing drops the payload', () => {
+    const base = windowsState('x', [
+      freeEntry('a', { x: 10, y: 10, width: 800, height: 600 }, true),
+    ])
+    const written = withWindowUiState(base, { id: 'a' }, freeUi)
+    expect(written.openedWindows[0]).toMatchObject({
+      ui: { frame: { x: 10, y: 10, width: 800, height: 600 }, isMaximized: true, ...freeUi },
+    })
+    expect(windowUiStateOf(written, 'a')).toEqual(freeUi)
+
+    const cleared = withWindowUiState(written, { id: 'a' }, undefined)
+    expect(cleared.openedWindows[0]).toMatchObject({
+      ui: { frame: { x: 10, y: 10, width: 800, height: 600 }, isMaximized: true },
+    })
+    expect(windowUiStateOf(cleared, 'a')).toBeUndefined()
   })
 
   test('project window identity records create, rebind, and drop cleanly', () => {
