@@ -1,0 +1,200 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:32b3edf2fd754ae656b0c4a35ee63fe31d3ed699321edc51ea4770d4baf85a58",
+  "claims": [
+    {
+      "id": "claim_2ee08929c9de4e999d731e7d9a1b77f5",
+      "statement": "getLoggingDestinations 在测试环境返回 memory sink，dev 通道同时启用 file 与 console，其他通道只用 file。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/logging/runtime.ts#L51-L57",
+          "version": "repo-lines-v1:sha256:61cd6471820c2d56c3e017ea1c9b1e25952d587bb954d1aafa15157cd4409b66:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWFkMGI2YmE0NWFkYWQ5NzBlYTI4MTk2NGMyYmQwY2UwMmVlYmJmMzA2MDg2ZTg0NDZiZjdiNmQ1NzcwZDk2MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTBjYmRlNTBkMTI3YmJmMWE0ZWI0YjE2NTg4YjExNTVjYjQxN2QwNDNkODE5ZDE2YTNiMWJjOTM4ZGM5ZjI3YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWY2ZTdiYzg3MDc0MTg2YzdiMzA5MzNmZjk2Y2QxYjZmN2VlMWRiMjFkNjdlMmEyYjJlNDZkMzM2MDNjYjI0ZiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_21ad74903c1e48119a13b55ce523ec46",
+      "statement": "日志文件路径按通道区分：dev 写 clotho.dev.jsonl，stable 写 logs/clotho.jsonl，其他通道写在以通道名命名的子目录下。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/logging/runtime.ts#L59-L64",
+          "version": "repo-lines-v1:sha256:d7e7ba20ef4698a47bf5ad6b1716acfcdd252a68285bb6e3da54a3780e53951c:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWIwZGVjYWUxNmQ3NjA1ZjJiMWFmY2FhOWI1MzUwOTg4YWUzNjQ5ZmRlYTRjYTg5NGJkZGE2OWY4Y2NjMTY3YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2Y5YWRjMDFmM2MwZTRmMmVmM2RkOTE4NTg1MDk3MjM5YjBmZmRmNzNmZjI1ZjQ0ZTA2MTE3NGQ1YzkxMTg4NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDg5NGFiYTlhYThiYjM4OWMyMTczYzE4NTEyNzAyNTY2ZTFlYTMwMzQ2Y2Y3NjZhNTNjMDRlYmMzMDZkZDkwMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_8d3b35e363a14740999f4a176a526857",
+      "statement": "configureLogTpe 的文件 sink 单文件 5 MiB、保留 5 个、缓冲 8 KiB、flush 间隔 1 秒且非阻塞，外层再套一层 redactByField 脱敏。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/logging/runtime.ts#L87-L113",
+          "version": "repo-lines-v1:sha256:108384f285fb3e158da39db40627daa395c2172fb65568b3cda35986a82d5645:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhiMTAyYzQzODE2MmMzNzQ2NTA3YmI4MDgyMTM4MmY4NDc3YjUyNDhjOWI0MDkwY2MzOTVlNmVlMWYxZjA4ZTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY0YjEzYjhjYjNiODcwNjdmNThkZWM4MGJkMmY5NDM3NTk5ZGI2YzNlZWE0Njg3MzRlY2ZmMTE1Y2I2YTNlZGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJjYWYwYzMzOTk2MmY4MGEyZWZiZmZjN2UwZTEyYjM3ZjdkNzJmMGNkMGQ5NmUxNGVkYWU4YTZkM2U2OThiNWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f62181e945014919b05b38cee3e86faa",
+      "statement": "日志级别可由 CLOTHO_LOG_LEVEL 覆盖，未设置时 dev 通道用 debug、其他通道用 info。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/logging/runtime.ts#L66-L78",
+          "version": "repo-lines-v1:sha256:b4648e461b9ab9169b4e871aa65e53587675965bdff1a752f74d71c3f0daf8f4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyY2ViMDhmYWFhMTczYmMxMjVhOWRhMGM4OWVlNzBlY2Q4MzAzMzQyZTc5MTA1NGYwZGU5NGI4ZDhmYWQzMWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJhNDg4NWE5YzFhNjZjZDMwODhkYzgyMzNhYTdmNzg0YzY0ZDVjNzEzODU5MjgyOWM4ZDkzMjVhYTFmZTE0ZTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdlZDc0ODExMDViZmE4ZWUwM2IzOTUwNWVlZjBkNzQ2ODFmZDcwYTVmOGFhNWJiZWNiYTBjYmViZjI1NDEzZjgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6fbc6e8be4b949e19f9a39bc6fb81220",
+      "statement": "initializeLogging 在文件日志配置失败时（非测试环境）退回纯 console sink，避免日志初始化失败阻塞启动。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/logging/runtime.ts#L157-L182",
+          "version": "repo-lines-v1:sha256:ace9e0cba308980844ed30c375ed5c1284fc96634534e9ad2e7f32939c82d536:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVkMzAzOTZjODBjZDg4MGJiNTMxM2UzNGE0M2I1Mzk4YjQxMWRkNmExY2JlNmVkODdkOGU2NTMyYThmY2M4MzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjViM2M2OTFjYzE0MDNmMzI4ZjdlN2FkYWYyMThjZjhjMDg3ZDFkOWJjZTZmOTBhOWQ4ZDk3MDVkYzllYTFjYzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzZmJmYWVkN2VhZWQ4NTM3NzNiYzVmMzkyMmU1ZGE1MWYzYWIzMzYxMDA5YWFkMDI3NWQ5ZmMyNzY1NjVhMTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_191e5e3d2e8545228acf5f01f6fd3e32",
+      "statement": "shutdownLogging 先清除配置标记与 activeLogger，再 dispose logtape，保证 dispose 期间不会有新写入落到已销毁的 sink。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/logging/runtime.ts#L184-L189",
+          "version": "repo-lines-v1:sha256:a7ced3fd784c46b25f508d596553f2db817da9d630ab2dea82252b168b91377c:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOWZlODBhNWM4ZDBhNDRmMTIzYjJkMWU1MjE1ZDI3YWEzZDNlYzcxZWRhYWJkNTQ0NTQyYTdhZTE4NDViMzU3NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjkzMDk5OWYwNWI5MjA3MjQyYjYyYzI1MjE4MjJkMmFmNDE3ZmQ2OTRhNDMxN2VkZjZmMzRiNzA4YTIxMTVhYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWQzMjM4NzM3Yjg2MDJjZTdjYzkxODdjMjBmOGRkMDNjZTc0NWMyNjIwZmE4MjQ3NjJmYzcyZGM3NzU1ODUyMyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_07e6f2f3fee94e47a419d5a9826a8937",
+      "statement": "createAppLogger 的所有写入都包在 try/catch 中，日志失败被静默吞掉，以遵守日志不得改变应用代码结果的原则。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/logging/logger.ts#L70-L72",
+          "version": "repo-lines-v1:sha256:504a23ee04bcba3a34b11959e53507ebd80be4e13584f75704babd7c6da19320:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDJkZjg2YjQ3NmIwZDZkYmJkMTZmYTE5ZmUxN2E4YmU3NzUxYWJlM2VlODA3YjUxMGZiNWY4Y2RkMGRhZDE0ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5M2Y0MGUzNzgxZWI4OTZjODJkMDQ2YTA4MDY3YTExZTM1Y2RmMmYxZGZhZjI2ZmVhOTBiOGRiNjY3NjQxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTc1OTlhYmQzNmI2ZjNkMzFjMjg0ZWMyMWE5ZjIyODg3ZTI5NTdhMzJhNTQ2YzM4ZThmZTkyNjdlY2I0NjdkNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjVkYWFkOTRhYmU0ZWI5YzU3NTkwZmU5OGQ4ZmZmNDc2NDdjOTkyNDE4YzRkNWU5MjJlOWEwNzIyMGRhMmYxMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_01c68d3e8a274d7e858cad448a324c68",
+      "statement": "AppLogProperties 固定包含 schemaVersion、event、process（main 或 webview）、runId、appVersion 与 channel，外加可选的 context 与 error。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/logging/logger.ts#L5-L14",
+          "version": "repo-lines-v1:sha256:eb69e35d4052b5d38eb2d3cbfce84cf06d52db395d13c7fd05c1085009d88817:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ3OTBiOTFjNGE1YWNhMzI4ODNiM2E1NzQyYjc3ZjJiMDlmZWMyZmEwNTUxYTRjMGE3NDNkZGViZTc3YzAwMmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM4MTE1ZTI5MzhmMTg4ZmU2YmI4NWUxODE5ZjJlY2E5N2IxMTc5OTVjOTlhNTU1MThmYmZhMDFhN2RiNjViN2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQzZWJjZDgzYmNjMTc3NWUyNzYxN2I0YTBhYTlkZjNlOTNiMTJlMmRmZDBlY2RkYjRjZWE2Y2Y5MWQ3Zjg4NzgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fd7518591e1741e5a41246e9e2a2e2b9",
+      "statement": "context 脱敏上限为深度 5、属性 100、字符串 2000、堆栈 12000、cause 链 3 层。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/logging/sanitize-context.ts#L17-L21",
+          "version": "repo-lines-v1:sha256:6b5114d65c08d16372214ddd1453a7dcf3e6cd0d22c2fe105baa4dc8b2aa5a95:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWY3M2E3NDNiYWJjZWQxMjA2MGJkMDNhMWMzNTgwZDY3MjNjYzJhYjFjZWQ3MmQ5NzlkNTc0ZmQwNGEwY2VhYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWI2MjI4NzI0YjJhNGVhMTdjNmY5NDlkMGQ1MTgwNWE5YTQ3YzhlYzExZmNlMGFkMGVhOTc0MDQxNDFiYzQyOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiY2JkMjVhMDkyN2I2ZGI0MzRhMzUyNzc4MzgzMmZhMmFkY2U2Njc4ZTAwOWUxYjliOWU3NGIwYWI4ODdjYTg5YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjkyYmE5MWY0ZGZiZDY2NTMxYTE0MTc2NzM1MWE1NzlkY2RkMjM1OTZmOWFkOThkZDMzMWUxMDI5ZWVkNDNhMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_1c9a5d241d5f42c683dca2e587e985c8",
+      "statement": "sanitizeString 把 home 目录替换为 $HOME，并把 UNC、//、POSIX、Windows 四种路径形状统一替换为 $PATH，超长字符串截断加省略号。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/logging/sanitize-context.ts#L101-L124",
+          "version": "repo-lines-v1:sha256:82f54968eba1a86c8e35b3d62b26344612d1f01237c91c82d86c26a44ff124ca:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg2Yjg4ZmJiYjk0NTVmOTBiNmYwOGM1ODk3ZTNmZjBmNTcxZDI3ZjQxOGFjODAzYmEzYmU3YmQ2ZTU0Yjk5NzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgwMDMxMDI2ZjQxMmEyNTc0OGIzZWM3ZTY0MzNkNGY4ZDBlNTAwYWRjNzNhZjY2YmYxNTdiMTZmZDc0YmJhZjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ2MDdjOWUwNTc4NTBiYjM5ZjFlOTgxYTljY2ExZTRjOGNmMDVlNzFiOGU0MjFjMTcyMThjYjA2ZTI5NGY5MGMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1c96f13aad2b4c8186c826fe67513910",
+      "statement": "字段名去掉连字符与下划线并小写后，命中敏感集合或敏感子串（含 model、prompt、content、token、apikey 等）即整字段丢弃。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/logging/sanitize-context.ts#L37-L64",
+          "version": "repo-lines-v1:sha256:e069885ffe3b345eef23835dc4535d9fc43aef28187f784ec8678c2863785764:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0MWU0ZjI4OThmZGUzYTViZWNhMzdjNmEwYTc0Yjg4NGFmMDAxMzE1ODNlYjc1MTBiMDkyYWRhYTQyMzhiYmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5NDE2ZTA5Zjc4YmEzMTZjMDMyNTY4MjEzYjg1NWVlNzU2ZTQxNTY1ZDkxOGYwOTUxOWM4MWZkNjIwZjQwNjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFlYzM5NmU1ODExYmU4NGIzZmQzNjA0ZWQzNDZhMjdiNWQ1ODVkMzUwYjM5YTA5YmFmNzc5M2U3MGEzMDhlNjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg1OTI2NWQwNDEyMTk4NjAzMDhmYmQ1MzA5OTMwMmNjZjQ5ZjBkN2JjMTM1NzhlNGQ3YTQ4NTQ1MjlmOGM1MDkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3af61eaecc9a4775851b3b168bacaf23",
+      "statement": "errorName 字段只保留标准错误名白名单内的值，非白名单名字被直接丢弃。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/logging/sanitize-context.ts#L183-L187",
+          "version": "repo-lines-v1:sha256:09224b08bead7c0ab6e83ce2953cd7b85bc4ba69e1896ae13ba96dfc574ee4a1:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODMzZDI1MDdiNDQ5MTk0YzExNmFkYzVkNWI0MTU0YjhkNTQzY2NjNjY0Y2FhMDIxYzFjMmZiMmQ3OTk1OWEyZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5M2Y0MGUzNzgxZWI4OTZjODJkMDQ2YTA4MDY3YTExZTM1Y2RmMmYxZGZhZjI2ZmVhOTBiOGRiNjY3NjQxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2NkZTVlYTEzNDlkY2FmMzRjZDFlNWViNTFkYmI0ZjMwZTU5MmJlNWUxZDhjZTc3NWRlMjE1MTdjMmNhZTZmMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDA4MTJiMjNmNDlkNGJhMGU0MGRjM2JmODkyNjVmOGIxOGE0ZGZiYmIwZDhlYWYyOWFlMTEwYTI5MGU5ZjM5NCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_337f2a8a06eb43b49ad8a1504dbce067",
+      "statement": "错误消息默认替换为 Error details omitted，只有命中白名单模式（React 更新深度超限、无效 hook 调用、minified React error 等不含用户数据的消息）才保留原文。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/logging/sanitize-error.ts#L12-L24",
+          "version": "repo-lines-v1:sha256:c6974db7e177d5626db4855bdaab66df86306774019c9152bfcf46f9a5afefda:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkMmNjOTA5ZDRkNjVhZDUzODE3MDc4MTcyNGNmZjEwN2VmMWFiZGQxODA1OWNlZjliMGM4ZjQyNDg4NDE3MTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5NDE2ZTA5Zjc4YmEzMTZjMDMyNTY4MjEzYjg1NWVlNzU2ZTQxNTY1ZDkxOGYwOTUxOWM4MWZkNjIwZjQwNjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIwODBmN2Y3ZDJiODc2MDlkNjdmYTU1ZmU0NWQyMTQxNzgzNmJhNWU5OGYzMTJlMzhmYjlkOWVjZjc2NGM0YzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU3ZTJkOTM3Y2EwMzBhMWFiNWQwNmQyYTBiZjNmMDM3ZWFkYjg0YzcwYTFhYTdhZmNhMDRkYjkwYzViMTU1YWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4f6546e4972a4639845a8c4e146c62ef",
+      "statement": "错误 code 只在标准 errno 白名单（ENOENT、EACCES、ECONNRESET 等）内才会被记录。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/logging/sanitize-error.ts#L25-L46",
+          "version": "repo-lines-v1:sha256:96370f8febd5d6632b7dbd8f2ff8ff74a2ba1f0542daf22599f78bbee53501c3:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhiMzFiNDNhY2VhNjE2MzA1M2U0MjlkYTc4MDY4NjYzZjg5YTZkNjllM2NlMzg2MTc0MDQzZDk2ZDUwOTY1NjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2M2FhZTM5YWQ1OWZhZjMyZDNhMDQ1OGI4OTM0NmU4ZTg4ZTkxZmRkNDA0NTQwM2E4OGEwNjdlYjU2Mjk5NjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiZTRmNTU1MDMzZTFhYzUxY2NlODIzYjlmYWI4ZWY5OWM1MWUxZTc1NTAzNjAzMDQ5MzdlMTEwYmQzZWM4ODEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEyMzQ4ZjdkOWUxNDUwOGE3Y2Y5MDA5YjU3NTc0MDUyOWY3YmMzMjBlZDNmYWZhNjRhZDk4OTM1NzFhZjgwNDIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_05e627b25d3b43828de24f43a38228e1",
+      "statement": "堆栈脱敏只保留 at 开头的帧，帧内路径替换为 $HOME、$PATH 或 $WEBVIEW，localhost URL 替换为 $WEBVIEW，最终每帧只保留函数名与位置。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/logging/sanitize-error.ts#L108-L134",
+          "version": "repo-lines-v1:sha256:9f533926fab605fd5523d00ea73a6b88743c9f9af4fd15a87b395319c020c801:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjYzc2OWVhMGYyODZkZmRkNmEwYWMxYTVmMTAxZWRlZjBiNzY4ZjE2OWU0OGU5MTM1NGJkZGEwMjg0YWU0MTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQyMDRhNDc3MGNiODk5NWZiZTdjZWUwYTExNTJhOTU3Y2MxN2Y0OGFiN2U3YTAyZWE2M2U1Y2ZkMzM0NTVjMDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_71e57ac0bc42407a80087cadc0491b8a",
+      "statement": "sanitizeWebviewLogBatch 用白名单策略覆盖 renderer 传来的 level、logger 与 message，防止伪造，并允许每条策略自定义 context 字段白名单。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/logging/sanitize-webview.ts#L20-L96",
+          "version": "repo-lines-v1:sha256:1667e4269bcff9f91657ae5f0868b7339c9429395eabfd1d4c8bd7a78ef1bdd6:eyJzZWxlY3RlZExpbmVDb3VudCI6NzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVmYmM1ODg1MzZiNjM0NTlkZGQzOWM5Nzc2YmY4Mjk4NzgwNzUwOWY3NjE0N2JjNjEwZWYyZTlhMjU5YTY2YjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhiN2FhYjZiMzZkNjdmOTYxZmNlZDA1MjgyM2NlYjliZTQzZTQ3NjVkMzJmZjMzYjZhM2E5MjAyYmNhODA1MGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY0M2Q3MmQxMmU1YTQ5YjRlMmM2NmUxYmJjZmU4ZDY0MjU5OWZkMjE4NjhjNzM5YzM0NjEyZWQ5ZjY3NzI5YWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d4429ff463b840f8862839eb81c1c10a",
+      "statement": "webview 日志准入要求 logger 匹配 clotho.webview 前缀模式、event 为至少两段的点分小写名、策略存在且 message 非空，否则计入 dropped。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/logging/sanitize-webview.ts#L16-L18",
+          "version": "repo-lines-v1:sha256:6cef9788101b668c3c800e9211cea81957b54ee54c07244f9c7eb01e2bfcc928:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDM5YTVmMTBhMDJhYWM2ZWY3ZDlkOTk5ODVjNjA3OTc2ZjhkYjA5MmQzNzFjMjhjMzQ5M2Y2ZDdkMGI0YzkxMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzgzYjJlZDk3NWZiYmU3N2RhZDc3MDQzNzEwZTY0MjMxZWUzYzNjYmU0ZDk2YjlkM2RlNWYzNGQzYTMzZmZhYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTU1MTEzZjI2ZWIxYmIxZWMxZjYwMWIwZDc2NTc3ZmY0OWY2NTA4ZWUwZDdhY2U4MmViYWUzMzkwNGFkOGE0MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTBlNTg3ZjNmZWE3OTZjNjM1NDc0YjYxMzc3ODUyMmExNDM0OTI5NTM0ZDBjMzQ2ZWJiODA4NjZiMTAzMTQ3MyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_afeb8b9b5a0d4629925cb8b3909decc0",
+      "statement": "webview 日志批量上限 50 条，超出部分直接计入 dropped，存在 dropped 时追加一条 rpc.invalid_log_batch 警告。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/logging/sanitize-webview.ts#L15-L108",
+          "version": "repo-lines-v1:sha256:fa83bed021e537048427a2da36fd99eba31a7248dff5bf76edac75a629f8a37e:eyJzZWxlY3RlZExpbmVDb3VudCI6OTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRjOWI2YjYwYzYwY2VmZTZkM2IxNTc5ZWY2NTk1NjBhOWNjOGEzODM3MzU1OTRmNjBlNTE4NmJhZTdiMTkzZWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg2YzcyYzg0NWU1MmUzOTE2MjE4M2IwYmM0YzhmMTRmZGMxNGFkNmMxY2U0ODRmZGM0M2RhZDZlOGY3NDVkYjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk0ZTgyMzAwNmY1YTQzMDY1MzM5NmMzNTU1ODY0YTIyZTc5YzEwMTM0MWIxMWRkZDVjOGEzYjBiN2M0ZmUwNzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJlMjE0MDVmYTBjYTE3NTg5YmUxZTZiN2RiNGRmZDQzOGU5M2UwNWI1N2Y5NTcwODAxYjExYzlmNWYwODRiMTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_48853fe1da08444ba8c801acef0d8d99",
+      "statement": "recordWebviewBatch 从 payload 取 entries 交给 sanitizeWebviewLogBatch，逐条以 process 为 webview 写入，整个批次非法时记一条 invalid_log_batch 警告。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/logging/logger.ts#L96-L133",
+          "version": "repo-lines-v1:sha256:3097c3f4a5481c2e36442e23ca532255748bbdb49cb49beb89ca5fd5105c89c0:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNhNzUzZjBhNmU5YmRmNWU3NjNkZDZlZjNkMGRjNDg1OWI2Y2QyMWRhM2VkNmFkYjY2NjhiZTUxMGY4MWVkNGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhiNjk2MTY5NWUxZjNiNTQ1ZGNlYmY5M2U2ZDM3OWZhOGQ0M2VmYjI5MjI3MjY5ZjE1MTgwZjA2NjNiZjZlYmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRmNzM5YTA2YzFjYmIxMjQ0ZTMzNjNkMzhiY2Y5ZmE1MGNlODRmZWQzOTljMjE5M2EzYzdmMDhkNTk5MThiMmEifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}

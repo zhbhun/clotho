@@ -11,7 +11,7 @@ the React renderer through a typed IPC bridge exposed by the preload script.
 npm start
 npm run package
 npm run make
-npm run typecheck
+npm run check
 npm test
 npm run lint
 npm run format
@@ -33,7 +33,7 @@ src/renderer/          React frontend and shared frontend modules
 src/renderer/pages/    Page-private UI, hooks, stores, services, and utilities
 src/shadcn/            shadcn registry components
 src/main/              Electron main process (backend)
-src/main.ts            Electron entry point
+src/main/index.ts      Electron entry point
 src/preload/index.ts  Preload IPC bridge (window.clotho)
 src/shared/            Shared RPC and Claude types
 icons/                 App icons for packaging

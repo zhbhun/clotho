@@ -1,0 +1,210 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:0b98f2d15be93c33000a9ef6d5fb104fc2b948c4a8893e5de4fa8a4c59c7fea1",
+  "claims": [
+    {
+      "id": "claim_c2a3e42809cd4de3a2b97af5302d13b8",
+      "statement": "src/main/index.ts 是真正的 Electron 入口：处理 Windows 安装/卸载的 squirrel 分支后，用 app.whenReady().then(() => bootstrap()) 启动，catch 里调 app.exit(1)。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/index.ts#L10-L16",
+          "version": "repo-lines-v1:sha256:16c971107bb900886fb7b33dabf7263b4b493c1305dee7ef54022efebd2c655c:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODMwNDMzMjUwOTBhYzRlM2M5NTIwYzdjMTAxMjMwNzM2YTcwNjAzY2NhNzU2MjlmMGRmNzJkMTg5NmU2MTFiNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjQ3NWU5NGE5MDRhYzQ5YjMxNTRkNDY3MmE2NmU4NjI5Yjg2ZGFjNzRlM2UyOTM3YmU2OTI3YWUzZGExMWM1MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTdiYjkwY2UwYzFjNTVjMDNhODA2ODU5NWMxNjE2NjVmOTM5YWI4MDM3ZmIyZDk0NjU5YjcwZmYyMzhhZTBjYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjlhN2NiMjkxMmVhMDY2ZjkyODlmODQxNDIwZTEyNDQ0YmExOTdjMjQ5OTNjNjhkNDUxYzMxOGI1YmQzY2M1NyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_11ee90ab82b24215abd6231fe6c9ca0d",
+      "statement": "src/main/index.ts 还定义 window-all-closed 行为：macOS 上关完最后一个窗口不退出，其他平台调 app.quit()。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/index.ts#L19-L23",
+          "version": "repo-lines-v1:sha256:4c2edde4994f7135b2cad0512fdfdf3d30054ad3dc396096c62e9d7cd2a35fbd:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDU2YmEzYTkzZWNkZTljYTY2NWVlMDEzMjg2ZWE1ODBlZWY4ZWI0ZmQ4NDYzMjEyMGUxNDYwMGZjMWI0YTRjNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODU4MGI3NjUxOGRhZTk3OWZhZWJkMDIzNjdhMjkyOTJhNTBkOTc2MDkyMjUxYTM4YTZjZTMwODgwYmE0MjgyNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjA2M2M0ZDFhZjhjZDg5YmIwYmRkNzY1N2ZmY2JmNjgwNmE2MTBkNzlkNmM4ZDRjMzA3YzI0MWRmMzkwMDUyMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_18a317f78179440db3e22b38a7d62b67",
+      "statement": "主进程的装配集中在 src/main/bootstrap.ts 的 bootstrap() 函数里，入口文件本身很薄。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L65-L65",
+          "version": "repo-lines-v1:sha256:e9b636701512bcc4e3c88222f811bec05d32cac456fca2e3662e9afc85200331:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTliNjM2NzAxNTEyYmNjNGUzYzg4MjIyZjgxMWJlYzA1ZDMyY2FjNDU2ZmNhMmUzNjYyZTlhZmM4NTIwMDMzMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTliNjM2NzAxNTEyYmNjNGUzYzg4MjIyZjgxMWJlYzA1ZDMyY2FjNDU2ZmNhMmUzNjYyZTlhZmM4NTIwMDMzMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODY3MTFkOTg3ODY0ZTdmMTNjNTlhZmI0ZmFlZDdjYTg3MDJiYzUyODU0ZGQ4NTQ0YWUxMzBmNTViMjUxZTU5OSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWViMDgwNzRmNmRjNzMwOTJiYzJiOGJhZjE0MzhkYzVkNzA2YTNjODhiM2E0YTJiMzMyYmNjNzQzYmU2Nzg5ZCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_776c6cb7754946c6a59f61ce08c3bcc4",
+      "statement": "src/preload/index.ts 定义两个 IPC 频道前缀：clotho:request: 用于 invoke 请求，clotho:message: 用于 send 与推送。",
+      "evidence": [
+        {
+          "resource": "repo://src/preload/index.ts#L8-L10",
+          "version": "repo-lines-v1:sha256:3f3b70431e908fd95999b6e6a8b77fed3fdfcece06f7580108aa728ffefd1df8:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzI4N2JjZGI2Mzg4NmUzZDg1NmVkMzI5MmEzZTI0NzY4NjM0YjYxZTBiNjg0MGIyNjRhMWVjZTkyM2EyNDgzZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjMxZThjMjNhYTU5MmRkYmUzYmRjYjA0NDI2MTkyNTIzMjJlMjdkNWYxYWZmNDA4MzEzYzJhMTU4NzFiNTFkNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNmMwNWVjNmVlZTlkOGM4ZjZhNDU3Mzc5NzAwNjYwMmVmMTk4YmQ1YTgxY2YwYTMyMGFkNGY3MGQyNTQxOTY4NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTJhNjYyYmJhZWYzY2QxNzM0MzQ4YTdiOTcxNWJkODM0ZjI5ZjhkMmJjNzBiODc5ODE4MDQ4MjMyMmYzZDI0MSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_7da66c4a45af401893543980e41d8584",
+      "statement": "src/preload/index.ts 用 contextBridge.exposeInMainWorld 把 window.clotho 暴露成三个原语：invoke、send、onPushMessage，后两者都走 clotho:message: 前缀。",
+      "evidence": [
+        {
+          "resource": "repo://src/preload/index.ts#L27-L41",
+          "version": "repo-lines-v1:sha256:62fea7ba463a07b855b862378d884427e69be5a8e836fe93860a4098eb407cd2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4ODJhMTJlOWI5MWRkNzY0ZmYzMWNjNmY1NTNkZjFiZWI3YWRkYWI5MzdiMTFmNDNlMDFiMzllOTZkMzQwYjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1ODBiNzY1MThkYWU5NzlmYWViZDAyMzY3YTI5MjkyYTUwZDk3NjA5MjI1MWEzOGE2Y2UzMDg4MGJhNDI4MjUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6dccb1b67b4a4b1b80d76fb649bb0a0b",
+      "statement": "preload 在任何页面脚本之前从 process.argv 里找 --clotho-appearance= 参数，解码后用 new Function 执行启动主题脚本，让第一帧就用上持久化的外观。",
+      "evidence": [
+        {
+          "resource": "repo://src/preload/index.ts#L15-L25",
+          "version": "repo-lines-v1:sha256:beb50b8c47988408306fdc119c04f5c1618d9203cb4e094e344a6a222c78aeff:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRkNzllMTQ1ZDBkNGE4OGNjNTk3MjFjMzkxOWJjMTY3N2FhYWExN2ZjNjQzOWY2MGRmZTM0NjMzOTk0NmJmYzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyM2UyNjVlMGM0NzZiODcyMjkxZWM0OGVmYzk0NTQ1MGUwZGFkNWQ5ZDc1YjFmODc3Y2YzZWYyOTQzZDRhMTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRiMDJhZmZhNjZkNjAzM2ZmMDZlMzE3NjNlZDYxYjI3YTY5MmIzMWU5MmFmMzgyNjE4NDMyNzUyOGMwNTVmMWMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_44e6995eff7f4016ac75143541f8995d",
+      "statement": "src/renderer/main.tsx 在模块顶层安装三件事：右键菜单守卫（isDev 取 import.meta.env.DEV）、webview 错误日志、窗口标题栏双击。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/main.tsx#L22-L24",
+          "version": "repo-lines-v1:sha256:9d3def44a82ed48d1fd0312b5aef83458e8845539742760de7a4be71ed2b16b6:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDRmNTAzNzhmNTE4YjRiYWFlYzZmNjYyOTE1MTVlOTJkNThhMTU2ZWRkMDRmNjhmMzY4NjA5M2Q3MmVlNDJhOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiY2E0NTNiM2UzOWU2YTFkZWVkNTFlOWIxYThmYTFlZWU1YTk4MDVhOTIzMzc3NTk3Njk4MDNkOTI2ZTk4ODRiZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNWJmZjQyZmU0OWRjMDUxNWFiNTYwNzlkOTZmNTA3NjM5NmM3YzkwNDRmYjMzMDUyNjE3MjU4YzNmM2Y1ZTVhMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTczYzU1MGY0ZDhjNjZkZDhkNzQ0NmZmNjE0ZWQzNDgwYjYyNjRlOGU3ZjQ5MTFjNTRjOTQ4ZTk5Mzg1ZWM4YSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_b7e6546518214fb2b1c2fc87d9626438",
+      "statement": "renderApp 先 await initializeAppSettings() 再 applyAppearanceTheme(loadAppearancePreferences())，然后启动 workbenchSessionPersistence。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/main.tsx#L31-L36",
+          "version": "repo-lines-v1:sha256:f1361ba4ff1980907bef6bb66b74f7237abea6a1a5b6ff5824f36838d476c811:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWQzNzE0NjE5OWNkZjA5NmRiMjY3OGMxNTgzYWFmNmMwYWFhYzBjODQyYmM5OTc3MDZkZjUwNDYzMTJmODVlNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzEwOWNhMzI2NmQ0YWI4NWQyMzJlZTE4NDc2Nzc5MTE5NDkzMDY2ZWUyYTM4YmNlNmZkMDBmMTYwYTYwNzkyOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDc5MmYzMTljYTZiOGQ3MzQ3ZThjYjhjZjNjZGExY2JkY2EzNGFiNGM0YjExMmY0YjMyODhlM2U4ZjYwMTU4NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTA3MWY0MDg4ZjQzYTI5NTczOTJlOGRlNjkwNTc2YzZhMmZmMTE5NWNhNTI4NTI3YmM5ZGU0MDhkYTU3MjEyNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_025961c7fab348c2a565bd0a76dcba7e",
+      "statement": "src/renderer/main.tsx 注册一次性的 pagehide 监听，flush 会话持久化、应用设置与日志三处；会话持久化失败记 persistence.flush_failed 并带 target: 'sessions'。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/main.tsx#L37-L59",
+          "version": "repo-lines-v1:sha256:f5ad17525cf9a63a1a939c96697a93c285fa4e6fcd171d4607338919dae8dd35:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVkZWExNzJiYzQxY2U2YmM5OGExYTM3NGNiYzVlYWE0MTE1NjhkZDBjZjRiNzJhYWIyNGUzOWYwYzc4M2MzMzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2MjY3OTM1ZmM2MzM0NjVkODQ4YjQwYTRlZDY5NjdlN2I3YTMyM2Y4MWNkNTNjMTEwYWUyMTAyOTY4N2FhMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJjYmVlZmFiOWE3NzljZDY4ZTMxNGI3ZTUwMjkwNTgwZmFkYjJiODI1YmY4OWQ5OWRjZjQ5NTZjNGRjMmIxOGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjczY2QyOWNkY2FjY2I3MDFhMDNlNDQ2OTg5MGYzNjA2MGJkZjI4YjMxYWVmMjQxMzRjNWEyNDY0MDAwY2Y5OGMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c6a879bc9e2a4d3f887590cceaac730d",
+      "statement": "src/renderer/main.tsx 在渲染前按 loadLanguagePreference 与 navigator.languages 初始化 i18n，并把 document.documentElement.lang 设成解析出的语言。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/main.tsx#L60-L63",
+          "version": "repo-lines-v1:sha256:ea51036f29d6c8cf490d07833bc0097f0375122f27090476f75abdd2ba4a6323:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOWY5ZWYxMmM5ZGQxOWFjZTMwNzUwN2QzZDc0NGNjN2ZjM2E3NDFmYzg0NzYzZmQyN2MxNTNlYmFjMTU5MjYwMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNWViZGM0YzQzODVhNzA3YTNmYTExMjczODhjNjZkZDk4YWFmMTdjNGNkMzQ1YzI4NDdhN2IyNzQ4ODMxMGZkYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTAzMWViMTllNjUwNDI5ZjNhMjUyZjhmZmYxNmQyODdhODcwYjI5YmVjMDIyYWVjMzYxNDAwZTRjODlmM2YzNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMmUxZDI3Yzc5MWVmZjc2NDdlZWMzNzI1M2MxZTVkZWUyYjYyYzFiYWY5ZWNkMTllNDA5MTlkNzExMzE4YWVjMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_5fe3e7d4433a4860a419e65bfbc5b5b9",
+      "statement": "渲染树是 ErrorBoundary(fallback=StartupFailure) → LanguageProvider → ThemeProvider → App；renderApp 自身失败时也渲染 StartupFailure，并分别记 webview.started 与 webview.startup_failed。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/main.tsx#L65-L82",
+          "version": "repo-lines-v1:sha256:79ed4186f30d5a4a09b5cebaba6722e73e636c15f15129b7fbeb6a8af5fc4919:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBjYmFlMWY1OTMzY2Q1M2U1ODNiZjQxMWM2OTY1YWM1YjkzNDU4YjkzNTViNmZiMjBkMDMzZGQ1ODdlMDE5NTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1ODBiNzY1MThkYWU5NzlmYWViZDAyMzY3YTI5MjkyYTUwZDk3NjA5MjI1MWEzOGE2Y2UzMDg4MGJhNDI4MjUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU5MTViNDU0YjFmMGQ4ZjkzNTI1ODE3ODk2MDA0MGRiMTRjMDNjNDdjOGM5ZDg3Y2RhMjU5MjVkNDRlOTE3OTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e3209df4a8dd41aca86c645659d2bcf7",
+      "statement": "src/renderer/app.tsx 的 AppContent 用 ShortcutScope scope=\"workbench\" 包住 ShortcutHost 与 WorkbenchPage。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/app.tsx#L9-L16",
+          "version": "repo-lines-v1:sha256:9d5bf2ccd037008bef9978201cf79fbc8813442545b6b731e0d523f0e33434ad:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGY4MWYzN2Y4YTVkNGMxZGY2NGFlOGY2ODUzMDRkNWE4OWUwZjg3ZTcxOWM5MzgxZGY3NzliZDcyYWFhODdlZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDllOTc5YmY1MWYyN2QyOTlkOGZmMTIzZWM4ZjBhOTg4NmM2MGU3OWM3Y2QwNTI4N2ExOGE2YmYxY2I3NjZhMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWEzZjJmNzNkMTY4NzJkYTE3ODE5ZjEyZjY4ZWE4M2VjODRjNDNlMmY1MmNhNzA1YjYwYjM0OGRmYTAyZmEyZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_2f47c8f5e5664df89756ea46a5eeabc9",
+      "statement": "src/renderer/app.tsx 的最外层是 ShortcutRuntimeProvider → TooltipProvider，AppContent 之后挂一个 Toaster。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/app.tsx#L18-L27",
+          "version": "repo-lines-v1:sha256:f3a3700fe20b0acdf87eb6385d6e1b03c763b9d7aab85a56c03eb320ca130610:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI4NTcxMjhiMjU2NzBhMDE1OTY1NDliYzRkNmM2YmI2Y2QyMmNhM2I4Mjk1NjZiMTRlZWJjZmUyMWQwNDY4ZDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM0MGM1ZDNkYzNhNzczMDc5M2M4OTI3OTQ4YjU1OTY2NDIwN2Y3OWJhODc3NzNjMjE1MDA0NDMxOTYyZmQ0ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3a8e2bb2e84b4fd099d24136fd37180f",
+      "statement": "src/shared/rpc.ts 用 DesktopRPC 描述全部跨进程通信契约，main 面挂 RPCSchemaSide 泛型以检查每个请求的 params 与 response 字面量类型。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/rpc.ts#L876-L877",
+          "version": "repo-lines-v1:sha256:72a2c8c2b662497b5a7f09603ce0826b8a2358374aba161de0cccaf1f980f43b:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2YwMzNiNTFkZDY2OWYxMGQ1NmY3NjFmMTkxZGM3OWQwOTEzMDljZTQ2ZjdiZGY4YTBiODg5ZmVjYzQwOWZhNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjkyZWM5Y2QzZjZjNDMzZGUwNjE5ZjVjNzMyZTk2NjFjNzNlYjdjYzk1ZGMwMTVjNmFiMjE1ODMyNzIyMTY3YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODAwZDgxZTE0ZDE0MGY0ZDBiNzdlMGViMGQwMzM1YmQ5ZWMzMGQ2YTIyZWUwYTMzN2FiZmEwM2UxYzIxMWJhNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzU0NTVkZGU4M2FhZjQzZjc3ZTNjY2FiOTkxN2QwMWE1NjgxNDhhYmMxNGJhOTFhNzk5MTQ2ZTE1YzY2ZTY0NCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_42157c76905e489687317aab15c3eabe",
+      "statement": "RPCSchemaSide 是恒等泛型，只给 schema 一个字面量类型上下文，让 params 与 response 的写法在编译期被检查。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/rpc.ts#L49-L49",
+          "version": "repo-lines-v1:sha256:59be8ee8c357a16c9e9a7c0a400bd78348ca23c6ff2f5e8d89aec9f6a1a37be7:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTliZThlZThjMzU3YTE2YzllOWE3YzBhNDAwYmQ3ODM0OGNhMjNjNmZmMmY1ZThkODlhZWM5ZjZhMWEzN2JlNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTliZThlZThjMzU3YTE2YzllOWE3YzBhNDAwYmQ3ODM0OGNhMjNjNmZmMmY1ZThkODlhZWM5ZjZhMWEzN2JlNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzUyN2FhN2ZkZDc0MDJkNmQzOGE0MWEwOTc0NmVmNmIwMTcwYzc2YWM1NmI0MzZkOWI2OTAwNTEzZjcyNzU4ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTdmZjUyZDg0YjgzYTRkZTVjZGJiNDY5NGNlMDBiMmFhMTU0NTdkODU3NDVlMWQ0NzA4Y2RhNDM1ZjgzMGIwNCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_14c74cc241a94e7da23ddc3c2e262003",
+      "statement": "渲染层不直接调 ipcRenderer.invoke：src/renderer/services/desktop/client.ts 在 window.clotho 之上封装，请求用 invoke、推送用 on、日志批次用 fire-and-forget 的 send。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/desktop/client.ts#L5-L6",
+          "version": "repo-lines-v1:sha256:59f4d3a5808ef93f49a62d851b2931914157f04563ba4534f3b2e51f014db92d:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNWViNmQ3NWJlYTFhMjIyMmQxYTIzMGNjYTE0YjkwZDUxY2Q1MWQxNDliZTdkYWQ4Y2FlOWVmYWFjMGIxZmY2OCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTRiZDAwMzU0MzdmOGZmYTAzMGExYjg4MjJkODk1MzI0M2Q2MzhhMzJmY2FjNzdjNDhlOWUzZWQzNzU0MjNhZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTZlMThkZGUzNThmZjFiMzg1NDkzZTY2YjBiY2UzNjVjZGUyYzJlYzIyMjIwMDkwMGRlMDRhNGM1NTE4NDY1NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDU0OGRlOWM1MDhmZTdlNDQ2ZGI2N2U4MDY4NThmMjI1ZTYxZTVmYzhkZjMxYWY5ZDBlMTA1ZDVhNDI4MGFhOSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_19b501a7235e4f5db327ae39b9c5a359",
+      "statement": "package.json 的 scripts 定义：start 是 electron-forge start，debug 是 electron-forge start -- --remote-debugging-port=3367 --inspect=3368，check 是 tsc --noEmit，test 是 vitest run。",
+      "evidence": [
+        {
+          "resource": "repo://package.json#L9-L18",
+          "version": "repo-lines-v1:sha256:0be097383e63bd140d65af151f9dff8c64544b394748d993b3516c119a2d4f15:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5NjA3ODFlNDkyMmU3NzUzN2FhMjI0NWRiNDhkZWQzNjc1YmFiYjQwNzYzMzI0OWZhZDUwNjZhMjQxNGJhNGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkNWNkMmZiNGYzZGY4ODQ1MTUyNTViMzk1MjNmMmY4YjU0NzJiZWVhOWY1NjZmZmNhMjA0ZGI4MDI1NjEwNDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMxZWRiOWRlZThiMjRmMjkzMTU0OGQ4ODU2YWMzN2M0NDI0ZDc3NGNkZDEwNmFkOGU3ODZjZGM5ZTNkZjUzODciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIxNDJiMjAwNjc1YWYxN2Y2OTZiY2U0MDM2YzI4ODdjZjg0MTZlN2I0ZTRmYWI0ZmI5ZjY5NWI2ZTIyMzllNTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_53815d0e36274693a75f0b4c7f9914e5",
+      "statement": "package.json 声明应用名 clotho、产品名 Clotho、描述 Claude desktop client built with Electron and React，main 字段指向 .vite/build/main.js。",
+      "evidence": [
+        {
+          "resource": "repo://package.json#L2-L6",
+          "version": "repo-lines-v1:sha256:c21caea68e500ebc3c3d3fe70d3182abfcb96f4bbcb9acdd729dcc8052336095:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDQ2YjNiNzkzYTc4YTllNWIzZDhjYzdiOWQ1OTkwMDJlNDQyNjEzN2IwODg0ODhmMWUwNDJjOWM2NTBmY2ZlYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNWZiZjFkZDlhNjEyNTAxZWU4OWJkOTg2YTY1YTliYTZmNmNiYTNlNDJlMjRlYTE1NTJkYzQzZTgwOGVjZjgxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjEsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTZmYjA4ZmRhMWFjYjk1N2I2MTE2YmQzNzgxMWExZmU0MWEwMTYxMWMwNjMxZWRiZjc4NmQ2ODg5YTI3YTU1YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjE2YWUwYzIzNzQ4ODZiNDI1NDMyOTg0ZTE1ZDFjMWY5MmNmNzZjNGQ0ZDEyNzM3MGFkYmM3ODBiNjZhMWYxMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_721ef346f9694abc9486ca18bd04df30",
+      "statement": "forge.config.ts 的三个构建条目是 src/main/index.ts（target main）、src/preload/index.ts（target preload）与名为 main_window 的 renderer 目标。",
+      "evidence": [
+        {
+          "resource": "repo://forge.config.ts#L102-L112",
+          "version": "repo-lines-v1:sha256:d2e6a5331e08dce3ff88a58dc727393cfd19f1faac5cbb41d29b8693632adc95:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjViZDQwYmI3MDU2YzJmYWU2MDJiOWRlMTk5Njg4NzdjNTc0OTZhODk5YTlmYTJkMDdkZmE4Mjc3MGVjOGUwMzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg5NDE5MTE5Nzk5YTUwNDVmOWY5OTkxY2YxZjkxMGE0OGZjYmNlNDU4MmRlMDE3NmM4MzJhNjRhYmM3ZmYzNmEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlkYjkzYzExYTFkODZmMzRjNWY3NmM2ZDZjMGZjOGM1NzIwNWFmMTVkNTY0YjIwOTk5Yzc3NmZlNmZkMjUzMTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUyYWY5YzQ2MzU3MTBjM2M2MmE1OTAwNzE3MGVjMWM5OWY4NWFhZmRkYjQzMmU1MTRmZDFmZGJhMmI1NjNhMGQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_069bd85365ae432d9a9f13849bed4644",
+      "statement": "README 的 Structure 块把主进程入口写成 src/main.ts，但实际入口是 src/main/index.ts——README 的这段路径已过时。",
+      "evidence": [
+        {
+          "resource": "repo://README.md#L30-L38",
+          "version": "repo-lines-v1:sha256:d814c07c1d7794aeb90c6ca7f2e12ae0eaa876b7f48db29b9cf7827b38d2aeb2:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTJiYzVhZDJhMTcxZGQyMWYzZTQzNjg5NDc4NGIwZjE0MWViZjI2OTUwZDE2M2FhZmQ0YWYxN2MzZWVjZGUxNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzRhZGNmYjY0NzgwOTFkNWUzZTBmOTM3Mjc4ODIzMjBhNmM2YjdkZDM1YzlmNGE0ZjZiZGJkOTU0NDg1MDc5ZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzc2YTU3NzdmM2FiNjMwYWVjY2RiYzA4YTFmNjk3YWJlMjE3OGY2N2IwZTI4YTAyNDlhYzc1NDAyM2IwOTdlNyJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}

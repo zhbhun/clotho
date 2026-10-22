@@ -1,0 +1,200 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:46cf6940dc17a32e47e5007b1c8f51569efabf8bc8f78e2c888c8d88c59e9edf",
+  "claims": [
+    {
+      "id": "claim_848d4387a2c541a5840ce7a5d0e6ea2f",
+      "statement": "forge.config.ts 的 VitePlugin 声明三个构建目标：main（入口 src/main/index.ts）、preload（入口 src/preload/index.ts）和名为 main_window 的 renderer（配置 vite.renderer.config.mts）。",
+      "evidence": [
+        {
+          "resource": "repo://forge.config.ts#L96-L119",
+          "version": "repo-lines-v1:sha256:2cb5dd4197e093f283dc75af9fc501393a13efc568b489be5c6183dc2c37bbe8:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE5MzZiMWZiNGZmZjIxNGQ2NzQ3OTcyYTc3OGQ5M2UwMTNlYjk2ZDgxYTMyM2NiN2QzYzgyMTlkZDcwNGM4NDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5OTBlYjZjY2RiMGZlZmNjM2M5YTg4M2M4NzljOTg2NmJlMzM5MzFjYWFhYmYzNjYyZDdhYzRjNDEzZWM4YjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE0MWMzNDc3ODg2ZjEwMTJmMDYzZDkyNzVjNjE1YmI1YTIwNDgyOWRlMTViYTU0Yzg4MjNjZjMxNDQyNmZkYjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQyMjRhOGZkYTFlYTU3ZDlmZDFmNzJhYjE4NTMzOTRjMTUzOTcxODA5NDUxNGZiNDdjNzYxYTIwY2JiZDYzN2UifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3005f37bec0446f59dbc6de2533b8cfb",
+      "statement": "vite.main.config.mts 把 electron、@anthropic-ai/claude-agent-sdk、@ff-labs/fff-node 列为 external，使它们留在 node_modules 而非打进 bundle。",
+      "evidence": [
+        {
+          "resource": "repo://vite.main.config.mts#L8-L11",
+          "version": "repo-lines-v1:sha256:bcfb7bbc153a7e669f68bd7e089dbbe2f91ce90aa59fe0d1b86e9a31113f69c7:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjQ1OTA2Yzc5MjU3YjUzZjIxMTAyZDNkZWZmODRlMDIzNjJjODk1MjBkYWJlZGJlMDc2NTcwMjNjNjljZGUyZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjBjNDRmYzlkNTI2OWU0NjlmNWUwZGEzZDViNTU3OGQ3NWI2ZmIxOTdmNjE0ODBkZWFlYjI1ZDUzZGM0ZDUxNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTg0ZjRjY2Q2NTBiYmRmZDFjYzc4NmVhMTBjNzI4MWIzYTU4YzQxNTk5MWMwOWY3YjRhYjNjYzgzYTg3NTNmNCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_7becdd2d79a8405380a06d58230f65ed",
+      "statement": "vite.renderer.config.mts 设置 base './' 与 dev server 端口 3366，并接入 react() 与 tailwindcss() 插件。",
+      "evidence": [
+        {
+          "resource": "repo://vite.renderer.config.mts#L6-L19",
+          "version": "repo-lines-v1:sha256:c3eee577f921fcc6954d3007230f7baec070b5c3b6316e3926bfca6700ad824d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5NzhlMjUwM2I4Y2YzN2EwNmY3ZDZmMGEzYTZiNmZlMzU2OTFmYmNhYjUwYjg3NzVjYWI2ZmFiYzcxYzU5MmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM2YTk2ZDU0ZmJhMDgzYWQ2NTVmZmU3MDQ0YmFhY2Q2MGVmZDljMzRiNDU4M2M0NGI1YzFlN2FmODgzYjFlOWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVlZjliYzJjMDg1OWNjMzViNDQ2YWJkODNmZmZjODFlNDY0NzNiNDcyZmJiMTFkMzY3ODg3ZDhlMGQ5YmQxMGYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_86170985a0d5448ab40a772bbbc4b956",
+      "statement": "vitest.config.ts 把 test.dir 指向 src、environment 设为 jsdom、开启 css，并注册与 Vite 构建一致的 @/shadcn 与 @/shared 别名。",
+      "evidence": [
+        {
+          "resource": "repo://vitest.config.ts#L18-L24",
+          "version": "repo-lines-v1:sha256:9492091352328c5c741bf3bf0704dabd83fbbcd64109541c8a2e9f0375909037:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjk3OGUyNTAzYjhjZjM3YTA2ZjdkNmYwYTNhNmI2ZmUzNTY5MWZiY2FiNTBiODc3NWNhYjZmYWJjNzFjNTkyYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzY4OWY3MjRhOTIzMTE0ODkwZTA1MTkxNjdiZjUxYmRlNTY4Y2RiNDdmNTM5MjQ4YWJiZmZlYjAxZGE5MDUxZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzY0MzYxZTE3NTAxMjNmMWU3N2VkNzQxMjZmODllMmU4MmY0NGE3ZWU5Y2QzZjQ0YTZiZWVhMWY2NTRlNjk5MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzUzNjNhNjBjZDdlZGIzZGI1YzJlYjM2YTE5Yzc2YTkyOWNiYzFkZDYyNTA1NTMxMDU1ZWY0YjhlMjQ5MWFkYyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_16519812793a435abdc11e5dd2d4334c",
+      "statement": "vitest.setup.ts 为 jsdom 补齐 ResizeObserver 与 IntersectionObserver stub。",
+      "evidence": [
+        {
+          "resource": "repo://vitest.setup.ts#L20-L24",
+          "version": "repo-lines-v1:sha256:91e08babe684d60f20b674be318df2468912c8e503908e113b08b2afc2f36956:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWIzYmFkZDEyZjQ5MTliODU5YmNhNTRlNGJhNDZhODJhMzFiMGZhNjRkZDJlZTU1NzNmYzY0NWM1NGViYTM2ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYmM2ZjdiYmJkOTkzMzg3ODQwY2I3NGM2YjM2MjVjNWZmYmVjZWE2N2ZiNTM5NjYwYjM0MzYyOTkyNTMxMzUzMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWVkZWQ3YTY5Mjg4NGVjODQzNDk2NTYxN2I5NjBiZmFhNTFkNWM5NjAzNDJkOWRkZGUyZGE5Njg3Yzc4Yzg0MCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_107075bd79de4bdd90772787b2424730",
+      "statement": "vitest.setup.ts 设置 BASE_UI_ANIMATIONS_DISABLED 为 true，使 Base UI 弹层在测试中同步卸载。",
+      "evidence": [
+        {
+          "resource": "repo://vitest.setup.ts#L52-L58",
+          "version": "repo-lines-v1:sha256:f18d4f8c0aad586acf1d6c8d58c838eb7c746e1fe5d07095cc700e4e6d8355ef:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTc3OGRmYjMwODdiZDBlMjRkNzkxYzNmNDQwZmVlZDlhNjIzNjQzM2QwMDA2NDNmZmQ0YjEzZDAyZmQ3YjI5ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDU1ZmQxNTg1NzNmYmQyYjU5N2E1YjEwY2YzNzI4ODAzMzgxNjUzMGU1OWIwNTkzNTYyZjE3MjNhM2NhYTFlZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGUzMDAxOWJhNDkwZWYwY2E5N2RjNGE1NjA5Zjk2YzFkMDMxNjhiOGM3NTA0NzA2YzY1YjM5Njg3YWMxY2E0MyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmYxZjZlYjI0YzYyNjFkOTQ1ZmMzNTdjOWQ3Y2ZkZWQ2ODU3ZDc4ODU0OGE4YWRjNjM3NjYwNjM3MWQ3MjgwOCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_75cd4097dedf4cad83abe6084489039c",
+      "statement": "vitest.setup.ts 在顶层和 beforeEach 中调用 initializeAppI18n('zh-CN', ['zh-CN']) 初始化测试用 i18n。",
+      "evidence": [
+        {
+          "resource": "repo://vitest.setup.ts#L82-L89",
+          "version": "repo-lines-v1:sha256:6616a71e2b49a3384fa4da07253d90ee0c9e27d2b487a620c6b651cec6655269:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGM4ODNiNTdlMDAxNzdjYzQ4ZmE4MDI5OTE2ZTE5ODJkMjhiYjNiMmE2ZGNlMzgwMGVlMDZhYzYwY2VkYzMyZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTUyZjE3OTg0MjZiMzY3MDEzNTU5N2EzNGEzYWJjZDZjMTEzYWMyNWRjOTIzODUzMTkwYmNjNTgyODkyZWY0OSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjIsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzIxMzVhODZlMGIwODkzZWUzODI2ZmE3OWI3ODRkMDBlM2MwYzRhNzFhMDc3MzFmMzgzNTk3MGUzMmU5ZjI5ZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_00eeeb6be20047ba99906186372435ea",
+      "statement": "TypeScript 检查的 npm 脚本名是 check（tsc --noEmit），不是 typecheck。",
+      "evidence": [
+        {
+          "resource": "repo://package.json#L7-L16",
+          "version": "repo-lines-v1:sha256:b291ea927f75f814cb940a32728c634750fcd85fd0df562d63ec6c262c8c54db:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAwZmE2YjdjN2FkYzExY2UwOThhNGE5Y2Y3NTJlYmQ4NWRkM2U1OGFjMGY4ZTgwNGQ5MzI5Y2FmOWI0YWJmZTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1MWIxOGMwNzVhNjQ4NzUyZGE3ODYyNzc2ODY3YjJkNmEyNTI0NTVlZTc2OTQ0NjMzZmQ1MDA5MjNiMjEwYjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZmMDgzZjdhZmE4ZTAyOTdiODdlODMzOGNmZjc2YzNiMGUwZTMwMDliZTE1Zjg3ZjEwYTUyOTY0NTBhYzZmYjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYxY2ZkNWVkOTkzODk0MmU1MDc4ZTI3YWI4NDZkNGY0MjM3OWE1ZDRlMjQyODJlYWVmM2U4MWM5ZWMwMTRiMWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f7fc83f30eb74bdbab1d811327b235fa",
+      "statement": "npm run debug 以 electron-forge start 附加 --remote-debugging-port=3367 --inspect=3368 启动应用。",
+      "evidence": [
+        {
+          "resource": "repo://package.json#L10-L10",
+          "version": "repo-lines-v1:sha256:6362f6f5cf2ff01edfa7721e2b587089714d62f3004d29ebaf672ce6fc5e4356:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjM2MmY2ZjVjZjJmZjAxZWRmYTc3MjFlMmI1ODcwODk3MTRkNjJmMzAwNGQyOWViYWY2NzJjZTZmYzVlNDM1NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjM2MmY2ZjVjZjJmZjAxZWRmYTc3MjFlMmI1ODcwODk3MTRkNjJmMzAwNGQyOWViYWY2NzJjZTZmYzVlNDM1NiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjE2YWUwYzIzNzQ4ODZiNDI1NDMyOTg0ZTE1ZDFjMWY5MmNmNzZjNGQ0ZDEyNzM3MGFkYmM3ODBiNjZhMWYxMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzdjMWFlY2QxN2FiMWVlZGNlNTFiNzQxNjk2ZjZhMzA4OGIyYmIwZDZlYjRlNzY3OTU5OTA2ZGY1NjVlZGQ1OSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_3885a42eb7d74432887d098664d8866e",
+      "statement": "forge.config.ts 定义 EXTERNAL_RUNTIME_PACKAGES 为 @anthropic-ai/claude-agent-sdk、@ff-labs/fff-node 与 ffi-rs，它们因含原生二进制或在运行时解析同级平台包而不进 Vite bundle。",
+      "evidence": [
+        {
+          "resource": "repo://forge.config.ts#L14-L19",
+          "version": "repo-lines-v1:sha256:0a93215deb5fe5dcac42b214e247cd8ebcad07248778faad7bf6de08e1a2ce1a:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWFmMjJjZjA3MzI1OTJjMjQ3MTQxY2JlNjFlZmExMTAxMjYxMmY1YTMxMjJiOWFmOWJiYWY1MmY1NzI0ZDE5NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODJlYWQxZDhmODhiZjc4Mjk3NmViM2E0NjAzYjk1MDFjOWQwNjQwOWViYWZjNGVhZWQ5ZGI5OWQ1ZGQzMzQzMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWEwMGM3M2M4YThlZDQxNTIxMGNjODEyYjIwYzM5ZDdlYzkxN2Q2ZmFiMmRkNjMxOGJlNTU1NGU0MTNhYTczOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDRhOTNjZTZiYTIwNzc4ZDgxYjcwY2QyZDVmNWE0MzRkNGRlMTE0MzUzOTVlM2FiMGMwYTJjMDkwODg1MGM1NyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d28a9d9c0a5947b9ae9b07a2bc7a699a",
+      "statement": "forge.config.ts 按平台与架构展开三类原生包：Claude Agent SDK CLI 的 @anthropic-ai/claude-agent-sdk-<platform>-<arch>、fff 的 @ff-labs/fff-bin-*、以及 ffi-rs 的 @yuuang/ffi-rs-*。",
+      "evidence": [
+        {
+          "resource": "repo://forge.config.ts#L21-L52",
+          "version": "repo-lines-v1:sha256:34f2e453d2805daa54191f61cd0712ca33afacdc1f218789fe34524c8807446f:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY3OGNkZWQyZDdhZWQ5MDQ1MTk4M2NmNDA4Y2UxMzQ0NTMwZDUxMTM1NzlmNGMwMDI1MjkxZmM0ZmRiNTg5NGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNkNmY1ODc5ZTYyNzkxOThkY2Y4NDkyYmJkZTJmOTYzYjEyOWNhYjUzYTRhYzc1NjJhYzgyOWJiOTRlZGY0YjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUzYzFkNDEzYTUyZTg1MDQ0NjVlYmRjMzc1MTUyNzUyODY2NzRiODJlN2M3M2Q2YzE1ZDllM2U5MmYxYjFmOGYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6f40da832e85411e8f522d0ac7eea54b",
+      "statement": "packageAfterCopy hook 在打包后把存在的原生运行时包从仓库 node_modules 复制进 build 目录的 node_modules。",
+      "evidence": [
+        {
+          "resource": "repo://forge.config.ts#L54-L76",
+          "version": "repo-lines-v1:sha256:d8ab1c1d3e21d714873c07ed832a4f83e953e55a41c26bacf353274995b212f2:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImExMWVmNDFlMTBhZTE0ZDMzMWYzMDNkMWM4NThiMzNjNTg1MzIxYTUxZmE5YzczNWEzMDlhZjE4NDg2Y2ZkZDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY5NGU3NmVjMzM1MDEyOTU2MTI4MzQyMTI0MDg3ODMxZDFjMGZjODNmMGZiNTM0NjU0MjllYzQ1MTk5MjIyNTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdhNjQwMjQ5YTNlMTJlZTliYWY3YmU0OTNhZTc1YTI2ODJhZGFlN2FiMjY3Y2ExMDNhZjY1Nzc1MTg1YWEzYzIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_205718ca386f4a438ac09351df05cdeb",
+      "statement": "packagerConfig.asar.unpack 用 **/*.node 与三个原生包前缀模式，把二进制和共享库留在 asar 之外以便 OS spawn 或 dlopen。",
+      "evidence": [
+        {
+          "resource": "repo://forge.config.ts#L79-L88",
+          "version": "repo-lines-v1:sha256:752d468cc1ac7b579acc8e15100dc62858498342693e6f438ed569822ccb198b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM5MmQ0OWJkZTA3YTIzMWZlZGEzMmQwMTQ3ZjU1ZTUyZjAwNTQ0OTdiNjM5MDdjMGI5MDhlNjI1NjI5ZGYyZDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkNWNkMmZiNGYzZGY4ODQ1MTUyNTViMzk1MjNmMmY4YjU0NzJiZWVhOWY1NjZmZmNhMjA0ZGI4MDI1NjEwNDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE1MWZjYWQwYWIxNTg4N2M5ZTE5OWUwODA1M2U1OGM2MjMzY2ZhMzc4NDE4ZTJlZmZmMjcwOWZjMGMxN2QyNjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBlOTNmYjE3Yjc2MDM2ZDgyNjc5MjhlYmM2OWVjZjAyMzRmZmU0ZDk4YmI0NmQ3NGVmNzZiMDg5Y2VlMjg4YTQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7665971c7c5b4761b5b0d7eb4a547f8a",
+      "statement": "FusesPlugin 禁用 RunAsNode 与 NodeOptionsEnvironmentVariable、启用 Cookie 加密与 asar 完整性校验，并限定只从 asar 加载应用。",
+      "evidence": [
+        {
+          "resource": "repo://forge.config.ts#L120-L131",
+          "version": "repo-lines-v1:sha256:81ab2365237a7fb76329e2d5aea288b51938d03b490e378180c799be327056b2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBjZDVkNWQyMzU3Y2I4MzE4ZWE0N2ZmYzIzN2U1YzU0NzIxMjNkY2NhMTg1MTNjZTAyNjEwZWIxMmEwMjhlZTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk2NGQ4YzA3MzQyOTg5MzEwMTU3NmQ4OGQ5OTEyN2U4OWQ2ODkxZDNiMTdlODlkZjAyZWM5YWU3MDcwNWQ4YmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE0MmY4Mjg2YzA3ZmYwNWYwZjA3NTBiNGIyZjQ5NTU4MGNjYjliYWMxZTJkZDJjZDY4ZDEwZmVmMWM2NjZkYmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEyNjNiYWZiZjY5OTEwOWQ5MjgyNjM0NWUwNWQ1NjE0ZGE0ZGYwMWU2Y2E5Y2VkZjcxYzg2MDcxZWQ1ZjA4YmEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2dbcc3e0076f4043bdc02ad82e76849a",
+      "statement": "eslint.config.mjs 使用 flat config，TS 文件组合 js/tseslint recommended 与 React、react-hooks、react-refresh 配置，CSS 文件单独使用 @eslint/css 与 tailwind4 自定义语法。",
+      "evidence": [
+        {
+          "resource": "repo://eslint.config.mjs#L5-L45",
+          "version": "repo-lines-v1:sha256:ecd7d4b8b63d0851e38ed4645355e4a09c0118426731f1273d5070b2a4f658d3:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyNjJlMTMxZTJmZmVlMDAyNjRiOTFhMWIxNTc2OGQzZWRhYzc1NWM0ZGEyZThmN2M3ZGNhMjJhMTNkMGJkMDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNjYjQ2YTQ0NzAzZWNiMDM2Mjc1NWY2ZDJmOGNhZjI1M2M0OWIzNmM4OGU4NzJlYWQxMzYwMWQ0OWEzZTg0MWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM4Y2VhZjc0YWM4NjY0OTY2ZDkzZGU1ZGRjM2ViZmEwM2FjYWUzMTkxMDBhZDhkYmJlNDVhMmJhNTk0NzA4YzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ3MTVjZDgyZDY5MzhkMDkwYzhjYzk1ZDU2M2JiYTliMjQxYTNmNWE0ODc5ZDcxOTczYzQzNWM3YzMzM2ZjZDQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0f39ec92b58244e2b85d9b7250072723",
+      "statement": "Prettier 配置为单引号、无分号、printWidth 100、trailingComma all，并用 @trivago/prettier-plugin-sort-imports 规定 import 顺序为 built-in、第三方、^@/、^[../]、^[./]。",
+      "evidence": [
+        {
+          "resource": "repo://.prettierrc#L1-L17",
+          "version": "repo-lines-v1:sha256:6018e6e596e93c170ce42a3396b18033b3ecb684f10bce40eb834a7103095543:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZmIwOGZkYTFhY2I5NTdiNjExNmJkMzc4MTFhMWZlNDFhMDE2MTFjMDYzMWVkYmY3ODZkNjg4OWEyN2E1NWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjllMDdmY2MwMjliYmEzMjg5NzNhODBlY2Q1NGRhMTE2OTNmMmM1NTgzMDkwZDI5MTMwM2UxZjE5NjJmNmI2OTIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRhMmRlNDQ0ZDc4MDE0NjczNWQ2YzVkZTM3NjZkZDA1MmZlNWFmMDgxM2E2YTAzMDk0MDc0ZDYxNDI2MzhiMjIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2c9d4391a38a436da48ae22bba6c387b",
+      "statement": "项目规定验证时禁用 Chromium、Playwright 或 ego-browser，也不运行 npm start；运行时验证通过 npm run debug 的 CDP 端口进行。",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L1-L130",
+          "version": "repo-lines-v1:sha256:f11d3ba0f08910ca62f288c88082110494155d551457f293281fe832fb0ff551:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJiYzdmNDQwOGEyZjkzODY1NThmZjRiYmIzZTQzODU2YjUxNmNiODczYzlkZjRjNDBlZWNkOWM4ZThmN2M0ZTFiIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJiM2JiMDI0NjNhYmFmMjZmYmUyMTAwOGQyMTllOWI4YjIxMTJmMGRhYmY2NGY5ZTExMGZkNGNhN2VlYTYwODJjIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MCwicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI4YjgyOTZjYTQ3ODc3NDhlNzVhMjI0Y2NhMzQzZjM5OWUzMGVlYWVhYzFhN2FhMTc4NWRmZmU4MDc2MjVjZjE0In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_4f702e3ef46e46f9b0f68f4529b9d217",
+      "statement": "项目规定默认只运行受影响模块的测试，不跑全量测试套件；构建相关文件改动时才运行 npm run package。",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L1-L130",
+          "version": "repo-lines-v1:sha256:f11d3ba0f08910ca62f288c88082110494155d551457f293281fe832fb0ff551:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJiYzdmNDQwOGEyZjkzODY1NThmZjRiYmIzZTQzODU2YjUxNmNiODczYzlkZjRjNDBlZWNkOWM4ZThmN2M0ZTFiIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJiM2JiMDI0NjNhYmFmMjZmYmUyMTAwOGQyMTllOWI4YjIxMTJmMGRhYmY2NGY5ZTExMGZkNGNhN2VlYTYwODJjIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MCwicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI4YjgyOTZjYTQ3ODc3NDhlNzVhMjI0Y2NhMzQzZjM5OWUzMGVlYWVhYzFhN2FhMTc4NWRmZmU4MDc2MjVjZjE0In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_aaed192317864875b017d0355498472f",
+      "statement": "项目规定运行时验证前先 curl http://127.0.0.1:3367/json/version 确认已有 debug 实例，复用而非新开，验证完停掉自己启动的应用。",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L1-L130",
+          "version": "repo-lines-v1:sha256:f11d3ba0f08910ca62f288c88082110494155d551457f293281fe832fb0ff551:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJiYzdmNDQwOGEyZjkzODY1NThmZjRiYmIzZTQzODU2YjUxNmNiODczYzlkZjRjNDBlZWNkOWM4ZThmN2M0ZTFiIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJiM2JiMDI0NjNhYmFmMjZmYmUyMTAwOGQyMTllOWI4YjIxMTJmMGRhYmY2NGY5ZTExMGZkNGNhN2VlYTYwODJjIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MCwicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI4YjgyOTZjYTQ3ODc3NDhlNzVhMjI0Y2NhMzQzZjM5OWUzMGVlYWVhYzFhN2FhMTc4NWRmZmU4MDc2MjVjZjE0In0"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}

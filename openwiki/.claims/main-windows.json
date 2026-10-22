@@ -1,0 +1,286 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:73fa66b9d3b27d4bde02d67c2be67e19e1f14c577a1b0785d20861096cd0e8ca",
+  "claims": [
+    {
+      "id": "claim_1d1359c58af640eca6f6e4bd73fe2f4a",
+      "statement": "StoredFreeWindowState 持久化 id、kind 与 ui（几何加可选工作区载荷），而 StoredProjectWindowState 只存身份，几何与工作区 ui 都活在按 projectId 索引的 projectState 中。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/window-state.ts#L40-L72",
+          "version": "repo-lines-v1:sha256:22b67aa22e175475053122c6ada58d1dee4d89acaeca560452b5cd75d958eecc:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg2MjhjMzNjMzMyN2Y4YjFlYTEyMGU1OTBiYjEwNDlkZWI1NGViNmE2OWU2YTA3ODQ1NTA1OWQyNTM4MWNlNmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI1NDE1ZDE3NDgzYTZkYWExMzA3MWI5OWQwYmQxMTZkZTgzYTg2NTUzMmVmZTQzY2M2NjMzMjg3Y2I4OTlmOWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI2NTcyZDdjYTU1MGQ2ZDY1MTg3YTJmOWRmY2ZkOGVmODk1MTI5MjMyZjMwYmViYjk0YzVlZDU4ZjE3MDA0MjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_75d1e5f6fa9f46f499de6b53ed18c640",
+      "statement": "项目窗口的标签页存在 projectState 中，因此关闭窗口不会把它们交还给其他窗口，下次打开该项目时原样恢复。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/app-windows.ts#L64-L69",
+          "version": "repo-lines-v1:sha256:8ea931d8eea92c14bf3b95eb5fe3761d891f34383e860cf42d5ebadbda7f67be:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWFmMjJjZjA3MzI1OTJjMjQ3MTQxY2JlNjFlZmExMTAxMjYxMmY1YTMxMjJiOWFmOWJiYWY1MmY1NzI0ZDE5NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTcyYTQyOTM4MmIyZTE0NzE4ZTBlMzdiMDU3MGE4YTE3MDI5OTFmY2Q4NDk4Y2Q4NDA2MGE4YmY0ZjA1MDE3YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjM2NjNmMzYzMWE3ODk5Yzk0MzA0ZjQzMjFkYjdkNWI3ZDY5NWU1ODBkNGQ3N2VmMmYyN2Q1MDA4ZGE4ZTk5NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMmI5ZDAzOTc5NTRkNGU3YjRkYTk4ODRlZTA1NTVmYzFkNGQ2MzE2NWQ0NzRjZGUzNWRkZGE1ZjFjZTQ5MmFkYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_f401146048274abab992301cfa7bcf26",
+      "statement": "sanitizeWindowUi 要求 currentWorkspaceKey 是非空字符串、sessionTabsByWorkspace 是字符串数组记录、activeSessionByWorkspace 是可空字符串记录，任一不满足即丢弃工作区载荷。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/window-state.ts#L108-L161",
+          "version": "repo-lines-v1:sha256:39ef7dd525dbd7f5931b8a33bf11d1862b4df32ff5f81419b004554a498339f0:eyJzZWxlY3RlZExpbmVDb3VudCI6NTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2ZWNjYWEyMTJmMWEyMTk1YmZmMzc5ODFmM2QyYjliNWZjODhhNzg5YTU1ZmY3ZjdjMGJmZTY5MDk3OGNiMTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNiODQyMGUxNDU5ZDA5OTI3YjM1NTZlZDI0NTA5NDY5Yjc4NTQxZjBlNTljNTIzOTZlYzc1NDVlMWEzMmYyMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk5M2Y5NTQwMTdlZDJjMDY4M2ExOGQxODA0YzI5ZTQxZDkxOGFhMDRkYjM2MDFkZmU3OWVkOTEyNzJmYjNmYWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_02a51d6bb88b4a75b6f452238763d5f0",
+      "statement": "sanitizeWindowState 对自由条目的失败粒度不同：ui 缺少合法 frame 矩形时丢弃整条记录，而工作区载荷畸形只丢载荷、几何照常恢复。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/window-state.ts#L187-L213",
+          "version": "repo-lines-v1:sha256:29d53e13488823e27ef29fc709a99ea7261a0cbca3f20bda0c6f05423340f977:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlmNjRmODM4MzQxOTYxYTA4NDRiMzY0OTQ0MWE0N2IyYjk1NDMxZWVjZmE2MmEwYjhhYTEzN2YxODY3NWNiMDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3YTY4ZTAyNWNiZDRjYzFlYTczMzNmM2EyYmQzMGU2OTYxZDEzZjZlZGFiMjI2Y2Q0ZjI3ZmYxOTVmNWIyZTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRhMTg2MDhlOTRlMmY5NDRmNmZkZDcwNjVhNjBlMjU0ZjEzZDg1NTc2OWI5YWIwMmM1MTI4NDg5Y2VjMTZjYmEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b1e31e7abd004014b9143bcffc536119",
+      "statement": "sanitizeProjectUi 把 sessionIds 去重，并把不在标签列表中的 activeSessionId 清成 null，避免会话被删后活动 id 悬空。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/window-state.ts#L164-L174",
+          "version": "repo-lines-v1:sha256:06e56d94f923b4b91fbb88796f7a6448d72f288b93e8f70aaf7ad3e4d0fe2247:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIzZmViMWJhMGVlMTJjZWYzODM5NDU2ZTk5MjRiMzhhMGFjODdjMjNiM2RkNWQ3MjVkNjg3YjYxODY4YTQyMmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFhNDA4ODQ3Yzg5MWEwOTczNjVmZTA4NTIyMWRkNTI4MjBkN2I1YThlMWM3YTVlODNjZjkyMjdmYzJiZTM4MDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZiZGUxODA3YTc0N2QwODU0ODY2YjlmYWVlNDg2NmZlNWU2YTUyNGY1MTI0Yzc5ZjgyZmNmOTJjMWQ4NzlkZWEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_aac0f1f4f4a7441bbb9ba00fcaa6e223",
+      "statement": "fitToDisplays 按存储 frame 与各显示器 workArea 的交集面积选择重叠最多的显示器，再用 fitFrame 把尺寸封顶、坐标夹进该工作区，保证拔掉显示器后窗口仍回到可见区域。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/window-state.ts#L460-L496",
+          "version": "repo-lines-v1:sha256:9e8db04c7969e7d77e19db6454716f365f6eafee75de58b29ffe9607df99e184:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3NDU1NTBlMjcxODRlYmE1MDE5ZTYyODM2MDNmNDM0ZWM5Mzg3MDllODdkZmViZTM4ZGFkZjc3ZjZiMjQyMWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYzMTU4NWU4YWU1Y2VhMmVkMWFiMmNiMGI3NTdiYzVmYTA0YTE0ZmYyYTkwMGI0MzlkZmE3YTgzYTdhNmNlMWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ3MWRjMWU1NTMxZGM3ZjJkYmNkYjliYmM0M2YzYzNlMTA0ZDFiODllYzM1YTJjZjc0NmYyMDg0YWEzOWJkMzEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_67f11fc728b94777b69a8e7dc3419358",
+      "statement": "resolveFreeWindowState 在没有可用记录时新建 uuid 并在主显示器工作区居中，尺寸取 1280×800 与工作区 90% 的较小值；cascadeFrame 从给定 frame 右下各偏移 40px 后再 fitToDisplays。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/window-state.ts#L424-L433",
+          "version": "repo-lines-v1:sha256:954e818b44480b23b94bef8158a6ac5944ca8c17d5af123d3a1f4ee553b8fe90:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImExYmI1OTg1ODk0OTJlYjE1MjE3OWQ5MGM3MWU1NDMzMDMwMDdiMDM4NTUxNzQ3NTk5NjYzNjU2YzkxMzYxZjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM0MGM1ZDNkYzNhNzczMDc5M2M4OTI3OTQ4YjU1OTY2NDIwN2Y3OWJhODc3NzNjMjE1MDA0NDMxOTYyZmQ0ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIxMDA4MGUyZDgxZTM3ZDNhNDIwZDlkMDI5OTM2ZWVkYTU5ZmFmMGU0ZTMzZGNmM2Q5YmJjM2YwN2MzNzkxOGMifQ"
+        },
+        {
+          "resource": "repo://src/main/window-state.ts#L499-L514",
+          "version": "repo-lines-v1:sha256:23813b516f4c921ae69b6b02e2e2fc01c6d88be43ea5c6353dd11e2ef42ba30c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhlYWI2N2IwYmE5MjkzYzM0MGQ5ZTI5NTFlOTBlNzcwMGI0MGEzMTI5MzdmYjJkZWFiZWJmYzQ2Mjc1ZGMyNWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU0YzRiNTZmNjVlODYyYTIzYjQ1ZWRlZWQ2OGUxZGRhY2Y5NjhhM2FiMzUyZTZjYWIxOTUyZWM5MTI0Zjg1ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIzZDg1OTk0NjhjNmMyODNlMjRkZTA2MTUwMTY2YmExYjMwZTMxODA0OGE0YTZmMjQ2YjIzMTY0NWRiYzNhZTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d455a3bab57241ada0f73e8db4b1b18e",
+      "statement": "newProjectWindowState 在项目有持久状态时复用其几何而非级联，使从未移动过的窗口也回到创建时的位置。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/window-state.ts#L554-L571",
+          "version": "repo-lines-v1:sha256:25bef8e2d0fb91cb208e76d7b6cc81faa4c6b4295e711ec14d2210fbaa8a102e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVjYWRhZTVmNDYwMjI4ZDM2ZWNiYmJjMWM4YmE5MzA2NWNkOGQ3YThiZDNlM2NkYzAyNzk1Mzc5MWM1YjAxNzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY5ZmFjYmIwNmNkZDA0NDViYzdiMDk3N2ZlM2NhYjRjMzU1N2Q0YTYzYzY2YzFiMWY1ZjM4YjgzMTJjNTgyYjcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fef8fa244b1a4d9682543660ab9cff47",
+      "statement": "updateWindowState 在全屏时忽略更新，最大化时只记 isMaximized，否则记录新 frame 并清除最大化标记。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/window-state.ts#L573-L578",
+          "version": "repo-lines-v1:sha256:78c0872801d3bb97bc06d2884d4cfb08b6e6cacf6372146cf7c5e94a7bc590bc:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDBlY2FhNzZhMDExOTg1MmVhN2M2YzZhZTgwODQ5MmQzNTIwYzhmZGMxNjFmMDAyMTdhYjkxYWNmNGFmZWQ3MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmI1ODBlOTY0ZjgzYTQ3M2Y0M2Q0NDM4NDYyOTQ5ZDY4YjU2MDBmZGE3ODdmMTYzNzQ1ZDAwZGU4OWNiZjM2YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_7122cadf6668487a9be821936e4fe651",
+      "statement": "createWindowStateTracker 用 250ms 防抖合并连续的 move/resize 事件，写入经 writeTail 串行，flush 清定时器立即写，写入失败则把 isDirty 置回 true 以便下次重试。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/window-state-tracker.ts#L52-L78",
+          "version": "repo-lines-v1:sha256:d02e14ddce01fd6ba43abf024d151edb67a7a3899f2eb7999e08db0c3acbefe7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUxODNkZmIzOGU3NDY5ZjEwMzRlMmJkZmMyMjI1OWM1ODQ1Njk0MzA1NjA5NDg4NWE1Nzk2ZjA4NmViZjYwZDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI1NjNkMzNlOWVlMDAxNmQxZTMyNDA3NTU3OGFlYjFmMmIxMzliMjdhNWFiZjk1NTNmNzY4YWNlMjc1YTcwZDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f6f354bb98e44329a689c7990bc6bb5e",
+      "statement": "createWindowRegistry 强制窗口不变量：id 不得重复、project 窗口必须带 projectId 且该项目未被其他窗口占用，register 或 rebind 失败时返回 false。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/window-registry.ts#L33-L54",
+          "version": "repo-lines-v1:sha256:ec9bf29d6a3ab22e142420119753e62a6b782143e7d7773a07cabb68465e39da:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ5NmRkYzE0NGQ2NDgwOGI1MDJjMTgwNDgxY2VlYjczNzk4MDBiOGJjMzQ5ZGFhZTE2MmVjZTJlYmQzODQ1YWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjljOGEyMGU5NGJmMjc2M2Y5NTA2YjM5OThjZjBkYjkxNGQ0YzYzMWVkNmFjNjYzMDliMWE5NDE1ZmE0NDY5NTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7942d4f454e44468817d955199f10591",
+      "statement": "createWindow 在注册表拒绝注册时立即销毁窗口并抛出违反窗口不变量的错误。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/app-windows.ts#L143-L156",
+          "version": "repo-lines-v1:sha256:da9d22c02376bd2cb2ae2255cc3ffb996334e3c9be9a7664fd6df6f165047395:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiMjQ1NTY1MWFjZDViM2ExMzkwNTI5YjRhMGIyYWZhYmIzODMwMWJjZmJkMjlmM2YxYThjNTIyNDNhMGVhYzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQwMjQ0ZjU5ZDA2MDcwNjA2YmUwNGExZTliMjg2NjdiODc5YzM1MGFiOTRhZjYwOGY5NzE1NzE4NDUxMDM2NjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdjZjQ0OTEzOThmYjFjYzliMDQ1ZjU1ZjM2NmU3NGVjNzc5NmIwNDJiNDg2NWQ0OTY0NGNlM2IwYzk2YTllNDMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9ce92c17b2ce4e009e110ac8ce69be6a",
+      "statement": "createWindow 按 main-view-url.ts 的目标加载页面：dev 通道且探测到 dev server 时 loadURL，否则 loadFile 打包产物；dev server 未就绪时会重试 25 次、每次间隔 200ms。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/app-windows.ts#L249-L255",
+          "version": "repo-lines-v1:sha256:ed7d42f998be2ad9e34f6ea4c94d7c76470cf8e93fc86c3894c3b8a03dd6c3be:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzc4MDM4MmMwOWI4MzViNjQ4MjU1MmYzOTllOTk0ZGQwZTMyZDliZTBhMWRlOTNlMDU0ZWM2ZmI5ZDJiM2JjMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTI3ZmUxYTk0NjdlZTFkZmVmY2IyMWRmYWE3Yzk1ODMwNzY3YTllNWUwZTRlZTY5YmVlMTFhM2E1Y2RmNDZjMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2YxMWQ0Mzc5NDU5MzMyNjVlZmMzYzY1MGVmYTczOThjMDFjMjc1YTQzZjY4NzM3NzQ5OGE2YTg2NTk4Mzg3ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOGQyYjBlYTczMWRhMGM1ZmNjZDFkODZjMzdiNjU1NjljN2M5ZTg1NzdlMGI2NGZjZDgzYzc4YzUyNjkwODdkNyJ9"
+        },
+        {
+          "resource": "repo://src/main/main-view-url.ts#L40-L68",
+          "version": "repo-lines-v1:sha256:840d32c7fef825555a01c01863a0b15abd705e655b1389782c512d79cb2a3f1c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNjOTk4ODI4ODk1MDIyYmI4ZWE5MDM5MzZlZDdhNzRmZWVmNTM4MTJiMjUyM2RjYzFiYzA2OTBlMDI1NzJkOTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdiNzIwOWQxY2UwNGU2NDdlMzhiYzk2NGJlZDY3MmFiNjVhZTQ3M2Q4YjU5M2QwMmRjZDUyMTI5NjZiMGU4MjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMwMWFhYzE5NzRhNDNkYjYwMWE4OTIwZDJkODhjMzhkYWRjMjRmMGY4M2YxMDczZjYxYzhmNTdjN2NiMTVmZmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2711f56252a2445888487c0ecd50eb4e",
+      "statement": "createMainWindowOptions 让窗口先隐藏，直到 ready-to-show 才显示并在需要时先最大化，macOS 上使用 hiddenInset 标题栏并把红绿灯放在 { x: 13, y: 12 }。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/window-options.ts#L22-L66",
+          "version": "repo-lines-v1:sha256:23c126edb9840eda9b9f736844331ea808cbf74558b81bbd1c01834fc561c596:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdjMDIzYjEwNDE2OWMyZmJhODNkNTMzZTIxYTExMWFhZjhjZGE0YWJiY2YyMGVjODAzNTBkNTM5YTY4ZmFlOGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZjZWUxOGY5YmI3OWM2MGQyZmM2ZWMwZDI4OGZmOTc4ZTA3NDU2YjQzYjA3MmM3MDQ1YjBjNTkzMTliMTJmNGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc0ZjYzM2U5NGRlNjAyY2NlZmIwZjllMTllYjA3NTI2ZDliN2Y2YjdjOWFkMjUwZjg2ZmJjNmFhZGEwMjY5ZTAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_16b484015b9945d9835afd49731fcfcb",
+      "statement": "窗口 webPreferences 中 sandbox 为 false，因为 preload 要在首帧前套用启动主题；外观经 --clotho-appearance 附加参数以 base64url 编码传入，base64url 能穿过 Chromium 命令行解析。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/window-options.ts#L47-L52",
+          "version": "repo-lines-v1:sha256:426020ba53b6d14e5de1486668df9e72fd83bcc230bd13512c3681bc77983268:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmI1MmViNjFhYmQyZTk1Y2E2NGY5YjY2NDRkYWE5Y2NlMWU4OWUzODU1NjU5MTk0YzE5Y2JhNjM5NGQ2ZTQ5ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWYwY2RiOTcyYTdiZmI3ZWQyNDZmOWZmNjcyMzg1ZTU1ZjQ5NjhmYzExMDQzZGM1YjY4NGQ1MWRmYTMxZGJjYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2VmMjRlYjVkNWE1NWY4NmRmZGVkNWQwYmY5NTI5YWFlNWRhZTMyNjNhNzZlOGJhNjFkYmEwNDEzN2YwMDc0ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZWRiYjhmNzQ5MzdiMGE4ZTc5ZTcyMzI5MGMwNjI2OTlkNjM5ZmRlNDgwMzMzNDIyZjNlNmE2MDhhZGY2NTQ0YyJ9"
+        },
+        {
+          "resource": "repo://src/main/window-options.ts#L69-L79",
+          "version": "repo-lines-v1:sha256:b421e77c37c54c4c1ed8241f642cc8556a1afb7205cd788c4ba2cfb609646bee:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0MWNjODJiYjQxMTMxOGU3ZDc5OWQ4ZmVkMjg3YzNkMGU0NmQ0NWM3ZjQ4Njg3MmE5ZGI1NzJjYTZkZjhhZjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA0ZWU0OGMwZjNlMzI4OTMwZDk1ZjI0OGZhMTUzOTEwMzc3ZjNiZWVhYzM0YmZmNWM1ZjY1NzQ3YTE3NzRkMWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNjYjI2Y2IwM2RmMDU0OTYyZjU3YTdjNzU5MDNlZjgxMTk2YWQ1ZDhkYzBmODk4MGMzZTMyODU1ZTdmYmJlMjcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1b62631e3ea24c07b3d96c2ab2d82d0f",
+      "statement": "restoreFreeWindows 把 lastActiveWindow 对应的条目排到最后创建，使它在恢复完成后获得焦点；没有任何记录时创建一个居中窗口。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/app-windows.ts#L316-L331",
+          "version": "repo-lines-v1:sha256:e6dfc94bede329384da0853ec2cfc162be1ebcf97bc6809c3a612e1ad7e96507:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQzMWMwNGQ0NjBlMGQxZTRmNDU3YzAyM2FlMzdkMTlmOTU2MmNmMjYyNjlhOTM2ZmQwY2Q0NjFjMDAzNDBkNTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkwZTY5NDEyMTA0YTQwYTZiOTU5MGIzN2MyYjM3MzhiNWNiNzcxNmI5MzQ3MzI4NzM2YmZmODFkMWRjMDY4MTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU4OGVkMTE3ODFmYTQ1MTE5ZWYwZjBmNDllOWFiZTE2NWZjZjc0MWNmMTNlYjYxZjBlMzk3OTg2NzQ1OGI1YWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e5b06828e765497bbbfad52228b501f0",
+      "statement": "restoreProjectWindows 丢弃项目已不存在或已被占用的记录，恢复的窗口使用新 id，同时把持久身份记录迁移到新 id，使之后关闭时删除的正是这一条。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/app-windows.ts#L334-L360",
+          "version": "repo-lines-v1:sha256:4266b8e074fd737831e0e8c91b84e152875a45e3e18351e137a7c66565ac6e58:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhkNzY1MWZiYWI1NTQ5MjBlYmI5NjRmMjUwNjQ1NzYwMGU3NjMzN2NiNDY1Y2I0NjQxODhkMDQ3NTk0MzI2Y2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMzYmExMzM0NTBiMjAxNTJjZDM1N2ZhZTc1ODdiYTdiMWU4YWUxZDZmMDhkOWZjZGE3MTJlZTg3MzNjODdjMjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMzMmY0ZDRiMTYxMDRhNzdkZDdhZmMzNDA2ZjQwNTU4OTg3YmQ0ZGE1Y2ZiYTM3M2VhNGQ0MWU4NmZlMDk0NzEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7ac3632bc6c746f6a05a4ca4e6d2eda8",
+      "statement": "openProjectWindow 在创建窗口之前先把身份与几何及 ui 的种子写入持久状态，确保渲染层首次 windowReadProjectState 就能读到项目工作区。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/app-windows.ts#L362-L401",
+          "version": "repo-lines-v1:sha256:aa44be28f0cf37c777f539be503067a019264f85a83d56b5475bf04cac8e688b:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjljMzg5NTQzMTc4ODFmMDZiMWViOGQxMWM0ZWEwMWY3OGFiMjQwOGQ3NDhkZjZlODhlZmQyOGMwOGJhMjYwMWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk3MWZhOTJjNTJmYzA4Y2UwZDMyM2VhNmI4ODk4YzcyMWJhNzg4ODQ5ZWJiYzg2MjljYTE3M2ViYmU0MTZiNzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUwZWQzNGZhYWZhMzU0ZmExNTM4MmU0NjJjZjQ0ZTFhMjg2ZWQwZDM3OGM3MzFjNDdjOThmYzQ3OGY0OWE3Y2YifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_724e25edba6e4b55aa665040b3115194",
+      "statement": "refocus 把当前项目窗口改指到另一个项目：旧项目工作区存入 projectState，新项目的持久 ui 作为结果返回，若目标项目已有窗口则返回 shown-elsewhere。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/app-windows.ts#L415-L445",
+          "version": "repo-lines-v1:sha256:e5cea08a29133924d3496bd33bded0483234046aec7d6456492689adff7a2bfa:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZjNDUwMWU0YzBhYTMyYmYzYzQ1MzZjN2UwODBiZDhmMGY1N2ZhZDQ4ZmU2ZTQ4MjljM2FiYzU0MTUwODM4NWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdlYWMwZGQyZTFkZDIxZDdhY2VjZDcyNWU5Y2UwMDcwMGE0NWJlNDYzZDdkODBkNGViYzMzNzRhNzQ1ZDdmNDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJiMTgzN2JkNWU2ZmM3MzZjZDEwMDc5MjY1MzlkOGM2NmQzMmExYzE0MGM4YTQ3ZjI1YTE4ZDUyNjljYzBhNDYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7be8a68922cc4783984dd72e7ff2a630",
+      "statement": "close 事件对项目窗口默认 preventDefault，先 flush 几何再销毁以保留其在 projectState 中的工作区；closed 时若项目窗口是用户手动关闭而非退出，则从 windowsState 摘掉对应条目。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/app-windows.ts#L220-L247",
+          "version": "repo-lines-v1:sha256:9689775ab45f9ee517a50c5f2793f3440e0961f03f7327180f5593e65d50f79e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI4YjM1YjIxZTIyODUxOWI4NmZiOWRlOGE3NTg4NjY5NWE0N2EyNDk2NTY0MTBmNWFkYmMxMmJhMGMyZDc5NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY0NzVlOTRhOTA0YWM0OWIzMTU0ZDQ2NzJhNjZlODYyOWI4NmRhYzc0ZTNlMjkzN2JlNjkyN2FlM2RhMTFjNTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJiZmUzMTAxYzQ3N2E2NTczMDcwNDJmOWY0MDQxZjY1MDg5NzU4OThmZTkwZDBjMzc5OWNhZGY3NjBhNTNmMzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU4NzUxZDAwYjI4OWFlYTMzOWQwYjIxZWE4OWIwOTllZGZhZTFmOGEzZWQxOTQ2OGRiMTQ1NzcyNGFkZDE5ZWMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d4dc32e1c7fd45ff81314d9da239a5fa",
+      "statement": "activeWebContents 依次取聚焦窗口、最后活跃的自由窗口与第一个注册窗口的 webContents，菜单命令由此送达。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/app-windows.ts#L265-L273",
+          "version": "repo-lines-v1:sha256:d7ff9673458f90846b9595eef54a7325ac6beb02390fcd2f80d89135db264d7e:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGYyOTg4YzA1MjdlY2ViOGM2NGUyN2E4NDE4NjE0MDI4N2Q2ZjYyMDgxY2Q4NmJiOTYzNjlmZjE5YmNjZjRmOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTdmN2MyOWUxMTAzMzllNjBiMTY5OTFlYzVhNjk2ODIzZGI0NWIyYTU2ZjQxOTg4ZWIzZDgxZTAzZWU3YzRiNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzRhZWIxZGJhOGQ3MmRmMWNjYWFiYWUxODFiNjJkYzdmNDBjNTJlYzczMWI2NTM0MWMwNWY3ZjVlNTZkNzA1NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDYwYWI4YzkyY2YzOWM2ZDQzMjBkMGNmMDc3YTVjNTJjNmQxNTlkYTM1ZWIzZGE4ODJjYTlmM2RkNzE1ZmIyMCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d60d19c22de74e2d88163ac53e70626a",
+      "statement": "windowReadUiState 与 windowWriteUiState 只对自由窗口有效，项目窗口读取返回 ui 为 undefined；windowWriteProjectState 只对项目窗口有效并转调 persistProjectUi。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L389-L436",
+          "version": "repo-lines-v1:sha256:6765503ecfc9704626375922c81917e499c2343a01d37699baf05362caf5bda4:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjZjVmODYyNWI0MzQ3NDUxMWI5MWUyMWY2ZTViNGFkYmVjZThmMmQ0YTUyNmU2MWJiM2Q1YjEwNTA5YWViOGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFlNjczYWJkNDU3YTk3ZWVhMTdhNjAwNjJlYjBmYWVhNmJkZjA5NDg2OGNjNmI4ZjhjMGViZGEyZjYxZWQ0MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzNDBmNjE5ZWNiMThkNTUwZjEwOWJkMTZmNmM2ZDQzODBkYjgxOTczNGRlMDgyNTAyM2Q5M2RiNmJjZWEwNzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEzNjIxNGQyNzQ4YjEyY2QyYWE0NmE5MmZmOTI0NTU0MDQ2ZjU5YmM5YjhkNTAzMmI0NzM3YjRmYjgzNzQ5OWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ce167c974dee4678a9635726542caeeb",
+      "statement": "windowDescribe 返回发送窗口的 id、kind、projectId 与 pinnedProjectIds，未注册窗口直接抛错。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L417-L426",
+          "version": "repo-lines-v1:sha256:5a15349a1c176a663dde46f8f71a920faaa6527f3cd1ed8f1497b53a45e29a99:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJlOTE5OGE2ZmRmMmU5YjEzNmEwMWNhZGFiNjk3YzE4MDk1NGYwYTNmNDc0NWViODM5Mzc3ZDNkOTczMGI2MDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFlNjczYWJkNDU3YTk3ZWVhMTdhNjAwNjJlYjBmYWVhNmJkZjA5NDg2OGNjNmI4ZjhjMGViZGEyZjYxZWQ0MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVhZTEyMzhlYTk1MjQ3NDQxY2VkNmZiZGM3ZjRlZjNlYjU1MWM5NTZlMjJlZjlkZGFmM2I0NGQ3MTU3YWNlZjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZmYjgzYTk0NWMzN2U5ZmJmNDFjODUwNWYzYTg2YjA2YmJiM2MxNmI3MmIwZjU0NWEzZGU4YTc5YTI3OTA2OWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_df7bb117000f4405b5ce13ebf9191810",
+      "statement": "createStartupThemePreload 生成的脚本在文档早期把 theme 为 system 时用 matchMedia 解析成 dark/light 并给根元素打 class，clotho preset 不写内联颜色变量以免冻结 preset 升级前的旧调色板。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/startup-theme.ts#L22-L51",
+          "version": "repo-lines-v1:sha256:2ad1b1057b81ccccec930a38eaf8f43fb9f44fa3f684ed5c2480db46b830a2ee:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJjMzE5NGY4OWU3ZjhiYTM4YjhjNzgxMzA4NTRiNjQ4MzAwYjJkZDA3NGY5NGQ3NzY1ZGM0Njk1YTUwNWMzYjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY2YzNjNTJkN2JkNzEyNjdkMDJhMzMzZjA2Y2RkODNmNTgxMWFmNjc3ODIwZjRkOWMzOTU5NGJhODcyMWYwNDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fb0cd3b8335b48ec9305c1ef4bcb628d",
+      "statement": "启动主题脚本在 document.documentElement 尚不存在时用 MutationObserver 监听子节点变化，出现后再应用主题。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/startup-theme.ts#L43-L49",
+          "version": "repo-lines-v1:sha256:c3f5bc4c60c334ed16df5a9549c0166bcac24b1e16acc49541ea0b186452857b:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2E0YjEyYjYxMjliOGQyYmQwMTkyOTk0Y2RhMjFhODAxOWQ1MWJjMjQxOWI1ZTI3NjJlMjc1Y2E3MzZhNzMzMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5M2Y0MGUzNzgxZWI4OTZjODJkMDQ2YTA4MDY3YTExZTM1Y2RmMmYxZGZhZjI2ZmVhOTBiOGRiNjY3NjQxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYmM5Yjk4NTM1YjIwZDVlMjNkZTIwODBiYmMxOTJjMTRmNmY3NTVhZmIyZDU4ZGVhODI5OTA0MTY1MWJiNTFlNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjIsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzBkNDRlODUyNjZhZjIzNWViNWQzOTRkNDgyZWE2NzA5OWU2YmMyZTBkNGM4MzJkZDBlODA5NWQ4MzI2ZjJlYSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_857803ab3eb9449194c981fd371a871c",
+      "statement": "applyNativeAppearance 设置 nativeTheme.themeSource 为应用主题，让红绿灯与系统菜单等原生控件跟随 UI 而非系统外观，bootstrap 在启动与保存偏好后调用。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L139-L139",
+          "version": "repo-lines-v1:sha256:c7c046cb9cdf9a1835d6063c75ef342d7b6ca38010b162c19fcc18ecb6a59681:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzdjMDQ2Y2I5Y2RmOWExODM1ZDYwNjNjNzVlZjM0MmQ3YjZjYTM4MDEwYjE2MmMxOWZjYzE4ZWNiNmE1OTY4MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzdjMDQ2Y2I5Y2RmOWExODM1ZDYwNjNjNzVlZjM0MmQ3YjZjYTM4MDEwYjE2MmMxOWZjYzE4ZWNiNmE1OTY4MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNWZiMzhiNWI3YzZhN2MxM2FiNDE5OTg5ZmY5ZDQzM2Q5NTY5NWQ4NTk1MGM3ODI5NGVjOGVmODNmOGM1NzdjMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTA5ZDRlZGI1NTkwZWE0MGQ2ZmU0YzI1NGQwNzk2Mjg0YmZjOGQ3NWViNDA1Y2YzOTJmN2I2NDk3OTVhYzk3ZiJ9"
+        },
+        {
+          "resource": "repo://src/main/native-appearance.ts#L10-L12",
+          "version": "repo-lines-v1:sha256:3cf484c954e3242c15bce53d39fb464660d762b815452b1ff23e1ab0b1fb0f43:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNWIwYjdlNGVmOTUyZjE3OTQ4YTA3YjljMjliOGFmMzEzMWJiZDk5MWM5ZjVlYWI0ZWFmM2RmZDJlODAwOGE1OSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZGEzMWJhZDMzYTVjZjY0Mjg0YTk5ZjE0OWM5ZjNiMzg5MzZmODFlNjkwNTNlOTY0ZDU2ODI4NjJiYjQ1NzQxMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}

@@ -1,0 +1,240 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:625be3b44292222d930261bda315284ba9fba8b59a1c65fe0f741a06809b0ae8",
+  "claims": [
+    {
+      "id": "claim_3af242cece204452870db71b14cdb3ba",
+      "statement": "SessionControllerProvider 的 key 是 sessionId——切会话即换一棵子树，所有 store 与服务随之重建；它内部 useState(() => registry.get(options)) 取或建 controller，再用 effect 把外围选项 syncOptions 进去。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/index.tsx#L222-L233",
+          "version": "repo-lines-v1:sha256:f6a279bfd77537ba70d29ba4fb92d92fc00c013903d07a171c320aede68af078:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwOGE1MjFjNzIwNTA3ZWQwMmJmYjIxZWRkOGI5MTk2ZTJiYzQzNzcxMzVkZWU2NmFjYWNlZThjM2I0MGZmODEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ3YjhjMTA4NWY5NWExYWZhYmU1ZDE1MmFkNThkYjlkYzI2MzM2YzEyMThlMmI4NDBhZTdhZDgyNmEwZDU3NDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU0ZDQyZWQ0YzExYzkzMzQ2YmY1Y2JlNmNjNmJlY2Q1MmM5ZGM4OTc3NDBiZTA3YTQzZWY5OTcyMzk3OWY0OTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ4M2E2YjI0ZGRhY2IxM2E2NDdjMGNjOTM5NDIyODE1NTBiODM0YmVlNmEzN2JhMTQ0NzViN2VkNmFlNjdkZmMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b07b971026e040f487a3dfa3cf91e715",
+      "statement": "ModelOnboardingGate 在没有配置任何模型 provider 时整块替换会话内容而非叠加模态，mock 项目跳过。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/index.tsx#L251-L260",
+          "version": "repo-lines-v1:sha256:7ffe55e185647040ccf49af8ff5645fedfb9d593943b99fbf77db0b73ca1c086:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVlZDhmNGIwZTNmZGRlMjM4ZTc3NTM4YjYxZWYzNWE2ODYzMjMxNTdkZmJmZjhlM2MwNzhmNmU1N2ZhMDBiMTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM0MGM1ZDNkYzNhNzczMDc5M2M4OTI3OTQ4YjU1OTY2NDIwN2Y3OWJhODc3NzNjMjE1MDA0NDMxOTYyZmQ0ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk2MDJkNTkyNjA2ODAyOTU1Y2E2YTM3ZmQ4OWZlYWYwZGZjMGFkNWE3ZjlkYjkxYWI0ZjQ2MGRmZjQ4ZjMxYmYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f42559d1f920452f81f796d985f996fc",
+      "statement": "SessionController 是一个会话全部可变状态与副作用的所有者，构造时一次性建好七份 store、七个服务与一个模型配置 store，不继承任何东西。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/session-controller.ts#L88-L132",
+          "version": "repo-lines-v1:sha256:119bcb7dabec74219b3bd3b2ecbd79eb004a2469a742688f6201a6017a69fd50:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYxNzU1ODg3MjM5YzE1OWUyYmI4MWQyNzc3YjQ4ZTgxMWM2YjIwYjE4YjljNTYxNjQ0NGE4NGEyMmQxMDgyY2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgzYWQyM2VmMDcxYmM0ZWUwZTAyNGNmNzRlZjYyNTlkY2YzZTIxYzlmOWFhN2QxMGE4MzRmNzcwNmM2Y2NlYzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgxMDJjNjkwNDc3YmQxZjk1MTFmNTRhZTAxMWY3ZWY4NzgwOGEyZjYwNmY4NDQxYTI0YjhiZTE5OWQxMDY2OWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e81e8caa98d046d98dd898f1800570d7",
+      "statement": "initialize 并行走两条路后汇合：hydrate 从 persistenceService 读本地记录恢复 composer 草稿，并在记录带 claudeSessionId 而内存没有时把它补上、将 hasLoadedHistory 置回 false；startHistoryLoad 拉转录。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/session-controller.ts#L238-L297",
+          "version": "repo-lines-v1:sha256:cc75e079101af8641f72465b4939bb875db634e2b3ee8e29967502bb2757391f:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQzNDQ0MzUwMWE4NjY4Y2ZkYjY5NjVhMDFlMDk0NTI5ZjZmMzUxNTQ5MmY5MDExZmRiYjA2MjRkZWEyYTFlMzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjljNzlmNjZkZTFhMGY2NmIwZWU2MzVhNDc5OTI2MTJhMzZkMjA2YWEyMzcxODY0M2E4ZTFjMDQxYzM5YTNkZTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdhNTU4Nzc3OGEwYjFiMTI3MjQzODMxYmE2M2RhYzBlMjliZWZmOTk4ZTlkMjAyOGJhZTViYTVkOWYxZWJmMDcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9bc7cb15c5594d6cb039fe0716444b27",
+      "statement": "进入加载态只在确实有历史要拉时发生：全新草稿没有历史，而加载态翻转会让 composer 在 dock 与空状态之间重挂载，吃掉飞行中的点击。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/session-controller.ts#L240-L247",
+          "version": "repo-lines-v1:sha256:d2a63e64043e297b5dd1a1eff5879cfc19417a99ecdb3645b0ed366064dd6b46:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTAyMGUxZTM0Y2M2NjMyNDkwMDI0ODU4YjliYTg3ZDIzNzM3MTY4YjY0ZDliNDk0NDE4MmY0NWRlOWQwNzAwMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5M2Y0MGUzNzgxZWI4OTZjODJkMDQ2YTA4MDY3YTExZTM1Y2RmMmYxZGZhZjI2ZmVhOTBiOGRiNjY3NjQxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjJkMGMxNWRiZTYwYmM5YmU5NzJkNjM2NzA1NjI1ODY5NDFiYTFhNWNkODBiYTgxYjBkOWEzMDhjOWVhNjdmOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGFiYzkxNzQ5YjgzYzc5ODZmOTM4NjZlNWRlOGE0YTFjMmFjZmI3MjJhMjVhMzQwNWE5NmYzYjZiOTcwNTI2YyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_93bd28bef6d64dd9a3e7b29aec98807b",
+      "statement": "initialize 最后做两件与另一窗口可能正在跑此会话有关的事：sessionViewOpened 上报本窗口在看它（阻止空闲热查询被回收），attachIfActive 若有活动查询就挂上去直播。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/session-controller.ts#L264-L280",
+          "version": "repo-lines-v1:sha256:78b0d2f224bf49be593763d8b6efb54302360996e1cfbb2b7c5c5bd375952114:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNhYzRjM2ZjODEyNGQ5Y2RiMGU3NWNmODY1ZjI1MmQ2MTk3OTNiMTczNzU4MTJkMmVmZjA0Y2Q5MzAzMDY4NDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE4MzU1MmFiNTcxNDk0YjM5OWIxODE5OTYyMmRiZTNiMzgyNmViNjFmY2QxZjc0Y2ZiMTJhYmNmODhlNGY3MjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU5Mzg0NDMxZTMyZTU2MTRhZjg4MDE1NzRhYmMxYzFkMDUyYWUyOTQ5ZGMzNjk4MzZiZWI0MzkxMTQ5MjY2YzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZmMGYxZGQ0NjE4YTNjNjZmOWI1N2M4NzIzY2ZhNWY2OWMxZTQ3NWE0NDU4YjYyMzhjOWQ0ODY1NzE4MTE2ODAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_69211e0af1a6444f9e787d446021b696",
+      "statement": "`submitAfterHistory` 统一处理发送排队：历史未加载完时先立 isSubmitting，等 startHistoryLoad 完成再真正发；sendPrompt、resumeInterrupted、sendPendingMessage 三条路都走它。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/session-controller.ts#L315-L341",
+          "version": "repo-lines-v1:sha256:e8430cd106e6b7374b1c244254033e51d621f17623146fa18b1ee6badd10498e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg3MTczMjdhYzk2NzQ4NjIwOWJjODQ4ODY1YmVkZjdkY2M5MGZhZGFkMWFiYzhjZDUwNGY0Njg2MjRkNGI3NDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIxNDVkZjc4OWExODJmYmM0NDUyOGE5MzRiZGZmMDhiZTU5ZGQxNmVhMWNmYzdmNzUwMTZhZjRkZDE2OGUwNzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFiZDliZDM5NDVmNjQzZTcyMGQxZjU3OTk4Njk0ZjhkNjUyYTE2YjFhOGZlNzM4YTRiYThmNmRkZmU2NmQwN2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY0NGJiYThiODI3MDIyMDlmNDVlOTFjZTkyZTk2MmQ3MjdlN2FmYTMzNTdmYjE1MmQ3NzhjN2JhYzQ4ZTc2OWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d4c74ed2710849b2847dd0f6de6797fa",
+      "statement": "运行时变更经 claude-session-runtime-changed 推送转 sendService.onRuntimeChanged，另一窗口的重建或回收在此重新挂载或重置；退订在 dispose 时调用，监听若在 dispose 之后才建立则立即退订。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/session-controller.ts#L122-L131",
+          "version": "repo-lines-v1:sha256:0ef8cc764df3ac83aa1ec625b53c14bfdf7a123506cb791c41e9623938b35667:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk2MTg1ZTI4NmY4YmRlOTJlMGNiYjFhZWI3ZTllOGRmZDZhOGQwMmMyMjk0NjE1ZGM2MDNmYWQzYWVmZTM0MDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJhYWVmZTYwNmIxNDkyYmJjNDRhOTk0NGIxYjk1OTdlZGJiODk1ZjhkMDc4NTRmODRlYmRhZDk4YTQwZWFjZDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY2OWMyODNhZjBjOTczM2FmNzkzZGRjYzc4NzI2YjhmYzM5ODg1NWU2YjJlNmM5OGJhMDUyYTAwNWUyOTI5NmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNjMTRiOTAyZjhkMzBjY2M3OTIzNzkzMmEwODE4NjdiMTVmMzNhZDM5ZmNhMWRmNTVhNGU4ZjM2YWJmMzBkZGMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6f73cc09f9e44462970695b70980f272",
+      "statement": "respondToolRequest 转发回应后，若被回应工具是 ExitPlanMode 且结果为 allow，就把权限模式设为 exitPlanTargetMode(默认模式)——默认是 plan 时退回 default，否则刚从 plan 出来又会重新进入计划模式。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/session-controller.ts#L389-L396",
+          "version": "repo-lines-v1:sha256:550ac66a6361a2ccdd955feb290b5af6a8f6b88b61974e651b9c3b8401153efd:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGFjZjhmMGJkMWFmMTNjNDZlMzBiODQ3NDVkZjkzMmU0NmY1NWZhMGUzZmMxYjRjNDY5YTZhYmJmYTViZTk5NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjdlNTc4OGQ1ZDlkNzNkMjRhODFkYmMwYTVhNzRiZmE4MmM5YzNiM2FmOTllNTJhZjc5NmU5MGI0NjhhOGEzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTc0NjkwM2M1YjBiMzc4MjJkM2FkODZjNmVlMjIzNGYwODZlMTFmYjRiYjIyOTViZDA5ZGFlOGY1N2I0NTNjYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDJlM2YyNGMwMjcwZTEzYzcyOWM4Y2U4NWEzMjNmMTczOWZiMzU2MjQzNDhhMGQzM2IwOTkyNjdhYWNjMzA2MiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_7826e2de6e594019951dd374a34b34fc",
+      "statement": "dispose 退订用量快照监听与运行时变更，调 sessionViewClosed 放开对热查询的持有，再 sendService.dispose()。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/session-controller.ts#L398-L408",
+          "version": "repo-lines-v1:sha256:449b3ae370b86f0f619a759cb9558ad7b2f2685f0c23d827eeabb7e70c1ef136:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJkZWJlZWRkMWE4NjdiYzllNmQ2MjNkMTcyY2VhMDk3ZmExZTQxMzJiNzlhNTEzMDliZTRiOWI3N2NjZjhmOWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI5MDkxMThhM2NiMmU1NGQyYzdmYTg4YTk5Y2Q1NGE3Y2NhZTM5ZWY1ODk1NTI0M2M2ZWUwZTE1ZmFlMzgwZDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIwZDAxNmIwZTZhZDg2NjcyNzU0YTY1NTllZDE0MTJkOTExYjQyOGU3ZWU1NWE2ZjZjMGI1ZTYwZGY2ZWE2M2UifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b7e847033c8c4a94a14563db8fad1e6b",
+      "statement": "七个 store 全部用 zustand/vanilla createStore 且每个 controller 一份，按会话划分；切 tab 时 key={sessionId} 整棵树重挂，若 store 全局则两个会话的消息、流式状态与草稿会互相污染。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/stores/conversation-store.ts#L28-L52",
+          "version": "repo-lines-v1:sha256:1d2341429a850e8ffd719d1c421b21d51f5d36cc20bcf237b090e59d945ad412:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUwNmQ3ZTE2NTI4ZGUxNjhjNzI1NTE3OWM0NmU0NDkyMzI3OWViMzkxMmIxNjM4ZmZiNjhjM2FmYzAzOTY1YTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQzNzU5YzJlZjhmN2YwODhlMDljYzRmNGRkNmM3MDEwOTRhNGUyNTVmNjNjNzI1ZjI1MGFkZWUzZDgzN2Y0MWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRmNDVjZTYwZmFjNWYyMzg1NDMzNDE3YTgwYzkzMGVmNTY2YjVjYzFhMjY2MjcwNGZhY2FmZjYyYzg5M2IyZTYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_904e832208ed40c1a989073c64b412bd",
+      "statement": "ModelConfigurationStore 是跨会话共享的应用级模型目录，由 registry 持有并注入每个 controller。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/session-controller.ts#L106-L107",
+          "version": "repo-lines-v1:sha256:3e9e82de8e8060a40529ee5a01633f2b436aa0c980d1cba2caf191ecdafb7a1a:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmNiYjA1MGFmZWVkYjRkZDFhZjVhYzc2MGJhNjA3NzI4MDNkMzE2NDliNjhjYTU5NGQ1NTE4ZjhmYjc1MmI5MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNWY1NmMzNTk3NjQ1MjAwMDI4ZmVmMGYyM2QzZjMyY2Q3MjlhYWRjYTA3NGE0MTc0ZjIyODhhNjRmYjhjMjgyNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTJmMTc1YTFkNjMzNzM4YmI2ZmI0ZDJlMTQzNmE3NWQ3ZjVmMTg0NDViMTc3OGI5ODc5YjEyZjliMDRjZTVhYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZWZjMmMxNDY1MWEzM2E2ZmUzM2Q5ZjBlMWEzYjk3NTExOThmOTYxMDIzNzBmMjJhY2U3Zjc1YjUyYWYxMWVhOSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_c299a7edd0504c01a239f6aeb05f3c46",
+      "statement": "conversationStore 除消息数组外还存三份索引：保序的 messageIds 与 messages 映射，以及按 toolUseId 归并的 toolIds 与 tools——同一消息里被流式分帧的工具因此合成一项。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/stores/conversation-store.ts#L34-L45",
+          "version": "repo-lines-v1:sha256:24e74765de463a9b9917126c31b6767e8d36c22b5f6918db1fdbe28299a1a9fa:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQyYTQ4MWQ4ZGE3NTllMDcxODkyNmI4NThhMmVhYjE3Njg0OWU2NGJlMDFiNGJiNTU2YzdmNjQ1ZDExNzRhMGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImViN2Y5YWY0MTk1M2EzNTgyZTIxYjY5MWNkMTNiMzVlNmYyMTJlZjNjZmZlMjg2OTQ3ZWNjYmYwZWZhMDRmZmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNjZTI0ZWVhY2Q5OWQ3ZDViNDgyNjdhMWIwNjgzNDVjZGMxNGNhMDA1ZGNjMmRkMDhlOWZkM2JlNjcwMzczYzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY1N2VjY2JhN2UwYTgzNTUwNjI2NjBkN2RlYzNmNzdhNjFmNmRlMjIyMDY4ZWIwNTNiYzY4MmNlY2I5MjE5NzMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_73d4f210a7ee42cdb439ff761a1cc039",
+      "statement": "markSent / replaceSentTurn / removeSent 追踪哪些轮次真的发过，乐观卡片换成真实消息时 id 变化靠 replaceSentTurn 迁移；markStopped / clearStopped / markFailed 记录终态。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/stores/conversation-store.ts#L72-L115",
+          "version": "repo-lines-v1:sha256:4bf5d50ab23f01633f9234fbf2e900c72d4bb27cc7b9b07d73c4a7b80be14a99:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjczZmQ1YjJkY2I2Njk3YzRlYjE2OGZjNGZmNjY3OTdhYTZhNmU0OWI5NGMzOTgwMzdhNDA1MjE3Mjc1ZDdlMmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRjMDU3ZDBmYzY2NTRlZGJkYzQ0Mzk0MjhkNmZmM2IyMjRkNjZkYzhjZjMyOTgwNzgwNWJhMTU2MDdlZjNlYzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZmOGE4OThkNWMxZDQ4ZDNlODQ3ZjAyZjgwNWViMTZiOThmOTVhZmVlYjU4YjMyNzg4Yzc1MjVjMmZiMWRlMjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRiOTcwYjczNTEzMjJjNzdmODIzOGQ0ZjYyNzQxNjAwNDIzMGRmYzJmZGUwZjE3OTYwYjUwMWQ2ODU1MzEzYjMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6bf4b197a3ae4132a9d6f42c23005612",
+      "statement": "UsageSampler 做按需上下文用量采样：两次调用间没有活动查询可答控制请求，故每次采样起一个短命空闲查询、拿一张快照即关；sample() 去重，并发调用共享同一采样查询。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/services/usage-sampler.ts#L5-L26",
+          "version": "repo-lines-v1:sha256:32a284a5eb4e65f2f8046e62ee050d125d26da38ca6b55e6010a89e1767ddefb:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJlN2FiNTY5NTIzMTUwNjAxNmQ2YjI2NjYzMzA5YmFiODkxMWVmNDM2M2I4ODQxMDM2MWM0YTFlYWI0M2I4NWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJiNjRlNjAxYmYzMzQ0NDNhMjNkYjBiNzE5N2VmNzk2ZGNiYjRiYmQzMGIxNjBlMmYzNTM2NzZmOGY3YThlOWMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_588a61d1097c4e08a1b9e345cb6ce521",
+      "statement": "ComposerService 有隐藏草稿分支：未 materialize 的空白草稿不进标签页与历史，一旦有内容立刻以隐藏状态落盘以免退出丢输入，内容清空再删痕迹；绝大多数调用 fire-and-forget，写失败只记 composer.persist_failed 而不成为未处理 rejection。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/services/composer-service.ts#L25-L84",
+          "version": "repo-lines-v1:sha256:b0090c15f96382b2d1117633a25f2e109e4d52760aef3709d1075a64b757a830:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUxMGE2ZWZhOThkYzQyMjYzOTNmYTMzMjVkOTc3ZDhhYmY0NDk3ZjNiNjE3MWU5YjcyYTdiOGM3YWNkMTVjMDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0ZjMzNjFlNjg1MGI2NmRlMGVkY2EyNTU1YzE2YjVjZTM1NmZjMWExYzY5MTFlNGYyMDFkN2NkZDliOTQ5NTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU3NWQyMGNlZDQ0MjI5ZmIwZmE2MGRjMWJjNDY2YjFjYWEyMmRlNDZmZmYyZDk1NDQ0ZGY2MGM1MTkwZDk2NzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJkYTA1ZjAxNzBlY2E4MjljMWVmMmE2YzFmMzMxZjQwZGE4MmNhZTAzYTA2ZDJhM2I0Y2U5NWQ1NWZkMTU1MDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4a0ba0aa261d431399e97397bfa72d49",
+      "statement": "queuePendingMessage 把草稿挪到流式轮次后排队并清空 composer（让停止按钮回来），editPendingMessage 搬回来；pending message 是临时的，只活在 controller 存活期间。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/services/composer-service.ts#L177-L205",
+          "version": "repo-lines-v1:sha256:073a104767b180f97fff14aa900c4fcbb881186e21ffb1fb75c546313e7e9c75:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRmMmEyZjk5NmYwOGU2ODBiZDI5MjEzNWE2ZmE0OTc4YmRhMjZlNjAyZDg0ZjMzY2IxZDU5NDc3NWQ0MzA0YjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjOTcyMGQyYmRjMTc4M2RkZmQwOWYxOWVlMWVmYTNiYmQwY2NkNGU0NWM3Yjc4ZWE5MWQzMWNmNzM4NTdmYjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIxZGEwNTk4ZmZjYjM3MTA0NjY5OWE5NGE1MDY0YjdjNjhlOWQ3NWU5YzRjMmY1N2YzN2I1YmExYjdhNDI3NjIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9b613250fa8a4305847809ad65064922",
+      "statement": "SessionControllerRegistry 是每窗口一份的 controller 表：get 有则 syncOptions 后返回、无则建并注入共享 modelConfigurationStore；find 只读查询；release 删表并 dispose。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/session-controller-registry.ts#L13-L39",
+          "version": "repo-lines-v1:sha256:20ac091963faa981591ad7848d914b0fbdd6702408e8d425d1b2181604813f35:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMTE1ODFlN2QwNzkzNWI1ZDU3NjhjZTAxM2FlODZhMDc4MzgwYWE4NjBlZWRiOWEzMjA2NDc0ODQyNDE5MDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU5NGQ0ZGNiNWIyYmUxMzIyMTUxYTZmMzI0OTBjMmE4ZWYwYTZiZjk5MTAxMjIwYmVmZjlhNjlhZmFmYzkzNzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE3ZDAzYzllNjY2ZWUyNTBlNDIxNGE1OTA3OGY3ZWU3MzdkMGRkODVjMzAzYzRhMGZjYzY3OTY2N2YwNTg2NjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_08f117ff900b4b3ab7bbcadf21faabbc",
+      "statement": "retain(sessionIds) 丢掉失去标签的 controller，但带常驻查询的例外：它继续注册、查询在后台跑、活动继续流入，关标签只请求主进程在空闲时回收，claudeSessionRecycled 推送到达才真正释放——用户关标签后轮次继续跑，再从别处打开能接着看。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/session-controller-registry.ts#L40-L60",
+          "version": "repo-lines-v1:sha256:255742a3061305ab830b55cf09a8915ba44b2cb2baaa93d25470cf079da5262d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM5Y2JiYzY1NDY5ZGIxY2EyODQyZWZkOTdkZjdlZTJjZTZjYzE1NzE0ODJkMDFhMThiNzkwYTEwYzdjNTEwZjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIyNWZjYzcyYTAyM2IyZGY3MjAyNzZjYzY2OGQzODcxNTJmZTkwOWY3MzhiMTFkYzFiOTY0OGNhZGUwMTQwMjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY4OTNmYmI3MzJlYTE3ZDM5NWYzZTA5Njk0OWE5YjVkNDMxMTYyOTY0ODlkN2M0NDA1NmZmODY5ODA0OWM3YTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_13640db0c0ce4b1bb51b8aadef3a4dff",
+      "statement": "resolveModelSelection 是四级回退链：会话自身选择、项目默认、应用级默认（providerId/modelId 字符串）、第一个可用模型；每级都过 isAvailable 校验——目录未加载完算可用，claude provider 在 SDK 初始化完成前算可用，其余必须在 availableModels 真实存在。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/stores/model-selection.ts#L16-L64",
+          "version": "repo-lines-v1:sha256:f7df9f74630d7cfd8199d378ea86d206748e3230d3a6b7ccf900afc09852fc66:eyJzZWxlY3RlZExpbmVDb3VudCI6NDksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ0ZWM4ZmQzZjNkYjBmYjY3M2M0MzNmNTBkMDQ1NWFlNTBlNTdmMzU4ZjdmYjhlODYyYmIyYzIwMDc1ZWE3OTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQyOGQ4NWJhNDcyNGFkN2U3ZDUyZmE3NTcxYTg4ZTI4NGVlN2YxOWVmZjgxZDY1NmQ4YTMwYzQ1YTc2MWJmZjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk5ODE0NzlhZjRlMTc4YzM5ZTkzMTNkOGMzZjVkNjE2M2VhNmRjNTY1ZDMxMDg5MDliMWZhOTllMjU0Mjg4ODgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bd96f9c10b244aba8e1fdf82ab8e188d",
+      "statement": "useTaskProgress 把 todo、运行中子代理、活动工作流组合成 dock 上方面板；TaskCreate/TaskUpdate 状态取代已废弃的 TodoWrite 轨迹，故 latestTodos 有 taskItems 时用它、没有才回退扫描 TodoWrite；已取消任务不计入，否则药丸会永远亮着。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/use-task-progress.ts#L48-L93",
+          "version": "repo-lines-v1:sha256:d2c5aaf021345a3b9e4b20c8b152d8997952d316726fa7fc20a0220798b2d935:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI1MjMwM2IxOWZjYTVkNzFkMjg4OGU0YjEwYTU0MTA5NjcwMDBhNWIyNWJiMGI2Mzk1YzJjZTM5YTBiOTUxYjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVlZTU1NTlkZWI0YjQzOTIyMDFjZmI4OTdiNzIwZTJlNDljYzZjMGYyMzQ2Yjk5NmU2OWM0YTBhNzQ4ZWM4NTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc1NDE4NTI2YWNlMmUxYzFlMTg2N2EzODliODY5ZTZmMGJhNjllNWQyYTIyOWEwMjExYTA4YTY5YWYxN2Q4YzgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_dd63d213d4784d14979882f5f911e34d",
+      "statement": "模型引导第一步校验：id 非空、不能是保留的 claude、必须匹配 PROVIDER_ID_PATTERN、baseURL 与 authToken 都要有、至少一个合法模型 id；保存后把默认模型设为该 provider 的第一个模型。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/model-onboarding.tsx#L111-L158",
+          "version": "repo-lines-v1:sha256:9af5ea0beed1ad27501636eb33b043390252a0e2e614844e008f8c2f209eef10:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkMjMyYTUyMjU1MGNmZmIzYTg4OTU0YTNmOGE3NzA2ZGMzM2IwNDU1NDU3NThiYWM1ZTRhN2U4NjhlOGYyYjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM2MmNhOGFmOTBkNDJkNzE4NWNiM2UzMTJkMGZhZTgzOTJjOWY1ZDJlOTk4MTUzNzQ0NThiZDg3YTUzMWM1NTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAzYWNmYzE4NjA1NzE0ZTRjNGJlZjQ1NWEzZTNmNGVhNGJjMjZkYTNlYjcxNDA4MWVhNDdjNjliYTU2MzliZTMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8127429834e04c07973697caee2013a5",
+      "statement": "pendingModelSaveRef 处理竞态：第二步默认模型的保存是异步的，完成按钮必须等它落地，否则用户可能带着未保存的默认模型离开引导；默认模型设置组件自己负责保存失败 toast 与回滚。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/model-onboarding.tsx#L160-L189",
+          "version": "repo-lines-v1:sha256:923f1cb10dcc245d25ad5cdbd3fcf99669b14ebc3a234203df780b071fcc670d:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4MTNmMTBkNTM1NjVmMzdkYWJmNzFhNzIzOTE4NWU5MThkMDA0Zjc1ZTI1ZTIzMTU4NjkzZWQ0NzViMjg3YzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk3ZDg2MzJlNTRlOTI5OGFiYjk1ODcyN2UyZDUxNDA4YWJhZjEzNjYwMzUzNzkxMDE0MGFiZjY1YjMwYWI2MTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJjNGRjMDU3NWJmZjg1MTUwZTZhMjE2OTMwMTI4Zjk4YTBmYmI5YjBjYWIwNzk5Yjc3YTE3YWQzZTQ5ZDkyZTkifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}

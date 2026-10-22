@@ -1,0 +1,210 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:9c9d4234601f7b8f59398edf9839992318d5d6281df61ec2cdda202443159b8e",
+  "claims": [
+    {
+      "id": "claim_83b224e770df43a59339f6c0d63d9eea",
+      "statement": "applicationMenuItems 返回六个顶级菜单：Clotho（about/quit）、File（新建窗口与关闭会话）、Edit（全用 Electron role）、View（侧栏与各类选择器及导航）、Window（每个打开窗口一项 checkbox）、Help（快捷键、排障、任务管理器，dev 下额外开发者工具）。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/application-menu.ts#L98-L189",
+          "version": "repo-lines-v1:sha256:1f9cd7bfd6829fb12e9f1dbd1614d337af9e5a631f7e3844807c2841b5e0d4ce:eyJzZWxlY3RlZExpbmVDb3VudCI6OTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI1YmY1Y2FhNzUyODBmOWMyMzQzOTkxNTk0NjQ2N2MwNmU2ZTIyNjIxNjE5MGI3NzM2N2RiMTFmNjkzMTYzMjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0dbfa6ebda3f4d17b9921e104a09bf5a",
+      "statement": "commandMenuItem 用命令的有效绑定首项生成加速键，点击时调用 dispatchCommand 把命令转交 renderer。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/application-menu.ts#L82-L96",
+          "version": "repo-lines-v1:sha256:c926bc2fa3e0275cfa1ce735ca4901556d64cc0a137037d1ba4cbc1b26f5619a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhOWZhMTY5NTVhYTUxMWI0MzBiNThiMGY2Y2JmYzkyMTY4ZmFlOWIwMGRjZjNhNzE0NGY4NGY5MDU3YjY4ZTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBjYmUwZGIxN2E2MDhkZTJhZjQ2NTdhNDI3NTgyNjU0ZjY4MjE5ZDM5OWNkNWEwM2Y3NzgzYjI5MzI3ZDljZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA0M2E4ZTFjMGQ4MTFlOWZmNzUzNTA5MDU1YWI1NDMyMzE2MGUyY2JhNWEyOTlkNWQwYTRmMDM3ZTMxNDQ0MzUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1b00583aa7434766814452578ca01732",
+      "statement": "bindingToAccelerator 把 primary 修饰键映射为 CmdOrCtrl、ctrl 映射为 Control，并把 escape/enter/方向键等键名翻成 Electron 的 Esc/Return/Down 等名称。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/application-menu.ts#L75-L80",
+          "version": "repo-lines-v1:sha256:061e083697a822126d64ab4ce152adae596710294ff9f6fc743a0c582fc95d95:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmIzOGNmZmVjYTVlYjFhZWRjOGI2NmJlNmYwNjdjNTIxZTE0NWE3YWY4YTg0NDRhZDY1NDNiMTNmNDRhOWQ1OCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOWNjOWUxMDQ0ZmFkYzc3ZmM5MTBhYThhMGU1ZGU4ODU0MGU2NzVmMzQ5OGIwYzM0NTQ0NDgzOGRjOGY0YjJmMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNWQ4NWM0NGRlOTE3OGQyZTMwOGQ4MGE2OWU3Y2UzZTg4ZDAyMDc1ZDdjNjUyYWY4MDZiOGU0NzdjMDg5MWVlNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_72093f46e6ae4761822987c8238647d4",
+      "statement": "renderer 录制快捷键期间 isCaptureActive 为 true，所有命令项的加速键被摘掉，避免菜单加速键吞掉按键。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/application-menu.ts#L30-L32",
+          "version": "repo-lines-v1:sha256:b673b076eedce0b7ac1244d815453792b8d6db369f85372504891522707983b2:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWZiZjZmOTliMjMwOTc0OTljZjFlZWFhM2RlOTlmNzg1NjdkMTQ1OGJiNDIzODg5ZmQ0N2FlNTQ4Y2M1NDUxNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDIxYjlkNjAwNGQ3NTdiMjdhZjcxNzhmYzYxNGZmMGM2ZjAzMmNjNjFjYTc3MzQ4MzE1OWNlOWY0YmFlOTkyOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2EyOTUzZjI5OWZkNTdkMzkxZjEyOWE4NTVjOTk2MmFmNjBlMjVlZjk3ZmE1NTg0OGE4ZGQwOTI3OGVkYTNiNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWUwMDg2NWJhYTQzNTUxZmJhNGMwZTUwMzkwNzA3ZDU4ZDI1YjQ5YWJjNTdhOWJhZTIwZDUxOTAyMDI2NDRmMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_67f7c966e99a46409888fce398ce7131",
+      "statement": "Window 菜单为每个打开窗口生成一个 checkbox 项，id 为 window- 加窗口 id，checked 反映是否为活动窗口，点击调用该项的 show。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/application-menu.ts#L157-L166",
+          "version": "repo-lines-v1:sha256:336fd8ba683c1e0a72979cb804a67f930d89276c6cf702d72540bfebc3d287b7:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdkMGQ4ZmJiOTU2M2U5ZmQ0OTQ4Njk0NzMyYzFkYmY3ZDUyNTZkNDAxZDllNDM0NjhhYjY4ZjQ2NDFhMzdmYWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4Nzc1NGU1ZjY5NDU1YjM5NzY4NWU3ODE1OTRkNTFmNjcxYTBjMmVlN2NhOTI2YzBjZDdmMzcxYzZiYjY4Y2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNlYTNiZjdmOGEzMDBhNDJmOTIxODYyNjBhYmI5MjlmMmUzNjI3MTBjOWQ5YTdiYTc3MDE0ZmNiN2NlZWYwZTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE3ZGI1MmU2NjUyYzU2MzI3NmVjMGNmODVjM2ZjN2E5NjFjNGNhMGE2NTZhZDA4NmEzN2IxNWI1YjQ5ODBmMmEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d69c408fd2da444f8c4ecea7a45be465",
+      "statement": "resolveWindows 为 project 窗口优先取项目名、取不到退回窗口标题去掉 Clotho 后缀，renderer 未加载完成时标题仍是裸应用名则显示省略号，free 窗口按序号编号。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L177-L204",
+          "version": "repo-lines-v1:sha256:0a0be7f0122808fbbf3d6ffd7fc366a1a07244b03608ba99308b8805526aa712:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1ZjZlMmM4ZGNmOGRkNjcyYzEyYjVlMmY0ZGQ3ZjU3YWUwYzVhNDJjNGZjMTNmOTc3ZGVkYTJmYWIxMjAwM2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkwMTI0MGIxZTdiOGViODY1NjI2ODIzMTQ5ZDQxNzdjZjc4ZDg3OTdjMTI1M2FmYzQ0N2ZmN2FjNzE5ZmY0MmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZmNTdmNzY1OWVhY2RhMDg0OTdiMDE5MGJkYzE2NjUxY2MyOThlMmI5YjU2ODE1NmJkY2NhOTU0OThiYWZhNmQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_341e2310836447a6ae3e6babc7c7428f",
+      "statement": "menuLabels 按 AppLanguage 从静态映射表取菜单文案，覆盖全部受支持语言。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/menu-labels.ts#L472-L474",
+          "version": "repo-lines-v1:sha256:eb55b3c925b16720ca4af3b2dce20d96662cb5d3ff0c5f01e1f2fa77ba9f6a6f:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODYxMDNmNWRmZTgzMzI0M2QzODhlODM2MGJmOGJmZWYwMmVjZWM2NDY4MmMzYmM5MGYwMmI2YjdiNjYzNGNmZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTI0MDBhN2RmNDQ4YjY0MTdkYzY2NzUyYjBlNzZlMTQ2N2M5NThkOWVjYmY2ZjViODc3ZTA1OGU4MzZhODZiMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_8f2447546fef45c396735da943ecf2a8",
+      "statement": "openTaskManager 开一个单实例工具窗，已存在时仅聚焦；窗口启用 sandbox、contextIsolation 并禁用 nodeIntegration，页面为内联 data:text/html。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/task-manager.ts#L97-L124",
+          "version": "repo-lines-v1:sha256:760087f029976886932b67e74fcb91d5aa17f136431367d709024a5b8faf1308:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc4ODMwZjMzNWNmMzQyOWI2NjExY2I0Y2E4ZTZkOTgwOTVjMmM0ODQwNzAyODQyNzQ2ZjAwOWU3MzdjZTViNzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE1NGY1MzYyNWVlZWVkNTc1NDhjZGQwYzk5Y2JmYzQ2NWMyZWQ5MmFiZDdmNDM5NTAxOWQ2OGY5ZDZkNTE4NWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_26dd379b4b8946f9b66cd9531a8ef1ad",
+      "statement": "任务管理器数据来自 app.getAppMetrics()，包含 pid、type、CPU 百分比与内存工作集，按 CPU 降序，每 2 秒经 executeJavaScript 推送给页面。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/task-manager.ts#L15-L39",
+          "version": "repo-lines-v1:sha256:bdf73903ca2c55f562e89806493a0d487a3e98eff519bce361dc9c5fc5506ec8:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlhYjcyZDQ2MTAxNWE4MjJlNjIzMTE5ZDBlYjRkNWE3N2ExNGRjOTVkMDU2MTRiNDkxNGMxNzYyYzhjNmNlZTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVmN2NkNmM5ZDAzNWJhNTQ2MWFkY2FkODE2ZjAwMmVkZjllMWEyNDBhNjJmZGZhY2NmZDQ3MmNkMWRkZTU0YjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg4MTgzOWU0MGFmYzcyZjE1ZmY1YzJiMzRiMDA5ODkyMjc5ZmE3NTZlNmM1ZGRmZGQ1NWIyZDE2OGFkN2Y4OTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_498ce9e7b25744699dd7a33610ea0d06",
+      "statement": "任务管理器窗口关闭时清除刷新定时器并清空单实例引用。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/task-manager.ts#L118-L121",
+          "version": "repo-lines-v1:sha256:f6cacbbcfcc865c64abcd246d75bdd6224686eaba961278ad2f231d71a12e2f1:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTgzYjE2MDBlNjU4OTdkNmE2MjgxYzdhMWNjOWZjZmJiZjM4MzI3ZGFjNWI0YzUwY2Q3ZmY5Njc1ZWEzZGM2NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjIzNTI1ODljMzRkM2M2MDY4NTkzMWI2ZWNjNGQ1MDk5MWE3YzU2YzhmYmEyODk0MTE0NjU3NjkwMjcyY2FjMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzJkZDNmODkzYzM0NjJmZDM5ZDZjOWE4MmRmODQ1MWYwY2VjMmM5ZmM4Y2Q2YmNlMjI5N2EwMWU2YmFkNjZiOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGFmNmZjNDAxZmUxMGNhNGZmOWEyMTBlNzEzMGJkZTgwY2Q3ZGMzMWNjOTE0MzVlZWY2OTc0ODk4MTEzZTVjYSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_0f26efe7f8d64953bd184fb97ec63d55",
+      "statement": "dialogs 模块维护一个模块级 ownerWindow，主窗口创建时注册，供后续原生对话框作为父窗口以实现模态行为。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/dialogs.ts#L8-L17",
+          "version": "repo-lines-v1:sha256:656f0f404e5041c3922c082ddf7e869e43151163274cfbed67e8b768c6d21774:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4ZjNjMzMxYzExZjA4NWIzMzczYmNlYmNkNDRkNWUzY2NmNThmN2FlNzQ5ZjJlZGUzOWJjNGE0MmYyZmJkNTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdmMmJjZTlhZTk2ZDZkNTNlZWIwOGM0ZWM5YmY1NjFjNWU0MDZlZjY0NDdkNjY3MWI4ZjA0MGU3MjhhMThiNTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZjZTMxYjNhZGUzYzdkYTNkN2FjZTFiNzllZTk0YTE4ZDdjMDZiODVlNDIyYWFiMTBjMTM5NzI2MGM3YTA3NjIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1b980feedf3441b48881bcd81fb8bf6c",
+      "statement": "showFolderPicker 单选目录并在取消时返回 null，showFilesPicker 默认多选并在取消时返回空数组。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/dialogs.ts#L24-L55",
+          "version": "repo-lines-v1:sha256:e420a160e59c646a366e4ebdd987ad537fec111a27d4667bd7ce926d94be53b0:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYzZmExOTQwY2I3NDIyOTRkNGYxNDlmMTE1NGYxOThjNTZlZjAwMzMzZGY1MmRiZDE3NjRiZDc0OTIyZDE4MDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI5OGVjYjhiMTAyZWU1NWViZjBhOGYwNTBmY2RlYTA5OGQ1Y2I5NTFhOTZhZDE4ZDY5NzA1NTIyZjcwMmRlYWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_91cf1e3695bd4e91ad217da9224ffd9e",
+      "statement": "saveImage 先校验 data URL 为 base64 形状否则抛错，保存对话框过滤器扩展名取自文件名、缺失时默认 png，取消时返回 path 为 null。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/save-image.ts#L12-L39",
+          "version": "repo-lines-v1:sha256:86e8a7a3419f4c20dd977ec1d0acf265ec7f162de903c00445a2097de83e1da7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImExYzI5N2JhNDJhNjQxZGEyOGFhYTAzZjU4Yjc5YjU5YzNjYjJkMjgyZWRkMzVlNWVjODlkYTkzODE2MWFlYTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2OGMwMzEyMTkxMWRhMDJhMmYwN2U1MmY1NTAyZmI0MTk5NWQxYWM2MjBiMmFkYTNhYmE1Njc0M2JkNDU0N2MiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFhMmMzZWU1ZjIzODczNGE3MmMzYjY4ZGQyMGJlYjMzZDBhOGJkNmVjN2RiMDM0N2VjMzBhY2RkMTEzMGZhNDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_157aa47ed94b4f0fadbe1e3a4aea99aa",
+      "statement": "resolveLinkTarget 把 http/https/mailto 判为外链，file: URL 与相对路径走项目内 containment 检查，其他协议、空串与纯锚点忽略。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/open-link.ts#L22-L42",
+          "version": "repo-lines-v1:sha256:5a80b459e9b731e515ce6ec7cbae7cba7a2600d0f19d39b50bc6e62144c39448:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIzYmU5ZDJjYWI0YWVhOWNjMTViYWRjOGRhMzNlZDA0NmY0MmYyOGQyNzZhMzQ5ZmNkM2Y3MzJhMmRkNDJkNjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI4NDA2OGM0MmVkZDM3NzY1NWM1OTlmNGYwNWE5YjI5OGJkZDRiY2Y4M2ZjYzc2YjhjZDY0OTk4ZmM2NmI0NDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU4MmM3ZjE3ZTEwZTc5ZjkzNzVkYmVlMGMzZDBiYmQxYzcyNTI2NzQ2NGExMzU1MGNkNDM0NWRhNmMyMWI4YzAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_452023427e994377a8144e20c8fdda64",
+      "statement": "containedFileTarget 拒绝越界文件链接：相对结果为空、以 .. 开头或为绝对路径都返回 ignore，因为回复中的链接不应打开任意本地文件。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/open-link.ts#L48-L57",
+          "version": "repo-lines-v1:sha256:979c08d38d9c66edf9a026420631a8580390031add38a53af05a7c1aee422946:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyZTkxYjg1Y2NjYTk5ODY0YjRhNTQ4ZTRhZTA5NGFhOGE0ZjBlYjhkZTI0M2IxOTY5OWFmZWM0MWNmNjAyOGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY2YTg4NzIzYTY3YjVkYWY4ZTJhY2I4MjVkMDAwYWQwYjkxZTQzYTIxOTk2YjQ4MzUxNmFmM2Y4OTAzMGUxMGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk5NmQ2YTgzMDA1MDYxOTI0MDZiZDE4MzBlMGI1N2M4MzMwMTllOTNlZmE2MTYxZTAxNWY3NThjZDg5NWYwYTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5c2ca5b082814b9fa05265ed0ea855e4",
+      "statement": "文件链接先用 pathExists 确认存在，再用 showItemInFolder 在文件管理器中显示而非直接打开，因为 .ts 等扩展名被 LaunchServices 重复占用，默认应用可能是媒体播放器。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/open-link.ts#L71-L79",
+          "version": "repo-lines-v1:sha256:f530ad3adbe64f14ead00aabc8b14a804637b939aaf0c0b964a0dddb75311ca4:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWQ3NjYxYzY4ZTk2NTljNzBmNjcwNTYxZDVkNWZmMTU0OTg5OWIyMDE2OGRhMDdlYzdkZWMyNzdiMzllYjMwOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzFjZmRjNTVhNTE1ZjkyM2QwMjdhZjI5ZDFjOGFhZDYzMzE0N2E0MWJmNDFiNzNkYjFmZDNkYmQ4ZDU1OTViZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDY3ZGI1N2RlMjdiYTY3ZmQ4N2NiNjBiMTRiZGVmNjYwZmY5M2E2ZmUxYzllYTllMTQ2ODcyOGIwNmEyYTAwYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_c2880e0903cd405da929ccc46d100f89",
+      "statement": "resolveNavigationDisposition 放行与当前 URL 相同的导航，阻止无法解析的 URL、dev 模式下同源路径与 file: 协议，把 http/https/mailto 交外部打开，其余阻止。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/external-navigation.ts#L14-L41",
+          "version": "repo-lines-v1:sha256:34853c8320bfe04585d29a9296607afa0a7f86ffd3523ff955b2d55a2e536e79:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4Njc1MmQ2ZWNjODJiZjMzOTFlODA2MzcyN2EyYjJjODFmYjNmYTA3NGFkNDU1NDU2ZTBkMGI3OThlNTQwNjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU3MjBjYjU0OTI2ZDljNjI1MDYwMmZiN2E2NzE4NWJlZjBkMWEyZjYyMGVmNzA5MGUwYjNhNDE0M2RlMjRiOWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUxZDU5NjNhYWQ0NDFiZWU0YThkY2E4MjFjNWUzYWI2MDhlYTAxNjE5OWI0OTA3ZjYwM2IzMWVhZjEzNGViN2YifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_57440e497be34be4bd683c2dc4136d6a",
+      "statement": "attachExternalNavigation 在 will-navigate 上阻止应用内导航并对非放行项转外部打开，同时在 setWindowOpenHandler 中一律拒绝弹窗。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/external-navigation.ts#L48-L63",
+          "version": "repo-lines-v1:sha256:1ab647c90cea6b29a202812fc411c93b1dec734f875c0baaab0bc14a8996e07e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkMWFmN2FhOGMxMzQ5OTJjZjllM2EwNmZhM2FlYjM1YmRjMThkZGFiNTE1NGM4MTlkMTE2YTdmZDcxMTBmYzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRlYjE0MTljMWEyYzg5OTA0ZjViOTliNWIxMWExZTAyNTdmNmU5M2IwNDU4MGZhY2YzZWVlMDExYjA4NGNiNTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0c4a0a79e96649bc9b2ad3be909d658b",
+      "statement": "textEditMenuItems 对既不可编辑又无选中的区域返回 undefined，对仅有选中的区域只返回 copy，对可编辑区域返回完整编辑菜单且各项 enabled 取自 Electron 的 editFlags。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/context-menu.ts#L29-L50",
+          "version": "repo-lines-v1:sha256:6755036a38b20409e842d19955447c72087bd0b5781d0a4e1387b3523845e9f5:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0NzVmZGZiMzlkYzU0NDQ1NGZiMDNjMTI5YjM3YTQ0ZmEzZmVjYTgwNjRiMjUyNmNkNTA4NzNlODY0MGFkZjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUyYTBlM2JjYTZhMDkzM2M0NDc1NTU0ZDU2MWZjNjNmYmM5NDQ5OTg2MWFiNWQ5MTg5NDU4MzlhMDIyODAzZmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bc0504202f114f979472d096eecda273",
+      "statement": "Electron 会把所有 context menu 事件报告为已处理且不显示默认菜单，因此无选区区域的静默行为完全依赖 textEditMenuItems 对这些区域返回 undefined。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/context-menu.ts#L23-L28",
+          "version": "repo-lines-v1:sha256:50044f6ee8670eff3b5ac8e7a0cfe44e57dbe18a2ed5c41a9d1deafaf3609b71:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWFmMjJjZjA3MzI1OTJjMjQ3MTQxY2JlNjFlZmExMTAxMjYxMmY1YTMxMjJiOWFmOWJiYWY1MmY1NzI0ZDE5NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTcyYTQyOTM4MmIyZTE0NzE4ZTBlMzdiMDU3MGE4YTE3MDI5OTFmY2Q4NDk4Y2Q4NDA2MGE4YmY0ZjA1MDE3YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODkwNjQ4YTU1OTRmYTc0MWQ4YzUxZmJlNzdjYWQxODc5ZTY4NGRmMTQ3Y2Q3MDhmYWMzMjQzNzkyMDVhMmY4YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODcyN2M3N2I0N2FkZGUyZWQxOWE0MjM2M2EwZTE5MDY0YmYyNzI4Yjk1NGViMWQxNjZhOTY5Zjc3MThlM2U1OCJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}

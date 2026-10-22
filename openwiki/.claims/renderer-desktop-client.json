@@ -1,0 +1,240 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:fcecf713c10cb7c695084c423aa8a2de37fe684cecfdcd4cdc30602280dfc94f",
+  "claims": [
+    {
+      "id": "claim_1862229e60934db1b7acba72dbfba9d9",
+      "statement": "`DesktopBridge` 接口镜像 preload 的三个原语：invoke（可返回值请求）、send（单向无返回）、onPushMessage（订阅推送并返回退订函数）；窗口上没有桥即返回 undefined，这是非桌面运行时的判据。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/desktop/client.ts#L8-L18",
+          "version": "repo-lines-v1:sha256:88725c2af960c7a23ae08ca0906e7271fdadcc09849671e2c981e9f18539e1f9:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1YWE1NTI1ZjQ5YjczZDdlNWI4MTY4YzE0ZWQwMTk0NzViMjAzZGEwM2JhYWYxMGU3MDdlMWRiMTZhMDg5YTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk4OTk2YmI2N2Q2MWE5NWQ0MmM3ODU2MTdlYjc0MTFjODc3OGI4ZDMzZTQwZDhlOGM0OWI4MDI0ZjE3NTU0MDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFlNzUzMDI0YmRhODU2MTYwODRkNGY2MjE3YWJmNjAwNzk0NDhmZGJkYzc5NzczZDhmMWNhYjMzNmIxZGY2ZWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_993a7f832259462586da78fc9ff5b771",
+      "statement": "`requestFromDesktop` 按 DesktopRPC['main']['requests'] 取该方法的 params 与 response 类型，无桥时抛错；`sendMessageToDesktop` 只用于渲染层日志批次这类高频可丢弃推送，无桥时静默返回；`listenDesktopEvent` 返回退订函数。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/desktop/client.ts#L97-L127",
+          "version": "repo-lines-v1:sha256:cabe455160ca235e9c7015b9ef5be4ccb27d93968e7b19ad10dec0cc8ddb0343:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0ZmRlYmRmNDA0NDk3YTJlODY2ZmY3NGIwMjhhZjcxZDc1ZjM3OWU2MWJhNmM2OThjZDI5NTlhOGJhNmQ1MjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFhODMzYTE1ZTExYzI2MDkwMmE0OWI1ODUzOGU3ZmM1MzU1NGFiNjk0YjU4MWQwMWM4MWFjMTJmMDNmZjA2NDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_344a73e3705640779ffc98e59c09cb2f",
+      "statement": "推送事件名用渲染侧短横线命名（claude-output、claude-tool-request、window-registry-changed 等），`PUSH_EVENT_BINDINGS` 表把它们映射到主进程的驼峰消息名；每条推送只在模块顶层订阅一次，帧当场分发给各事件名下的 handler 集合。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/desktop/client.ts#L45-L58",
+          "version": "repo-lines-v1:sha256:1abddc5571e6889b46261317c3db4299b1e5e8eff56bb9fab2d97edb0e3d16fd:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MWJhYjFkOGFhMTBiNjhkNTMxN2ZiYThhMTExMzE3ZTQ2NDA3MWJjZWRmY2Q4YTM0Y2QwY2NlZTdmMWVhY2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5NDE2ZTA5Zjc4YmEzMTZjMDMyNTY4MjEzYjg1NWVlNzU2ZTQxNTY1ZDkxOGYwOTUxOWM4MWZkNjIwZjQwNjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU3NWVlZTRlZjJjYWZmNGQ1OGU1MGYwODZlZDk5NjJmYWQ5YWQ0NzU5OTlkNGE5OWEyZmNkMDE3Mzg1N2YxZGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJmOTMyNTZlMTdiNGNmZGMwOGU4OTcwYzc5M2RjMTYwOTk4MjJlYWY4ZmRjMjFhODI5ZjhlNGNkMDA3ZDgxYmYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_52590838a92a442d9d06fc4cb2325e47",
+      "statement": "`DesktopEventMap` 把每个事件的 payload 类型钉在 DesktopRPC 上，因此新增一条推送需同时改主进程发送、PUSH_EVENT_BINDINGS 与 DesktopEventMap 三处。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/desktop/client.ts#L28-L43",
+          "version": "repo-lines-v1:sha256:f9fea04a16802dcd63176b9390c6c8d8197187ac29f3d0401aa4214bdf49f382:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBmYzViZGNiZmFhZGY0MWEwZmNmZjgzZDdlMGUxOGExOGM2MGE5ZmI0OWY4MmU2ZWNiYWYxYTVjODU0YzIxODYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJmN2MwZDU1NzI2MmVjOTE3MGQ4MDE5MDUwMGRkZmZmZDRhMWUwMGFmNzAyOTE3ZTM2MGNmMmE1YjQwYTk3NjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUwZmFkNjM3NjZiMWEwNjQ4YjFiOTNmNjhiNmE5MjM3ZmE2NjhlNWYxYmZhOGYyZDI1MWY0ZGJjODQyMjMyNTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI3Y2FhNmYxODM3OWNhNzUxN2Y2MTFkN2FhZjE3NGU4ZTBjNDA5NWUxMzUzMWMzYzMyYjdkMjU4ZDljNTE5NTMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_84ab9bb972d64345bc2f9ec4158784bb",
+      "statement": "`claude` 门面导出约六十个方法，每个对应一次 RPC 请求，命名与主进程 handler 一一对应；文件大部分是把 src/shared/rpc.ts 的类型别名重新导出，渲染层 import 的 ClaudeMessage、ClaudeSession、ClaudeToolRequest 都是共享契约别名。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/claude/claude.ts#L482-L489",
+          "version": "repo-lines-v1:sha256:fcfa521e3d1026d7af33f161201a1f7c36dc28622ea3d76948712f26f66eabce:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYmU4N2Q1ZTJjMjFlOGFjZWYyNzRhNGY1ZTVmMGU2NDJmOTFlNWE1OTU5MWNjNWUxMjEzNzRiYmI1ZGY5ZjQyYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ1Y2QyZmI0ZjNkZjg4NDUxNTI1NWIzOTUyM2YyZjhiNTQ3MmJlZWE5ZjU2NmZmY2EyMDRkYjgwMjU2MTA0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNWI0YzhkYmI5MzFiNWVhYmMxYjhjMjRlMWM4YjE4YjFiNWQ3M2FjYTZkYzIxNzQxMGYyMmFjODBiM2I1MDA4OSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMmM1ZTRhNzZlZDI4MThmMWMyYzY1OGE1MTRiN2FhZDhiMTU4YzdkOGU1ZmRiMDZjYzY0OTVmMmY0ODdkMjg4ZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_67f79b5286bb49b7aed316c74d09a508",
+      "statement": "非桌面运行时下每个门面方法各有兜底：列表返回空数组、可空值返回 null、写操作静默返回，确实做不了的事抛错；判据统一是 `isTauriRuntime()`，它只是 `isDesktopRuntime()` 的历史遗留别名。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/claude/claude.ts#L221-L223",
+          "version": "repo-lines-v1:sha256:e214bad36be52f07ef47826b021b9b0d6a444f2d9fa023ac5b03f2b58ee1f734:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzMzZDdkYzlmNjA1NjY4YjhjOWYyY2NiMDM3YzEyZWMxMjA0ZDQzZDg4YmIxYzk5MTRiMWRhMjE4Zjk1YWE5OSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzY0YWY3MTVlNGQyMDI4YjQ0YzZkMGI3NzJkZjM3Zjc4NWI1ZWNlNzEwYmE1NDU5ZGI1OTFiZmI4ZDExODc4NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTRlN2JhN2E3MGY1M2Q0MzQ5NzBkZDA4NzQ4N2Q2ODM2MDkwZDFkNzkxYWRiZWFiMzQ5ZjBjNDZkNzVlYzNiNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_4b2578c32123483998a9d98f0921a3f9",
+      "statement": "mock 注入走 import.meta.env.DEV：listProjects、getProjectSessions、loadSessionHistory、listSubagents、getSubagentMessages、getWorkflowRuns 与 git 分支查询在 DEV 下先查 mock.ts，命中 MOCK_PROJECT_ID 即返回假数据，使浏览器里无需 Electron 也能开发界面。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/claude/claude.ts#L625-L636",
+          "version": "repo-lines-v1:sha256:420fffcc6db797debd0505f9d27747c6c644e87a06e1e61a794a6998169c7d66:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA5ZmYxMjA4MDZkNmZjY2FiNDZlYWQ3ZTQwMGRkMmRiYTg5MjFiZDg4ZDQ3ZDlkZDk2NmQ5YTMwMGRkMzkyMDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkNWNkMmZiNGYzZGY4ODQ1MTUyNTViMzk1MjNmMmY4YjU0NzJiZWVhOWY1NjZmZmNhMjA0ZGI4MDI1NjEwNDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI0ZmE4ZjgxZjVjMjJiYzEzNjg0Y2VhMzc2ZjA1MmQ3ODFiMmUyYTg3YWMxN2M4M2U3NmU3MmIwZjQyNzc2NWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJjYTUwZTM2MGNkYmI2ZmE0NDQ2NzRiYmRlOTkzZDBiY2U2MjRhMDU4NmI3NjgxYmJhOTA5MzA3NWZjZDZhMDUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e2badca1d0ad47f0870d8b1fd07d7d38",
+      "statement": "`AsyncQueue` 是会话流的缓冲核心：帧到达时若无等待中的 next() 就入队，有则直接交付；fail 与 finish 关闭队列。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/claude/claude.ts#L150-L211",
+          "version": "repo-lines-v1:sha256:f98ccd8a2c69323a3a93374b2f94e232ecbcc9fb443d65396a93b6efc60492eb:eyJzZWxlY3RlZExpbmVDb3VudCI6NjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRlNGUxODg5YjU3ZTk3OGIxNGIxMTgyODAzNmViYjE1YjIwYWVmZTlmMzEzYmRhMGFlMGVkYTA1ZDhkYzNlY2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIzZjE2NDM4NmU2NzA3ODE0NzM1OGQxNDE1NzI5ZDNhOWU1ZTQxNWEzNTZiNzJlZTk1NjJlZjkwYjJlZjRiNGYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3a249e7d20294c548e91465e8784f634",
+      "statement": "attach 前的帧不丢：事件可能在带 streamId 的 ensure 回复之前到达，`buffered` 数组先存，attach 落地后统一 flush。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/claude/claude.ts#L269-L308",
+          "version": "repo-lines-v1:sha256:c125667b72db4a60c56fbc5885aa4db2f0667bb2e6effe2802726e58d9a5965a:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAzYmQ5YmMzNWZmNGZkY2JjZWY1ODQwNTViMTIyM2U4ODE2ZDVjMjA0OTU5YTgyYWVhMTNjMzFhMWQ1Mzg1OGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZmMmEwOTU3NmZmMGZhOWJhNjI2MGM1OWJlNzIyMTNlMjEzMmIxNTA0M2UzNWU1YWNiNzgyOGQ3NjFlY2FlOGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjllOWNhMzRmMzFlYzE5NTdkYmNmNGRkMDVkYWZhM2UxZDFjNTAyOGQ1N2QyODg4ZmUxNmNhZjAxMWY2YzZjNzcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1be552da206e430fb54ccd5e908d6543",
+      "statement": "`applyFrameState` 从帧推导流状态：result 帧把 turnInFlight 置 false，user/assistant/stream_event 置 true，system/init 落 claudeSessionId 并把状态推到 ready。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/claude/claude.ts#L282-L300",
+          "version": "repo-lines-v1:sha256:cecc51efeaed959a5af3009a6fb4c424cdd82923bfc6530a1c30a958fa996533:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJmOTVmN2QyOGUyM2M1MTk1ZjA0Y2E5ZWU5N2U0NWQ4NTYzOWZlMzViZmM0YjkyMjU5ZDA0MWJkZGU0N2MwNzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRlMzgwNDlhMTJmNDUyMjllYjkzZTFkMTM1MTc1MGFiYzk3OWVkZTFhMzE4OTU5MDc5ZTc4OTUwY2IzODNhODYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMzZGI4NjkyNzNiNDkxNTAwMjc0ZThkZDMxNjBiMjQ5N2I3OTMwYzRlMmY2ZmQwMjM2NDZiOGI2NzgzZGQ3ZDUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4815d8dd654f4e588c76640cbd782255",
+      "statement": "attach 时主进程回传该会话已缓存的部分帧（replay），先入队再 flush 缓冲，使半路 attach 的窗口先看到已有部分轮次再接直播；attach 时已挂起的工具请求会补发给 handler，因为它们还欠一个回答。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/claude/claude.ts#L360-L381",
+          "version": "repo-lines-v1:sha256:88de9c8cb6fe9960442b678174a6671a315bd8583b7e825bc0bb4945a955b33f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNiNmQyN2NjNDUwM2QwMWZiZjFmMzdhNDdiOGM5ZTViMTRiMWI2YjdkMzk2ZTQ3ZmQzNTlkYjg3ZWJmZjdlZjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2MjY3OTM1ZmM2MzM0NjVkODQ4YjQwYTRlZDY5NjdlN2I3YTMyM2Y4MWNkNTNjMTEwYWUyMTAyOTY4N2FhMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVlMjAzYTJjY2VlNDVmODg1ODhhYWUzMjQwYzZiODMxNmYzMDNlZjZjMzU2OWU5ZTFkYTFiY2RlM2ZjZGFhNTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhlODQ2ZTQyNWQyNjJhODhmODA2OTA0MDk3MWE4ZjJjNTkzODI2MjYwYjkwMTIyYWRhNDdjYzM1NTgyMzVjN2QifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_49f8f8a7ef1f47adb3964fa0c7692035",
+      "statement": "会话流的控制面方法（interrupt、setPermissionMode、setModel、getContextUsage、stopTask 等）统一走 claudeQueryControl，只传 streamId、命令名与参数；发消息用 claudeSessionQueryPush，回应工具请求用 claudeRespondToolRequest。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/claude/claude.ts#L213-L219",
+          "version": "repo-lines-v1:sha256:eb9d6bffde42353a49f1cf25417e6ec75d2ad8b5dc2d518599f719b37b8a064d:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2JjNzE4NDRlOTU1NmE4NWQ4OTA2NGUxZWU2NzI0YTBjZWUxNGVhNTM0NDc3NDc0OGViNjUzMDFlYWVlMzhhMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmI1ODBlOTY0ZjgzYTQ3M2Y0M2Q0NDM4NDYyOTQ5ZDY4YjU2MDBmZGE3ODdmMTYzNzQ1ZDAwZGU4OWNiZjM2YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMmRlNmRjNzY5MzNlOGY3ZDg0NDQ3YjkyMTMzNjI4OTZiNjZhNWI4ZTgzYjQ0OTU4NzNkMmJjYzEwNTg5Mzc1MiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_4608214a0381443b81487212e9062792",
+      "statement": "`detach()` 退订全部监听、清空 handler、结束队列，但不动主进程的查询——关掉一个查看窗口不影响另一窗口正在跑的轮次；`whenAttached()` 在 attach 失败时 resolve false，供只看不建的调用方收手。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/claude/claude.ts#L471-L479",
+          "version": "repo-lines-v1:sha256:bb1440833b0d2910f061d56face737ba788672e65a10a1e10ac2837cab27bc6e:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGY5ZTdkMWNiZWI0ZjkxOTlkNmMwZDI0YzFlZWEwZTUyMjkyNjE5MGM0ZTJiZGIyNGMxNGEyYmMyZWJhNzEzNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTI5NWQ2NjFmMDk1YTEwMTgxMWQwOTQwOWY3M2ViNDNiYjEyZTA0YzcxMzgwZGMyN2I0ZTU1MDdkZjUxODIwYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjZjM2M1MmQ3YmQ3MTI2N2QwMmEzMzNmMDZjZGQ4M2Y1ODExYWY2Nzc4MjBmNGQ5YzM5NTk0YmE4NzIxZjA0MyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNmMyMjBmZmE0OTA3MDQyOTdiMjBjZTU5NmY2MGM5OTFlMGYzMzEwZWY1MjZhYzBmNzJkZDE2NjhiMzVmMDNhYyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_081c82fe60574b7caa8c27aa1a7dbf1f",
+      "statement": "`ClaudeSessionStream` 与普通 per-send 查询的区别是：result 帧结束的是轮次而非流，流只在查询死亡或消费者 detach 时结束。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/claude/claude.ts#L232-L236",
+          "version": "repo-lines-v1:sha256:069f651ace93119eba671df750b04e5807f5ba30781100751887b934dea495c6:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWFmMjJjZjA3MzI1OTJjMjQ3MTQxY2JlNjFlZmExMTAxMjYxMmY1YTMxMjJiOWFmOWJiYWY1MmY1NzI0ZDE5NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTcyYTQyOTM4MmIyZTE0NzE4ZTBlMzdiMDU3MGE4YTE3MDI5OTFmY2Q4NDk4Y2Q4NDA2MGE4YmY0ZjA1MDE3YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiY2M2MTc3NDg2MDY3Y2Y4YjQ2NjMzYzJkY2UxOWMyYzMwNTg2NmYzMThmYTY0YTBmNjQ1YTJiZjRlZTM2N2YxYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmZhNThhNWVhMzc3NmFmZjViNTIzNjdmOWIzYmMzODc2ZGNjMzhiYzBjM2IyYWVjZDg3ZmQ5MjQxY2E4NmExNyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_f1051ad947b24e0c9cf888f1b99bf9f7",
+      "statement": "`createAppSettingsService` 是带回滚的 write-behind 存储：持久化经 appGetPreferences / appSavePreferences 两条 RPC 委托主进程，渲染层只缓存读出的值；内部以 current、confirmed、dirtyFields 三份状态工作。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/app-settings.ts#L134-L190",
+          "version": "repo-lines-v1:sha256:01be17a71698ac6e9cd0ef7981b64f28da1baddaed570d0cfa19e52b9378a0da:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyM2MyNWY4MzBjNjk2MDY4ODkxZTcxMDUyMzI5NzcwODZkZjkxZWExZmRiYzk2Y2RhZDI0MGJkZDc4YWNkZTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE3OGMxM2JhMDg3NTI4MzcxOWQ2OTZjNWE0OTZkMzJlNWY0MzJlNzliMTc5NzQ0YWU1N2Q3NmNhZGQ1MDExMTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_07b00fe2ba7c4b859cd85cee772bfb99",
+      "statement": "`persist(field)` 只把字段加入脏集合并触发一次合并写，`mergeDirtyFields` 用脏字段覆盖 confirmed 的对应字段，故一次保存可能同时带上并发改动的其他字段；保存失败时 current 回滚到 confirmed 并向上抛，由调用方弹 toast 并恢复 UI。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/app-settings.ts#L141-L150",
+          "version": "repo-lines-v1:sha256:e796a4ae2ab37e13e6f1e330931ecd57430b24fec09e03220e96747e57d0e50f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyZDczZTEwZWM2ZmU0YTExYmY1M2E1Nzc1MWY4NDc1NmRlNTYxMTRmNDJiMjU0MzQyOWMzZDA4ZDcxMTAzMTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIyMzUyNTg5YzM0ZDNjNjA2ODU5MzFiNmVjYzRkNTA5OTFhN2M1NmM4ZmJhMjg5NDExNDY1NzY5MDI3MmNhYzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdhZmQxYjQ1ZmIwMjQ3NmEzZmQ0YWU4NGViMWYzMGMzYWU2MmJjNWY3Mjg1NTMwODk5MmFmZjBmMGM2NWFhZjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQzNGYxZmNhNWY5ZWUyMTYyYjA5Y2I2ZjdhZWM4NmRjOWFlMzJjNGE3ZDllMmQ5OWIzYzQzNDA2YTFlYTFhMDMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2b3a0e068feb4ae1999cacc006728241",
+      "statement": "AppPreferences 有 language、defaultPermissionMode、archiveInactiveSessions、appearance 四个顶层字段，每字段各有合法值集合与默认值；`sanitizePreferences` 在读取与保存后各跑一次，任何字段不合法即落回默认而非保留坏数据。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/app-settings.ts#L83-L119",
+          "version": "repo-lines-v1:sha256:33a79a6db71eb63359ad551057eb1b0d75b549835480e6c9cc4a32bb411442fa:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzZTMxMzdiYzFiMmJkYzg0NzkwYTI4OWIzODU1M2IwODc2YmE0ZDljYmNkMDY4NzIxYTkyOGMxYzY3MjZmZTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZlM2QwODkzODI4MzYxZTY2OTFhNmJjZDZiOGU0NzMwNjc0NjRlODM1NTAyMTE1YjAyMDFhNzdjMzdjZDc2NTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBlNmQ0NDBmNzI4ZTZkMmMwMThlOWYwNTczZmQwYzFiMzA4MjFkMDI2OGNlZDBiZDkxYjA2ZTU0MGYyOTg5YTQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e7e6355265c344b99e01cc96e1308bbb",
+      "statement": "`flush()` 等到写队列与脏字段都空，pagehide 落盘链调用它以把待写偏好全部落盘。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/app-settings.ts#L244-L246",
+          "version": "repo-lines-v1:sha256:5dfcc0bbf22a75b7a4eff299490fb8d6876c501d7e9bd1a08fe2fc5aeeafb59c:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODc2NDQ5OTY5ZWUwYmE4OTRiZWY4NzMxYWViOTMwYjA4MGJhMjE3MTIzNzUyM2RiNWNlNDA3NjEyODkzN2JjYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWYwY2RiOTcyYTdiZmI3ZWQyNDZmOWZmNjcyMzg1ZTU1ZjQ5NjhmYzExMDQzZGM1YjY4NGQ1MWRmYTMxZGJjYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTc0Y2U1MDJhNWViMDUyOGQxMjcyM2YzNjFhNjgyMmI3MWFhMTJlZWQzZjM0NGQ1NGFlZmFkODc5NjRlZmY4YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZmI1ODBlOTY0ZjgzYTQ3M2Y0M2Q0NDM4NDYyOTQ5ZDY4YjU2MDBmZGE3ODdmMTYzNzQ1ZDAwZGU4OWNiZjM2YSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_838ff5e6c31d471eb53d4ba1bcc099ca",
+      "statement": "`desktopSettingsClient` 是非桌面兜底：load 直接返回默认偏好、save 原样返回，不发起 IPC；`initializeAppSettings(client)` 可整体替换 client，测试因此能注入假客户端。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/app-settings.ts#L250-L266",
+          "version": "repo-lines-v1:sha256:e9602a5715d4af3aac73cf07409b0e271be5c70e932bbb1bd5bcdc29beae25a3:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ0YmZhMzA3ZWJmNmE0NDk0YzgzNzMwY2ZiOTRiYTU3ZjNhODQxNTRiMmZjMmNjY2JjNDg5OTU5NTBkMmI1NjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFlMzcyNjY4MTljMDVmZjYwMTBkYTg5OGY5Y2JiMmQ0ZDBkZGRlZTEyOTRmMzEyMzRkNGYxM2M1MDcwZjc3YmMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bf61ff13572742e2b0c804777ecdfc32",
+      "statement": "`fetchModelSettings` 并行拉 listProviders 与 getDefaultModel，`loadModelSettings` 把结果推进 ModelConfigurationStore；默认模型是应用级的，项目级默认模型另存于项目注册表。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/claude/model-settings.ts#L11-L27",
+          "version": "repo-lines-v1:sha256:46c0b7a067e2215f649696433294a86af6faef8a04bc4c9bc690890705a88e06:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2NGU0YjVhMzZiZTkzZjFjZDI4MDRkZDkyZTJkMzE5MDU3YjE3Y2E2NDJjYzBiMzUwMDc0NTQ1NDdhZDA5MTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5MzE0ZGZiYmZjZjZlMzEzOTMwYmIxMDBiOGFjYTI3ZmY0OGM3ZjlmYTkwZDlmMjQ4NGM4NGZlZDYxZGFkMGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_59224844f15c4bf591ca46fb3a9561b3",
+      "statement": "ui-storage 是渲染进程不经主进程的一小块状态：单键 clotho-ui:v1 存扁平 JSON 对象，readUiState 读不出坏数据时返回空对象，replaceUiState 整块覆盖且写失败静默（UI 恢复是尽力而为），updateUiState 做读-改-写合并补丁。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/ui-storage.ts#L1-L41",
+          "version": "repo-lines-v1:sha256:31b386b07c883c87e4abf8adc0d64b850e0c1b6a37460873cb2cd20f1d4e1198:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgxYzk0MGI1OGY3OWU3YzBhYjhlOTVmMWEyMjQxZDNiYWM2NDA4ZTFlZTMzMzQxMmU2NmEzODdlNzY2OWU0NzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_29cb072448e347b58aaba3fdba508f61",
+      "statement": "storage 可注入：默认取 window.localStorage，取不到（无 window 或被浏览器策略挡住）时退回模块级 memoryStorage。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/ui-storage.ts#L13-L19",
+          "version": "repo-lines-v1:sha256:850823435dbc69de6ea4b812b75981c8faf253977a586bc54c4cac86228964da:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDlhZTg3OGYwN2M0ZDFhMzk5ZGEzNmNiYzYyYjViYTNiYmJhMWU3YjNkMTk5OTcxYzNlNzMxODU0ZjY4YjhmNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzg0MjU0NWU5NTRlMGRlMTJjNmVmYjA4YWZhMTE3YzVmYTZkODBkMjdkZDBjZDZlN2QyMDBlODQ1YjljYTFjMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNmZiNGZkZjk2MDU3Njg3MGM3MjcyMjNjZDAyNzJmOTMxOTI1YTZhMzA4NzkyNmU4YzM1MTk5MTZhNDg5OTJjOCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_615d4af220314df1bce34e27a3347400",
+      "statement": "放 ui-storage 的是每个窗口各自的界面状态，主进程窗口状态管不了这么细，目前只有侧栏宽度 sidebarWidth；会话目录、标签页与工作区 ui 则走主进程持久化，因为它们要跨窗口、跨重启共享。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/components/resizable-sidebar.tsx#L43-L89",
+          "version": "repo-lines-v1:sha256:ba4f8dc77127fc929e8c15b17038fe96093dbfd209d643ea732d71329dfc330f:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3ZjRjODc2ZmQ5YTdmMTA1YjI2NjI3YzQxNTg1NjRiNjA0MzBiYmFjYTc4OTFhYmNmOTgwOTY1YzAwZTEwYzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJjMmYxZmRlMGRmYThmYTVlNjhmNjlkZDBhNzIzMGZiMDQzOWMzMThmMjAwOTVjOGFiMDY5MDc0YzNlMTM0N2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRiMWI2ZThmNmRhN2JjMDMxNWQzNGFlZjM4Yzc0NTM2MjRiYzI4M2MzZTY2YmJhNTVlYjhiYWM3MjgzMTRmNzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJlMTQ5YjVlYjM3ZTM2YjJkMDRjNTUxNDBjZGExN2QwYmY4MGZiYjlhOGI1NjFiYjViMjliZTE2MmE1NDVkZWQifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}

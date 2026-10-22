@@ -1,0 +1,240 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:29d0e49431fe369755303ad2932e406b3832843b97978758a0b3ba986fc6f08a",
+  "claims": [
+    {
+      "id": "claim_f8cc623cedb54c2ab4233efc3742da0f",
+      "statement": "canSearchProjectFiles 在 git 仓库内先统计已跟踪文件数，少于等于 50000 个时选择 fff 策略，否则依次退化到 rg 与 git 策略；非 git 目录则在 rg 与 walker 之间选择。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/project-file-search.ts#L488-L527",
+          "version": "repo-lines-v1:sha256:a9f918f81d6767ae7791f556fa5dada1a7520ddeb8282de56ff2ee6628857355:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY5YzFmZDc0MDZjY2RkNWRlNmQxM2NhZDQyYTk0OTdhNTEzNzJhYjBmNjQzODE1Mzk1YTNjNzYxOWU3NTJlMGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxZDE5ZTc3ZTg2NmYyYzMwNDVjN2NmZjdlNzA4ODhhNzQyZTM1NDNiNjQ0MjJkZmNmY2M1ZDNkOTJjMGVkNmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdkMWU4Y2U0NmMxNjY4NmU0YzdjYjdjYTZmYzBkOGRlYzljNjQ2NjE2ZWY1ODliZDRlNDRmOTMyZjRmMWEzMDgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_221c8a376eec4f6f9331954023fc4453",
+      "statement": "isSafeProjectSearchRoot 拒绝空路径、~ 开头路径、Windows 宽泛根（C:\\ 与 C:\\Users）、文件系统根、home 目录以及 /Users。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/project-file-search.ts#L245-L260",
+          "version": "repo-lines-v1:sha256:5cfb7ce2360a0795620f9a27da945e126b2c59b444a5f0b3c9d4982e992503c2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhNDRkMDcwNWRlM2MxZGMyNTgzNzY2MGJmNjczYWM0NjEzMjM3MjgxMWRmNTFkYmZjMzg3MzJhOTdkYjBiNTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM4MmE0YzAwNmY0NTI3YjdmNGVjM2U0ZmU5YmNiNjg0NTllOWNjMDNhYzFkYzI3YzFlM2Y5NTRlNWZmNGU2ZmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyMzlmOTkxZjVlYzQ3NDI5OWI1ODBkYzE3YjE5YTJhZDM3ZjE3ZjUyMTBhM2IwOTY0ZjRmZjY2NWY2MzI0ZmMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_29dc318530f24da99c44827a634098b4",
+      "statement": "rootEntriesFromRelativePaths 把完整文件列表压成根级条目：多段路径记为目录、单段记为文件，目录按名去重并跳过 .git/，最终目录优先再按名排序，默认上限 40 条。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/project-file-search.ts#L198-L239",
+          "version": "repo-lines-v1:sha256:9b27668bad05ac9fa34414ac066d229bc28165442118f40a3cf3ad79cf8f8e9f:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRjNDMzNGQxMWRmZDg1Y2U1Mjk5MTNjOWM3ZjRjYjgwY2I0ZjJjYzk1YTg0NWEyYWJhNWRlNjQ5ZWVjN2YxYWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYyMzk2YmI5MDcyNTRkNTBkZGIxM2E5OWUxZjI1MzA1MzkwNjgxYjdkNzkzNzRhMzQ2ODVlOTIwY2YwM2Q0NjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA3ZDJhN2FiYWI4OGEwMGIxZTgzNDJjMjU5OTE2N2Y4NmJjMmJlMzdmMTI4YjliZmQ0MWViMDZlZjk0NjcwYzEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fbca92bce474401f8156de9462677d78",
+      "statement": "search 在查询为空时转为列出根条目；策略为 fff 且 finder 已就绪时走 mixedSearch  fuzzy 排名，否则退化为路径子串匹配，且 fff 策略未就绪时 source 标记为 fallback 而非 fff。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/project-file-search.ts#L606-L667",
+          "version": "repo-lines-v1:sha256:ea1a2403c2a64a5d4647731b7deeb0b2c028f59eba08901db241e19e4ec0bf40:eyJzZWxlY3RlZExpbmVDb3VudCI6NjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI1NTM2YTNjYmEzODAwODA2YTU2YTI2YWMyOTE3MmIyODY3YWFmY2Q2ZWNiODBhNjA5NDUzNjY2MmI4M2JhNjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdmNjRkOGVmYmZhYTdhYzdhZjRhODgxYzNmMjM4YTlhMjNiOTcxMmUyNjVjMjg1OTYyMWE2YmE1ZWQ0ODhiZDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU1ODkxMzYwYjRhNzY4NDRmZDYzYjY0MjhjOGUyNmQwZmRlNWMwMzRhZTY4ZmYzYWExMmU2NzU4ODE3ZDIwMDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d89f6fbee4114870a38c9d1434d48d0a",
+      "statement": "列出文件时 git 仓库用 git ls-files -c -o --exclude-standard 取已跟踪加未忽略的未跟踪文件，与探测阶段只数已跟踪文件的调用不同。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/project-file-search.ts#L529-L533",
+          "version": "repo-lines-v1:sha256:b68d470501c46e0b94bb7e03706aed036c9923a200edff5be11525eae4118856:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDY1MjU3NjQ0MGE4ZGUyODkwODM4NWU0NGVlZTdlZTFmZDc5MDRjMDFmYWIyNzI2Mzk2MzFlZWVhMWQzNDFjZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjdlNTc4OGQ1ZDlkNzNkMjRhODFkYmMwYTVhNzRiZmE4MmM5YzNiM2FmOTllNTJhZjc5NmU5MGI0NjhhOGEzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTdkODYzMmU1NGU5Mjk4YWJiOTU4NzI3ZTJkNTE0MDhhYmFmMTM2NjAzNTM3OTEwMTQwYWJmNjViMzBhYjYxMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmQ1NzkwOTUyMDU5MDNiNjBiZjgwNDM2OWUyYjQyN2JkNGQwZjM0OTY2MmM0M2FjNDY0M2M1YzQ0YmI0OWU1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_e0cf280239c84368aa0a11ebc74598cd",
+      "statement": "walkFiles 兜底实现只读取不含 * 且不以 ! 开头的 .gitignore 行，跳过 .git、build、dist、node_modules 与 dist- 前缀目录，并受深度 20、条目 20000、时长 2500ms 三重上限约束。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/project-file-search.ts#L338-L366",
+          "version": "repo-lines-v1:sha256:dd226a25bc489d6b98fec59703ecae72fc2c09b5bf7f4b4c88c267a8ba81e0f7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFkN2ZmZmQ5YjBiMjRhODgyOWZiYjhlODA0OWZhMWQ3Yjg3MjkzMWFkNmNiNGMxMWE3NDVkM2M3ODJmNzQ3NzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg2NWRmOWNmN2RhZjVkNjZjZGNiYWNiN2RjZDMwMWZmMDRjYzg2NWY4ODNlOGI5NzM0YTg1ZDczMzBmNjlmYjEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_48f954338bc54ce8b6fc916659c6dbdd",
+      "statement": "matchRanges 为每个条目计算查询串在 name 与 relativePath 中的匹配区间，供 renderer 做命中高亮。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/project-file-search.ts#L129-L153",
+          "version": "repo-lines-v1:sha256:b0d6172fd99e316ad1c1d038f2fcd9d216326c2a120c7e44888472ad490cb662:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYyNDQwM2YzNDE5ZmM1NzU3NTMwNGM2OGFiNmM1YjEwNmU0YjRmMWZmZDBkNDljZjExNTBmZmUzYzEwYTUyOTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBiYjVkZTI1N2NiMmYzMTk5M2E4Njg2ZGJlNmZkMmQyMDVkYmZmNWJjNjQ1YzYwNzRhYzlhNjA4OGE0MzlkYjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYyYjA2NmEyZTBhYWJmYTJlZDM0MzllYjhkMzI3YjBjMTUzZDljNGUwY2EzMmY1ZDgzMGZlNTAxZTU2MzViMDgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_77d99b0e82784e2b9c4fb0f514beaa76",
+      "statement": "getOutline 把一条相对路径拆成节点链，末段是否以 / 结尾决定该节点是文件还是目录。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/project-file-search.ts#L458-L474",
+          "version": "repo-lines-v1:sha256:61e77b6df0e63478b79a89ea7b0c751cbe0fd91e433b1f465a02b39b1a4085da:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYyOWE3OWQ0ZDQzMDk2OGNjMmI3YzUyNzA3ZGNhMGRjMjQzNzNiMjQ2ZjJmYjQxMDMxYzA0MzA5MjVhMmRlNzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRjZjk1ZjJhMmZmNDU0NDJlMTM1ZDA0ZjY2ZmIyNTRiYTcwMTBlZTMyYmU4YjNhY2EwMDI3M2UxNzdkMDlmMjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ4MDg3NGU0OWM0YWUyZTRiOWU1MmFhY2U5YjI3ZmY2NjYzYmQ2ZTkzYmQwOTdjNGYyZWUxYjgyNGFmYzc2N2IifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b3bb6c3a7bf24f3fa297cdfce163e92d",
+      "statement": "enterWarmup 只对 fff 策略的根创建 finder 并触发 5 秒扫描等待（不阻塞返回），创建失败会从 warm map 中移除自己；exitWarmup 不立即销毁而是挂 60 秒空闲定时器。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/project-file-search.ts#L557-L604",
+          "version": "repo-lines-v1:sha256:d2b7dc8fe82b6eef4c356b7b1b76541755f16e883a142d46d0e3aec8411c702b:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1NTJlZjU3MjM1Nzg1MmQxMzM5ZGExY2VmMzM2NzdkNmY0M2YxZWQ0YzRhNzBjMjMwYzBlNTg0MDMyZmNlNWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk3ZDg2MzJlNTRlOTI5OGFiYjk1ODcyN2UyZDUxNDA4YWJhZjEzNjYwMzUzNzkxMDE0MGFiZjY1YjMwYWI2MTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU4YjllNzY5YzZlZmYwOTMxMjNjZDg2OTc4MzNjYTQ2NDZjY2U5Mzc4ZmEzYTJmNWUwNzYzMTU0ZjQyMGI4MWEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c646df9d869b429daf856b5def7d2b25",
+      "statement": "warmup 空闲定时器到点时销毁 finder 并从 map 删除该会话，期间再次 enterWarmup 会清除定时器保住会话。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/project-file-search.ts#L592-L603",
+          "version": "repo-lines-v1:sha256:9da1fc23c260a6747b000ad2529eaa28f32e8d10b48be6d5d4e348be8d69bd8a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdkZTQzNGM4N2VhZTk0ZDk0OWZhNDBjZDA5OGQxMGFkM2UxY2NkZjM3YTEwYTg1MDQzZThiYWQ2N2U3MmFiZjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNkMDk2OTRkZGUwN2ZmZGM0YjhmOGM0ZTM5NjVjYzIyYzBhYjMwNjdlZjFkMjZhODJkNGY1MzdhMTZkMjFmNTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc5MThmODQ5ZDEyYWQ2MTc3NDIzZGMxNDY0NzlhOGJjYjQ4MDEzZDQxZGU2NzNhMjA4MDFlOTkxZGU0MWRmYWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYyODVhMjQwODI1YmI3OGJmYTE2NmRkNzIwZmViZjk0NTE5NzkzY2NmMzEyMDY3OGRjMTgxZTgwYmU2MTA0ZTAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_18f8c5fd36cd4309aa8651eb3f0ed731",
+      "statement": "nonProjectRoots 按平台列出 OS 与应用管理的目录：临时目录、macOS 的 Library 子目录（保留 iCloud Drive）、Windows 的 TEMP/LOCALAPPDATA/APPDATA、Linux 的 XDG 目录等。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/project-filter.ts#L21-L55",
+          "version": "repo-lines-v1:sha256:29bd4d700af843f9af65770eb42e786bfdb1825d8d6761b895be1270a821da00:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyMmJiMDkyZGQ0MmQxZTJlZDdjMzM4NzdjMjRmYjZmMDM5ODM5ZTA4ZTg5MmQzMDQ1YzliYTFmMGU5Yjk5YjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5YjIyMTU2ZWUzZDkyNTQzMDMyYTdhNDA0NWViZTI2MWJhZmIwNWE1YmNiYjZmODQ4Mzc1NmM4YjVlY2M1NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNjNzEyZjhmMDA5NjUxODkwYmY3Yzk1YmIzYTJjMDBhMmIxYmVlNzZmOGE0ZjZjNWY4MTk4MDM0Njg0MmM0NWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e50b523ad8fa4cfeb876ea0976baa428",
+      "statement": "resolvedNonProjectRoots 把平台根连同 realpath 结果一起去重后缓存，使 /var/folders 与 /private/var/folders 两种拼写都能匹配。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/project-filter.ts#L97-L117",
+          "version": "repo-lines-v1:sha256:1cf41ce485791726e9e935cd791a6bb2bda42d8dc0275c85b9435ebd3a6127b1:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyNzQ3MzYzNjliMDFhMmUxNGQ0ZmFjZThlZjExY2VmOTY0MWMzYWUwZWI0N2FiZmZhNWNjYTg4YmEzMmQwOGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA0Yzg4ZGUzNmRkMDdmMTU5NGE2NjE5YzdiYTMwYmM3NjI3YTVjYjBjMTcwODQyMTUxZGQwM2M3ZjhjNmY4NmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1308facba2654fe1a5c178f51ca55f44",
+      "statement": "isOutsideHomePath 把 home 目录之外的路径视为非项目，但 Windows 平台豁免，因为项目常位于其他盘符。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/project-filter.ts#L79-L89",
+          "version": "repo-lines-v1:sha256:8361b539fdfe783f311ac3b1a7cbc6c2005f44831f019aac6669baa12c63a109:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM4NzVhNDM0ZjVjMDdmOTc2MTZkNzdlMjM2NzEwY2Y4MDExNTgxYjMxYTAzNDg2NjRjMTgxYzdmYjE5MzRhMWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYxYmVlZTVlZGJmMGZkOWI1ZTQ4YzAwNjg3ZjYwMWYyMmIzZTVhZTI5ZDcwYTNlZGYxNmVmNDFkOTVkYzI1ZDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMzM5NDBhYzFlZWJmYmMwMmI1YmZjMDJjNTIwNmZhMmFlZTAzM2U5MzRlM2UxMmQxYWZhNjA1MGQ2NDIxOGIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4376fa1610944e948991ad0fd67a0454",
+      "statement": "附件上限为总数 20 MiB、单个图片 20 MiB、单个文本 1 MiB、一次最多 20 个附件。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/attachments.ts#L17-L23",
+          "version": "repo-lines-v1:sha256:98ed46137f3e9f7f63c1338257a52034fdd54469064877baf8f1477aa7a62d45:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDE3N2Y1YjE0ZjkxNzM3MjAyZDc1NjU1ZDk1MzI5NTEzYWJmNjcxZmIyODQyNzIxNzY5YWIyYTc0OTY4NDdiOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNWMwZDMyMzk4YzdkZTNjZDJmZWI5NTc4YWMzMDE4Mjg4MWU1ODI0NzViZmI0NjViNWJiNDA4MzA3MjQzOTUwMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWM0NjBiNDU2NmFmNzM1YWRhMmYzYjg0NTY2YTI4NTA3MTA5YTE5ZjdhNzY0ZTRjNjU5Zjc4MDNhNjBjNjRmMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTJkMjYwNTVlNjJiOTJiMDBmMzI5NzFjNjg4ZGM5YTIwMjRjZWZjYzM2MjNkN2RlNDM5NTc1OGUwMmFiZTA5NCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_6ff1d8c0f4f74da4afe466811e2d5296",
+      "statement": "图片上限刻意放宽到 20 MiB，因为 SDK 会在发请求前重采样压缩超大图片，大源文件可被接受并在发送时缩小。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/attachments.ts#L19-L21",
+          "version": "repo-lines-v1:sha256:388ebca585b4a7ee7884458281b3ae719ab5419561722abbd249fc0b27c60f1e:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTBmOTM5M2NkYzEwMmYwMjc5NjRhNDQxNGYwZGM4ZTY5MDg3YTQ0OTNhMTdlYzM1MTE4NGRiNDEwMTVmYzg4MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmEzMmFhYjQ1MjdjZTZmZDQ1MTkyMGQxZmNiZWMwOTRjZjI2NDAwYjg0ZWMyZGFlYzhlZmM3OTgzYmU5YTE1NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZWVmOTE1Y2ZlODY5Y2M4MzZkYzY4OTZiZjk4M2MzNmYzMGRiN2I4YWY3ZWFiYTAyM2QxNGM3NTk1MmQxZTA3NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzYxMjU3ZGUwOGQ1OTk1MzlkZGE3Mjk5NzQ1NWMzY2FlZGMwMDNmNGRjN2I3N2M1Mjg3MTQ5Nzg2OGFlZmU5OCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_e446e8d30d5047fe903dfeb003e4cee0",
+      "statement": "binaryMediaType 按魔数识别 PNG、JPEG、GIF、WebP 与 PDF；都不命中时由 isPlainText 判定是否为 text/plain，要求 UTF-8 严格解码通过且不含控制字符。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/attachments.ts#L28-L58",
+          "version": "repo-lines-v1:sha256:19809209cc2460594a6c9dd9a21e2e97c82d76d4f8d70cc14808238dd367e685:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlMzllNGM4NWY2Zjc3YmM1MDExNDhlMzg1YTAxOTdjNjhmOWFkMjNmNzY3ODIwZGRjYjEyNDA3MDc0YTU4M2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhlM2NjYTAzMTI5MTJhYTNjYWNjMTZkY2JjOGYyZWNhNDk4ZjVmNDhhMWY3MzBlNDM3NTExMDA5MzkxZTFmOTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFjNTI5NmI1OWRjMzA1M2YzODU4NTRkZmRjZjZmZDQyNGI3ZWNmNDQxMTAxZTRlNTFjZjQ2NjAxZjYyNGFkMjMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5c09a10cc1be4368bb2534f528eeda62",
+      "statement": "loadAttachmentFiles 逐个处理文件，失败的进入 rejected 列表并带 name 与 reason，成功的记为带 source.path 的 ClaudeLoadedAttachment。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/attachments.ts#L214-L246",
+          "version": "repo-lines-v1:sha256:cf38ed2dc5eebe9cc656880fce4ab43c3db28da2b286830a3a179bf8eff55eb2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI3ZTY2ZDI5NjNlMmY0YjRlMDU1YmFlY2Y5MWU0MDBiYTQxMmEzYjk4YTZkZjU3NjRjNDRkNjY2MGViNDg3MjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJhYzc4ZGYyZjg4Y2NkODE0N2Q2NWUxNjAxYmZjM2RjMTZhMTllMGMzOThiM2YxNTZjZmU0ZjYyNjk4NjI4YjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YWVjMzlkMWM3OWUwZTlkYWIzYjQ2YzljOTVkOTJlMmQ5ZDI3YTM1MzQ5Zjg5YTMwYjU2OWU2ZTAyZmExMTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9203c89210614ae09b48f5f88d6cbf81",
+      "statement": "rejectReason 从错误消息反推拒绝类别：含 empty 归为 empty、含 limit exceeded 归为 too-large、命中不支持消息归为 unsupported、其余归为 unreadable。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/attachments.ts#L201-L207",
+          "version": "repo-lines-v1:sha256:90fafc192169cc1ee7abe5f46cd1771cff749c03bc677e3a857adac3c19ef289:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDM3ODI1YWJlYzI5Yjk5ZThmMjBhMTU1M2FjZGY1YWY0MTkwODZjYzJlOWQzNzY2NTMyNTNmMzFjMjExMWZiNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2Y4Mjg1MmI4MmFmYWFiM2NlNzk5YmM0MTU4NzA5NzQ4OGFkNmFlMTYyMTM0YTQ4NjlmNzZkZTQwZjZiNzc3MyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOGY4MmZhZWNiOThjYjEwZjQwMGYwNzBjMWZiZjdkODBkYzliYjJlNWM5ZjJiMmQ5MTZmYmY0NTdiOWVlNzRiZiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_c343c04b8f76493a9b8c4fb7200ee1c9",
+      "statement": "prepareAttachments 逐项消耗剩余字节配额，任一项失败立即抛出带文件名前缀的错误，不会跳过失败项继续处理。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/attachments.ts#L172-L199",
+          "version": "repo-lines-v1:sha256:1cb2d0336f90c4710cfe4e7532a7fea45c9ef999b1b0fb6b42a6028f2d209fc6:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkwY2M3NzI0MGFkODJiY2VjYTNkODIxN2E1Nzk1OGVmNmIyZDE2N2M2NGY4NjY0ZDEwYjE1Zjk3YmM0NmVmNDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI4YzExOWM3MGI2YmViNTcxZTUxODI1Nzg5N2NhYzU5NjU0YzY1MDdhNTBhMTk1ZjFhZjM2MjY1YTdjYWFkNDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE2MmUwMmRlOTM5NmE2ZjBiNmFiYWQxYmI4NjUyMTA1NzlhYTgwMjkyOTgwZDQ3MDUxODlkN2ZmYmZkMDk1YjgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d83c1348a3a945558b56027d3194706a",
+      "statement": "embeddedContent 校验 base64 内容时先按长度粗筛，再解码后重新编码比对，不一致则抛 Invalid base64 attachment，并校验嗅探出的 mediaType 与声明值一致、document 只接受 PDF、image 拒绝 PDF。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/attachments.ts#L142-L161",
+          "version": "repo-lines-v1:sha256:e9e47746eb1ff618489044e64d46c7d525b981d3f9ae2f04b0c8d3234ad6fe03:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEwZDI4M2QwY2JlZjhlYjRhNWM4ZjM1NDU1YmFlYzA4ZjY2MDg0NGU5ODNhMThiYTU1OTQ2MDU1NmJmNWNhNjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhjNzZiNjc4ZmMyYmRmYTI2M2M4MmM4YWI4MmY4MGRjMTRiYjY2NTQ3OWVmNGNmN2Q0ZDBmYTgzNmRmZTFjNWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNkOGQyYzM3M2VmNGEwNGM0Y2FhNzQxYzVmZWU2NmYxZDM5ODk5Yjg1YThkOWU2ZTExZjg2YTBjZTUxNTM1MjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNkOTZhZWRlY2UwM2YyMWUwNjAwN2FjYjdjMjFhYzU1MTNlZjQzNDRhMzQzY2UxOWI4MGRjZjk3MjBmODE2MDUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_86b4280bd9ef4a67b7f8193aeb709112",
+      "statement": "sdkContent 在发送前删除 source.path 字段，因为该字段只是 clotho 本地溯源信息，API 不接受未知的 source 字段。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/attachments.ts#L164-L170",
+          "version": "repo-lines-v1:sha256:cfbb6da801f1483c88b945bfd9f29a443db438df1e43c5acced2b624f4e29615:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzY0MzNhZjBmMjgyNTViNjIxYjQ1YzVkZGEyODg4YzZhYmM1Y2U5ZjYyMDBkZTNlYTMxNDE1ZjZkY2YxZDU0YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiY2NiNThiZDk5YmIwZWZiZGFjODQ0Njc5NGFjZTUxYWY2YzJmMjQxMzc4NTk4ZGEzMTEwYTEwYzVmOTZjZGNjMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzU1ZDE0OTVkYTUxNGE3ODdkZTk1NTBjOTY0MjAzMzFmNTE0M2Q5YzZjMDI5NDY1ZTMxOTEyMGUwNjVmNmEyMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_ddcce7839d6542f89b67702d1a12b924",
+      "statement": "getAttachmentPreview 对非图片或 PDF 以及任何读取失败都返回 dataUrl 为 null，不让预览失败影响主流程。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/attachments.ts#L248-L259",
+          "version": "repo-lines-v1:sha256:4d3987b3dd40127735fa8230a78c744fa5c8828f36bfc2dac35a745c80f9ffc4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRlNThmOWYxY2MyMTY5Y2RmZWQ0ZmU1MWY0YjY1NzBjMzRjY2MwYjMzZDA0NTc4YjA2ODA4YWY0Zjc1MzgwMzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM1MzJlNDU5NDI1YTcyMDViOTcyZGFiNDU5NmZhMmYzN2QxZjlhMTk4M2JkY2M1ODFiZDExOTU2YzczYWMyN2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNkM2E5NTIxNGY2ZTk0YmJjYjk2OWViNDUzZTE1OTZkMjg2OTRkNzliMWQ3ZTFkNjg3OGE5NGExZjIwZGY3ZTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_195feea0de6641c4acb59eb052eb0069",
+      "statement": "readLocalFile 以 O_NONBLOCK 打开文件以便拒绝 FIFO 与设备文件，读取时多读一个字节以检测 stat 后文件增长，并用 signal 支持中断。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/attachments.ts#L102-L131",
+          "version": "repo-lines-v1:sha256:89077e6c02f9d04bc03a6a0adb3a0315a8a8f5c80544f174f0ce6544852990ff:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE0MWIxNjA3ZmEyNTIxOTFkMzk5ZjgxODNhZDRhODY3MDk4MjVmMWUzNTQ5NzE4MzYyYTU2MTMwYTliMmRkZDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFiZGExYWMzMzMyYTAxNDVkZGUyMjRhYjAxZTdhODM0ZmZlNTFlYzMyMDczMTYxZjM3YjQ4ZWM1YTdjYzk4ODIifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}

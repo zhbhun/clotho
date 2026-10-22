@@ -1,0 +1,310 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:15e849d5b393201cf8b88d88d4f52698092c8a248c70681237ebab153191648c",
+  "claims": [
+    {
+      "id": "claim_f1860c85482e4798b34291531ed4d9c8",
+      "statement": "src/shared 是主进程与渲染进程唯一共用的代码，只含类型、常量与纯函数；rpc.ts 在末尾把 session.ts、provider.ts、shortcuts.ts 的类型再导出，渲染层因此大多只从 rpc.ts 或 services/claude/claude.ts import。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/rpc.ts#L1-L8",
+          "version": "repo-lines-v1:sha256:82c116adbc6dd4760a1a29df5fa1167a58c599d5410cd6bfbf0768ae9999d9da:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTcxODAwMjA0MWUyNjgzN2FmMjdmZDhmYmM5ZTE1OWJkNDNiZWIyYTk1ZGRkN2EyMmQ1YmYyMWE1MGVjMDYwMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmI5ZTYxMGIzNjEyOWI5NTg2NGU0ZjA2YTI0NWQ5NjVjYTYzNGQ4OTQ5YmZiYWMyNWZlYTcyZDFjZjI3ZTFiNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDljN2Y3ZTQ2ZWU1ZTQ1Y2RhYjQzYTY0NzFiMzI3YjI2ZTNjNDJiMjJjYzQ0MzZlYTY2ZjI1ZTIyM2YyZDgxYSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_f7c5874674004f36ab66c0929f8a6264",
+      "statement": "RPCSchemaSide 是一个恒等泛型，只要求 requests 与 messages 两个字面量结构，不起变换作用；它的价值是让每个请求的 params 与 response 写法在编译期被检查。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/rpc.ts#L49-L54",
+          "version": "repo-lines-v1:sha256:a555427cda8bbdec862e75fffec9d345891d4480a0e0b34a5ee85b541ce0535c:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTliZThlZThjMzU3YTE2YzllOWE3YzBhNDAwYmQ3ODM0OGNhMjNjNmZmMmY1ZThkODlhZWM5ZjZhMWEzN2JlNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzUyN2FhN2ZkZDc0MDJkNmQzOGE0MWEwOTc0NmVmNmIwMTcwYzc2YWM1NmI0MzZkOWI2OTAwNTEzZjcyNzU4ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTMxMmMzZjlmYjA5MzM5ZmQwMTU0YzcxOTEzOThiMGYzMDYzNDM0NDFjNjc5YzVhM2Y5Nzg1NzBmODQyNTJmOSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_cb42a7887e43493985ddde0c12390891",
+      "statement": "DesktopRPC 分 main 与 renderer 两面：main 含约 90 个 requests 与唯一的 message appLogBatch，renderer 的 requests 为空、messages 有 10 个推送，形成只有一侧能发起请求的不对称结构。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/rpc.ts#L876-L879",
+          "version": "repo-lines-v1:sha256:7a801e6adf56db7216f3ee1e27ce92d538e46eee42e8efd1e53be420bdb10063:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2YwMzNiNTFkZDY2OWYxMGQ1NmY3NjFmMTkxZGM3OWQwOTEzMDljZTQ2ZjdiZGY4YTBiODg5ZmVjYzQwOWZhNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjI5NGNiY2ZkNDgzMGM2MDQxZWJjMzA2YzVkNzMzZDE3MDVjZTY3Zjg4MzM3MGQyMDFjY2ZkNWJiZDVjYzFhNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODAwZDgxZTE0ZDE0MGY0ZDBiNzdlMGViMGQwMzM1YmQ5ZWMzMGQ2YTIyZWUwYTMzN2FiZmEwM2UxYzIxMWJhNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNWIyNzJkYzAwNjg3NGNjM2M2MDUwYjA5MmNkM2IzZDNlNDNkZDIwYjg5NzQ5NzE4MGI5OWRlY2I1YTI3MDRiMyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_5665ec8f19d94d6f942d8ca5cf64ad34",
+      "statement": "main.messages 只有 appLogBatch 一项，因为日志高频、无返回、可丢失，所以走 send 而非 invoke 通道。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/rpc.ts#L1224-L1226",
+          "version": "repo-lines-v1:sha256:3b4dbdaa2e70d101169def48ca3110d7957072e13ca6452d93616a6d471f958d:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjZiMTc0NDc2YjU4MDQxODZmOWYwMDJjZTQ1ZDFjZjliOWFiZTg1Y2NkNDZlYTk4NTgxNzE1MjQ3N2EyN2U3NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5M2Y0MGUzNzgxZWI4OTZjODJkMDQ2YTA4MDY3YTExZTM1Y2RmMmYxZGZhZjI2ZmVhOTBiOGRiNjY3NjQxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzdkNzBjODdhZGM2NzZlN2ZlMjFlMjYyOWZmMGI5ZWJjNDZmYTM0NTk3M2YzOGM3NjhhMTkwODNiYjU1ZDZkYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjEzMWQ0ZGEwOWE0MWI4NGQ2MTEzMzU0ODU3OTU5ZTdjMjllZDg5YWEyZTc0NjdkN2I3YWNhMDcwMzMwYTY3YiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_94b4390e956d4b41b845c02c4c33a24a",
+      "statement": "渲染进程侧推送消息共 10 个：claudeOutput、claudeError、claudeComplete、claudeToolRequest 四个带 streamId 的查询帧，以及 claudeSessionRecycled、claudeSessionRuntimeChanged、menuCommandDispatch、menuOpenSettings、windowRegistryChanged、windowSelectSession、catalogChanged 七个窗口级或应用级广播。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/rpc.ts#L1228-L1250",
+          "version": "repo-lines-v1:sha256:f91db300a185771313bf7ef48446ddbac3210d6e7835fd87ccc2f5a733208628:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRlOTUxMzgzMjNjY2E2M2QyMGExZGUyZjMyZmQwNGRmYjVkODQ4NTU5OWEzZWU1OThmZTBiOTIwOWMzNjc1MGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM3YTRjZWFhM2IyNGRmZTkxMWRiNWQzNTlkNWRlYmQyMzc3MDkwNDZlZDYxMDMzZjY1YmJjY2QxOTc5YzA5NzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNmNzIzNGFmNzc4MmYzYmJkNzliNTk4ZGY0OGUyZDJmNDliNTBlZjVjNTM0YmJhYTc0Y2FjZGMyYjI1ZDM5MzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8349145d24694abba18d0abacf493d58",
+      "statement": "claudeOutput、claudeError、claudeComplete、claudeToolRequest 四个推送都带 streamId，因为一条长住的会话查询由多个窗口共享，帧必须能路由到正确的订阅者。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/rpc.ts#L1231-L1234",
+          "version": "repo-lines-v1:sha256:0bec30f367c80a7d9f3dc1470e184d3a8462f5ce925950a008f523a5caff10fa:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDkwZjEzMzFiMjFlZWFjMjIxOWU0MDdlMTJkYTA5NmQxZDc1MDAzZDFiMTFmMTZiMjI5ZTExMTYzMjVkMTkyMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzNhYmU5MzM4NDEzNzY0NGNiY2I0YmZjY2E1Y2Y0NGU0OGU3MTI5NDBhNzJiYmQ2OTFhZGFjOTFmODViZWY4NyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTJjNjdhMTlmNmNjZThlNWQ0MTgyZDIzYmI1NWQyYzQ0NGZkMDJjYmM3YTgyMTg5NDZhNzYwZDIwY2UxODVhOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjg5NDc3OTg2ZGE1MTkxNGVhMWRkNGJmZDAxYTIxODExNTMyOWMzNzExN2ZjMTY2NGU2MmQ1OTZjOWQyZDVhMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_17ed0ced517b4e02a653ef065220cf94",
+      "statement": "ClaudeSessionRuntimeChanged 的 streamId 可为 null，表示查询已不存在（被回收、重建或结束）；载荷还带 turnInFlight 与 pendingToolRequestIds。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/rpc.ts#L614-L621",
+          "version": "repo-lines-v1:sha256:c6697c8f979d44ad9d95d500b28d9c363d6b6b3dba2c1f410756d7b284a2bed8:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzEwZTAyODNhYTIzOGM4NDczMzVlNzhmMzZhMGZiNWFhOGM2MjYwZGU5MWY5M2M5NTg0OTkxMTdmZjBmN2Q5YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjI4MjIwNDg0ODNiODMyODA1MTQ4ZmE0NDRlMmVhNGY3NzBjZWRhYzJjYmRjNDJiMzM4OTcyYTM0NTVmNzBjNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWNhNGM5NjI0ODhlZWU4M2U3NWEwZTliOTYwMzgyNTk1YWQxZDZmN2E0MTkxYmMyOTkxMGIzMGVhNTRkMjMzNiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_1cc18defdfd241b19cef84635fcafb9b",
+      "statement": "ClaudeSessionQueryEnsureResult 带 replay: SDKMessage[]，主进程在重新挂载时回传已缓存的帧，让半路 attach 的窗口先看到已有轮次再接直播；claudeSessionQueryAttach 的注释明确它从不新建查询，没有运行中的查询就返回 null。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/rpc.ts#L631-L636",
+          "version": "repo-lines-v1:sha256:aae614eb137f8350ed6e802d5ad44639dcfb488b719bdd75035e80a470acb398:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGYwMGUzYzZlYjUzMGMxNGYwMGVkMTc4MTQ4Mzg4ZGQ3ZDNmMmQ1Y2VlZTMxOGY1MDViNzA4NTdlMGM0M2RiOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOWMyNTIwOWE3ODk3MWJmMDc5YmJmMWFhMzBlMjhmZGI1ZGVmNDExMzVkMDA0OWU4MTVlNDU0MzAzZmQ5MDY0ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTVlNDk5OTk4NzBkYjMxMThhYzU4NjU5MGI2MmQ0NmQxMTg5OWQ3MTE4ZDg1ZjE1M2RjNzIyZThhYjNmMGNkOSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_597647458bf340c888da24f177ff52fa",
+      "statement": "ClaudeSessionStreamState 是 attach 时查询的快照：status 为 starting/ready/dead、turnInFlight、pendingToolRequests、backgroundTaskIds，以及查询创建或切换到的 model 与 agent。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/rpc.ts#L600-L612",
+          "version": "repo-lines-v1:sha256:137c2c7e3a2cbf6dce44e7b95a57863b4d625045f9ce7f6c8a0d89f61df0408f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwYzhiY2UyNWRkZjc0YjUyYzZkN2Q5MGUyY2ZkMGViM2I2NzdiYzA5NjVhNzNkNDIyYWEyMjcxYjJhMDdmYTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY3NDFmNWM1MmE5YjA5N2E0ODZlNDlmNzZjN2NiM2JlYmY5NDI5YmE5OWY1MTVjNTUzMTk1NWVmN2VhYjk1ZWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM5ZjI0NzdmMzBiYzkyNTZlNzdkZWNjMzVhODMwYWQ5ZjI2ZDFkYzYwODMzOTY2MjYxZjBjYjIzYTBhMTg3NGYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2334f55a10ab404c976465edbbcca7cc",
+      "statement": "ClaudeToolRequest 分 ask 与 permission 两种 kind；ClaudeToolResult 直接作为 SDK 的 PermissionResult：allow 可带 updatedInput 注入数据（如 AskUserQuestion 的答案），deny 带理由消息。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/rpc.ts#L700-L727",
+          "version": "repo-lines-v1:sha256:74d6dc9b06129b4a4f4559804be94aee703bfa18ae1aceaad35ef85f0a6a79c3:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcwYzJhM2RhYjhlNDQ3OGE1NGE0Y2NjNzM1NGNmMWYyZDFjODZmNDg2ZWY1ODg0YzQ0NjZjNzhhZjBjYTQ0MGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU3YjE5ZDZiYjNlYzRkYzJiNzRhNjdiNGVmOWFhZDliOTBmNmY1ODU0YmE0MTgzOTdjMmJmNmQxNmNhOTlhNjEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c15a6169ce804f5a96d629b8b0cd77da",
+      "statement": "历史消息编辑的三个请求：GetSessionEditAnchor 决定全新还是从某条消息恢复；RewindSessionFiles 支持 dryRun 并返回 filesChanged、insertions、deletions 而不动手；DropTrailingTurn 带 allowLaterConversation 开关，历史编辑跳过更新对话拒绝、召回不跳。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/rpc.ts#L352-L380",
+          "version": "repo-lines-v1:sha256:7e5b6a09460176e86757b8d929b6d23762c0223833ff2ad949b467f29be0c780:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5YWIyYWQ4ZTRjNzI5MDQ3NTNhOGE3ZTk4YjQ1MDNmZGQ1NGMzMzBlNGVjMjFlZTQ0MmQ5MDAzMzczOTQ4ODIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhmNGNhYjhhY2Y1MzVjNzQ5Mjg2YTdmOTNiNjQ3N2QyNDg2NDQ1ZDgwZDMxNjZiNzhjMzkxYTAzZjRjNDRiYTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkzYjU0NzhhOGZlNzRiODI4N2Y0Y2QyY2M1OGViNjcyYjEyNTBhNTdkZTYyOGJiZmEwMmIwN2NmOGQ3YzQ1ZTQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_232e21808e9e4182b58ecacdd1621e70",
+      "statement": "三个 UI 载荷类型：WorkspaceKey 为 claude 或 project:<id>；WorkbenchWindowUiState 是 free 窗口整窗载荷（当前工作区键、各工作区标签页与活动项）；ProjectUiState 是单项目工作区载荷（sessionIds 与 activeSessionId）。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/rpc.ts#L24-L42",
+          "version": "repo-lines-v1:sha256:7a9df9348e450601024ea4667781eb6190a72a62b07e9e45d8c15943321976b4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEyYmQ3ZDM5MmZjY2FjM2QzZGYwNThkZjYzNTA2ZmQ1NzZjMzUyNTI1MzNkN2QxNDQ5NmFmYTI2ZTAxNTBlNDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVlZjEzODg3MDM4YjY5MjZjZWU3Zjk1NTNlMWU1OGM4N2Y4NDMyYzc0NGY2YzIwZWY1ZGU2MmQ1OWM5YWVmOTIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUzZGJiMWUxMTNlMzIwMDc3MDQyYzA2ZjM1MDlmNDE0YjY1MTcwNzk1YTQ0MWVlM2RjNDkzNDdkZTY2NjU2YzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIwZDhiNGYzNGE0MWIwNjc4NDk1MjNjNWUzN2Y5ZTliMDBjOTdjMDY3MTE2ZWZjOTM1NjFjMmE2YmRjMmI2NzUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a2488b4068114001823eccd6d0d1c886",
+      "statement": "windowOpenProject 带 ui 时是弹出窗口（把别处的工作区种进来），不带时恢复项目的持久化状态，已有窗口显示该项目时不开新窗而提到前台；windowRefocus 把项目窗口改绑到另一项目，参数是调用方对当前项目的状态，返回新项目的状态。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/rpc.ts#L1128-L1162",
+          "version": "repo-lines-v1:sha256:ca0941fd72557ee524f1c2e7bcc2b920ffccbe81325d5643e0642da9d29bce8e:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNjZTMzZTY3YzdmZDE5MTM2MTViNjQ1ZjgxZjY5MWU3OWJhMjg0Nzg4MmMxNmU5N2UxOTllODMyOGZhZGU5YzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjliNjJmNjBkODU5MGE1NzljZjQ2ZjhkNjczNzhjNGM1NzJiOTYyY2VjY2RiOTBjN2E1ZjdiNDJiOTYwNzgyYTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk0YjdkNTI2ZGViM2JiYWYyZjY3OGM5MzRlYzE1MTNiZWUyNjM2MTRjNGIwMTI0NWE5NzU5NmYyNWQ0NzNmY2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImExMGFhMGM4N2U1MGNjNjNlM2M1MjUyNGJiMWM2Njk4NzcxOWEyN2JjMTY0MzVmMGY2ODAwNjYyM2FmMzZjNWEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8d5423a0835b4f0481226064d2baab2b",
+      "statement": "windowReadUiState 的响应是可选的 ui 字段，因为窗口可能从未写过界面状态；windowWriteUiState 与 windowWriteProjectState 分别对应 free 窗口与项目窗口两种写入目标。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/rpc.ts#L1116-L1121",
+          "version": "repo-lines-v1:sha256:f6212e07b75f224b2310648f8fff959a56fc41baaa440cdebe8b285eb12270e3:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzE4YjI4OWYzYWQ5MDJiNTg1MDc3Nzc1YWYzMmNhYjZmNWM4YWZiNDM5YTg2NjIzYjNjNDg2M2IyMjY3NjZiYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMGQwZTNhZjRkYzNmY2RhMTg3ZWVmOTQ4YjMyMjZjN2MxYTUxM2VhZTFlNzdjNWRkYjJjODUzYzljOWZlNGRkNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzgyZGJlMDVlMTFiNjE3ZTNlZjk0NTBiOTBjNjZmMDViY2M3YTE2NmIzOGE5ZDdjNDA1YjU4YWNmNDdkYjNlZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiY2QzYmQ4OTBmN2FjZWIzMDA3OTMzYTY1NTllMTdiZjkwYjZkNWJiYTRiYjk3MGNiNGI1NjBiOTBmMzBjNGRlNyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_a950079de1814e488f6e877e54612483",
+      "statement": "SessionInput 是 composer 的持久形态：prompt、附件、provider/model 字符串、权限模式、agent，以及 recalledFromMessage（哪条用户轮次的输入被恢复进了这个 composer）；LocalSession 的 id 可省略，旧文件没有该字段时读取方回落到文件名。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/session.ts#L3-L27",
+          "version": "repo-lines-v1:sha256:9485a4db5a42ce5b6ba866992f56407a9b3cbc9a8af3825b6d3ff7d18bb4a746:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzZGQ3OWQ5ODExYjcwYmI1MWMyMzU1YjU4NDAxNjFlY2U5NjRiNzI0NmM1ODc2YjAzNjNjZDdmMTAxMGEzODkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjoyLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE3NTkxZmRkNjU2ZTFhYjQxMDJmMTY0ZDJiMTJhZWEwNWQ0OTMzNDUyY2ZhMTkyNjVmYjY0MDUzOWU4NGU4M2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZhOGY1MGJhYjc5YzRhMDliOWRjOTBhOWUwMzM0N2RmZTkyNjVmYjAyNDI4NDA5MWRiNmNkNzYwMDE1N2JiZTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_78415948c8e64061bba04e7468317810",
+      "statement": "DraftSession 与 DraftSessionIndex 描述草稿索引条目：标题、创建与更新时间、项目路径，以及 pinnedAt（存在即置顶）。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/session.ts#L29-L39",
+          "version": "repo-lines-v1:sha256:71ccc5c9e0e49eb3d5ae8984e89a127f7217fe05d523372d59844687e508d5d9:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJlMDRjMzJjMDM0MTMwNzU5NzQ0OGY4YjMzZWNkNDUyMGZmOWYzNzJlYzAwYTlmZjgzMjk5ODZjNTA3NGFiNDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlmMjU0NGRhNjI5NGI4NWYyMjg5ZDBiYTUyZTI4ZDJiNDkyZDAyZmUxNzI3MzBkYjAxYjNmZWRiZDBhNWQwMTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc2OTcwZjMxODFhZGNhNDM3ZjFiNWU4NDY4MjkwZWNiYzMxNTdlMDllNmRjODQ5MTY4NmJkM2Q2MzZlY2ViMWEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2bff9438f3fe455c85ae71905a0a22a2",
+      "statement": "SessionIndexEntry 有双重身份：会话开始阶段是草稿，开始后保留一条精简记录，因此索引同时承载会话到项目条目的归属，这正是同一目录的文件夹与工作区两种形式能分开历史的原因；归档标记可能待在一个没有会话文件的标记条目上。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/session.ts#L41-L69",
+          "version": "repo-lines-v1:sha256:1b7dc9e2fdd4b1ea7fa75e9d81d8f1da980ae26fb704d9ea942ca3c03935d540:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJjNmY5MGJkODJlZWJhNDg5ZWQyZTUzN2ZiZjkyZDc5Nzc5ZmVkMDQ0M2JiZDIzYzcyODg3Yjk3YzIyZTY2MjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVlZTFiMGNkZThlNDJmMGYyZjEyY2RmNDU0MGI5ZWM4ZmY5NzA5MWFlN2NmM2VhYmIyYjhkNjZhMWYyZjU3MjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNiM2M0ZTQxYWUwNjZhY2I2MDg3OGQyNTMwYzVmMDE2OGU0NTg1MTcwNTFlMmMyMGQ5MmE4MTdjYzQ3MjcyNDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_440f7c90ec2641f7b833d7a89b63a026",
+      "statement": "SessionListFlags 是列表态（归档、置顶、未读及其时间戳），由主进程按 claudeSessionId 从索引汇集后合并进列出的会话。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/session.ts#L71-L82",
+          "version": "repo-lines-v1:sha256:e534f3725a9fe0afdad4b12561a86af92a12eee69ad3d8e1498c79a5e9b04104:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU4MzZmZmQzZWRlYWM0N2E5YjhhNzc1Mzc3YmZiN2Q4ZjdiMDIyNmYyNDQ1MTZhMzA0MzM4YWI2MGIyZTgzMzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7c80952036814f97b522fbece5130634",
+      "statement": "AppPreferences 四个字段：language（14 种语言或跟随系统）、defaultPermissionMode、archiveInactiveSessions（0/1/2/7/14 天，0 表示关闭）、appearance。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/rpc.ts#L98-L103",
+          "version": "repo-lines-v1:sha256:41f3cd3ce616aa38157bbf5eaa9e3b7526d4f82e71fdc322518a46f8c5113511:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTc0MGUwZTAwMGIwOTA0ZjUwMjkzMDQ0Y2YyYmY3MDg5MWI5MDU0NzY3Zjk2YmM0Y2RlM2MzN2RiOTk3YzMzOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmI1ODBlOTY0ZjgzYTQ3M2Y0M2Q0NDM4NDYyOTQ5ZDY4YjU2MDBmZGE3ODdmMTYzNzQ1ZDAwZGU4OWNiZjM2YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOGQwZWI3ODE2ZWEzMjA5MzZjZTlhYzFhMjU1YTI5ZGU5NmFmMDJhNzhlYmNjMTgxZDgzNGEzODE5ZjQ2M2ZkMCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_a7b1b185125a425c9078793e7e875d7d",
+      "statement": "三个 shortcut RPC 都返回全量覆盖而非仅改动的那条，渲染层 store 直接用它换快照；主进程侧写操作会触发菜单重建，使菜单上的快捷键文字同步更新。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/rpc.ts#L1207-L1218",
+          "version": "repo-lines-v1:sha256:485da43c1f678b8f8f3546909dbb17a27141915ce17c3fb352ccdfb408f5ec8e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyODE5ODI1ZDVmNzNhZTZiNWE3NGJmZDQ1NTMzNjk3YWMwYjhmZWIzYjA5NjI4NGUwNjkxMzQyZWFmNDZmMjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjliNjJmNjBkODU5MGE1NzljZjQ2ZjhkNjczNzhjNGM1NzJiOTYyY2VjY2RiOTBjN2E1ZjdiNDJiOTYwNzgyYTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc2ZmQ0Y2RkNzE0ZTY0MzFhY2Q2ODU5YTg2ZmUwYTRlMjQwMGJkOGI4NDFlMDU2YzU5NzY0ZGQ5MmY4MDNhYzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc1ZWZlMThjMGNhMDc4NGU0Y2UyOGQ1YmM2YTA0NWE1ZDY4MWFkODNkYjNiNGZkNGNlZTk1MDY5YjliOTdiOTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f2e8d61922224c0c92da821e920f09fa",
+      "statement": "ProviderModel 的 thinkingLevel 是模型原生档位，thinkingPresetId 指向 reasoning.ts 的一个预设；没有 presetId 时 thinkingLevel 被无条件钉住，有 presetId 时由预设提供可选档位与映射。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/rpc.ts#L769-L783",
+          "version": "repo-lines-v1:sha256:ab48d62b16a4dce1c64c3af585cfff3762b2bbbaec71b5c5540fdb28e348e4ac:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlmNDMzOTk0MmVjNGUwZWNmMjJlYzk0MTdhMWY0NjUyY2M5MzZlNDRlNDhhNDIwZTBlZmJhNGNlZjY5ZjJhNDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRhNTcxYzIxMmE0MDE3YjQ0N2U0ZmI5MjNiYTE1MTQ5ODgxYTA1YWY3NmUyZGViOWQ0Mjg4YmZjZDVlZjk3ZDAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d7ea19e348be4b9d9a9ee09596ca22f7",
+      "statement": "ProviderUsageWindow 用 name 与 i18n key 对齐（fiveHour、weekly、monthly、balance），utilization 与 remaining 二选一，分别对应百分比窗口与余额窗口两种形状；resetsAt 为 ISO 时间或 null。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/rpc.ts#L799-L823",
+          "version": "repo-lines-v1:sha256:25fbeeffa439e95f20cff0acf5f53738883a6db2bf025d7b1e80cc91fd24e942:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc4ZmYyOGMwMzE5YTBkYjM3Y2JhZmVmN2FhM2RjMmRlMzlkZDVmYTJjYWZjNTFjMWFhMWE5MDcwN2I4M2U5Y2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYxMWE2OThkYTI1MDk2NTYwMWJmNjcyNWU4ZDgwNTlhODBiMDJiMzM5OWU3MjFhNWQzYjhkNzUxMjg3OTJiNTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZlZWFiNWQxNjg3Njc2MDY2MmZlZDJlZjY1Y2UxYThlZDQ4NjUxZjg2ZmU3YWQ3ZDZkNmVmODdhMTE4MWJjNTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b94b6495e3a5450c9a5657fc1b635fba",
+      "statement": "shortcuts.ts 定义 ShortcutBinding（modifiers 加 key）、五种修饰键、ANY_SHORTCUT_SCOPE 常量、CommandDefinition 与 CommandCatalog；SHORTCUT_MODIFIER_KEYS 列出 17 个单独按下不算快捷键的键名（alt、capslock、control、fn、meta、numlock、os、scrolllock、shift、super、symbol 等）。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/shortcuts.ts#L1-L59",
+          "version": "repo-lines-v1:sha256:88aa3470046735a7cb5c41fb9a1ae09e8c87f6ca44752e27677b9a2a600b995c:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBjZWNhYzIyNWZiODdlYjYwNDhmODFlZWZkM2FmZjFjZmI1OWI4NTAxZDdiNWMxYTAzNzQ2MDJiYjg2MDkxZjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY0MDc4NjQ2ODEyZmVlMWNmMjhkOGUzZmQ5ODNkZWU1NjAwOWJmOWQ2Mzk4MmZmNmRlYWQwYWY4MmRlM2FlYjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f5a9884843934bf9875bd34ef72ff478",
+      "statement": "command-catalog.ts 是唯一的命令清单数据源：约 30 条命令全在 workbench 作用域下，末尾用两组 Object.fromEntries 批量生成九个标签位与九个侧栏位命令，主进程读同一份目录生成菜单加速键。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/command-catalog.ts#L9-L153",
+          "version": "repo-lines-v1:sha256:5d79a9b148c9f6d0a0ed7bab958fb0f3fbb0b313770653e62f94a3abdb980970:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQ1LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJlYmJjYWVjZmY2MzI2YTE0N2U0NmI3Zjk5YmI5OWIzNmY2MmRhMWVkZGZmN2I0MWM0NGU1ZDZhNmUwMjM2NTVjIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIxM2NjMWE1YjE1NTNkMDZjZGFmMTk4ZWIxOWE3YWQ5MjAzMTczYTY5NzZhMmI0MWQ2ODlmZDkzMzdjYTlhNDVkIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIyODllNzM0YTBmNGY2OTU3NmQ2NGFmMDJkZDU1OTg4ZjM3NDQ2YzBiYjA1YTVmZGZlNjZkNGM4N2E0MTY1YWZmIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_5d4ce3acf73c44449619dffa5e07ea6b",
+      "statement": "PROVIDER_USAGE_URL_PATTERNS 是九个已知有用量端点的 baseURL 片段白名单（kimi、bigmodel、z.ai、minimax、deepseek、siliconflow、openrouter），不匹配的 provider 从不发试探请求，且必须与 src/main/claude/provider-usage.ts 的查询实现保持同步。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/provider.ts#L40-L61",
+          "version": "repo-lines-v1:sha256:c99cc562c8ca1c929f3117dbd9ceaba4e09ef234d6e98174a70035b6e6cb0e1c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUyNjIxOWI5NmZhZGE2NmZlYWY0YzE2ZjY4MjFmZTkzNTczYjI5NWExNjVlNWE3YTU0OWIxNWFkMzJjMTIzMTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e95e9c2011c8484dbc48885c1696ad29",
+      "statement": "provider.ts 定义 PROVIDER_ID_PATTERN（^[a-z0-9][a-z0-9._-]*$）、PROVIDER_API_TYPES（anthropic-messages 与 chat-completions，缺省前者）与 PROVIDER_MODEL_REASONING_LEVELS（none、low、medium、high、xhigh、max）。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/provider.ts#L10-L36",
+          "version": "repo-lines-v1:sha256:3fe88f06ac648dd7232b94ec906cddd70b412e7a1e479b4040a8525e905c73e3:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiYjEwYjBiMjgyMGE4YWY4OTU0NzQ5N2U4NjdjZGYyMDQ1MzI3MmE0YzRkYTVhOTBjYWU4N2U2YmE1NzhlNTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA1MWU5MTk1MzAyMmZiMjBlNTA0ZTg1MjFmOWJiZmJhNTE4Y2VmZTNmNTYwODA0NzU5ZWY1MjczYTY1NTk4ZWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU1YzFkZDQxZmUwMzQwMjkzOTY1ODE3N2VmOThhOWJmN2Y0NDEyZWE3MDg5N2M0Y2Q1YTdiY2ZkZDk5YWZmNzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUyNjIxOWI5NmZhZGE2NmZlYWY0YzE2ZjY4MjFmZTkzNTczYjI5NWExNjVlNWE3YTU0OWIxNWFkMzJjMTIzMTcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_92948f960265403d9f0144115dc6e803",
+      "statement": "reasoning.ts 的 ReasoningPreset 含可选模型档位列表、默认档位，以及 anthropicParams(level) 与 chatParams(level) 两个返回上游实际参数的函数；文件头注释说明两处对 ZCode 的刻意偏离：gpt 系列在 chat 上游只发裸 reasoning_effort，未知模型的 anthropic 上游发 thinking.type: enabled 而非 adaptive。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/reasoning.ts#L1-L39",
+          "version": "repo-lines-v1:sha256:dfd3300f9c82c3acbdee26b7fe155f2f32536a5483855cf1cf74afe6394d8198:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNlNWZhMjM0YTE1ZWU1YzRmODAyZjZlZTAxM2ZhYWU3MzU4MWU0ZTI3NDUzODhjOWE3ZDMxMDExYjVhNDg2YjEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d88f4a80871e4ed095c6774540106e01",
+      "statement": "matchReasoningPreset 的匹配顺序是先按模型 id 的模式（聚合器 provider id 匹配不上时仍能拿到家族合适的预设），再按 provider 的模式，最后回落 generic 预设；GENERIC_REASONING_PRESET 是一个纯开关，anthropic 侧用 enabled 值。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/reasoning.ts#L482-L496",
+          "version": "repo-lines-v1:sha256:cddd1fd48eaeb8b833efeb6f3e4ceebd96831a6cffee96a98ee6e0a4ea743d67:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAzYmE5ZThlYWUyNzhkYmVjZjg3Mzk3NjQ3YWZkNmQ3YmFhYzFjODg0NzNkODBlZTdmNjFmNjk1ZTE4YWYyZTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMzYmI5MWNkZTIzNDcxMWMyNWVmZmU2NDE1YzAwZGE0Y2Q2ZmFlOTA4ZDc2N2JhN2ExNDE3NGRmY2FlZjZkZjgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_53eb1940ded84a41a63163c1123bb880",
+      "statement": "claudeLevelFor 与 modelLevelFor 是模型档位与 Claude effort 的双向映射，取不到的档位分别回落到预设默认档位或调用方给的 fallback。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/reasoning.ts#L501-L521",
+          "version": "repo-lines-v1:sha256:d8d2a7b2dbd922ffb9e8a5a0a2cf9cb57c0b93d229cd0d7906ae6c0429195bc2:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQyZjJiODc0YTAwMmE3ZDE2MTUyMjQ0NGRmZDg3ZmNjN2U2ZTk5OTE4MmZhOTdmM2QxNTE1NzgzMjIwOGU2MGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEwOWU4NDMyMjkxMGIwMzZmOTcxYjE1YWQ5YjZjYjMyMGZlN2RlZDljOTc4MWRlZjdkYmIwYzY4N2QxZTBiZWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e29ef129f63b4eef931dbb6a56f5168e",
+      "statement": "logging.ts 只有线上格式类型：AppLogLevel 五档、WebviewLogEntry（level、logger、event、message、context、error）与 WebviewLogBatch；SerializedLogError 带 componentStack，使 React ErrorBoundary 的 componentStack 能进日志。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/logging.ts#L1-L27",
+          "version": "repo-lines-v1:sha256:78be466783987a8255a5b51099e98f060df3af9067ae0634f576410eab0694f0:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYyNDlmM2YwNjJkNWQzMWJlYTY5MTMwMmRkMmEwZjdjYWQ1OTdmMThiMmRiZjBhNmQ0NDBhM2IzYzI0ODViY2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}

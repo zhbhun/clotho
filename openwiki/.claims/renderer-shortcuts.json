@@ -1,0 +1,300 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:a177596c6206f5b554c72107206135c638ed8883aab50a1379f1d0b85b8ff05e",
+  "claims": [
+    {
+      "id": "claim_043f5846937e4ad2a63106b23794d7fb",
+      "statement": "commandCatalog 是唯一的命令清单，把命令 id 映射到 CommandDefinition（title、description、scope、defaultBindings、allowInEditable、allowRepeat）；workbench.sidebar.toggle 等命令挂在 workbench 作用域下，workbench.tab.activate.1..9 与 workbench.sidebar.session.activate.1..9 由 Object.fromEntries 批量生成。",
+      "evidence": [
+        {
+          "resource": "repo://src/shared/command-catalog.ts#L9-L24",
+          "version": "repo-lines-v1:sha256:0d9bd365732da80e201398290f5aae4076173892a61b963b0e4f995294f21cb7:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImViYmNhZWNmZjYzMjZhMTQ3ZTQ2YjdmOTliYjk5YjM2ZjYyZGExZWRkZmY3YjQxYzQ0ZTVkNmE2ZTAyMzY1NWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI3ZjllNmI4ZmE4Y2Y5YTJjMGMzYjUzN2Q4ZDRjMzRmMmUwYjI2MDBhNTBiYjcwZGNiYjc5NmYxMWZlMDA4ZTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI4OWU3MzRhMGY0ZjY5NTc2ZDY0YWYwMmRkNTU5ODhmMzc0NDZjMGJiMDVhNWZkZmU2NmQ0Yzg3YTQxNjVhZmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYxZmRkYmJkM2IyMWI2YTQwODVmZmQwZGMzNjI1YWY2MjA4YTJkZWZiZTcxYzlmNTYxZThjNmQzMTNmY2Q1NmUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_65e137f146884a4db4a308ca9e91302f",
+      "statement": "validateCommandCatalog 在运行时校验目录：命令必须声明至少一个作用域、ANY_SHORTCUT_SCOPE 不能与其他作用域组合、默认绑定必须通过 getShortcutBindingIssue 校验且同命令内无重复签名、默认绑定之间不能有 hard 冲突（用空 overrides 调 findShortcutConflicts 自检）。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/shortcuts/catalog.ts#L18-L51",
+          "version": "repo-lines-v1:sha256:20d2154d6ee4abb0e2eec3a24af3465e2b6e3414ac13648a62fd5141e56e3302:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZmZDZlNGE0YTI1OWEwMzU3Yzg5MmViNjViZjk0MWEyODhlN2I2OWRhNjJlYmRkNmYzMTA3NmE5Yzk4NmM5ZjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgxZWNkZDRkNjE0ZDg1Mzg1ZWIyOTlkMzk0ZjY0ODM3ZjE0Mjg5N2M1ODBkMjQ3NDA2NjZjYzE5ZjNiODhhNmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f15f01e7dfbb4d9591513605e4c25937",
+      "statement": "normalizeShortcutBinding 把修饰键按 MODIFIER_ORDER（primary、ctrl、alt、shift、meta）去重排序，键名过 KEY_ALIASES（空格映射为 space、esc 映射为 escape、return 映射为 enter），使书写顺序不同的同一绑定归一后相同。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/shortcuts/bindings.ts#L75-L82",
+          "version": "repo-lines-v1:sha256:df762216daee1bcf087661bff55d4ed8b29ac1b2d58c43eb0fa7458857cc82d2:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjdlNmQ0ZWZiOTQzMDE2ODc0YTI0ZjdkOGY3N2RkYTFjNmUzNmJkNGEzMTM0ZTJlZGRkODhiMjQyODBhOTQ2MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGZiZWJlZGIwOWUyYmYyYzRlYTBkOTM3YThhODY3NTI0NmI5OGFjZTAxNGU0ZjZiMmJjMGU1MzgyNDMwMzgwMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWEwMzIzMWJhNjUyZmMxZjIyMzk3MjRkMTFlNTlmNzExNjBiMDZmMWNjNjAxMDMzYmRkMGNiYjY1MTE4NzFiNiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_8f2620488af94d84999f39412bee95bd",
+      "statement": "resolveModifier 把 primary 在 mac 上解析为 meta、其他平台解析为 ctrl，所以目录里写 primary 的绑定在 mac 上是 Command 组合键、在其他平台是 Ctrl 组合键；bindingSignature 生成签名时刻意排除 primary，只用其余修饰键与键名。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/shortcuts/bindings.ts#L84-L98",
+          "version": "repo-lines-v1:sha256:f7b50e9f35115e07faff448257614ab5bb53f262206f590fd648dfa50c647c2d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEzYWIxMjRlYWM4NGMxMDJjZGJlYzgwMmU5ZDgwZjI3OGI2OWJlYjRkODgxZDI1YmIxNmJmYjhjOTFjOTJlMTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjczZGM5YzZiMjZiNGUzODc4ZGM1ZjliNzI4YjhiZWQ2MDBiMTI5NTU5NTg4OTI2OTk1NDEwNzRkNDRhYmViODUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_855513e93715470bbb707c7ce85e2f9c",
+      "statement": "shortcutEventKey 处理 mac 上按下 Option 时 event.key 变成所键入字符的问题：无 altKey 或非 mac 平台直接用 event.key，否则用 event.code 反查（KeyB 形式直接取字母，MAC_OPTION_CODE_KEYS 表覆盖数字与符号键并按 shiftKey 取第二项）。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/shortcuts/bindings.ts#L64-L73",
+          "version": "repo-lines-v1:sha256:cbbbebb9ee2c38187c2d61e510d450f644711b4d9e8573052e243b81aca25b60:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyMTc4YzRiZDI3NGVkYTM5N2E2ZGY3OTYwYjhjNTU5M2Y2YzJiMjAwYTgwMmZlNWNjOWNiMGRiNDhjMmE3ZmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY1OTYwMjc1Y2E4MjY2OThjZGE0NmIzMmVkNjZmN2M4YmViZDM2Mjg2OTRkOGE1ZThmMjZiZDE5MzA0YWU0MmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFhY2FlMmIxZjY2ZjYxMGI5MjgyMzNjOGZmYTU0NzVhMWQ1OTE5YzlkM2Q0ZWExZWJmMDIwN2ZlOTIzNGU2MWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b94f102c7f984329881576650e16090d",
+      "statement": "shortcutBindingKeyLabels 按平台选择修饰键显示顺序（mac 用 ctrl、alt、shift、primary、meta 顺序，其他平台用 primary、ctrl、alt、shift、meta），键名查 KEY_LABELS 表，未登记键直接大写；formatShortcutBinding 在 mac 上不加分隔符直接拼接，其他平台用 + 连接。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/shortcuts/bindings.ts#L138-L157",
+          "version": "repo-lines-v1:sha256:b13db81fa982a7e52b514bbad3268d484bb67eee9883c1fe92160eba9b4f3b23:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY5NzhlODM2M2U5NjgyYjQ2YWY2ZDJjNjM5M2I2MzhmMmVjMjIzMzcwOGM2OTU0MjE1OTlmZDQ4ZWI0MzBiZTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY1MDBjNTVmYzllNjhhNDg4NGE0YWRhMWU5YTliMzFkMTVjZjE4ZGRlYzM3MDVkZTBlZWViMjJlMDI0ZjE4YzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fb439caea85a4ffd9ee2ca233c01b352",
+      "statement": "createCommandRegistry 维护 CommandId 到 {enabled、handler、token} 的映射；register 要求命令存在于 catalog 且同一命令只能注册一次（重复注册抛错），返回 {dispose、setEnabled}，dispose 用 token 校验后才删除，setEnabled 在值未变时跳过；每次变更递增 version 并通知订阅者。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/shortcuts/registry.ts#L10-L64",
+          "version": "repo-lines-v1:sha256:431097a6abc52c078e1d2020547efb905f2b37c41906ad6450ac965f53c6b770:eyJzZWxlY3RlZExpbmVDb3VudCI6NTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlYzEzMmRkZjZjMmRlM2NhMjQxODY3Y2UxZWI4YmEyYTNjNTk3YjNjNjc4NTJjMWZjNTEwZDg5NGEzOGIyNGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE3YjIyZWJlY2FkOWJhOTZjN2Y1ZGI0MWU3MTU3OGQxYzRiY2FlYjIxNjVjNDM5OTc1YzA3YzRiNDA4MmVmMzEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE2YWRlYjg1YjdkN2E5NTZjNThiYTY1N2RhMmM1NTdjYjc0MjYzOTA0ZjUyNDZiOTQ0ZjU1YjUzZGYyNDIyMmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b58f4579fbdf4faeac6c27e5a377b33c",
+      "statement": "getEffectiveBindings 用 Object.hasOwn 判断 overrides 是否含该命令：含则用 overrides 的绑定，否则用 catalog 的 defaultBindings，最后统一过 normalizeShortcutBinding；空数组因此是合法的 override，表示清空而非回退默认值。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/shortcuts/keymap.ts#L10-L23",
+          "version": "repo-lines-v1:sha256:49e9929844322e7463a07ddce7d397a96e0f6f9141cd85b4b9c1f36ff1d90358:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjYWViMzk3NDVkMTljYzk5OTM5MTE0Y2UxZmQyODg3MWMxNjY3ZDU3OWI5OTZjNmI3ZmIwOGI4NDJiYjcwNDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIwZmM1YWFlZmEzMjUzZDlhZjU3MDgzZGZjYjQwYmIyYjJmNDhhZWMyMGUyN2QxNzhiYmE5ZmY0NjZkNzA1YTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_41a85bbf74df488a8c8d9539c5a94a45",
+      "statement": "scopeMatches 规定 ANY_SHORTCUT_SCOPE 恒真，否则当前作用域等于命令作用域或以其加点为前缀时命中，因此命令作用域是前缀匹配（workbench 命中 workbench.sidebar），当前无作用域时只有 * 能命中。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/shortcuts/scope.ts#L3-L6",
+          "version": "repo-lines-v1:sha256:4cac90a2ab99f6ab364f91379b70f384f1aaee8e2071de45ac55393c9f69f617:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDg1NDcyOWQ0MTY3NDMzNjIwYzI2YjY2ZDUxNjc1MmQ0YWEyZDM0YTcyODA0ODk2NjMxZjJiYWIyNjM5MGQwOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjIsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTk2MTdmMTU2ZGVhOGE4NWY2NDkyMWQwMTE1OGU4YWMzODRhYTI0MWIyNmY2ZTZmYmJmN2M1NjU2YjM0MzE3NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDBiOWRkMjJiYWY4NGE0YjU4MDUwNmYzM2UwOTQ0YTcyMDgwMTRiMDE2MDU3YTgwYzE4NWY5YmIxYWE0YTI4NiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_6537f2da8c074069b6b15ccb55c0884f",
+      "statement": "createShortcutScopeManager 维护一个帧栈：activate 压栈并返回退栈函数，getCurrent 从栈顶开始，若该帧带 owner 就在全栈中沿 token 链寻找 owner 是其后代的帧并一路下探，以此处理 React 卸载顺序与作用域嵌套顺序不一致的情况。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/shortcuts/scope.ts#L13-L74",
+          "version": "repo-lines-v1:sha256:0079e7813c598e29e325b47de77fb7de564b38f6f0cc59057aaac76df921787e:eyJzZWxlY3RlZExpbmVDb3VudCI6NjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE4MjIzM2UxOGEyMDEwMDI0ZjY5N2QyMzFjZmExMWU3YzNhYzZiN2RiYTUxMWQ4OTczYWM2YTEzMDAyNDMwNTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRkY2ZlZDIzOTM2NjI5ODE5MjI4YjJjNjgxM2M3NThjMDljOTUzZTJjMzg0YzI5Mzc1ZTQ0MWI0ODI4ZWFmMTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY5MjNmZWYyYWU2ZWMwNWFhOTdkOGNiZWI5Yjk3YzkyNDZiNWE1YjZmYjkzMTdjMjBmNWVjYmNjMGU0MzVlNjEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4808aaa545e94e1bb685b57fd9f16909",
+      "statement": "scopeDepth 给作用域一个深度值：ANY_SHORTCUT_SCOPE 为 -1，其余为点分段数（workbench 为 1，workbench.sidebar 为 2）；deepestMatchingScope 在命令声明的所有作用域中挑深度最大且命中当前作用域的那个。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/shortcuts/resolver.ts#L31-L33",
+          "version": "repo-lines-v1:sha256:8ccc96f22296ca43ce643731563cd9f9daa90fd76f0b33d263fbb5bb5e198848:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYmQxYjRiNzhhZmQzMmEzMTRlZGUwMDg5NTdhMTQ4ZjBhZWQ5MTU5NTMxNGM5NWVmZWQ3Y2RjODlkNDczNjA1YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTMyMTdmNDE1YjRiMzlmNDYwMjExM2YyMmFmOWNmODE1MjJmODlkNmJhYzRhZjIyNGVkNGYxZWJmNzcwYzZkMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTlmYTRiZmUyNGJmZjU1YTA5OGNkYTlhN2UwOTQxZTNkNTNiZWUzODgwN2I3MWY1MGE5OTE5ZjFhY2NkMjNiYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_936f3b89ba114dd384b1fee81a5e2e83",
+      "statement": "scopeConflictType 判定两个作用域冲突类型：任一是 * 或两者相等为 hard，一个是另一个的点前缀为 shadow，其余返回 null 表示不冲突。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/shortcuts/resolver.ts#L44-L50",
+          "version": "repo-lines-v1:sha256:96a4a518ea7ef6b4df07722949df51cd772c79fa3197716e0dc6d91655bf4f06:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjdmZWVkYWY5MGIyMDlmMzM4NGE4NzhlOTE4MDE1N2JhNTgxNmZmMjcxMTZlOTU3NTljZGVmZTE1YzNjYTM2YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWQ4ZjM5MGY1OThkNGI5Mzg1NGViMDQ0OWEwZjAzYTNjYTNhOTJjZjY4MDVlOGU2MjcyMWYzOTA2MThlOGRjYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2E4NTM5MGU2MGI1NTZlZTZmNTljMGUwOGM1YWRmMTkyZTA5NDg0ZDNjNTFmNDc0ZjE4ZTE4MzcyY2E0ZDkwNCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_ec489f8b318845549bcae6a9a8da8c93",
+      "statement": "resolveActiveBindings 在捕获中直接返回空数组，否则遍历目录跳过未注册或 enabled 为假的命令，用 deepestMatchingScope 算匹配深度，按绑定签名分组且同命令同签名只取一个；组内若有候选匹配 * 则整组丢弃，否则取最大深度且深度最大的候选必须恰为一个，否则整组丢弃——无法唯一确定赢家时该键位完全失效。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/shortcuts/resolver.ts#L94-L148",
+          "version": "repo-lines-v1:sha256:af12c84650864861906f356e962e657e211a82d5967fd4d566a612b5b23383d9:eyJzZWxlY3RlZExpbmVDb3VudCI6NTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1Y2JiOWUzZGQ3YWY3MjYzOGY0MzE4NWFiM2RhZmMxOWRhMjcwMGYxYTUyYjA0NTRhMGY2ZTg1ZWM4MDc5MjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ2NTAzZmU3YzE4N2IyNTA4MDg2NmNkNjI5ZGJhODliOWM5NGExZGIyNzY5NzkwYTRiNWJlNmQ2Y2E2MmQ5MjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_91157b3d040346d6bb8a0b5649063848",
+      "statement": "findShortcutConflicts 扫描全目录找签名相同的其他命令，对两边声明的所有作用域两两求 scopeConflictType，hard 压 shadow（任一对为 hard 即整体定性 hard），返回 {commandId、type} 列表供录制器使用。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/shortcuts/resolver.ts#L52-L92",
+          "version": "repo-lines-v1:sha256:720a34d4200be0ca8d42dab55e9741f7e6793ba5053293863b92006acd71372c:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAzZWI5YzFlOGU1ZjllZmRjYjMwMGFjNWRjMGM0M2Y4ZGJjNDgyNDQ5NzEzZjdmNjEzYWVjNGU3YjNlZmUyODciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ4MDAzMmZkZGViNzBmMTg0NjBlM2JiZGEyMDRmYjg3ZmVkMmU4ZTQ1N2FkZGFkOGFmZDc2NTA1NGY2NGRhODMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM1ODcyNTY4ZTFkZWE1Y2Q1MjZiNjc4MzFlODgwZThmY2VjOGI0ZmQ0NjNhZDFkZDI1NWUyOTllNjViNjY2MzcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7b75b4b7f7d24182b31a8b3c61800593",
+      "statement": "createShortcutOverridesStore 的 initialize 只在未成功加载过时执行并复用进行中的 promise，失败时把 error 写入快照但仍置 isLoaded 为真以区分加载失败与仍在加载；mutate 先 await initialize，成功后发布深拷贝快照并返回，失败时合并 error 并向上抛。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/shortcuts/overrides.ts#L28-L86",
+          "version": "repo-lines-v1:sha256:a843872c78e46d58bc55e0703de37e341e59b64d3807eb3e36bd50e69111f3bb:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIyYmY5N2QwYjk1OWMzZjUxZTliMzgwZTgwNTk5OGQ2MjMyZWEyNDg0MGIxOWNiZTFkZWE2ZTYxMjAyODA0YjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRjN2UxMzUwYmYyMDUzYjVlMmM2YTY3MjVhMjA3MmU3ODljMzlhNjVjZjVkMDE2NTgwODFmMTRjNDAwZGRkZjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJmMTE5NDIwZDA4OWI2MTgzN2ZjZjY4MTFmOWMxNTZmYjkwODg1YzIzNzFmYjcyNzgzZGJmMjc0MjliMjI2NmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_87762760ff0f458caeb4cb6f5722ca4b",
+      "statement": "desktopShortcutOverridesClient 在非桌面运行时 load 返回空对象，而 set 与 reset 调 requireDesktopRuntime 直接抛错；三条 RPC 为 shortcutGetOverrides、shortcutSetOverride、shortcutResetOverride。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/shortcuts/desktop.ts#L11-L24",
+          "version": "repo-lines-v1:sha256:b501d087c3d3cd989af0d7519d7fb02b004115b462da12154ecdd8ec13ab1262:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwZDA0YzQxNjYyMGEwMWQ3ZjVhN2Y0NmYyYmJkZDI5NTg4OTk2MjU5MzEwOWUzODM3NDUzOGMyZTgzYmExZmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYwNjQ0ZTczMGY3ZDljYzE1OTQ3ZTEzOThmNzc1M2VhZmNlZTFkNzc4NWEwOGVhMDI2N2E0NmEyMDJkZTcyOTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_eb26b4f15af04a0883844fe5ef977f0c",
+      "statement": "主进程 createShortcutStore 用 tail 链把写入串行化以保证并发 set 不互相覆盖，先 persist 再更新内存；set 逐个绑定校验，非法直接抛错；persist 写临时文件（.shortcuts.json.<pid>.<uuid>，mode 0o600）后 rename，而非原地覆写。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/shortcuts.ts#L143-L189",
+          "version": "repo-lines-v1:sha256:5d5998e32548caa7076ac8b417ebeb104ef0945d273ef15c322460588b5b8382:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjliZGY4YjViMjg2NWNkMTIwNGFmY2JjZWZlYjQxNzNkMzBkOGM2MzI1ZDNlZmJmZGUyOTBiOGYwZjg2Mzg5OGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA4NDIzYTM4NTJjZTRiMjQ5ZmUwYWY2MmFkNzdhYzZjMWI3NDA0MzFlN2JkYTM2MWZjNTllYzc0YTdkMzhkMzgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b7910922a6b14468b6de51ca376896b1",
+      "statement": "bootstrap 的 resolveCommandBindings 先查 shortcutStore 的覆盖，非空则用覆盖，否则回退 commandCatalog 的 defaultBindings；shortcutSetOverride 与 shortcutResetOverride 处理器改完存储立即调 rebuildApplicationMenu，使菜单加速键文字同步更新。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L170-L175",
+          "version": "repo-lines-v1:sha256:25e82b341240a046f37dff7ffe91d82ce63bdf61744bb8b4092d9ff090b7ab5f:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGNkMTU5YTRjNjBkMWQ5MThkOGJkZjcyOWY2YjA0NGJiNWJiOWQ0ZGNjMDEwMjVkNzI2ZmQzZGZiNjM3MGJiZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5M2Y0MGUzNzgxZWI4OTZjODJkMDQ2YTA4MDY3YTExZTM1Y2RmMmYxZGZhZjI2ZmVhOTBiOGRiNjY3NjQxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTMzNjY3NDc1MTcxNzliNjkxY2ZmNWRmMmRkMjI3YmU5OGMzMmQ4YTI5NWU4MjE2MjdhNDkxZTFlNTJhNGU4ZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzJlMmNkNzBkNzVmMWVlNmJiZjYxMTZlZDkzNjgzOTcyZDNmZTI5MDAxM2VkZDFiZDBlMzM4YTUxNGU4MWM5OCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_5c93ce38906d47f8b9fc47a75fa0593e",
+      "statement": "applicationMenuItems 的 commandMenuItem 取 commandBindings 结果的第一个绑定，经 bindingToAccelerator（primary 映射为 CmdOrCtrl，键名查 ACCELERATOR_KEYS）转成 accelerator；isCaptureActive 为真时一律不设 accelerator，避免菜单吞掉录制中的按键。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/application-menu.ts#L82-L96",
+          "version": "repo-lines-v1:sha256:c926bc2fa3e0275cfa1ce735ca4901556d64cc0a137037d1ba4cbc1b26f5619a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhOWZhMTY5NTVhYTUxMWI0MzBiNThiMGY2Y2JmYzkyMTY4ZmFlOWIwMGRjZjNhNzE0NGY4NGY5MDU3YjY4ZTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBjYmUwZGIxN2E2MDhkZTJhZjQ2NTdhNDI3NTgyNjU0ZjY4MjE5ZDM5OWNkNWEwM2Y3NzgzYjI5MzI3ZDljZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA0M2E4ZTFjMGQ4MTFlOWZmNzUzNTA5MDU1YWI1NDMyMzE2MGUyY2JhNWEyOTlkNWQwYTRmMDM3ZTMxNDQ0MzUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_032adead17d643819e51c4c975a0cf36",
+      "statement": "createShortcutRuntime 先 validateCommandCatalog，再把 client 包进 whitelistClient：load 过滤每条绑定，set 先 assertKnownCommand 再逐个绑定校验，reset 透传；返回 capture、catalog、overrides、platform、registry、scopes 六个零件。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/shortcuts/runtime.tsx#L20-L66",
+          "version": "repo-lines-v1:sha256:7a0119c25f38e4bef5f2f7badc8ef9ce0bb9d0964266aaf9c996e622643f994d:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNkZTFkODU2YjJjOGYwM2ExOWYwZjU2OTQzYmI2MWFhMzk2YzA3ZGQ0YTk2MDQwNjBlZmY1NTNmYTQxMTdkYTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZmN2E0ZmViMTZlODhmNmZkODVkN2UwM2UwN2ZiY2U2NzI4NDllYzBmNmJhMDM4OGMwMWVlMzNlM2I5MmQ5OTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVlYTFiYTk5OWU3YWZiNWQ0M2VhNzlhMTA0YmU4ZTAyYzg4NmQ2YTM1NWQ2YmQxOWIwMTU4YmFjMGU2YzZhOTcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d693b4e075a2455e98eff59a6b79b5f9",
+      "statement": "detectShortcutPlatform 从 navigator.userAgent 推断平台（含 mac 为 mac、含 win 为 windows、其余 linux），无 navigator 时返回 linux，保证测试环境得到确定值。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/shortcuts/runtime.tsx#L12-L18",
+          "version": "repo-lines-v1:sha256:35a72fad83cdaafec72ab9f37f17fa1ed13b20354af6084fc2fa07b7c242cc13:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzI4YTIxM2U5OTFiZjAwNGM0NTUyMDU0ZGU0NGQ4ZWQ3MDY4MzZhODVhZWFjYjRiYjBmMzliOGViMDQ1MjU0ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzI3OGUyMzRkMzhiZGJlM2Y0NmVmOTU0ZjgwZjgyYzZkNWY3ZDRiNTBkZTE2OTNmMDExMmQ5OWI0OWUyM2NjOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMmVkMWFlYzFjZDk5NjIyZjgyZWQ3MWRmODIzYzdhNmEzY2YyZGFmOTkwZDZlMTZjZjAzNmIzMzdjMGJmZjljZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d5b4599e3ea24404ae9bd67af58acb45",
+      "statement": "dispatchCommand 在命令未注册或 enabled 为假时返回 unavailable，执行 handler 成功返回 handled，抛错则经 reportDispatchError 记录 shortcut.failed 日志并返回 failed，避免一次快捷键失败变成未处理的 rejection。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/shortcuts/dispatcher.ts#L15-L30",
+          "version": "repo-lines-v1:sha256:85916747d854be3166895942a5c6aa9bfd6743cdc29c653c4d4c4e025560655d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc0Mzc0MDc3MDRhODc5OWU5MDE0NmM2ZDhjYjlmNTg2MmIzZTY2MGNiNWQ0NDYzMjVjOTQ0MWU0ZGZiNmE1NDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRjZjk1ZjJhMmZmNDU0NDJlMTM1ZDA0ZjY2ZmIyNTRiYTcwMTBlZTMyYmU4YjNhY2EwMDI3M2UxNzdkMDlmMjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8c33a826542d41328b379cba053a77c7",
+      "statement": "ShortcutHost 订阅 menu-command-dispatch 推送并直接调 dispatchCommand，使菜单点击与键盘走同一终点；同时订阅 runtime.capture 变化，经 requestFromDesktop 调 applicationMenuSetCaptureActive 把渲染层录制状态同步给主进程。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/components/shortcut-host.tsx#L30-L60",
+          "version": "repo-lines-v1:sha256:caf072b00945829ed4b0b0c765ebb3d71377fed305caeb7cdd8ed6d56044b812:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5NjZmYmZhODg5OThkYTc0NjU2YzUwMTk0OTU2YzI1ZjA4NDk0NTc2NjBjMDA5ZmU2M2QxZTlmYTlkYzkzMWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmYWM3YjY1NGI1OTUyYjlmYzE2NTU0OGRlMjU3Y2U5NTkwNmMzZTI2ZmZkMmI1NDQ3YzMwYjE4ZjVjZDBkYTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlhYTA0ODFiNmM2OGUyNmY1OGE1N2E5ODJhMzBhNDQ0ZjU0MWQ4ZmJmN2U1NDQ5YjlkZTBiMzIyNDZlY2NjZjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUyMmJjZWE4ZDFjN2I0Nzg0ZTIwYzlmZGZkYjk5N2M3MDBkNWEyZWExMjg1ZmYxNDliZTI2ODYxNTE4MzgzZTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_258f72e7e046457e8be5a3018a31cfef",
+      "statement": "ShortcutHost 的 useHotkeys('*') 配置 enableOnFormTags 与 enableOnContentEditable 且 preventDefault 为 false；回调先跳过 isComposing 事件，要求 overrides.isLoaded 才继续（否则默认值会顶掉用户覆盖），再用 resolveActiveBindings 找匹配当前按键的赢家，最后按 allowRepeat、allowInEditable 与 isEditableTarget 决定是否 preventDefault 并 dispatch。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/components/shortcut-host.tsx#L62-L95",
+          "version": "repo-lines-v1:sha256:b3aa9f5f000a61f5db88e6e0e29106fc90c3d065b337d41e64616a7c6485c539:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZhMWNlZDI0MzIxYTE1NWEzZGY4MGU5OTEzOGMyNWJhZTYyNzc0ZjFiMzU4ZDY5YzA0ZTc3MTUyMGE0NDhmZGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2MjY3OTM1ZmM2MzM0NjVkODQ4YjQwYTRlZDY5NjdlN2I3YTMyM2Y4MWNkNTNjMTEwYWUyMTAyOTY4N2FhMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU2ZGU2NTIxNDY3ODU3NjEzNDZlMmNlNTIzNGVkMThiMWUzZWE3YjhjMWE3OWQ1MzU5OGQzYWEzMGRlNmRiM2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIzYzZiZmI3YjBmYzRmYzQwZmIzNjg0OTJmNWM5N2M0ZWE2YjNlMjFlOGM2YTBmMDUxNmQ5YjcwYTM4ZGJmMmQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c35c2fb7aa5d4859a1d675aae89dda26",
+      "statement": "useCommandHandler 把注册与更新拆开：handlerRef 与 enabledRef 在 layout effect 中刷新，注册 effect 只依赖 commandId 与 registry，因此 handler 每次渲染变化不会导致重复注册；enabled 变化由另一个 effect 调 registration.setEnabled，卸载时 dispose；命令可用性通过 enabled 选项表达，无单独的 useCommandEnabled hook。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/hooks/use-command-handler.ts#L8-L37",
+          "version": "repo-lines-v1:sha256:db23ae8f2329932a06135b8fd21f8de62670fafc186bb3bd6bebc9b9d2791910:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZjOTk3NmFlMDI0YjI1NGQ5MjU4YWNjNWU2ZTUwNmRiMzIzY2I1MGE0OWQ3YzFiNDYwNGQyNDU0NjY5MWM4M2UiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIwMDhjMjk4Njg0OWVjZTU0MzMxYjViMzI4ZDc4ZWYzYjY1NzU2OTI1YmQxMDEwOTRjZGYwMWUzZjgwMDBkZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fefde869c6de4281ac6b266268113c4a",
+      "statement": "ShortcutScope 从 context 取父 owner，用 scopes.createOwner 建自己的 owner，在 layout effect 中按 scope 激活，并把新 owner 通过 context 提供给子树；scope 为 null 表示不激活。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/components/shortcut-scope.tsx#L27-L44",
+          "version": "repo-lines-v1:sha256:1299f992211c5e3a700699ca9df28b02a7a76bd24b9d480791044124a95a6858:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwOGI3YTcxODZkMTU5ZDM3MzQ0M2I0ZDJjMjFiYTBkMGQ2OWM1NGNhYzFkMzM5MzA4YTQ0ZDVmNjQ0NzMwYmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ4MDAzMmZkZGViNzBmMTg0NjBlM2JiZGEyMDRmYjg3ZmVkMmU4ZTQ1N2FkZGFkOGFmZDc2NTA1NGY2NGRhODMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_63093721448e4d968ac23227a73a9651",
+      "statement": "ShortcutDialog 与 ShortcutAlertDialog 在打开时把 ShortcutScope 切到 overlay、关闭时切回 null，使弹出的对话框自动接管快捷键；两者都同时支持 defaultOpen 非受控与 open 受控模式，并原样转发 onOpenChange。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/components/shortcut-dialog.tsx#L10-L56",
+          "version": "repo-lines-v1:sha256:1a36a34826bae87f79f78e1b008922da20095b3a4a0d3bb6691d915c84c97786:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg4ZjQ4ODcxOTI0ZWI4ODZhMjhhYmRhNTBhYzYwNDc3NmEwZTRmMzY1NjY1NzQxNjI2M2Q4ODk5ZTYzODgyNWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFmMjY0ODAxMzVjZDA1OGI4NTVjMWQwYjE0ZDgxNDI1YTI2YTdkZGZjZDAyMGZjNTUyMzBlOTM3NWVlZTM0MDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_186bba1264b44baea92879f35c262995",
+      "statement": "interpretShortcutCapture 把原生按键事件翻成五种结果：isComposing 或按下的是修饰键返回 wait，Escape 返回 cancel，无修饰键的 Backspace/Delete 返回 clear，命中 bare-printable 返回 invalid，其余返回带归一化绑定的 binding。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/shortcuts/recorder.ts#L22-L46",
+          "version": "repo-lines-v1:sha256:0d6d82d077e03bd2f14e26a3105ec94c42f65fa7a28d1f23ffe1f0de8d49a54f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJjNDA4YWM1NzVhOWQzNWNjYjUxZDUyZjIxMThlN2E1OTdlMmNjNjY5NDM4NTc2MWE2MmZlNWE5NGQzZjNjYWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBmODE1OWM1ZmFiOTIxYzY4NzRlYTY4Yzk3M2JhOTBhMjNlMTA3ZDNkZDAxNzQ5NzdlY2FmZGEzMTlhOTJiMzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_51f3577bbc3a48b99ebc190efc467c4e",
+      "statement": "ShortcutRecorder 打开时调 runtime.capture.begin() 独占键盘并在 cleanup 中释放，随后 interpretShortcutCapture 分派 cancel 关窗、clear 清空、invalid 报 requiresModifier、拿到绑定立即 findShortcutConflicts；保存走 runtime.overrides.set(commandId, binding ? [binding] : [])，空数组即清除，有 hard 冲突时禁用保存按钮。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/settings/components/shortcut-recorder.tsx#L37-L108",
+          "version": "repo-lines-v1:sha256:8dba8ff880628750ce61c1bf0ddc27ab413b6d602d2a80aa7eeab8c7e47f1af5:eyJzZWxlY3RlZExpbmVDb3VudCI6NzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5NjZmYmZhODg5OThkYTc0NjU2YzUwMTk0OTU2YzI1ZjA4NDk0NTc2NjBjMDA5ZmU2M2QxZTlmYTlkYzkzMWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc3YTM1NzJjNzJmNzk0M2E4Y2VlY2QwMWQ5NmI3MWNiODY0NTE5ZTJhOTUyZDliOTU4YzFiNWIwNjg0MTBjMzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRhMzE2NzQ2NjdmMTlkNjlmNWU5NjhhMzAyZTQzMWE3Y2I4NGRjMGViNTE2YWYzMDA2OGYxYjhmMDE4NzNhYzYifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}

@@ -1,0 +1,230 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:17180e6a08c8802594a1fae13cd67a38f8388b4e038d7cd807255aaaa0190aaa",
+  "claims": [
+    {
+      "id": "claim_3229f026d1b94e11b391d91b94fcf1fb",
+      "statement": "RegisteredProject 持久化于 ~/.clotho/projects.json，包含 id、规范化后的绝对路径、可选名称、图标、additional_directories、deleted 墓碑标记与默认模型字段。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/projects.ts#L21-L32",
+          "version": "repo-lines-v1:sha256:45cb9a6ac19d4a720d9a438547a8c2ab5af08858bba4c61d5362ae446838ab14:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNmYjA5MGRkYzQ1MjMxOTE0NjQ4ZDk5MjViNTI1ZDgxOWQ3YTEwMTk5OTBhNTc3NmFhNjBjOTBhNTc1M2ExNzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg2MDc5MGNhNGZjMzM0NDVjNTcyZjEwYWZjOWFjMjA1YjRjNTRlZDAyZTA4M2U2YjFjMTk5YmE5MzFiMWE5NWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhjNzNiZDE0ZWM5NGZiMWFkNmNmMDEwMjFhMTk0N2IwYjc4YWZhNjlmYWEyMzZiM2ZmNWQzNWM5NjM0MDBlMzgifQ"
+        },
+        {
+          "resource": "repo://src/main/claude/projects.ts#L82-L84",
+          "version": "repo-lines-v1:sha256:f9e83511db3a26d1308144e66f1c972569e161928f04b824d46fae00a4bfd66b:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTkwZTQyZmU4ZjVmM2ZmYWQwYjMwYzQ2YjA3MWRjNjYxMzM3MmZlYTAxM2QzN2I3NzUxODM1NjVjYzMwOGMxZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTQ2YTk4ZjdhYmVmYjI1YWEzMmQwMzc4NjU4N2JkZmMwZDliY2VmM2U3NDhiNDk1YjU0NjU4OWMyYmE2NWE1ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZWQ3N2Y1NmYyZDZkY2Q2MDQ4NDU0ZWRjNmVhMTllYzhmYzQ2Y2QzY2NkZTc3MWVkYjcwOGE5NDYzOTg0NjljNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_9902bb95750743159bf400bc52fc2577",
+      "statement": "updateRegisteredProjects 按文件路径排队串行化，每次更新前用 readRegisteredProjectsStrict 重读，任何一条记录不合法即整体抛错，与读取路径使用的宽松版 readRegisteredProjects 不同。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/projects.ts#L212-L236",
+          "version": "repo-lines-v1:sha256:15d75402afd9d72232ed34767e907e7cc7f00ce80c576ac5f5ad380b756e41c5:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI4ZDEzOTg4NzUyNjRjZDc1NDhmMGU1NzliZGUyODUwOTNiNmU5ZWZhNWY4MTkxNjdjM2Q5ZDkzNmQ4NDQwNDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM0MGM1ZDNkYzNhNzczMDc5M2M4OTI3OTQ4YjU1OTY2NDIwN2Y3OWJhODc3NzNjMjE1MDA0NDMxOTYyZmQ0ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY1ZTNmNjgzY2Q1MTEyNjQ5ZWRmZDgzYmEyMDE2ZWYxYzI4NjdjZjMzZDM2MzdmMWEwMmNjYWJhNTQzZjkzZjkifQ"
+        },
+        {
+          "resource": "repo://src/main/claude/projects.ts#L281-L303",
+          "version": "repo-lines-v1:sha256:d842164e7dff9c68ec7fe3c1657d32b29c673c16beb388f1bcd4f6338c9de24e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ2YThkMmJjZjliOTg4NzQxZWU4MTRiZDM1OGQ2OTMwZmRhMGI1YTg3M2U0YjQ0ZTk0OGMxZTMyZGMzYzZjYjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdmNzMwM2JiNjFkZGNjMmQ1MjZmM2E5YzUxZTNkNTYzYWQ5NjYzNDg0YTU1ZTMwZTYzNzA4YjQxNTRlNGUxZDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_94862ccc196c4998b01414e31a8c71e9",
+      "statement": "同一路径最多存在普通条目与工作区（带额外目录）条目两个，条目类型由 isWorkspaceEntry 从 additional_directories 是否非空推导，从不存储。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/projects.ts#L94-L100",
+          "version": "repo-lines-v1:sha256:b3bdf649236a3dbdad2a6db80664b5fff844f18e927ea14f559067ab33a96d73:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWFmMjJjZjA3MzI1OTJjMjQ3MTQxY2JlNjFlZmExMTAxMjYxMmY1YTMxMjJiOWFmOWJiYWY1MmY1NzI0ZDE5NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjVmYTliZmVmMjIxYjJjMTkzYmQzNzY2NDZiYzI2MTU5Y2EzYWU1ZWJlZmM5Zjg1ZDZhZjQ3MWM3NzgwYzU3NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTVkMTQzNjRmODhiOTg2MDFiMjdlMmFhNzRhZjUzZTVlOGMyYzc1YzQ3MGYxOTQ5Y2RhZjFjN2U4OTEyMTljMiJ9"
+        },
+        {
+          "resource": "repo://src/main/claude/projects.ts#L98-L100",
+          "version": "repo-lines-v1:sha256:9d7061be0ff7fc2ffbe5d7d078a065d4f80b551faabc31695d1827c1940f472f:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGI3YWNlNjdmNWE1YjQzNTNjZTc2NDJiYzVlN2MzMDRjOGZmMzQzMjEyYWYzOGYxOWI1ZDk0YjMzYjZlOTA3YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWQwNDRlOGY2MjFiZWM3NzgxMzRhMGJmZGIxMzA0YzczZDQ0NDA2NzlhNDdhMDU0ODE2ZDRhZjBiMGQ0YTQ5ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTVkMTQzNjRmODhiOTg2MDFiMjdlMmFhNzRhZjUzZTVlOGMyYzc1YzQ3MGYxOTQ5Y2RhZjFjN2U4OTEyMTljMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_a22cd822ebf747bca3e95f6314772c4c",
+      "statement": "工作区条目的 id 由 projectIdFromPath 在路径 md5 前追加 #workspace 后缀得到，mergeProjects 用路径加类型的键分桶，使同路径的工作区条目与普通条目互不覆盖。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/projects.ts#L392-L418",
+          "version": "repo-lines-v1:sha256:3bf80220892847b25e98f7229d4846030693068f89f439185c25b85feb4092d5:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ5NjExM2ZkMmMzMDg3YWI0Mzk1MzNlYjJmNjEyYjFiNDMyM2FhNTdjODMyMDA3YjJjMDAwYzIwZTVjNTU1NzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhjZjNkZjkzNWFiY2M5NGRiZmJiMTgzZDAzMjhhZTM3NGIyZjAyY2UxOGZkNmZmYzEyZWFjYjgwMjEwMWUxYjUifQ"
+        },
+        {
+          "resource": "repo://src/main/claude/sessions.ts#L15-L22",
+          "version": "repo-lines-v1:sha256:7236df7a13fc6699099003bcbeb7a69891aa836e0cebfee610c79c3476062ef4:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDcyODhkNDM2MDIwOTcwMTFkMjZmMGYxNWRhYTdhYmM3MmU4MTdmNDlhNTFmMGIzOWU1MjFiNDBhNWYxN2M5NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDJmNWM2MjA4MzgzNjhhNzE4ZDk0ODViMzViZDY0MGEwOGQ3ODQzNzRlNDZhMjI0ZDliNjY0OTQ2OTAwOTdiYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTJiMDg2YzIyNDYyOTk3MGRjODM0NDM3MWM0MTM2MDYwMzNlNThiNmZiZWViM2IxMzcyZjcwZmE4ZThjZjMzOSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_be1730f95044467f8d35c7cec0168587",
+      "statement": "删除项目时打墓碑而非物理删除，墓碑在合并时抵掉同名会话发现，之后重新添加同路径同类型项目时会复用该条目并清掉 deleted 标记。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/projects.ts#L407-L415",
+          "version": "repo-lines-v1:sha256:55abd642177e81423c487e6d8e82345281ffd8141be320679c3f92809935cf96:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2E5OTQ3ODFmOGYyNzE5ZjI1MmUxOTczZDVjZTUyNjlhNWFiZDhlOGZhYTcwZGVkMTJjMjczZDgyYmUwMjg4ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjdlNTc4OGQ1ZDlkNzNkMjRhODFkYmMwYTVhNzRiZmE4MmM5YzNiM2FmOTllNTJhZjc5NmU5MGI0NjhhOGEzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDE1NDEwOGE0YTMzZWQ4MDQ1YWQ1Njc1MDkxYzFkZjFjZWI5ZDYxNDhkYTgxMTU1YWRmMjVlZWFmZGMwMTRkNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGYwY2RlZDc0ZGU0MjRiOWE0ODE1NGM3MGMxYjU4NzU5NWI0MTE3YWM1OWYxYzFmOGY4YmExNzU1YTM0ODdjNyJ9"
+        },
+        {
+          "resource": "repo://src/main/claude/projects.ts#L557-L562",
+          "version": "repo-lines-v1:sha256:b7024f9f3b00ced058d613e86b7049d07c95f0b0787e3274e4d14df1114969f4:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOWI3YjBhYzE3YzgyZjQ1Y2Y5MDhiMmQ3YmY0YTY4YmUxMDU1YmJlMmQxYTExMTBhNzc0OWNiYmE1YTQ5YTA2YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzBjMWYxODhmMTQyZWQ3YTgyNDY4MGIyMDcxNzJjNTUxOWJjNjE0YTQ4ZmRhN2NmMTY3ZWRiOGRkZjc5OTU2YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjAyMGU2Yjc0MGYxOWMxMWI5Y2JhYmYyYmUwZDVkMjJhYWU0ODBjNDlmOTc1ZWFlNmRkNzY5MTQ0MDJhNTUyNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDRiYTZlOGQ2NjgzNjc5NWMwMWRlZTkwMDA4NmM1MWYzMjJiNDg4YzI1M2U1MmJkYTVkMTMzYjFlMTE0MDMyYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_19365a512c6e4a0ba4146c07564b81ca",
+      "statement": "projectPathForId 反查项目路径，依次尝试内存缓存、注册表（经 canonicalProjectPath 规范化）与会话发现的项目，全部落空则抛出 Unknown project。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/projects.ts#L775-L799",
+          "version": "repo-lines-v1:sha256:ae6a3be7b2ac4606b624f208e3ae2b369087a9cf86aa737bacbb8314b53a3061:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI5NTFmMmZiNjQzYTE2M2Q4MjRmMGM5OGMwM2Q5ZDcwZjc4Y2Q0ZjA2NTQ2YTJlMjI3NDE4YjY5MTM1M2YyNmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRjZjk1ZjJhMmZmNDU0NDJlMTM1ZDA0ZjY2ZmIyNTRiYTcwMTBlZTMyYmU4YjNhY2EwMDI3M2UxNzdkMDlmMjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_82d5ff12a2b14f7caf4d24cdb8c331f3",
+      "statement": "createProject 校验名称非空且不超过 50 字符、路径必须是已存在目录，额外目录经 normalizeAdditionalDirectories 去重并丢弃不存在或非目录项，同路径同类型的活条目冲突即抛错。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/projects.ts#L532-L582",
+          "version": "repo-lines-v1:sha256:1c93b8a6ecd226c517bb595c3623f2a3da64bd48569e233b880b2112aaf5ef79:eyJzZWxlY3RlZExpbmVDb3VudCI6NTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIyNTNkMGYwYmExNGFjYTMyN2QyZGVmYzU4MzljZGYxM2E2OThkMWIzMjllMDI2ODNkZTRhNjZjMGJmMjg2MjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI4NzUyMTg4MTM5YmJhZjFkMjdjZmQ2OTkwYjM5Y2Y2MGFmYzEwMTc2NDIyYzUwZTRmMDMwNzM5Mzc2ZTM1YWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJmNDQ0YzA0NDI0NDM0MDAzY2IxYzNkOTA1OTY3YWZjMTljZTkzZTE2NTA4YWVkMjYyODhiYjc2MmU5ZDQ2MjIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e258f294f5e342b295e8eb0ae75d7cbb",
+      "statement": "updateProject 在条目类型变化导致 id 改变时设置 pendingRebind，待注册表写入成功后才调用 rebindProject 迁移引用，确保新 id 先成为事实再迁移依赖。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/projects.ts#L584-L652",
+          "version": "repo-lines-v1:sha256:563c4d30ac44a8dd678d12668bd8b7e1f86b2005125906c2f1bcc8666247f2e8:eyJzZWxlY3RlZExpbmVDb3VudCI6NjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAwMzk5N2E5NGQ1YjI0ZTI3ZmRhZGY0MjdiMGQ2ZTFmYjlmZmZhNDI1YzBjODRkMGY5NDdjZGEyNGRiOTg3OTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI4NzUyMTg4MTM5YmJhZjFkMjdjZmQ2OTkwYjM5Y2Y2MGFmYzEwMTc2NDIyYzUwZTRmMDMwNzM5Mzc2ZTM1YWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAwY2MyZmMwYWQyYjg1YWY0YzM0NmQ0MWMzZjk1YjFkMDc1YjcyYTExZDFiOTI0NmFkMzkwYWQ3YzA1ZDIwOTQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_042b204a6e7b4f31ad6108838e625fd2",
+      "statement": "removeProject 对存在注册条目或同路径会话项目的删除打墓碑，纯粹注册且磁盘无会话的条目才物理删除。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/projects.ts#L654-L686",
+          "version": "repo-lines-v1:sha256:5f4a561ae2e0e5e8d04e9c68dffd64e2e72425bbdb73dff675f4f76a5962125a:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIzMWIxZjRmMDQ5MjNmNmNkYjJhZTI0MmEzMjc3NGYzOTJlNTJkY2ViOWQ4YjUzMDhjZmRkZmY1YTEzZDhhNDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI4NzUyMTg4MTM5YmJhZjFkMjdjZmQ2OTkwYjM5Y2Y2MGFmYzEwMTc2NDIyYzUwZTRmMDMwNzM5Mzc2ZTM1YWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJlNzQxNzg3ZmUzYTg5MDMwOGYzNDA2N2Y0NDFmNWQ2ZGZhYWNiMDkzYWZlZDU3N2Y4MmVjOGQyYjMwYTdjMTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a73e9cc3e8bf4c3893c4d111d5d026ab",
+      "statement": "homedir 被保留为内置 work 项目：assertNotHomeProjectPath 拒绝注册该路径，ensureWorkProject 保证条目存在、名字为 work 并复活墓碑，同时保留已有图标与模型默认值。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/projects.ts#L474-L499",
+          "version": "repo-lines-v1:sha256:c8e482390e12db820fbfcf33b26652678e07998256f6caf70b3e7b16e05d0ad6:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4M2Q2OWVjNDk2ZTNhMTMyNmFkNGE2M2Y1MGM5ZmNjMDgwY2YxNTIyMGNhOGM5MGI1MTIwMDY2ODI1NDg0OGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxMWQ4MzRhNmRjMzRhMDI5N2M4YWM5ZmUxMGVmMTYwYjM4ZjI1MzYzYzhhNDQxNjEyM2NjYmRiMDU4NzI0YWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIwOWJkMmExNmI1YjU0NGJlMzE0YTUwN2ZlYTBhNmUxNTZkYjQzNTNlODM0NTM4YjcxYTFjOTllNWU1ZGU2MGYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ff283de0e8874440befc36b2972830f6",
+      "statement": "canonicalizeRegisteredProjects 把注册路径解析到仓库根，并把解析不到仓库根的 worktree 路径整条丢弃；listClaudeProjects 只对会话发现的项目过滤非项目根与 home 之外路径，显式注册的路径即使在临时目录也照常列出。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/projects.ts#L140-L157",
+          "version": "repo-lines-v1:sha256:4402094267e77de83e64c973c50729028d42de82df156b27625613e1854542ae:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkZDZlMTkxOTJkZmI2YjBmYjhkZTI5YzQyNjE4ZGNkZDQ0ZDZhMzY1MjQ5MTBjMWRkNTg1MjE4NTVhY2FkNzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ4NmUzNWM2ODZiZmM1ZjE4ZThlYzM2YzMyYjkwNmY4MGQyOTMwZGE3OTM4NDYxNzg5NWU4MWVjYmU2MTU4MjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMwYThlMzg5ODFkYjM1NGFiNTAwZDdmMGY5ZTliMDU5YTMxMjk2MWE3NmRmZDBmZWYwNjY4Y2E3NmQwOTBmY2MifQ"
+        },
+        {
+          "resource": "repo://src/main/claude/projects.ts#L441-L467",
+          "version": "repo-lines-v1:sha256:b9c8fa98a91ac5b74259e88869b2136d36c039ac22737fac7aa2986fa275549b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjViMjc4MTNlODZiNjY3YTY5YzkwZGJlNmMzNjRlMTljODZiNDY4NjY1MmRiMDZkNDI1MGQzY2ZlZjljNDc3OGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMwNTdlOTY2MjY1ZDJlMGZiMmUyZWM3ZmNjMjYxNDFkYjZkOTFmNTc2YzNjOGIwOTBmZTIyM2U2YjAyZGFjYWEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d0a02e5e50034174affab22445bcc5a5",
+      "statement": "listClaudeProjects 在合并后再 stat 过滤，目录不存在（ENOENT 或 ENOTDIR）即摘掉，其他错误保留；项目最终按名称排序，名称缺省时用路径末段。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/projects.ts#L118-L133",
+          "version": "repo-lines-v1:sha256:944e4d25878007db997758c19b03744ef02293ab912ec1cabe60aab08f8e8d1a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYwNjg4MDk0YjJjNDlhMWJiZGUxOGU0MzUwMjI3NzU4YmU1YzIyMGQyZmI1OTJjMmQ4OGZjNGMwZDI1ZWQ1ZDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAwNThkNjk2NjVlNjYwOTRhZTgzN2QwNGM4ZjMyYjBmYWExY2EzNDc1NmE2OGI1MTMzYzViODM4N2NiYjllZmQifQ"
+        },
+        {
+          "resource": "repo://src/main/claude/projects.ts#L420-L432",
+          "version": "repo-lines-v1:sha256:98a8116e70133f84a8746c67ba4e982c84114d409972750b3a4d2dc217d715ab:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY4NzM0ZjVlN2E2ZjQ4OTRlMGJiZWFjNDIyYjBjZGUxZDdjNmU1YzhmNTg2YmQ0NGMwNmQyMzIzOTQ4ZmNiYWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAzMmM3Y2ZiMWRhYjJlMGE4MGI5ZTQ3NmUwOTgxZDE0NmIxZTUxODFmMGY1ZmYyZmU4OGNjZjA5Njk0ZmZiOWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY0NTNmZjI5MGEyYjI5OTYxZmJmNWIwNDA4YWE2ZmYxZjkzZjlmYTcwZjlkMDZiZjllM2M3ODU0OWMwYjIzYjMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5ffacba8120e4872ba3b6d02e9250b6a",
+      "statement": "getProjectSessions 把未在 ownership 映射中的会话判给同路径的普通条目，没有普通条目时才归给唯一条目；listProjectSessions 据此过滤，使 CLI 开的会话出现在 Clotho 列表而不串到工作区条目。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/sessions.ts#L128-L176",
+          "version": "repo-lines-v1:sha256:6325b324cd0b73364e4d558d832f51694ef7ce08548b825669798e4954f05e26:eyJzZWxlY3RlZExpbmVDb3VudCI6NDksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNjZjdjZGVhNTFiYjlmOTI1YTFkYWE4ZTAxY2VhMmZhZDc5NmZkZWMyZGYwMjMxMjcwYjAxMzRiYWM3NTRhMjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRjZjk1ZjJhMmZmNDU0NDJlMTM1ZDA0ZjY2ZmIyNTRiYTcwMTBlZTMyYmU4YjNhY2EwMDI3M2UxNzdkMDlmMjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://src/main/claude/workspace.ts#L98-L132",
+          "version": "repo-lines-v1:sha256:b3ef9b4c5bf14108d9188d6e5a34edbf6363357ce1f5ef7effbe31ee4fa7de92:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5NGMyYWJjOTdjYTZkZWE5OTdhMjViNzNkOTgzNmM5MTg1ZGE3NmIzNzFhMmEzOTg5YmVhMmJhZTE2ODJkZWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3YTY4ZTAyNWNiZDRjYzFlYTczMzNmM2EyYmQzMGU2OTYxZDEzZjZlZGFiMjI2Y2Q0ZjI3ZmYxOTVmNWIyZTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgxZDg2NTU3ZmRjYzY3ZTJkYzg1ZWQ1MWM5MzdhNDE5MzJjNzMzMjkxMmE3N2E0NDQ1MDA5YmQyMDViNjY0NWMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c029192ca4114858841eeec2114e068a",
+      "statement": "renameSession 与 deleteSession 都经 SDK 自身存储操作转录，注释明确 clotho 其他任何地方都不许写转录；delete 在 SDK 删除后补删 jsonl 与子代理目录，查询未初始化时直接删孤儿文件。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/workspace.ts#L139-L152",
+          "version": "repo-lines-v1:sha256:a1485fb87cfca1c4d900370366d9f074a2228fcbfc865807eb8b7364c9166adb:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI5NDkzY2M0ODViYWMwOGY1ZjY2YzFmYjRmYWI4YzIyMGVmMDU5YzNmY2NlODNmZjE0Njc1NTliMGFlZDkzNDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJmZjE5ZTk4YjZhMWY1MzU3ZjJhNjJkYWQ0NmUzMmE5MTUwNDRiZjcyY2YwM2U1YWU1MDlhY2Q1NDA5Y2ZkMDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRlMzJhOWQzMzI3ZTc2ZDNiNmQ1NDdhMDcwNzRmNTg2ODYwYWQ0NWJjZDRmYWFmZjA2ODc2NzA3NjU3NmM1MmIifQ"
+        },
+        {
+          "resource": "repo://src/main/claude/workspace.ts#L160-L195",
+          "version": "repo-lines-v1:sha256:cdf615a0dc5ace648ac9d7366991b6dae8e6d850ff0bd9cf55e0b64bd25f8e2a:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhkOTUxYTBkZmZhMzkzNWE0NjJmZGZkY2U5NDMzNmYxYzM5NWIzODBjZTQ2N2YyNGQ3NjlhNWM4MDdiM2I4MjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c28e68f95ab04f4baacc4aa657ffe737",
+      "statement": "isWorktreePath 通过路径末段字面等于 worktree 判断，这是约定而非文件系统探测。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/git.ts#L21-L23",
+          "version": "repo-lines-v1:sha256:bba7e9fac160f7bc3a07c66a1b813bf5177605eaeb4722d56513c06bb6c63787:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzMwYjc3M2NjNDI2MzU1ZDAwMjk0OGI4NmI2MGIwM2Q4MDdlMGU2YjA2ODI2OGQ4ZDJiMTlkMGU5ZjAxNDBiOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmI1ODBlOTY0ZjgzYTQ3M2Y0M2Q0NDM4NDYyOTQ5ZDY4YjU2MDBmZGE3ODdmMTYzNzQ1ZDAwZGU4OWNiZjM2YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTQ4NDM5MjMxZTdlZjk2NWZjZmU1NzIzMzVhZGIzZDM0YzgzMGE0NDFjMGFlYzc2NWNjMDY0MzA0MzY0YmRhYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_8fb27f39f2bf4d8999f5675c29d0ef46",
+      "statement": "getProjectRepositoryRoot 从给定路径逐级向上查找 .git：目录形式仅在起点本身就是仓库根时返回该路径，文件形式读取 gitdir 与 commondir 得出 linked worktree 的主仓库根，读不到时按 worktrees 目录层级数三级目录名回退。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/git.ts#L25-L55",
+          "version": "repo-lines-v1:sha256:22c92c8f7693ce978014d91094bf3cddc2fbf1cefb0f2456b85cceca52291d90:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjExYzM4ODQzZjU3OWQ5YzgzZWI4OGZlYzVhNmFkNDNjYzgzYzdkZDkyOTg3NWZhNmFhMzIwNzg5NjQwMDM1Y2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjllNGU3NzlkNDUzOTZlM2ZlYmIzYTMyNzFmYmIyODRmODA2NDRjYjY5ODVjZGRkZmJjNjc4MGQzMjkyMmNhZDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNiMDI1ZmEwNmM3OTQyOTM0OGZlOWVkN2UyZWNmZTY4MzZkMWRhOTA0MThmM2FhYmM4ZDg2MWJmNmRiNDY2MzIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_662740089d3a4a62977abe777008fd35",
+      "statement": "listProjectGitBranches 用 for-each-ref 按 committerdate 倒序列出本地分支并以 NUL 分隔解析出当前分支；switchProjectGitBranch 拒绝以短横开头的分支名，以免被 git 当作选项，失败时返回 git 的 stderr 作为错误详情。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/git.ts#L113-L137",
+          "version": "repo-lines-v1:sha256:c197231c9563380415cbd97ead80f76558cb7964861816f758c0baea87435ca4:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5OWIwN2IwNmZlMzk3ZjE3ZWVlOWZlZWJhMGIxYTI2NGQ3ZGIzN2ZlMjcxNzYyOTEyMTU4ZTgwNjJhYzE1N2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFjYzM1YmFmMzg1NWI5MzM5NzM0ZGJhYWY2MGE5YWQ4YThkYzhmZDIwYTIyNjVlZGY4N2U4Nzk1OGMxN2I1ZmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://src/main/claude/git.ts#L89-L111",
+          "version": "repo-lines-v1:sha256:49e8c79891f4fe67b84b169e7780b52b3beb88f9487bd591cc7361258f1feea1:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIyMGU4MWIyNDYwOWQ1NjdhODNhMzI2ZTQ2MzgyNjgyNTg3YmEzMTYxNjE4NjhhYzM5ZDY0MzRkMTI2YmZhYmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU2NzVkZmEyYjQyMGU4NTg0ZTdkMTI1NjQwZTlkNTYzZjAyZjE3N2ExZDYwNWRkMDQwNjBhNTVlZjY3ZDhlZmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJlNWJiYjA3MzExZWY1MjJlMDIzZGM2NGU0YWI3M2UyYzAwYTdjNTMwZmIwMjU2NjkyNmU0MmQyODM5NWM1NWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2a4fe0d1911b4da4b280d6afb5515433",
+      "statement": "getProjectGitBranch 执行 git branch --show-current，命令失败或输出为空（detached HEAD）时返回 null。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/git.ts#L57-L65",
+          "version": "repo-lines-v1:sha256:2a40debb4464e5dbc392c46a95678dda5b5f99812250789790f7a4c4cde4b27a:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjE5MTU5ZTkwY2VmYzY2YTFhNWM3N2U1N2VjNmZiZjgyNmEwNDlmOTIzN2MxZmU4NjM4Y2MxN2E1NTg5NDYwZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmI1ODBlOTY0ZjgzYTQ3M2Y0M2Q0NDM4NDYyOTQ5ZDY4YjU2MDBmZGE3ODdmMTYzNzQ1ZDAwZGU4OWNiZjM2YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTUwY2NmNzBjMGY3ZjlmNjFlODEyMzNiYjE3MWRhYTljMDJhNWVhNGQyOTVkYWU2YTg5MzY3OGYxMDJlZDAxMyJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}

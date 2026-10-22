@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:ac506cb1bbe3708f0b2fcdb58625d2a35c4a80666d51d7d7ca8328b173f5ae3a",
+  "claims": [
+    {
+      "id": "claim_24a571b9f43b47c89b363e465db23ca3",
+      "statement": "主进程入口 src/main/index.ts 只负责在 app.whenReady 后调用 bootstrap，窗口、存储、日志、模型代理与服务的全部装配都在 bootstrap.ts 中完成。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L65-L118",
+          "version": "repo-lines-v1:sha256:9360c7acf578e9cf73a15d92d30ebcb2fc64f9cb49ca6974908a068a0f806f57:eyJzZWxlY3RlZExpbmVDb3VudCI6NTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5YjYzNjcwMTUxMmJjYzRlM2M4ODIyMmY4MTFiZWMwNWQzMmNhYzQ1NmZjYTJlMzY2MmU5YWZjODUyMDAzMzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg2NzExZDk4Nzg2NGU3ZjEzYzU5YWZiNGZhZWQ3Y2E4NzAyYmM1Mjg1NGRkODU0NGFlMTMwZjU1YjI1MWU1OTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFhZjBlYTNjZDU2NWJmNTgwZjk3NWEyZDMzYjgzMzYyZWM4ZjRmNzQxM2IwNzgxM2UwNTcwNTdiNDBlMzgwZDgifQ"
+        },
+        {
+          "resource": "repo://src/main/index.ts#L10-L17",
+          "version": "repo-lines-v1:sha256:e2019ac8606c1bd4009bab8e2e718e327f5d35bbd8f970dab635dbe71618c2a9:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODMwNDMzMjUwOTBhYzRlM2M5NTIwYzdjMTAxMjMwNzM2YTcwNjAzY2NhNzU2MjlmMGRmNzJkMTg5NmU2MTFiNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTdiYjkwY2UwYzFjNTVjMDNhODA2ODU5NWMxNjE2NjVmOTM5YWI4MDM3ZmIyZDk0NjU5YjcwZmYyMzhhZTBjYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWU0ODkyM2Q3MTAzY2M3OWE4OTQ0NjIzYTJiZTkyYjU3NjI5ZTY2YWVmNjI2Y2Y2NzJmNmQxZDE2OWM1OTAxZiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_dfcfea20f21342d092b7dfa8b1fc7da5",
+      "statement": "preload 通过 contextBridge 暴露 window.clotho，提供 invoke、send 与 onPushMessage 三个入口，分别走 clotho:request: 与 clotho:message: 两个通道前缀。",
+      "evidence": [
+        {
+          "resource": "repo://src/preload/index.ts#L27-L41",
+          "version": "repo-lines-v1:sha256:62fea7ba463a07b855b862378d884427e69be5a8e836fe93860a4098eb407cd2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4ODJhMTJlOWI5MWRkNzY0ZmYzMWNjNmY1NTNkZjFiZWI3YWRkYWI5MzdiMTFmNDNlMDFiMzllOTZkMzQwYjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1ODBiNzY1MThkYWU5NzlmYWViZDAyMzY3YTI5MjkyYTUwZDk3NjA5MjI1MWEzOGE2Y2UzMDg4MGJhNDI4MjUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_72019512d5954dfb8dd6ab7f36d7d0ce",
+      "statement": "preload 在任何页面脚本之前执行启动主题脚本，外观载荷由主进程经 --clotho-appearance 附加参数以 base64url 传入并解码。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/window-options.ts#L47-L52",
+          "version": "repo-lines-v1:sha256:426020ba53b6d14e5de1486668df9e72fd83bcc230bd13512c3681bc77983268:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmI1MmViNjFhYmQyZTk1Y2E2NGY5YjY2NDRkYWE5Y2NlMWU4OWUzODU1NjU5MTk0YzE5Y2JhNjM5NGQ2ZTQ5ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWYwY2RiOTcyYTdiZmI3ZWQyNDZmOWZmNjcyMzg1ZTU1ZjQ5NjhmYzExMDQzZGM1YjY4NGQ1MWRmYTMxZGJjYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2VmMjRlYjVkNWE1NWY4NmRmZGVkNWQwYmY5NTI5YWFlNWRhZTMyNjNhNzZlOGJhNjFkYmEwNDEzN2YwMDc0ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZWRiYjhmNzQ5MzdiMGE4ZTc5ZTcyMzI5MGMwNjI2OTlkNjM5ZmRlNDgwMzMzNDIyZjNlNmE2MDhhZGY2NTQ0YyJ9"
+        },
+        {
+          "resource": "repo://src/preload/index.ts#L1-L26",
+          "version": "repo-lines-v1:sha256:4f85ee6d48b645f638ea6a411725534ff597bd02796ee9bfb9caa97db4cb6a0e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ3MTNmNjk0YTFiZTUwNDE4Y2JjYWJkNDI0Mjc3ZjM4MzkzOTI1ODBhZDVmN2NjYTk0ZWE3ZGRlNjc1YmYxOTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQyOTkxMjRlOWZlNWNkOGExNTA3Y2U1MzlhMmNjNThhNDk1NTc1N2U3MmYwZTllZmNkODRlYjQxOWY5ZjBkZDMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4215ac86ae5c41c6927652cd0a0f9bfa",
+      "statement": "渲染层由 main.tsx 装配 ErrorBoundary、LanguageProvider 与 ThemeProvider 后渲染 app.tsx，后者在 ShortcutRuntimeProvider 与 TooltipProvider 内渲染 WorkbenchPage。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/app.tsx#L9-L27",
+          "version": "repo-lines-v1:sha256:5dde6095e34131cf552a2d0355570158c2484466e407660366b1ced2234eec41:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmODFmMzdmOGE1ZDRjMWRmNjRhZThmNjg1MzA0ZDVhODllMGY4N2U3MTljOTM4MWRmNzc5YmQ3MmFhYTg3ZWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5ZTk3OWJmNTFmMjdkMjk5ZDhmZjEyM2VjOGYwYTk4ODZjNjBlNzljN2NkMDUyODdhMThhNmJmMWNiNzY2YTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://src/renderer/main.tsx#L65-L74",
+          "version": "repo-lines-v1:sha256:018caafabc703f6f7c17c7fe5fe49e01ccf0bce221dfd6d94d0dc2a2ecdd6a2b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBjYmFlMWY1OTMzY2Q1M2U1ODNiZjQxMWM2OTY1YWM1YjkzNDU4YjkzNTViNmZiMjBkMDMzZGQ1ODdlMDE5NTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2ZjVmMzU2NmE2NTg1MjkyZDQ5MDFkMGRkZjU0Yjk2ZThjNWI4OGMwOTk1NDZlNGI4YjJiYjAwMGIyNzA2N2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU5MTViNDU0YjFmMGQ4ZjkzNTI1ODE3ODk2MDA0MGRiMTRjMDNjNDdjOGM5ZDg3Y2RhMjU5MjVkNDRlOTE3OTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJkZGY5NTM2MjMwYzlmMzYxMWVhNzg2MDEwNmVlODgzODllMTAyN2M1M2E2ZmU1ZGRkYzY1OTE3YjQyYTM0MWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4bb51a14db0d4e87b99dd11a95c33297",
+      "statement": "项目依赖 Electron 44、Electron Forge 7 与 Vite 8、React 19、Tailwind CSS 4、zustand 5、Tiptap 3、TanStack Virtual 3、logtape 2 与 @anthropic-ai/claude-agent-sdk，测试用 Vitest 5 与 React Testing Library 16。",
+      "evidence": [
+        {
+          "resource": "repo://package.json#L25-L67",
+          "version": "repo-lines-v1:sha256:87d4b83376bc996fdefd2b2457325bc1a43c6168f296a5711c4ffd74e1b905fa:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJhM2I0NjlkOWUwOTc1NzIyNDY2NjczNGM5ZWY3YjI1NGQ4ODUzNGY1ZDViYjcwOTg5NjA4MDVjNTUzZGMzMDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkNWNkMmZiNGYzZGY4ODQ1MTUyNTViMzk1MjNmMmY4YjU0NzJiZWVhOWY1NjZmZmNhMjA0ZGI4MDI1NjEwNDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQwOGNkZmZjZjJkZmI1YjM3MzJhZDZjZDkzM2I2MTE4NDg4OGM3MjUyOWM2NGFlZWEyZTg3NzZhYzljMDA0OGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUwMTdjYWE5YTAyMGM2MDcyZGQ2MzZjN2I4OWRmMWU2ZTgyMmEzOTc4ODcyMjMxNWYwY2Q1ZTdlNGJlZTY2MGEifQ"
+        },
+        {
+          "resource": "repo://package.json#L68-L106",
+          "version": "repo-lines-v1:sha256:9cf57e13122a2c4322c4e9a30e35f488754ff00a9e9b219caba3d3d9acb6aa6e:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlkYzRkZTdlZDM1YTIzMzY0NTM5ODY0ZGFkYjkzOGI4NzIzMzM3OTE3OWQ2MjkyYjlmZjVmNjE5YTZjMTMxNjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2NmMwYWViODU1YzY0M2EzZWQwZjA5YmRiMzQ5ODUyYmZmOTBjZmZiODk3ODFhOThlNzUwYmY5YjNlZDlhMzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgzZDBmOWVmYzkwODE4ZmYzNGY4ZmFiZjQyOGU4ZGE5ZGVhMWU5NjVlM2IwMzBjMGM2NGZkNDgxNjlhZmNkYTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFkZmQ0MzAwYjAxMzE2ODA1MDJjMjYyNzdlZmQ1YzA5YTJlN2EyZWJkODMyNWZhZDFiMjM2ZTJiYWQ1ZDNjODUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_02fb25cc6512407bb60b8b370ba47ea4",
+      "statement": "fff 的原生二进制按平台作为 optionalDependency 提供（darwin-arm64），项目文件搜索据此在原生索引不可用时退化到 rg、git 或内置 walker。",
+      "evidence": [
+        {
+          "resource": "repo://package.json#L108-L110",
+          "version": "repo-lines-v1:sha256:6a700f7190f05ad005778f5a802d75013043979183db15466876570991e146cf:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGY0YmE2MWNkMGY5MjhlZjQ5MDkxODc3MTdlMTMwNTI1NTRiNDc2NmJhYzEzYmY1YjFiYmU1YzlhNzQ5NmFlZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjdlNTc4OGQ1ZDlkNzNkMjRhODFkYmMwYTVhNzRiZmE4MmM5YzNiM2FmOTllNTJhZjc5NmU5MGI0NjhhOGEzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjYwMjRkNjg4Yjg0ZmMyZjE4NmQ2MjlkNzQ2ZDkzZjUxYjA0OWJjMjAzYzgxMzk1NThlYjg5YzcwYjQ4MjI3MyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSJ9"
+        },
+        {
+          "resource": "repo://src/main/claude/project-file-search.ts#L1-L40",
+          "version": "repo-lines-v1:sha256:20132eae35ae5657654bf339cb7e9776e6e0182dcf06d2236669fbc22f54afdd:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNiNjc4ZTJhNTMxYWJhNTFkMTQ0NDlkOTg0MGZhZjVkZGI3NTVlNjg3MzI2ZmFiNzAwODQ4MDA4YTU0ZDU4NjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzNGQ5ZTdlZDM4NTQ1OGQ5ODk0NTNhOGM0ZGY3YTllMWJmNTlkZjg2OGJhZTRkMGRjZmZlZTcxMGRmYjljYjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjllNzUxOGFkNjVkNWEyMDM3ZmExMDNiZTBkMWJmM2Y0NjcwZWE2NGExNTc2M2ZmOTE2ZWUwMTEzMWNkYWZmZTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a5aa7fd82210447d9998d273107704c7",
+      "statement": "AGENTS.md 规定 src/shared 只存共享契约、src/main 不得依赖渲染层或 shadcn、页面私有代码留在 pages/<page>/，且 README 说明包名为 clotho、版本 0.1.0。",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L1-L130",
+          "version": "repo-lines-v1:sha256:f11d3ba0f08910ca62f288c88082110494155d551457f293281fe832fb0ff551:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJiYzdmNDQwOGEyZjkzODY1NThmZjRiYmIzZTQzODU2YjUxNmNiODczYzlkZjRjNDBlZWNkOWM4ZThmN2M0ZTFiIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJiM2JiMDI0NjNhYmFmMjZmYmUyMTAwOGQyMTllOWI4YjIxMTJmMGRhYmY2NGY5ZTExMGZkNGNhN2VlYTYwODJjIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MCwicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI4YjgyOTZjYTQ3ODc3NDhlNzVhMjI0Y2NhMzQzZjM5OWUzMGVlYWVhYzFhN2FhMTc4NWRmZmU4MDc2MjVjZjE0In0"
+        },
+        {
+          "resource": "repo://package.json#L1-L10",
+          "version": "repo-lines-v1:sha256:cd7328376f4af82eecf77ba7f7cb5107d150a3499cdbbd3112ed0bce253f99e4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZmIwOGZkYTFhY2I5NTdiNjExNmJkMzc4MTFhMWZlNDFhMDE2MTFjMDYzMWVkYmY3ODZkNjg4OWEyN2E1NWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYzNjJmNmY1Y2YyZmYwMWVkZmE3NzIxZTJiNTg3MDg5NzE0ZDYyZjMwMDRkMjllYmFmNjcyY2U2ZmM1ZTQzNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM3YzFhZWNkMTdhYjFlZWRjZTUxYjc0MTY5NmY2YTMwODhiMmJiMGQ2ZWI0ZTc2Nzk1OTkwNmRmNTY1ZWRkNTkifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}

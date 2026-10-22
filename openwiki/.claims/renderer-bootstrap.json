@@ -1,0 +1,202 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:906285810025150e9e72541cc24b21bad7996193c68e216b8825804a88387111",
+  "claims": [
+    {
+      "id": "claim_9ea3aa0a474f42718be7c6ac66fb56ee",
+      "statement": "渲染层入口在模块顶层先安装右键菜单门、webview 错误日志与标题栏双击，再在 renderApp 中初始化设置并立即应用外观主题，之后才启动会话持久化、注册 pagehide 落盘链并等待 i18n 就绪。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/main.tsx#L22-L24",
+          "version": "repo-lines-v1:sha256:9d3def44a82ed48d1fd0312b5aef83458e8845539742760de7a4be71ed2b16b6:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDRmNTAzNzhmNTE4YjRiYWFlYzZmNjYyOTE1MTVlOTJkNThhMTU2ZWRkMDRmNjhmMzY4NjA5M2Q3MmVlNDJhOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiY2E0NTNiM2UzOWU2YTFkZWVkNTFlOWIxYThmYTFlZWU1YTk4MDVhOTIzMzc3NTk3Njk4MDNkOTI2ZTk4ODRiZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNWJmZjQyZmU0OWRjMDUxNWFiNTYwNzlkOTZmNTA3NjM5NmM3YzkwNDRmYjMzMDUyNjE3MjU4YzNmM2Y1ZTVhMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTczYzU1MGY0ZDhjNjZkZDhkNzQ0NmZmNjE0ZWQzNDgwYjYyNjRlOGU3ZjQ5MTFjNTRjOTQ4ZTk5Mzg1ZWM4YSJ9"
+        },
+        {
+          "resource": "repo://src/renderer/main.tsx#L31-L35",
+          "version": "repo-lines-v1:sha256:be26c8b921af99e0484fd10ab53d502ca58df55a4082d8232b677ac9937ca973:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWQzNzE0NjE5OWNkZjA5NmRiMjY3OGMxNTgzYWFmNmMwYWFhYzBjODQyYmM5OTc3MDZkZjUwNDYzMTJmODVlNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDY3ZjE2ZDdhYTk3YjdkOTg0N2QxMmEzMWExMTFhYWNiNTA3N2IzYzNiNTE5OWNkYTM5ZWVhMmVlMjZhNzE4OSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDc5MmYzMTljYTZiOGQ3MzQ3ZThjYjhjZjNjZGExY2JkY2EzNGFiNGM0YjExMmY0YjMyODhlM2U4ZjYwMTU4NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNmFkMmRmZTdhMmFlZDc5YjYyMzk1MzAxOWM5MjA0MzIyNjQxODNmMDQ5Yzk2YjNhODUyYTkwNTgzMzBiYzlmZCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_5a6da28ebb3448008452aaa39f6e31e1",
+      "statement": "createAppSettingsService 是带回滚的 write-behind 存储：current 为内存值、confirmed 为已落盘值、dirtyFields 记录待写字段，保存时用脏字段覆盖 confirmed 的对应字段，失败则把 current 回滚到 confirmed。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/app-settings.ts#L134-L189",
+          "version": "repo-lines-v1:sha256:6725d96d51a409191db117ae7e1e21d2056341fb543256e2f2912dc1215773dd:eyJzZWxlY3RlZExpbmVDb3VudCI6NTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyM2MyNWY4MzBjNjk2MDY4ODkxZTcxMDUyMzI5NzcwODZkZjkxZWExZmRiYzk2Y2RhZDI0MGJkZDc4YWNkZTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI5Mzc5ZmU1ZTM5NDA1MTk2OTQ2MjU3MDJkODE5OWRkNTA4YTdmZjdkOWM5OGFjZWVjNmNmMzZhZDNhMmMzYmEifQ"
+        },
+        {
+          "resource": "repo://src/renderer/services/app-settings.ts#L141-L150",
+          "version": "repo-lines-v1:sha256:e796a4ae2ab37e13e6f1e330931ecd57430b24fec09e03220e96747e57d0e50f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyZDczZTEwZWM2ZmU0YTExYmY1M2E1Nzc1MWY4NDc1NmRlNTYxMTRmNDJiMjU0MzQyOWMzZDA4ZDcxMTAzMTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIyMzUyNTg5YzM0ZDNjNjA2ODU5MzFiNmVjYzRkNTA5OTFhN2M1NmM4ZmJhMjg5NDExNDY1NzY5MDI3MmNhYzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdhZmQxYjQ1ZmIwMjQ3NmEzZmQ0YWU4NGViMWYzMGMzYWU2MmJjNWY3Mjg1NTMwODk5MmFmZjBmMGM2NWFhZjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQzNGYxZmNhNWY5ZWUyMTYyYjA5Y2I2ZjdhZWM4NmRjOWFlMzJjNGE3ZDllMmQ5OWIzYzQzNDA2YTFlYTFhMDMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c23273fef71a4b49b59141334da16f17",
+      "statement": "desktopSettingsClient 在非桌面运行时直接返回默认偏好而不发起 IPC，initialize 失败时退回 DEFAULT_APP_PREFERENCES。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/app-settings.ts#L250-L266",
+          "version": "repo-lines-v1:sha256:e9602a5715d4af3aac73cf07409b0e271be5c70e932bbb1bd5bcdc29beae25a3:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ0YmZhMzA3ZWJmNmE0NDk0YzgzNzMwY2ZiOTRiYTU3ZjNhODQxNTRiMmZjMmNjY2JjNDg5OTU5NTBkMmI1NjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFlMzcyNjY4MTljMDVmZjYwMTBkYTg5OGY5Y2JiMmQ0ZDBkZGRlZTEyOTRmMzEyMzRkNGYxM2M1MDcwZjc3YmMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d832bca6ea724381901968bdf98a5944",
+      "statement": "resolveLanguagePreference 在 system 时遍历 navigator.languages，matchLanguage 先精确匹配再取基础语言，其中 zh 按 Hant、HK、MO、TW 判为 zh-TW 否则 zh-CN，pt 一律 pt-BR，全不中回落 en；i18next 实例以 en 为 fallbackLng 且 initAsync 为 false。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/i18n/languages.ts#L30-L62",
+          "version": "repo-lines-v1:sha256:b11e255ed2b19e64a2efb90d30809b110fa5212a89dff02e253f22793cd4a0ec:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIxMTRmYzJlYjRlOTcyM2JlOTEyNzNmZTdhMzk2NTAyZDNmYTM1NTVlNWRkOTg2NWRkOWE2M2E4ODU5YzY2YjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE0YmY4YWM2ZDk5YjNlZGVmNWU5OTY2NDQzNThkMDdkNGE0MDY0YjUzM2Y3YzU0NWU2MjFhNjMwNzhlMDUzMWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://src/renderer/i18n/runtime.ts#L11-L23",
+          "version": "repo-lines-v1:sha256:83ab75592dc0948a5fbe23ace9de41732cfc58ff5ac63436d59a007d51ac9206:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQzZDgyYmJjZGQ4Mjg3OGJjMGIyMTdiMzgwNmI3ODI2MjdlMTlhYWRkNzRmYzQwYzcyMjdjMmE3Yjc0N2ZjOWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI3MzNkZjdhNDZiMGM4OGY0MDZhNzViYzgzODA4NTFlZmY2NTMxYTA1Mzk5ZjkxMzBhN2JjMWU0NDEwYTk1YTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU4NDUxOTQzODRlYzkwYTg0ODQxN2MwNTgzOTY1NzNiOGFlZjI1MmRiMmZjNTFkNmRkMjQ3MTE1Mzc4NDcxYTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_265cb73985c441b7a74c9ff2e53290f2",
+      "statement": "i18n 不用语言包 JSON，而是每条文案在一个 messages 调用里按位置给出 14 种语言，resources.ts 再把合并后的 catalog 翻转成 i18next 的按语言嵌套结构，MESSAGE_KEYS 由 messageCatalog 的键推导。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/i18n/catalog.ts#L3-L35",
+          "version": "repo-lines-v1:sha256:d415307979a7225cc33edc0114920e774bc5a9676543055095686278b708f27e:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI1OTc4ZjFiZjQ4M2RjNmYwMTZhZTBlYzE4MTkwZWZmMzY0ZjVhY2RlODYzMWQ2MTUwYTc2NzBmNDMyNzZjZmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg5YjI0OWIwYTliYzRkMDMzNWRmNzJkOTkxNzZiNjAzMWNiMjk1ZjgyMDZiZDg3OTJkZTczMjhkZjI4NWE4ZjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjoyLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVjNDY0MzhmODQ1YjI1ZjRjZGZhZmExOWQzOTdjMmE5Yjk2OGUzZWFjOWM2YWU2Nzg4MjViMjkyNzlhMmM4MjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRmNzM5YTA2YzFjYmIxMjQ0ZTMzNjNkMzhiY2Y5ZmE1MGNlODRmZWQzOTljMjE5M2EzYzdmMDhkNTk5MThiMmEifQ"
+        },
+        {
+          "resource": "repo://src/renderer/i18n/resources.ts#L444-L470",
+          "version": "repo-lines-v1:sha256:53b09617c746ede54293b96f9618c684540be2cc4565858641bf5ad70929988d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdhY2M4Y2EyMTcyMDljZmE3MDJhNjIzYjI1YjdkNzU4N2YzY2JjOTc4OGY2MjljNjg3NGQ5YjNkZmYxNDYxNzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU0YTkwYTYxMDY2Nzc2NzA0MDRkZDViZmE3ODM3ZDJmY2JlYTE0ZDEzMjE5OGRkY2UyYjI3N2E3MTljNDE4MGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk4N2Y4OTE4MDM2NWQyNGI3NDIzMzE2ZGE3MzVjZTM5MGRlOTZiYmRmMTFlNDE1YmY1NTI3NmNhYTk0MmJkM2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0a41e0ca270c4495a27a3355abaf6403",
+      "statement": "LanguageProvider 的 applyPreference 同时切换 i18next 语言、设置 documentElement.lang、同步主进程原生菜单语言并持久化，preference 为 system 时监听 window 的 languagechange 事件。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/i18n/language-provider.tsx#L43-L71",
+          "version": "repo-lines-v1:sha256:0d67845dceeb439b355d510be483741f02df1b820b845980e01ca59b36ba3544:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZmZmJhYjIyMmJiOWE4OGI4NGIxYTRkY2EzNTUyMGNlMWMwYTk2YzU3YjgzMGFiY2QyNzFiYmYyYTM0MGE5YjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2MjY3OTM1ZmM2MzM0NjVkODQ4YjQwYTRlZDY5NjdlN2I3YTMyM2Y4MWNkNTNjMTEwYWUyMTAyOTY4N2FhMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlhZDc4MGY2ZTJmNDkwZWQyOTkyYzZjMTA3NmY1OTdiMDFhNjg4ZWY5YjZmNzQzNmFhZmYxOTg1MTFjYjIxNGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU4ZTM0ZmRhN2E3OTZmNGU1NmEyMmI1NzE4NjdmZWUyYzQyYWZmNzk5ZDdlNjI1NzZmOTBhOTNmNWY2ZWExMDUifQ"
+        },
+        {
+          "resource": "repo://src/renderer/i18n/language-provider.tsx#L81-L87",
+          "version": "repo-lines-v1:sha256:56d1de7a2d8db16ad4d559ff1b0bac406c8abced9109a2cd24ceca0bcce2f7fa:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTk2NmZiZmE4ODk5OGRhNzQ2NTZjNTAxOTQ5NTZjMjVmMDg0OTQ1NzY2MGMwMDlmZTYzZDFlOWZhOWRjOTMxYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjYwMDA3MjZmYTVkYjY3N2VjMjZkYmQ2NzEyMzIwMThkMTUwNmZlYWUzZDIyNDIzMjQxMGQ5NjE5ODViMDg3NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzJjNjRlNDg3ZTYzNjEwZGM0OGFjMjEwZWMwZTViOGJkZjk5NmQ2MzczMmIzMWUyZjc3NTBjOTMzN2UyZDE2NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNWYzMmEyZTA0OTIxY2U5NDM0OTE0NDMyMDE0ZGQ4NTZmM2FkOGVjMTFjOTA5Y2I0NGYyZDEwZTI1NTc4ZTliZCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_732d335637ea4d6892db6db0657df122",
+      "statement": "pagehide 一次性监听中并行执行 sessionPersistence.flush、flushAppSettings 与 webviewLogging.flush，三者互不阻塞且各自失败只记 persistence.flush_failed。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/main.tsx#L37-L59",
+          "version": "repo-lines-v1:sha256:f5ad17525cf9a63a1a939c96697a93c285fa4e6fcd171d4607338919dae8dd35:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVkZWExNzJiYzQxY2U2YmM5OGExYTM3NGNiYzVlYWE0MTE1NjhkZDBjZjRiNzJhYWIyNGUzOWYwYzc4M2MzMzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2MjY3OTM1ZmM2MzM0NjVkODQ4YjQwYTRlZDY5NjdlN2I3YTMyM2Y4MWNkNTNjMTEwYWUyMTAyOTY4N2FhMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJjYmVlZmFiOWE3NzljZDY4ZTMxNGI3ZTUwMjkwNTgwZmFkYjJiODI1YmY4OWQ5OWRjZjQ5NTZjNGRjMmIxOGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjczY2QyOWNkY2FjY2I3MDFhMDNlNDQ2OTg5MGYzNjA2MGJkZjI4YjMxYWVmMjQxMzRjNWEyNDY0MDAwY2Y5OGMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9f3c5d3191a64ef8b173532ec4ffcccb",
+      "statement": "会话写入为 write-behind：update 立即改内存，落盘有 200ms 合并延迟；workbenchSessionPersistence.start 订阅 store，只把草稿索引与草稿完成事件写进主进程索引。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/services/session-persistence.ts#L72-L119",
+          "version": "repo-lines-v1:sha256:c546eb9d47f27acc8352e43fcc9fb39131c8dfe7efdc818a4cb22f2deaa00f49:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZlOWQzMDhmYjJkMGMxZGZjZTRiMzJmOGVlNWYyMzBhYzU2YjQ4NTIzOWY0NTAwM2ZiYjhkZDU4MzE3N2VmYTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQxNjdhZGIzMTY3NWQ5NTE1YmM1ZGU0YmRjMWUxMzY1MjUzY2YxNGQ0ZjJmYjAxZjk4NjJhNDYwYzU0MWJjMGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAyODIzZDVkMzgyMWIzZjk2NDYzMjY4OTk4MGRjNzU3NDg5MTgxMmU1YTkzNDk5MGE1YWEzNTAyMzVlNmNkOWEifQ"
+        },
+        {
+          "resource": "repo://src/renderer/pages/workbench/services/session-records.ts#L60-L83",
+          "version": "repo-lines-v1:sha256:18a49c04772f03c011cac656cb64e8c8945104e08bb40efe3e17b98fe214669a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIwNzQ3NmVhNTljMTdiYmEyNmIyZWY5ZjI0ZTA3MTkzYTE3YjgzMjVlNWU0M2YwMzFiNjFkMmFmYTljMjY2MzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkNWNkMmZiNGYzZGY4ODQ1MTUyNTViMzk1MjNmMmY4YjU0NzJiZWVhOWY1NjZmZmNhMjA0ZGI4MDI1NjEwNDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY1ZjhmNTNlZTQ5ODY0ZDQ4MzQxZmM0YTE0ZTcxMGU1YWIzNWY5N2ZlOGIwMTRjNDgzODExMzcyNGJjN2ViZmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJlYzgzMzA4ZDExYzNmNjY2YzYyYzdlMjI0YTVlNmNjY2U5ZjhhZTVhNTJhNDBhYTAwZmFmYmQ2ZmJlOTMzM2IifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8ded423a090d4e72aa977bcfd36fe159",
+      "statement": "app.tsx 在 ShortcutRuntimeProvider 与 TooltipProvider 内渲染 ShortcutScope 包裹的 WorkbenchPage，main.tsx 用 ErrorBoundary 包住 LanguageProvider、ThemeProvider 与 App。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/app.tsx#L9-L27",
+          "version": "repo-lines-v1:sha256:5dde6095e34131cf552a2d0355570158c2484466e407660366b1ced2234eec41:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmODFmMzdmOGE1ZDRjMWRmNjRhZThmNjg1MzA0ZDVhODllMGY4N2U3MTljOTM4MWRmNzc5YmQ3MmFhYTg3ZWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5ZTk3OWJmNTFmMjdkMjk5ZDhmZjEyM2VjOGYwYTk4ODZjNjBlNzljN2NkMDUyODdhMThhNmJmMWNiNzY2YTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://src/renderer/main.tsx#L65-L73",
+          "version": "repo-lines-v1:sha256:9a5770c79d9fa6665060391f18f84b569db42fbb84bc9d213fc83a5bd9e2bbeb:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGNiYWUxZjU5MzNjZDUzZTU4M2JmNDExYzY5NjVhYzViOTM0NThiOTM1NWI2ZmIyMGQwMzNkZDU4N2UwMTk1NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTYyNjc5MzVmYzYzMzQ2NWQ4NDhiNDBhNGVkNjk2N2U3YjdhMzIzZjgxY2Q1M2MxMTBhZTIxMDI5Njg3YWExMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTkxNWI0NTRiMWYwZDhmOTM1MjU4MTc4OTYwMDQwZGIxNGMwM2M0N2M4YzlkODdjZGEyNTkyNWQ0NGU5MTc5MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTFkYWE0MzJhNGE3ZDY0NGJkMjFiZGRmYTgwMjkzMDVjNDMzODMyNzkxZmVjZjBmZDIwNGUzYWMwZDNlOTZmZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_3dbdd8af63144b6cbdeb7e76fe3a1235",
+      "statement": "applyAppearanceTheme 把 theme 为 system 解析成 dark/light 并给根元素打 class，clotho preset 只移除内联颜色变量、其他 preset 才写入三个内联变量，与 preload 的启动主题脚本是同一套规则的两份实现。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/startup-theme.ts#L33-L41",
+          "version": "repo-lines-v1:sha256:5e2652218b318f725638d10dabe3da7c7234497d04f496d69dc8dc52faf332f5:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYmM5MjBlMjZlZDY0ODNjNzE2MGM5YTUzNzAxODUzY2RmMWQ1NDAxOWEzMTg0MmE5ZmRhYjA1OTE5YjYxYWMwMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjUyYTkzZmMyMDcyNjNjOGQ3NWMwYzhiZjkzMTBkMTNmMzI4OTJmOWM5YzIxNTE2ZDJmODM3MTJjNTJhMDM0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjJjMWE3ODc2MDYwOWFkNmMxMGUyNTU1YzJjN2FiZWQ3MmZjNTdhY2EyYmIzN2IwM2ZhZDRkMjhiMzFhNjJjNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODVkYTMxNjg0ODEwYTQwMzU5YWZhNzdlZWY1NDM1MzRhMjg3ZjAwYWExYWRlMDQwNmJmMmJkZTY4NTFmM2FiOCJ9"
+        },
+        {
+          "resource": "repo://src/renderer/components/theme-provider.tsx#L56-L76",
+          "version": "repo-lines-v1:sha256:ee7910aa50ae66c600f55d45a79e54974573e75a930aa68c922c4dc0c2024b20:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJjMTFiYzJiOWY1OTBkZmVlMDcyZjgxMTg0MDBhZTNkNzA4OTM5YThlOTJmMDIyMTExZThmYTQ1ZTJiZDY3NGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdkMTBmOWU1YmU5MDUyNWY2Y2IxZGQwYTUxOGU2M2RkMDU3MDdjODQ3YWY3NDNjMTQwMTA5Y2UyMmI2OWIzMjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ1MjkxYjQ3MWY1ZjBlMDJjYWQ5NzJiMWVmMDFhODY2NmZhNDg4OGJmOTI1M2Y5MDA1MjkwYjMzZDhkNDUzMzIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7774a9d22ce448c59aa68c47d53ba732",
+      "statement": "ThemeProvider 切换主题时默认插入全站 transition none 样式并在两次 requestAnimationFrame 后移除，theme 为 system 时监听 prefers-color-scheme 变化重新应用。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/components/theme-provider.tsx#L227-L244",
+          "version": "repo-lines-v1:sha256:06dadd6ac2da8c46ca6545d3fd90f184f0303b4308424a72d0660838e4d954eb:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI4YTAwZTA0YzY3ZDI2OWI5ZDFiOWYyYjdkOTk1MTZjZDJlNDA3MzE0YmE0OGM4ZTA0ZjljZWM2OTRiZWI1ZmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMyMTUzY2FkNGE0MTBlOTEwZTZkZGY2YzIxZjI5N2U5MGUwNDAxYmEyMGJkZWVkNmU1ZDhhZDNiMzBhN2U3NTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQzYWEwZGJlYzZiOWNmOGM2N2EwZjJiNDZlN2MyZTI2NjRkZDY1NmViODIwZjQzZWMxYTU5NTQxNmE0NWYxZDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM4ZTVhOTIwYzEzMWI0OTg0ZmNmMGU1NmQwYzYwN2NhZmE5YjViOGEzODU0NTYwODExMjMzZGNlM2Y5ZGMzNjYifQ"
+        },
+        {
+          "resource": "repo://src/renderer/components/theme-provider.tsx#L98-L115",
+          "version": "repo-lines-v1:sha256:549e1e2f58100d09de3713db0f44de701a8962bbff3ccb87d01ca90d26079189:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1NzczNDFiY2IxNzc2YWE2NDk0ZTllMWIyOThhNTU2YTRjOTZiMTQ2OWIzNjU3YTlkZTgxZDkwMTRjZGI2YzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM2ZjU2YjJlZDhjZDIxOWFjY2VjYTRlYzAwNGYyZjQyYzhhOGNmNzQ0NTZiYjljYTgwOTY3M2U5MTMyZTU2NzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJhOTAwZjA1N2ZiOWZjZDJmNzhkYTk4M2Y2YmRjOWFlZjM5YzllYmYxMDljY2U4OWRhNDQyNTE5NDhjZmE1NGEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2f52af3c71094551a95f1acca5c31ce9",
+      "statement": "reducedMotion 为 system 时跟随 prefers-reduced-motion，结果写入 documentElement.dataset.reducedMotion 与 dataset.pointerCursor 供 CSS 使用，并以 MotionConfig reducedMotion 传给 motion 库。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/components/theme-provider.tsx#L210-L214",
+          "version": "repo-lines-v1:sha256:a2c50415d9655dc1983a0dca24733d07a462942fb73dea72d14c57674284796d:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjI3MjM3NTY3OTU2NWVhMzI3NGQzMjE0NWFhNjA1MWMwYmZlYjJjMjI2YTMyZjIzNTAzNTFmMGFlMzdhZDk2MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDBjNDAxZDYwMDI2MjA5MzliNTljNGJkZTYwN2ZiOWZlNjI5YzFlZTdjMDBkYzgyNWJlZTQyNzBlNDkzZDJmOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTVhNDhkOWJjYzI0YmI5MDg5ZDQ4ZTc0ODJjMWJjMjQwYzg0MjgyZmRmMjVlMmJjMTZmMGIyN2FjZGQ1ZWFhOSJ9"
+        },
+        {
+          "resource": "repo://src/renderer/components/theme-provider.tsx#L246-L250",
+          "version": "repo-lines-v1:sha256:8db0ad3f5be549c1cd88d942056457886e527972713f6c5e8bf81c0048944917:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjhhMDBlMDRjNjdkMjY5YjlkMWI5ZjJiN2Q5OTUxNmNkMmU0MDczMTRiYTQ4YzhlMDRmOWNlYzY5NGJlYjVmZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWM1OGU3OTYzZDUxZTA5NTBkNzgxYjg3YzFiNjM0NGQ1NjFjMzUyY2M0NmNjNTVmZDgxZGU3YTAyYmZjYjA2YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjQ3YTRiM2Y3MGIxYjRjOWNiOTU4ZDRkMzE4YWMxYmVkZTA4NDE5YjlmYjIzMjY3YzY5Y2MwNTFmODlhYTUyOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTQ1ZTgyNGE3NGZmMGFkMzExYmNjNzU3MDVlYmQ1NmRhOTcwM2JlM2NlYzdmZmQ3YzliYjViNGYyNjAyNmQ5YSJ9"
+        },
+        {
+          "resource": "repo://src/renderer/components/theme-provider.tsx#L279-L290",
+          "version": "repo-lines-v1:sha256:ac17f2acf29b0f106ab7c2d43bd138cc04e0c1b47eaeb10f743b8e35b0e7e0be:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNlODJkZTMwNDlmYWUxYzYxZjcxZTVlMjEwMGUzZTVjYjE5YzhjYzk4MmFjMzhkNDJjMWVhOWJmMDljNmRkZTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2MjY3OTM1ZmM2MzM0NjVkODQ4YjQwYTRlZDY5NjdlN2I3YTMyM2Y4MWNkNTNjMTEwYWUyMTAyOTY4N2FhMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM0NjE1ZGJiMzFhN2NiZDZjNjRjMDNkM2ZjNDg3NGUzMGUwZTU3MzdjNWFjNmFlZTAyOTdmMzM3NGE3MjU3NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM5MTIxMmFiNzc1YzU3ZjRiN2JkNzA4MDk5YjM3NGFkOTNhMzA4YmYxYjBiOTFiNjllMGQyMjYxZjJjYjFiYTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d1d4fb67f4f245abb7fa269e3a9e51f0",
+      "statement": "setThemeColor 会把调色板 preset 标为 custom，此后该调色板走内联变量路径；每个 setter 持久化失败时把状态恢复成 loadAppearancePreferences 并弹错误 toast。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/components/theme-provider.tsx#L126-L136",
+          "version": "repo-lines-v1:sha256:35829fec0c382720db409c3653f72a6e94293ce182d5c9344d23b6883953881c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRiNTI1N2ZlMjJjYjBmMWU0NTEzMTRiMzU5ZDBjOGRmMDY3ZGY4OWViZWVmMjNiNzVhYWVhNTgwMzUwN2Y5M2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0ODllYTg2MGZhYjg1YWYzODNmNDE4MzQzMjQ0ZjE3ODMwZTI2ZjBmOTY1NzVlNzEwYjdjMTliNjgzN2QwNDYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJkN2EyZmNjMjU1NjM3ODcyNjUzYjQxMWExODgwOTE2ZDAwNzNhMTRhNzI3NmFmNmMzMWI5ZDY1MTg2MWUwYWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM5Y2EzZWE1NTFlYjkzYzJhNjM1M2ViMjBkNTJjMGVjMjg1ODI3YzI0NGJlYzVkNjZkNjQzYTA0OThjNzU1ODEifQ"
+        },
+        {
+          "resource": "repo://src/renderer/components/theme-provider.tsx#L197-L208",
+          "version": "repo-lines-v1:sha256:7553569366195fbbe80add180fdcaaee736a0ca4f342b0c1df4f41c7cecafa97:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5NDJhOWExMzQ2MmZlYTk5MTZjNWJhZmRjODMwYWQzYjgzYzMxZDIyMTM4NTEwMDgwZGM3ZTgzMzdkMzExYjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2MjY3OTM1ZmM2MzM0NjVkODQ4YjQwYTRlZDY5NjdlN2I3YTMyM2Y4MWNkNTNjMTEwYWUyMTAyOTY4N2FhMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAwYzQwMWQ2MDAyNjIwOTM5YjU5YzRiZGU2MDdmYjlmZTYyOWMxZWU3YzAwZGM4MjViZWU0MjcwZTQ5M2QyZjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFjODZmODg3OTY4ZjkyY2RmZDFlYWJlZTY2ZWE2NmI5ZDQ5OTliNmYzNDI2YTRlNmYxYmNmNDBhNzU3MGQ2MzUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_186b2e746b2b405a8f3ec2b8404ed2b0",
+      "statement": "ErrorBoundary 在 componentDidCatch 记录 render.failed 并带 componentStack，支持 resetKeys 自动 reset 与函数式 fallback；StartupFailure 不依赖 i18n，直接从 catalog 的 messages 行按解析出的语言取文案。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/components/error-boundary.tsx#L27-L60",
+          "version": "repo-lines-v1:sha256:cce787752466c5d601cd73259f904e82357e5245d343a7b2da37885491aa06ca:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdkZGZhMjQzY2ZmZDE5MmUxZTM0Njc2ZGJmNmJlMTM1YmRhODAyZDdlZmU3NzNmZmM3ZjAzMmU4NWYyYTI1MDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM0MGM1ZDNkYzNhNzczMDc5M2M4OTI3OTQ4YjU1OTY2NDIwN2Y3OWJhODc3NzNjMjE1MDA0NDMxOTYyZmQ0ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://src/renderer/components/startup-failure.tsx#L61-L84",
+          "version": "repo-lines-v1:sha256:05fe4619e9b9ab0e354fb41938ea03663c79cbfeb08c11d84e2d534e529706ae:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNjYTU1MTBmNmZmNjBhZmQ5Y2Y2YTE4ZTU3ZWM1MGFlOGVkY2FlOTI3MTQ2ZTBiZWM1N2MyMmZlNTE3ZTI3OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2MjY3OTM1ZmM2MzM0NjVkODQ4YjQwYTRlZDY5NjdlN2I3YTMyM2Y4MWNkNTNjMTEwYWUyMTAyOTY4N2FhMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg1ODE5MDI1ZGI1NjdlMzJjMGU0OGY1NjVkNWNjM2Q1MmVjNTEyMmEzY2NkN2JlMWU2Y2M5ZmUxZmUzYWEzZjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}

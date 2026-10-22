@@ -1,0 +1,300 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:9dafdec6d0c79a8d3e040934138605f65a74c610ed58f39b7eb1abfdf4ec6a03",
+  "claims": [
+    {
+      "id": "claim_f9e2756cbdba45f2818a1ae48dba9165",
+      "statement": "ToolRenderer 契约分四层字段：heading（icon、iconFor、label、description、summary）、body（hasBody、bodyView、bodyItemView）、footer（footerView、floatingFooter）与交互（itemView、opensSubagent、canOpenSubagent、flushBody）。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/shared/types.ts#L12-L47",
+          "version": "repo-lines-v1:sha256:39ece5869a7859e2ca959be6942dc44ee21e8ff075338c2cd5cbe1af047b7b63:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3OGIwNGRkOTNlODg0MDE0NGQ3YzVjYTVkMjNlYWI3NDhhMGJjMDczZGMxZTg3M2ZlMmViNjkyMjc5NWE3MjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE1YTYwY2ZjMjQ2MWYwMWI3MTM3NDM2NWIzM2E1ODE3OTI5OGM3ZjQxMmI5ZWUwZWU1MDk4ZTczZDlhZTk5MDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYwZDAxMWFkYmE3ZjRjZjFiNDU5MTk0NDMxOTNjZGMwN2Y3N2YyYjllZWQzZDI4NDZmNmEwODliNzhjNGY3ZTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_665d410e2fbd46c3b838e4c938e31a3d",
+      "statement": "ToolItemContext 打包一次调用的全部上下文：name、input、result、toolUseResult、projectPath、images、coalescedReads、taskItems、toolUseId、onOpenSubagent、pendingRequest、onRespond、isError、isRunning、backgroundTask。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/shared/types.ts#L55-L71",
+          "version": "repo-lines-v1:sha256:9fef043a0b01e2e0ffc8cea1a21bf0603ea4bf64abac70c0800547f22bfbc26e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgyZmUxMjAyODNlMGJhOTg0MWNhMTJmNWJlYzZlZmVmMWRkMTNmMzgxMjMyNGVjMTA1ZWIwMzNmNGU4MTAyNTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA4ZDk4ODQzYjhkYmQ5OWFmOGFiYjFjZjNmM2E0MjMyYmFjZjExYzgwZGZlZjZhZWI0ZTRmZWZhYjEzMjY0MDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2b800af67e7140f48cec04e8539c51ad",
+      "statement": "ToolItem 的组装顺序：itemView 优先整体替换；否则按 hasBody（未提供时兜底为有 bodyItemView、input、result 或图片）画可展开卡片，展开区优先 bodyItemView、其次 bodyView、最后是默认的 Input/Output/Images 三段式；子代理行不可展开，点击直接 onOpenSubagent(toolUseId)。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/tool-item.tsx#L98-L118",
+          "version": "repo-lines-v1:sha256:1725f79d33591b1e32f36d1e6393ef4e9e41f6760a185ac7459b1b0d290a06e6:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ0YTFmZTA3ZjQzNDMyN2IzZjZhOTExN2JiMDZmZTI4NDI3YWEyZTQzNzMzMjIxMDRkMjJkNmMxNmI5ODJiNmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI4OTI3MTg2YzYzNjBhMDg5NWE2ZjUyYTM0NjdlM2Y5YTBlNTUyMGQ5NDhhMDhkYzI3ZWY5ZDZiZTQ5MmQzZjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcxZmI2YzJmNTllOWU5MTY0NTI0Y2Y3ZDBlMGI3YTNjZTUyMzM5NWUzZTgxYmVjNWQzNmJhNWU2Y2U5YmYyNzEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b342b17d27ab4db7bd978cfbb5f01fc5",
+      "statement": "RENDERERS 表约 60 个键，同一渲染器挂多个名字：驼峰原名、加 Tool 后缀与蛇形命名三种来源（如 TaskOutput/TaskOutputTool/task_output 共用 taskOutputRenderer，Read/FileReadTool/ReadCoalesced 共用 readRenderer）。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/registry.tsx#L36-L95",
+          "version": "repo-lines-v1:sha256:26fb923ababe36977cd8ce394907b6c8a7bd0da2cd96c75558318e94403b1ef4:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIxZGUwNmYxZWY3NzAwMzc5ZmViYmE4ZDE3OTg5MzViYjRhNjY2ODc0YTU3NzY5MzBkODg3MzBjNjM2ZjcwNmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFkNzA4YzU0ZWQ4YmFiYTVjNDJjOGZiMjk1NmZiZjI5N2ZjN2U0NjUzYjQ2M2E1MWZkN2ZmZmNlZTM4MjdjMjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU2YTk1YzdlZmRhZDYzNTc5ZGEyYmNmYjFlNWM1MWY3YjQ5YWFiYTAzMjNmNTFmNGRjNmVjYmYyYzE1MGMwMjIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e9a5cec51a32408eac2eb4cbebfc4f9a",
+      "statement": "readRenderer 的 itemView 检查 coalescedReads，有值就渲染 ReadCoalescedCard，即一次显示多行、每行一个路径加行号范围，而不是把折叠起来的多条读堆在一行里。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/read.tsx#L17-L20",
+          "version": "repo-lines-v1:sha256:88bd946f18cfeb0222ece5cafaefcd27bae63a1f94528613688db1672d87ca06:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjViZDBmZGZlNmIxNzk4YTI1ZjJmOTUxYjVlODg0MDEzZWVmYjlmNzkyOWU5NjVjYWU2NTZlMmY0YTMyNGE3MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzhlYWYyNzFmODQ0ZWNjMzQ5ZGZmMDA3N2Q4MzY5MzAxODZiYThiNTkwZDJhMWUxYWExMjZmNmYzNGE5ZGYyZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTEzZDFkNjQ0YmI5ZmM4YjY4YjNhOGQ0NzBiZWVjYTlhOTNlNTBlMWQ2ODBhNGRmZjNlYzc5ZGI0NDMwY2FlYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjBkOTU0MDFiN2Q5MjNjMWY1OWZkYWQ4YjdhNGIzYTMyNTBkZWJmZjIwODk1ZWIzODYzZjQ4OTFiM2QyZjY3NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_3f03790d192f447085e1091887a98937",
+      "statement": "getToolRenderer 的查找顺序：名字为空用 DEFAULT_RENDERER，命中 RENDERERS 用对应渲染器，去掉 Tool 后缀后以 mcp__ 开头则派生默认渲染器并用 Plug 图标与 mcpToolName 作 summary，其余未知工具用默认渲染器且 summary 为空。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/registry.tsx#L124-L141",
+          "version": "repo-lines-v1:sha256:e7899d5eb750fe070468fb4ef6d55b5582a620f4db3b2802781b903c2aa12f65:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk5ZTZhZWM0MTFhZGY2ZTU1ODg1YmIzNDU4NTZhN2JkNGU0NTA3YmY2NWY3OTE5YmIwNTU4N2U2YTliOGYyNzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc1MDI3MGY1ZGUyOWExODMwNGU3NWEyY2I2YTI2ZGI4YzUzOWQ0NmU3OTc0NWJiM2I3ZjQ0MGQzYTE3MTRkYmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY4MmRmODNhNGY4NzQzYWZhM2E4M2M5Y2M1NzcyNGE2YjI0ZWExOGUwMmUwNjcyMDkyNWM1OTExNWYyOTZjNDcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2419f500bfbb499a9566a73c388d1638",
+      "statement": "mcpToolName 把 mcp__server__tool_name 转成 server:tool_name：去掉 mcp__ 前缀，再把其余连续下划线全部换成冒号。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/shared/utils.ts#L17-L19",
+          "version": "repo-lines-v1:sha256:3163f08ead35cab0de19b3e3cb70e6677261b8af3ecc5d88effafa7f72fad2f3:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiY2FhNTE2Nzg4ZjI4MmY5N2EyNmMzZjM3N2E1MmE1ZWFjNWM0ZDEyNjAyZTc0NGMxYzQ5ZWEyMDI0YjJlYzRmMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZGZjOTNmZWM5ZGRkMTk0ZmUyYzg2NzdhMDgzNWM3NzNkZDBkYTg0ZGIyODI0NjhmYjQwYjZkMDRmNTMzMzMzNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWJkNWIzMjc4Mjg4MTJiZTgwNmE1N2JjNGYwZDAyNTI2NDY0NTFkZmU1OGY4OTg5Njc3OTYzNTllNTVjNjQyZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_ae39bbb651284171ac75f84be6dd75e8",
+      "statement": "DEFAULT_RENDERER 的 inputView 是 JsonInput，把 input 原样 JSON 美化输出，保证未注册的工具至少能看到完整参数。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/registry.tsx#L97-L103",
+          "version": "repo-lines-v1:sha256:06952a138492be2dafefb8e3cc6f9c9fde1f36c17bcc2b2192d73b2ceef0868c:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGUwOWQ4YWFmMGQwZDQ2NmU3OTE5Njc0ZjI2ZWU1MzkyM2Y3YmNmYjdhZmQxY2Y4NjA1MWExNzgxODk1ZDBjMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTg1ZGI5ZDMwZjBhM2Y4MmNlNGJlNTBlZDJkNjc0OTQ3MTZmNjQ5NTBmNGM0OWE2NGNjMWFlYjM3OWQ4ZjlhNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWU0MTE3N2Q1YTc1NzhjYmQyYWM1YTA5ZWFiNzkxYWQyMTUzNjAwN2Y5MWEyYWU5ZmM5YWFjMDFmOGNmZDEyNyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_0e73c00f26c14449810ad79fc1a8d7b1",
+      "statement": "getToolDisplayName 对已注册工具与 MCP 工具都显示翻译后的 label（如 Read、MCP），其余未知工具显示去掉 Tool 后缀的原始名；MCP 行的完整限定名放在 summary 里，行标题只显示 MCP。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/registry.tsx#L111-L122",
+          "version": "repo-lines-v1:sha256:b485e021c8ad469794112d03d7de423e6204e7f2f2cc87fe990220b79ae7f8c4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJmZWI1YmRhNWUwZTkxNzNjY2ZkMmZmNWNkMzI0ZjQzYzEyOTJhODdjYTRlZTExMjYwZTUzZmYxNzQ2NDcyZDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ3ZTcwYTRlNjQzYzM4ZDcxY2Y3OWU0MzBmYWNmNWMwMjc2MThhNjcwYmFmOTc3ZGNlYmU1NDk5MWVjNDZkZmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ4ZDVhMTU0YzEzM2NiZDg0ODQxOTU3NGU5ODk1MWY4ZGYyMzY4YTFhZDkxMDZmOWU5YTllNmNhNDRhMWY3OTQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_84ab4110d46941ef8723a4d6ee889cc6",
+      "statement": "getToolSummary 对文件类工具（isFileToolName 覆盖 Read/FileReadTool/ReadCoalesced/Write/FileWriteTool/Edit/FileEditTool 七个名字）统一走 fileToolSummary，不经渲染器自己的 summary，与别名表保持一致。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/registry.tsx#L160-L161",
+          "version": "repo-lines-v1:sha256:07a4d72ecdeca42d54e921c7d191085fdd152f778fc5c23610d977c5abf6e7cf:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTRjNTM1YmUzNmZlY2JiZGNkZTY3ZTg1OTJhZDZhMWU0M2I4NmFiYmI2NGRjNzlkNWRjNjY0MmVjYzY3OWViNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDkwMTc2Y2UzMDljNmFkMmUwODFiOWM5MjIyM2Y0Njk3MzdhYjljM2EzZmY3YmU0YjVhYTI1ZGE4ZTcwZDA4NCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjkwNjk3NmViYzY2MGY2MGYzMTY1NTgyOGNlZmFhZTNiMWI5MThlZGQ0YjgwMGM2MmJlMDM3Y2UwNjllOWIwYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNmRiMDgzMDhiMjMwODc5YTJjNDYxZTI3NWE2YzE1MDg2MDA3MzA1NWZhYTAyNjc4ZTA2MTM3YjU1YzRmY2ZjOCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_517d1544f8be406c9f01e5232bcb4eec",
+      "statement": "ReadCoalescedCard 的摘要在有 limit 时带上行号范围：start 取 offset（缺省 1），end 为 start + limit - 1，end 小于 start 时省略范围。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/read.tsx#L92-L104",
+          "version": "repo-lines-v1:sha256:ef5ccc73440503bad749ccf57bed62b24a9bdc7e50e24b55bbd2ec527af01bc1:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIzNmM4NDllYWZjMmEzMjgwOTAyZTY3OGVkMzAwZTRkMTJhZTJkZWM0NmQ1YzhiOTQzMzMxNjA3MWJjZWIwNTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM0MGM1ZDNkYzNhNzczMDc5M2M4OTI3OTQ4YjU1OTY2NDIwN2Y3OWJhODc3NzNjMjE1MDA0NDMxOTYyZmQ0ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8ccbd379d8cc447bbaae04abc5767d42",
+      "statement": "Edit 渲染器的 GitDiffPreview 把 old_string 与 new_string 画成伪 diff：--- a/、+++ b/ 与 @@ -1,n +1,n @@ 三行元信息，随后旧的红色行与新的绿色行，两边各只取前 6 行，超出补省略号；flushBody 让卡片内容贴边以容纳整宽 diff。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/edit.tsx#L35-L55",
+          "version": "repo-lines-v1:sha256:e8fa49a1e295c3ce45072aa244f44f46d00f9c70411d53238b5397aaea12903b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5OWRjYzRlNjk0ZGRjODQ5MzZkMjk4NmFhMzhiNjY1MGVjMjQyYWMwNzNjZGIyMzQwNWU0YjJhM2Q3ZjUxYmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2MjY3OTM1ZmM2MzM0NjVkODQ4YjQwYTRlZDY5NjdlN2I3YTMyM2Y4MWNkNTNjMTEwYWUyMTAyOTY4N2FhMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzZDdmMWE3M2E2ZDdkMTkyYjJhZDBjN2UyMDFkYTBhZjYyODY5MjQyMDEyMzg3MTkyMTkxNDRhZDE0ZTIyZTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhmODI0MzVlZDRhNzFkNDFlNmViNDRiMmY5MTg0OWJkMmNiZThmMGE0NGY0NjNkOTY4ZjI3YTgxNzI2YzI0MjUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_63f29fa12811451f9beab75bd75b2fc1",
+      "statement": "commandRenderer 是 Bash 与 PowerShell 共用的工厂（后者仅把提示符换成 PS>），按 run_in_background 或 backgroundTask 区分后台与前台：后台走 BackgroundTaskTranscript，前台走 TerminalTranscript。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/shared/command.tsx#L9-L42",
+          "version": "repo-lines-v1:sha256:3ab76886303aba81f8b10148b00eee20decab625d9788949707aca2886950ba1:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1OTQ2MWE1ZjkxYzZmZDNhMDFiNDhiNDg2YjIzMTg0YmM5NmU3OGY3Mzg0YzMyNzBjM2ZjZWMwMTk0ZmI3NTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI1ZDA0MWE3ZWZhNDY0MjZiMTkyODFiMmJhNmI1NDIwNWFmMzQ5NTE3YjcyNzAzMzBjODVkZmEwN2QyZjg4ZjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAyNDQ5YjU0YWRmMjZhMjJmZDA5ZjM4NTc1ZDUwYmYxYmYzMWI2ZjFhOTA3MTI5NzgxZDk0MGMwZDhkZTVhNzkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e0c65bf0310542b38ce06bf278097387",
+      "statement": "BackgroundTaskTranscript 按任务状态分派详情：running 显示后台运行中与 taskId；completed 有输出显示输出，否则显示完成或带退出码的完成；failed 取输出或 summary；stopped 拼接输出与已停止。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/shared/command.tsx#L65-L80",
+          "version": "repo-lines-v1:sha256:ee6088b3cd3247587efe663fb41ded68a05405225a00b8c0214319720e599e1e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4MWZmYzI1OTg0MjFkNjdmZDg0ODY3YjQxMDBmNjZkMGVmMTAyMmEwOGQ0ZTVmNGZkYmE2MDEzM2YyOTdlNWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzYjU1MjNlNWI1ZmQyMmRkMTNhNmNmMDczNTY5MWM5Y2Y5MjVjZTU1NmRhMzI4NzM2YWRlZjYyYzc2ZDdhYWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU0ZTBiMzY0YTY4NzkzYTg2Y2IzYzgxZWI0NGRjMjM4MTE1ZTYxZmVlYTMyMWIxZDM4NmFmMDExMGQzZTMxMTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZlMjA4ZGJmNmE2NjYyNTY0MGNiNWFlZTZiNGU1ZGRjYjdkZDhjNTdjMWZmZmY5YzU1ZjgyOGQ4ZjUyODNiNGMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3ae1a61bf9714c3a954948ba429a06c1",
+      "statement": "WebSearch 用 floatingFooter 在右下角浮层显示耗时与结果条数，hasBody 检查 toolUseResult.results 是数组；WebFetch 同样用 floatingFooter 显示 formatMs 与 formatBytes 的结果。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/web-search.tsx#L18-L21",
+          "version": "repo-lines-v1:sha256:759407bc4792d1e601df5fa84a33b82ecf91e03c692a4bb1a85f16c403272343:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDJlM2IyOGQ0OWRkNTA2NDU1YTY0NGZiNmQ2NDM5ZWFhNzlmN2EyODQ2OGNlYTY1MWI0ZDkzZWU0YWFjYzA5MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjY4NTIzODRjNjJiZWM5M2Y0MWNjMGU0YWQ2Y2ZiOTE5OTFjODkzMWNmYmRmMTRiODYxMTBiNGRhZTY2M2VlMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzNmZjNlMWYzODM0YzJkNzMxZGRkMDhiNDU2YjM5NTE2NDkwYzBjNDc3NTg1MDZjNjJiMTQwZDY2YjVjZTNmZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWIzMzBjNmJmYzk0NzUwNDBmNzFkMGNhOGUwZTM2YjU1ZDY2ZDkwMzRlYjc4YzYxMGIwNjFkN2M4NDMzZTBiYSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_4d04864b0afc424bbced23dc1b842b4f",
+      "statement": "normalizeTaskStatus 只接受 completed、in_progress、pending、cancelled 四个值，其余一律归为 pending，供 TaskList 与 TaskGet 共用。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/shared/task.ts#L44-L53",
+          "version": "repo-lines-v1:sha256:10da3dc6cea79ff0742f6e62db14594992dc717fb6a2e2056a4aedf61ec84f2b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5ODE2ZGM5NWZjZjQ2ZTg1YmE5ZDI2OGIwMzQ1NjU4ODU3NGJiZDgwNzc2YTVjY2ZhODIwMzgxZmNjZTU0ODMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYyMjU4ZjExMTEwNzE1MGE5YmVhZjg0N2VmZGRkZDhhNTdlMDQ5MjU5NGVjZmY1NDczYmQ1ZjMxNjQ3MjkwM2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_eac1c3bb1c3e46da8ca000b761542d10",
+      "statement": "TaskOutputTranscript 用正则从结果文本抽取 retrieval_status、task_id、task_type、status、exit_code、output 六个 XML 风格字段，有 output 显示 output，否则显示结构化详情，都空才回退原文。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/shared/task-output.tsx#L20-L29",
+          "version": "repo-lines-v1:sha256:95beb5c2e64a655c895a96c30d1a2cd658530f1866005d92d14c5f9dfeac358f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI2MTJhMDg0YTBlOTc0MWIyZTQwODNhOWNjZTY2YmM0OWQzMjhlNWU1MGVjNGEyNGYwMDllYmQ5N2QzZmU2ZWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdlYTI5NzRhMTBkN2I3MjhkZTIyNDdlYTZmNGEwMzQxMTRiMTE2ZDU3MTY1NDEzZTdjYTRmNTZkOTA1MThjYTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ2ZDU1NTBlMDg5OWExMDc4ZGZiYjJjOGU4Yzc4NTQzMmJjZmE2NGMwNDRjYWUyYmFiYjQyMDMyNjMzMjEzZGYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_33a19a5dd3664e99afcb170166de0cb5",
+      "statement": "TaskUpdate 的 body 用 TaskSummary 渲染，优先使用 context 里的完整 taskItems，只有一个任务时才回退到单条。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/task-update.tsx#L65-L70",
+          "version": "repo-lines-v1:sha256:f73e9cf3e3c03ad21c11bac34d2608c3e8bbf4818a76e109a919a94ce4a36135:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjU3ODZmZjhhN2QzZWY1NmU0YjM2NjRkNWQ3OGFiMjU5YTI5MTQzNTkxM2VmZWMxMjQyYjljYTIyMjUzZTgwMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ1Y2QyZmI0ZjNkZjg4NDUxNTI1NWIzOTUyM2YyZjhiNTQ3MmJlZWE5ZjU2NmZmY2EyMDRkYjgwMjU2MTA0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzZlYmIwNzc3ODk0MTk1NzRhZjQzNGRjZDcyODg5MTQwMzRjMzczY2M1NjgzYWE0YzEyNTAyZDVhOWIxYWQ1MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_9e04321a709840feb363e5fc2d728f1f",
+      "statement": "TaskSummary 的 flat 模式去掉卡片外壳供工具卡内部使用；in_progress 的任务第二行显示 activeForm，其余显示 description。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/task-summary.tsx#L55-L58",
+          "version": "repo-lines-v1:sha256:7ef24dde03261c16c9fc6f11eff566790619c228dab910bd5df2669b6fe09c4c:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZmM4YzY1YjQ3NGJmMzUxZjVlNTE1ZTg3MzRlNzEwNzYwYmE0YjQ1MzZjZThmZDc0Y2MzZTkyZTkwYzJmMzU1NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjhlNmRkZDBlYzA3ZWUxYWQ3YWI1YjY0ZDIyOTBmN2M2ZTdhNDEwMGZhMjk5MWM2ODJhNGU1MzZmYzJkZDdjOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmI5NTYxYTgzMmQ1MTUxMGQyYzNkMDBiMThmOWZiNjgyNGJhZTlkNjY1NGVhMDZmN2IwNDJmZWJmZWIzZTdjNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_9abff73953ce47d4bf310ea69eebe17f",
+      "statement": "taskCreateRenderer 只在 TaskCreate 执行期间显示这一行，提交后该调用折叠进任务卡，因此行永远没有 body。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/task-create.ts#L6-L17",
+          "version": "repo-lines-v1:sha256:ef173251d6c92fde54bf136e8837d5cb03af86e4eb2ecd0d364bce14def2b10a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMyMzdjZDg0ZmM0N2EwZGE1NGU3YWQ5ZThmMTYyMzgzYmFhODBlYjJlN2M0NWI2MjY1NDhmY2E0ZTY0MWU3ZmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_631702b8d9a7405aba54f42b83e05708",
+      "statement": "agentRenderer 的 opensSubagent 让整行可点开子代理；hasBody 与 canOpenSubagent 都要求出错时必须有 agentId，即没有 agentId 的错误无从查看时才把原因摊在行内。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/agent.tsx#L25-L28",
+          "version": "repo-lines-v1:sha256:76fcfc39efb4246a88de9a6b5aeca9ff9fa8c2543c841308880ba0ffdb447cdf:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWYzODczMzk3M2QyYTQ2ZDNmODEzYzQ4NzJkZTY0ODViOWU5MTA4OTJiZTY0ZTFjNzYxYjM1NGUwMGJkYjE1MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzkzN2E3Y2YxYzgwY2VhZDZhMzliYWY0NTg3NTlkOGM0M2M5OWM3OGIzYmVhYTc1YWY0ZWI5YjBkMzZkOWQ1NCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYmE0MGZlYjRlMjk2ODZmZjQxN2VkNTVhNTYwYWM5Y2Q0NDlhMDA0NWY1OGE4MzhjZjU0YjRiODdhMWEyOTg0MSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_30c54a7f5f5d45aba73dbf358db2f9d3",
+      "statement": "workflowPhases 从 run.phases 出发，把 agents 里出现但 phases 未声明的 phaseIndex 补成默认标题（第 N 阶段），避免 agent 有归属而阶段缺失时丢内容。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/workflow.tsx#L78-L90",
+          "version": "repo-lines-v1:sha256:67fe75c68f6cfa8461ea8d8c9b2de364403c4fad46ac93d489337ad69a183ed0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIyMzc1MmE4OGU0Y2M3ZTdmZmMwOTA3MjQwY2RjMDQ1NmE4M2M0NDY0ODZiZDNjNGUwZGRmNTgwMjhhYTQwNGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg2NjRhZTQ1ZWM0OGQ0ZDRhZDRiZjYyYWU2MWIyZTIzZjcwZjBjYTQzMWRlMzQzZDZiMjBkOTRiNGRmODkzYmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNkNWQzODRhYWU1ZDZhZDYzYTRlNWU3N2E2NGM5YTUxZDY1OGMzNWM4YzAxNzgyZjY5YTBhZWU0NTU0NjI2NjUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_836cc8f08dfe45a9ba772067f42b3313",
+      "statement": "Workflow 每个 agent 节点显示状态图标、模型、耗时与 token 数（Intl.NumberFormat compact 格式，数值除以单位大于等于 100 时不留小数），并附一行当前活动摘要：running 取 lastToolSummary 或 promptPreview，failed/stopped 取 lastToolSummary 或 resultPreview。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/workflow.tsx#L69-L76",
+          "version": "repo-lines-v1:sha256:e8f88d5c66917d6982cf2ae9536c3a5b68e7c12dcaa912fc6aece81c3fc749b8:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2RjMjk3ZDA0MGM1ODIyODFjMWUxYmEzNTcwMDhhNzEwMjQ0ZWJiNTc2YWI1NDYyM2JkY2M5MzFmYWFiYjE3NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDcyNDA4ODg2MTE3MThhOGEwOTZkMWRhNGU2ODhjN2NmYmE5OGE0ODA5ZmZlMTZlODAxNjFkZjE4ODc0MmZhMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjQxZTA4YWRlMjYyMzViYjA2YzczY2Y5Nzg1YjY2OGM5YTMwODU1YjQ1NGI0YmNlNzBjODU1NDE0MzFmYjUyMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_a1bac317364a47108881d865dd63bcab",
+      "statement": "WorkflowToolItem 先用 parseWorkflowLaunch 从 input、result 与 toolUseResult 解析出 runId、taskId、workflowName、summary、script，再与 useWorkflowContext 中按 toolUseId 找到的引用合并，上下文优先、解析结果兜底。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/workflow.tsx#L308-L334",
+          "version": "repo-lines-v1:sha256:19f843ba8803ce79a107807bc8019000c5eb544d2a79893328bbb2f824a1dc5b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4MTZiOTQ5YjFlNjE0ZmY3ZWEyYTE2NmE0OTdjYjRhZTlkMmQ1NjQyOWI1MjYyOGMyNDQ4YzkwNjM1OGIwYTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM0MGM1ZDNkYzNhNzczMDc5M2M4OTI3OTQ4YjU1OTY2NDIwN2Y3OWJhODc3NzNjMjE1MDA0NDMxOTYyZmQ0ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVmMGJmYzZlMzQ3YzA0N2E0YjNmMzUzNGM2NDdhNGY2NTJkODc1M2IwNGZiZTlhNGMzMDAxMTlmMTRmOTliYzAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f771f2262842421fb47fa6a122623172",
+      "statement": "exitPlanModeRenderer 的 summary 从结果推断批准与否：把 behavior、status、decision、result 四个字段与结果文本拼起来小写，用 deny/denied/reject/rejected/refuse/refused 与 allow/allowed/approve/approved/accept/accepted 两组词表匹配，均不命中但结果带 filePath、plan 或 isAgent 字段也判为已批准。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/exit-plan-mode.ts#L16-L31",
+          "version": "repo-lines-v1:sha256:2c10c6ed24cd8ce72b7c7e612a434dcc6f17111d2a41cb09021b7f2981e0a46b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNkYjA4NzM5MzE1ODY5ODkyYmMwOWZhOGJlMDhlODM3ZGUyMDU0MzY4NDViODc1NGIwOTAxYzQ2YjhlNDJmMzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFlYWZjMjZkNzFhMTY4M2YyMmQ4MGNlZWEyNTIyMjU0YWQyYzk5YjVhYmI0MzNkOGQ0ODRkZTcxMmYxZjZmNWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5d3721bccf5743fea05a7d32ebeb2c9a",
+      "statement": "CollapsibleRegion 用 scrollHeight 与 250px 阈值判断是否折叠，并以 ResizeObserver 重新测量，而非按行数估算；折叠时底部加渐变遮罩与展开/收起按钮。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/shared/content.tsx#L34-L44",
+          "version": "repo-lines-v1:sha256:21f7de612d1ce73fe58fa6eb3a5761910f3cfd8404a49562881c8c6524bd6717:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ0NjU0MjAzODVkYTAzZGZhYWEzNzUwZTliZjUzMDhhOTkyYjNlNWM0NDQ4ZjM1ZGZhZTg1NWExMTkwN2M3NjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0ODllYTg2MGZhYjg1YWYzODNmNDE4MzQzMjQ0ZjE3ODMwZTI2ZjBmOTY1NzVlNzEwYjdjMTliNjgzN2QwNDYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM5MzcwMGRmNGM1ZGJkM2FlMDBhOGJhMTlhNDNjZDI4YmRhNjkwN2MzZDdjY2NmMDgzMTI4YWI2ZGYxODgwZDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkyYzAxN2E5ODk2Zjg3M2UyYzRhZTcwM2QzNmQyNzdjY2JlYTI1MDRmZmY2MjQ2M2U2NjJjMDc3Mjg3MzhhNzAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_515f7d89f2924fe8829db84a0c36089e",
+      "statement": "relativeProjectPath 把项目内路径转成相对路径并统一分隔符为斜杠，路径等于项目根时退回文件名，不在项目内则原样返回；compactDisplayPath 把超过 4 段的路径压成前两段加省略号加后两段并保留根斜杠，用于行内摘要。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/shared/file-path.ts#L49-L69",
+          "version": "repo-lines-v1:sha256:5dd1e406e9945e07bc5d63485b280c9848f3de77f61f997700efbabddf9f187d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0Y2UxZGYyYzVjYzQ5NTczYmU0OWIwOWVlNDU3Mzc0N2RjNjgwNTFkYWQzNzVkMGY0MWM2MDdkNGJlOWE1NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg1MGQwZDY4MGQ3NGQ2NDQ1YjQwNjU3NmMzODNmNTA3ZjcwMjQyYzZkYmQ1ZGM4N2VkNWU5Y2UxZTlmZGVlZTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8a2e80903b6c488d89fa5b9ed9d0b3d2",
+      "statement": "relativeDisplayPath 不做中间段压缩，供 readRenderer 的 appOpenLink href 使用，因为压缩后的路径主进程无法解析。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/shared/file-path.ts#L39-L43",
+          "version": "repo-lines-v1:sha256:51df23434988c7c2cfb8f0d0e37f9189a857b0e5ecd857f1de474d257b3bb3c3:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOWE1NDVlMmEyZjI4ZDVlNWQzYjMzZjc1N2M4ZDJlMGI2ZGY2NTQyZDg2OGMzNzhlNjQ1OGMxYTljYTNlMGNlOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjUwZDYwMjhmNmIzM2RkMzM5NjZjNTFmMTVkOGNhZjVmNmY2Y2Y5NjI3ZTI5ZWYxMmMxNTcwNDc4MjIxMWE0MSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNWZjNzBhYjI2ZDI4Y2M1ZWQ2YzEyODM5M2YwM2FkYTY3NGExZGY0MTM0NzY4MDg1MWViMzcyMDIwN2M4NGIyYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_3493f20df6e94a43becc783a9fe037d3",
+      "statement": "ToolName 在运行状态下用 ShinyText 发光，注释说明运行态的光效加在工具名上而不是图标上。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/tools/shared/content.tsx#L228-L236",
+          "version": "repo-lines-v1:sha256:11ff3e08b90bc964f22f5fa1319e60185667156de83945383a5a540c20e7d37f:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWFmMjJjZjA3MzI1OTJjMjQ3MTQxY2JlNjFlZmExMTAxMjYxMmY1YTMxMjJiOWFmOWJiYWY1MmY1NzI0ZDE5NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmI3OTczMzQyYmI0ZjgxYTBiOTJmYzQxYzAzZDU2MDdiZjU3M2YwNTQ3YTY4NDM2OTZmY2JhNjA4ZDdmOTBmYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODc1NTRjMGM4ZTE0NmFmMjE0ZjdmZjYwMzA0ODBjNzUyOGVkZGVlNWM5NTc5ZjlmOTQzOTQ3MDFkZmY5Njc5NCJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}

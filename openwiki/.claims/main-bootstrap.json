@@ -1,0 +1,210 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:8eb3ae49d117164c42ac88def17c7b43cf41b6c663f98ef289bb88282d22eb89",
+  "claims": [
+    {
+      "id": "claim_b04ee312208f4ae3955dc379145bf90d",
+      "statement": "bootstrap() 把整个启动过程包在 try/catch 中，任一阶段抛出都交给 handleFatalError('app.startup_failed', caught)。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L78-L79",
+          "version": "repo-lines-v1:sha256:24bf508649c2f918e56d49faff72bd481b5f3cc179c6d2704460185befd90687:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDY1OTVmNGVlNWZmNjNkNTA5NTA0MTlkYzM0NDE0NTEzODUxZGM5NzM2ZmQxN2E0ZjdiZmE5MzBiMjYxYjZmMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjM0NmJmYjEyYzRmODg4M2I2NDVkMjNkODVmMjgyNWRlZDY4YmQ5MmE5MjdiNzIwMGFjOTUwYzU3MjRlNzU4YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOWZmZjZlZjQ3YjEyYzMwNDIxNWM2MjJiYjFkNzliYmU5YmI2ZTM3ZTY5M2NlMDgzNDA3MThkN2ZmYjY2M2ZmNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjExMTA0OTJmMDc5NGFiYjlmYjE5ZjgxNDk3NDQzZmZmNzA1OTViNzcyYTlkZmYzMjhmMjhkYjRkNDcwY2NmMCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_70104c1e72374a33847c949e6fcce7b6",
+      "statement": "启动第一步创建致命错误处理器并安装 uncaughtException 与 unhandledRejection 处理器；该处理器只生效一次，先记 fatal 日志，再与 1000ms 超时赛跑等待日志 flush，最后以退出码 1 结束进程。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L67-L76",
+          "version": "repo-lines-v1:sha256:2f16fe21bba44f71b40d1292bdfd3ddac0dc81c7c5534a43b97a133a2c01d28a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdiMjc1ZDhiZDBhM2UyNTExYzdlN2YzMjJkMzU0YWRmYzFiNDJlYTgwZDJiYmZhZTkxNWQzZjA0NzdkOTA4MjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2NWYwYTExNWQ3NmMyN2Y5ODM3MWQ2M2UwY2EzMmE0YWQwY2Y0MjMxNzc5ODI1NGIyZGVmNGQ0NjYxZDdmODciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZiODQ1YWVkOTViMjRhOTNmYjQ2Mzc1OGMxMjE2YzI2MWM1Yzc2MTY1NWIwZjZkMTYzZjg5MDE2OTQ2MmFiNzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc5ZGFlMmRiZTgxNjcwODZkZjFlOGFjMTc1MjA3MzU0NTJjZTQxYzdkNDgxMzc0MzcwZDQyMGJiZTIzYjAwMjcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7e355f3b24fc44bbb8c08721f06c03c4",
+      "statement": "resolveAppChannel() 决定日志 channel：打包构建默认 stable 并可用 CLOTHO_CHANNEL 覆盖，dev 构建固定为 dev。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L79-L85",
+          "version": "repo-lines-v1:sha256:85bcba4c734752a00c45b665dfca75ba08000f6342defc56b8a4868032a3438e:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjM0NmJmYjEyYzRmODg4M2I2NDVkMjNkODVmMjgyNWRlZDY4YmQ5MmE5MjdiNzIwMGFjOTUwYzU3MjRlNzU4YSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjQ3NWU5NGE5MDRhYzQ5YjMxNTRkNDY3MmE2NmU4NjI5Yjg2ZGFjNzRlM2UyOTM3YmU2OTI3YWUzZGExMWM1MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMmZiYjQ5NjY2ZmE1ZmQ4ZTc5ZmU5ZWVjYzJiZjE5YmU0MWIyNWE3Mzc2Y2NhMzUyNzU2MDUzM2Y5OTc2YTRlMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTllN2FiZWU4ZjUyNmQ4MTNjOThlNGY3ZmFlNmYxOTZkNjlhMjlmMGMyYTc5YWY0Njc2MzZjOTIzYzM4YWQ0YyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_4cd5313ddd46403ba3a59bb51f66fb90",
+      "statement": "readStorage() 失败不致命：只记 storage.read_failed 警告并用空对象兜底，之后据此创建 stateStore。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L102-L111",
+          "version": "repo-lines-v1:sha256:8d9e7d8d2da9ed03ef46a1f85f54b3a526e63f16ff8735600d1923c4383812e6:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1MjE5NmUzNWM5NzJjZDY2YjMzMWNhMTRmZGZlNWQxNmNkNjNkYjNjN2YwYzkyOTYzMDMwODMzYjJlNzIzYzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyYzIwNGRhYzk5NDUyODg2ZTcwNjM4MDM5OTI4NjRlZWM1NWUyZGEzMzUwOTM2OWJlZjA3MTRiNzU5OGRmODkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI0NGI4OTI5MDNlYTFiMGNhYTU1MzkyM2I1OGNlZmU3NDIxNTZmOWJmZTFkYTUzMDVhMDEwYTRiMzMxY2NmZjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY2YjhkZjg4MGRjYTJjMWEwNTVmZmY4NmI4OWJhYzIzNzIzM2Q0OWI1ZGY2M2MyNGZlNGZkNDQ4ODgzNWYwOGEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0057d83769dd4a15a1ae3fa98e4d4041",
+      "statement": "bootstrap 在读取任何项目或会话之前调用 ensureWorkProject() 注册 homedir 对应的 work project，再用 createSessionStorage 建立会话存储并传入 home 项目 id。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L114-L118",
+          "version": "repo-lines-v1:sha256:cfa4ccf5f93ff2a3f1551a4fbbd7c59d111db628d54a62aa0efc88cfd641bc96:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjcwMTVhMzRkYTRkYTkwOTUwNjM3ODM0YWM4YzlkZDEzNjVmNmE4NGFkZmFjOTgxZGVkY2U3Mzg1MmZmMmI1NSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzBjMWYxODhmMTQyZWQ3YTgyNDY4MGIyMDcxNzJjNTUxOWJjNjE0YTQ4ZmRhN2NmMTY3ZWRiOGRkZjc5OTU2YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMGZkMGEwOThjYTg4YWM5YWYzMWNlNWQ1ODhiZWFlNjgwYmJiNDkyNDM2YzU3N2ZkMWRkZmQ4N2ExZDlkYTliYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWFmMGVhM2NkNTY1YmY1ODBmOTc1YTJkMzNiODMzNjJlYzhmNGY3NDEzYjA3ODEzZTA1NzA1N2I0MGUzODBkOCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_6c4bc91136634d01855ebb4528639a23",
+      "statement": "getMainViewTarget 决定主窗口加载目标：dev channel 且 dev server 可用时返回 dev-server 目标（带重试），否则返回 bundled 文件路径。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L120-L128",
+          "version": "repo-lines-v1:sha256:6e305b9149dc6946db0a3854aa5b1e6cf3a56c267f03929d2955a46ca6da4d4c:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDdjM2Y4NGMxNjk1NzBkZGMyNDMwNTcxOTg5Y2Q2YzE2ZDY5MDRmYTk3MjgwZDdjMjMyZmExMzhiY2FmZjk4ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5M2Y0MGUzNzgxZWI4OTZjODJkMDQ2YTA4MDY3YTExZTM1Y2RmMmYxZGZhZjI2ZmVhOTBiOGRiNjY3NjQxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTU1YjZjYjg5ZTk3ZDI5YTE3MmQzM2NhNDRjNWEwMmE4NDg3NWMzZmUzZDk1ODhkZGE4Y2ZkMTQxYjg2MGZlYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjExZmZlMzZkZTZjZDk1NGJkOTE2OWExODdiYzg3MTlhMWViZGRmMzI2MDRkMzhjNDM4YmE2MzJhMTM0NzA4YSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_edd65c3238ff4ff2abf6d32eed8ae207",
+      "statement": "readSettings() 失败时用 defaultSettings() 兜底，并把 readSettings 作为 recover 传给 createSettingsStore，使后续写路径先重新读盘再合并。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L130-L139",
+          "version": "repo-lines-v1:sha256:c508685de84989f721e99bd3546ade8cc242311aee1b41454576e8a65391e46b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1NWIxMDZmYWI5ZGMwODUyOTc2ZDJhNDU1MzUwMWRmYWE3MjQzYTFmYTU3YWE1ZWFhYTNjMzYzMzE2ZTY0MGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM3YzA0NmNiOWNkZjlhMTgzNWQ2MDYzYzc1ZWYzNDJkN2I2Y2EzODAxMGIxNjJjMTlmY2MxOGVjYjZhNTk2ODEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE3ZTIwZDA5ODc4YWZiNzhjNzFhNGQ5Y2FkZjNlM2YwOTYyYThkNjc1NTViOTdkYjA1YWFhYjkwMzYxYTRkNzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEwOWQ0ZWRiNTU5MGVhNDBkNmZlNGMyNTRkMDc5NjI4NGJmYzhkNzVlYjQwNWNmMzkyZjdiNjQ5Nzk1YWM5N2YifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d0a2e1e351c0459d8c1aedcc66b17b81",
+      "statement": "createModelProxy 启动失败会被 rethrow，由致命错误处理器收尾，因为缺少代理时非 Claude 模型完全不可用。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L241-L250",
+          "version": "repo-lines-v1:sha256:e25e3dcf907d65dbdda6c4f9920c063ec0964d5bdcf035eb1313454007ca86b8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZiZTE4MmYxNDAxMTM5MWI5M2M4MjVlMjBmYzcxOWYzMTgwYTEwMzMwZmJhNTIyYmYzZjk5M2ZmMTcxYTlkYzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY1MDZkMjZiODIzMWNkZmMwOWU0NTA0MzQ0NjUyNjY1NGJiMTNjMTc1MDJlOTcyNzJjNzUyOGIwZTU2NTU5NWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzMWM1ZTM2YWNmZmI4MWM3NWRkZGQ1MTc5ZTk3MjNmZDQ3MGM3MWRkY2M5NDA5ODAyM2I4NTVlMDljNjg4NWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEzYjc2MmRjMGU3MzFmZGYzNDUxMmFkNTU2MTVjY2I2MTI0ZTZlNjcyMmNlNWY5ZjgxMWJmZTRlOTU1ZmY1OWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5f199b8699204dfaab5c4c0c0a082444",
+      "statement": "createClaudeDesktopService 接收事件 sink、模型代理、设置存储、一组会话存储函数（sessionOwnership、sessionRebindProject、sessionSetArchived、sessionSetPinned、sessionSetUnread、sessionListFlags）以及会话钩子。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L252-L291",
+          "version": "repo-lines-v1:sha256:cc2b39102b7060b304b2efd023b54c9736b43cdb2e5a5aeaa4fb047cc7c4a7e4:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1NmMwOTFkZTQ2Njc1ZTlhY2Y4Mzc4NGI0ZDI4NTQxMzFiMTI2YmIzZGUyNGJhMzk3YWNlNWUxNDcxMTFkMGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNlY2U5Mjc2NDA0MTVjNWMwNTQwMWYwNDRhOTRjYzcxY2MwMGQ0NjRjN2Y1NDhjYTFlOTRiYmZkYTFhNDhkMGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgzZDMwMmE4MDkxZThkNGJiMmI1MGNjY2UxN2VjNjY0MTQ3NjI0MTliMzQ5MDhjZWRkM2MzMTk2NGU3YmY1ZmEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f9a06ba388f647969225fca2695c465b",
+      "statement": "createStorageStore 用一条 tail promise 串行化所有写操作，get() 返回 structuredClone 副本；update 做浅合并，transform 做读-改-写。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/storage.ts#L52-L87",
+          "version": "repo-lines-v1:sha256:d0fa04d72ba0d598bab78301a1eba6f296ec6c73eed27b50c7e665ed2bf2aeac:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhZDNmNTliMjU4NjRiY2E4N2RjZDc5ODk3NWY0YzU5ZjY2YWNmMGYxOWQ5NjY4NTQ1ZDdmNWNkYjRjOTFlZTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBlM2JkZTFmNjZjMDdmZDllNTM5NGI5ZmQxOWQ2Y2EyZDliYzBlMjY4Njk2MDNhOGQ0YWY3YTI2OWJkMjVlNGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4f9eadedcc48412baf780e156fe35511",
+      "statement": "createSettingsStore 的 recover 参数让第一次 update 先重新读盘作为基数再应用变更，成功后记 settings.recovered 并关闭恢复标记。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/settings.ts#L274-L303",
+          "version": "repo-lines-v1:sha256:c65e5cc08ff611acfb1d8e5b426df547f2c4483565f91926c8605fc4d2568809:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMxOTZmNjA1M2YwNGY5NDZhZmZjN2E0Mzk2ZGZhMDEzNGY2ZDlmZTQ4YmE0ZGYzNDJhYzAzNDViZTM2NjE5N2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhkNWNmMDVhZTgzZGIyZDE4M2E1NzkyZmUyMWU0ZGM1YjE3YTczODUyMzk2ZmI3YTEzY2Q1MDhkNzA2YmRhY2QifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ebcdf25d96134dfca31fd5e7ab125156",
+      "statement": "wrapRequestHandlers 用 Proxy 拦截取值，把每个处理器包成 async 函数：出错时先调用 onError（onError 自身抛错被吞掉），再原样抛出原错误。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/logging/rpc.ts#L1-L24",
+          "version": "repo-lines-v1:sha256:cfb77331f25990c02569c775b9db6f253ba3639037367a5f3fa6fb74df90c106:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZjOWZlN2UyZGU5NjBmODE2OWM2M2I0NzhhMzdlZDk0Nzg0NjliM2IyNDk3MDI2MzgwMjVkMmFlZmZmMWVkZTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_971c7e994fb04909942fd261ddca453a",
+      "statement": "bootstrap 把每个 RPC 处理器注册到 ipcMain.handle，channel 为 clotho:request: 前缀加方法名，并把 params 与 event.sender 一起传入。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L511-L515",
+          "version": "repo-lines-v1:sha256:b13c8e850b5c172740c57ff4ea9cf380aa46a2c13dd2d9a9a947f2ee3e0ef00c:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTcxZmQwNDA5MDcyZDliMDA0MDZjY2RkYTY1ODZmZDNlYmFlNTdjYTJkODk5MDkyMzY1ZDFjNGVlZThiMmIxZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5M2Y0MGUzNzgxZWI4OTZjODJkMDQ2YTA4MDY3YTExZTM1Y2RmMmYxZGZhZjI2ZmVhOTBiOGRiNjY3NjQxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDlmNzVjYmY4NmNkYmIwZWMwMGVhYjJhZjEzOGY2NGEzNDU2NjhlMDFiNmU5NGJmYTRjODI0ZjBhZWZmMmQzNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTI0YzQxN2Y3NDRkOWQ1NTBlYjM0NTE2YmVjOGRmYzkyMmJmMzU4NDBkYTE5YzM1ZDZmYmE1MWQyYTA1ZjJmMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_0523360e23a145518919bc92a7b1cdfa",
+      "statement": "renderer 批量日志通过 clotho:message:appLogBatch 通道进入主进程，交给 recordWebviewLogBatch 处理。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L516-L518",
+          "version": "repo-lines-v1:sha256:524c417f744d9d550eb34516bec8dfc922bf35840da19c35d6fba51d2a05f2f2:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGUzOThlOGQwMTcyYmI1MTBlNjMzYTkwZWVmMDI2ZmQ1ZDMwNTc5NjFhYTJmYTgyNmQ5NmE5YjQyMzdhODkwZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjQ3NWU5NGE5MDRhYzQ5YjMxNTRkNDY3MmE2NmU4NjI5Yjg2ZGFjNzRlM2UyOTM3YmU2OTI3YWUzZGExMWM1MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2MxMDFiOGZmM2EzMTIzNTAzNmQzMGU2YWUyZDI1ZWViYjFlMzQxYzAyNGFkODI3MTA5NDU0YWM3NTA3ZDY2MyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjAxOWNkMGJmOWUyZTIwYTZmMjVkNTUxYWM5MTJiYzU4ZTFhMjA3Yjc4MjU0ODI1Mzc3OTJhODFhZjMxZGFjZiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_a9eb441fd2664a5fbd4cd413566bf887",
+      "statement": "rebuildApplicationMenu 用自增序号防止过期异步回包覆盖新菜单，只有序号仍是最新的那次才调用 Menu.setApplicationMenu。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L205-L238",
+          "version": "repo-lines-v1:sha256:c4ebbf0f865d734882bd944f65798c4b3a81efc8f428999b602e22eb853852fc:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY0ODZhMjdiZDY2NzU1ZjM2NWFmYjQ5MzMwMjQwNGZjM2IyYmRhMmRjZDMxYzNhNGMxNWM3OTM1MjM3MDE5YmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRhZDY2MjRmYmMwZmVkN2JhNGE5NjY5ZTJiZDE2ODQ1NGFiZjhlYTYxY2I4OTc1NGFkOWFlZGM3MDA5YjliOGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU5Mzg0NDMxZTMyZTU2MTRhZjg4MDE1NzRhYmMxYzFkMDUyYWUyOTQ5ZGMzNjk4MzZiZWI0MzkxMTQ5MjY2YzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI3ZThlNmYxODFkMGE2MWUzNTYxYzQxYTg1ZTY3NWZkYjQ1YTFiZDgxMGFhNjc0NDdiZGQ4NzE0MDMxMWJlMzMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0af9520fb9d84bc2b783887d7aff7ca9",
+      "statement": "before-quit 处理函数阻止默认退出并保证只执行一轮，随后并行执行停止模型代理、flushAll 落盘窗口状态、closeAllSessionQueries 关闭会话查询，全部结束后关闭日志并 app.exit(0)。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L521-L553",
+          "version": "repo-lines-v1:sha256:21ddeff36a9d2b562dc6385748fc293bb69b88c1e94c2a3da515f122962c9922:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAzMDNkOWFjYjZiZWY2OTc1MmFhYTQ2NDVlYjI0NDNhZDYxZTRmNTJmZmUxOWIyMDdlYThmNWNmY2IwMWVhZjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY0NzVlOTRhOTA0YWM0OWIzMTU0ZDQ2NzJhNjZlODYyOWI4NmRhYzc0ZTNlMjkzN2JlNjkyN2FlM2RhMTFjNTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM3YWI1N2I5YWRhNDgzMjU3ODY2YmIxOTUxNGE2OWZjZmU5MTBkMTgwZmMwNjczMGRlOGNmODNkYjU2Njk2NDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVjY2YwZGFjOGZkOWQxYjRjODg5ZjE1MTViYzMzZTY3ZWJiMzIyZjQzOThiN2ZiZDNiMTYyZTRjODBlM2NkNTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c65cbc65519c44ce93a127287728fc79",
+      "statement": "常驻会话查询持有 CLI 子进程，退出时会话查询被关闭，子进程随之终止，正在运行的后台任务也会被杀死，这是设计行为。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L544-L548",
+          "version": "repo-lines-v1:sha256:5c9866b538de35e1061c66eed1dc7d4fd8ef247ac8e9ae25509b5f518cc6c864:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYmY3OGVmNWE4OGRhMzQ3YjBjODY1Y2QzMjZmMTRkMmI2ZDM2ZjQ2NDI1MmQyODc3YTM2NWEzZjgxYzM5MTZhYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTgzNTUyYWI1NzE0OTRiMzk5YjE4MTk5NjIyZGJlM2IzODI2ZWI2MWZjZDFmNzRjZmIxMmFiY2Y4OGU0ZjcyNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGFmYWM1YWM3MzEzNTFiMzk1ZjlkNDQ4OTMzZTgzNTY5YzZiNDI4MzA1ZjE5Y2ExZWE3YjM0ZjVhNDNlNWNkNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjdkMGMyM2Q5YjI2MGJhMDgwMDE3MzQ3MmI3NWRhZDM0ZjcwZTIxZmYxZjY0M2I3NmZmYWMyMTYwZjkyNjljOSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_0c275c2cc2454620b3969eca4f9f3bbd",
+      "statement": "启动末尾恢复上次的 free 窗口，再用项目列表过滤后才恢复 project 窗口，已删除项目的窗口不会被恢复。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L557-L559",
+          "version": "repo-lines-v1:sha256:d8b6074bcf88bc205d3a629dfc60ac5f713b5b3a5d8b3b1e64a44bc02609ae85:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2YxZDgxZDUxMzllNGFmNDhmOWQ4OTc3NmQwNjNjNWZlOWU0ZTFlYmJmOWFkYTgzYmQ5ZDc1MmFjODRkYWQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjExNzk1YjIzMDQyMDQxYmVkZmY3OTczMTMyMDUwNmVlYTU2NjI3NWVhMjEyNzI2ODMzMTkyZjMyMzE1ZTJlZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZWNjZjBkYWM4ZmQ5ZDFiNGM4ODlmMTUxNWJjMzNlNjdlYmIzMjJmNDM5OGI3ZmJkM2IxNjJlNGM4MGUzY2Q1MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWRjMmRiYmMxNzY1MTgxNGFiY2M3ODVhMGU1MTBjYmUwNTMxYWE3YzY0M2FkNGFhMjljYWYxZjRjNWVjMTM1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_63fffb7a9ef147349df4eac2d66f9ca7",
+      "statement": "src/main/index.ts 在 app.whenReady() 后调用 bootstrap()，Windows 上 electron-squirrel-startup 命中时直接退出，非 darwin 平台关闭全部窗口即退出应用。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/index.ts#L5-L19",
+          "version": "repo-lines-v1:sha256:36dd0bd6ed821bbc660fd0e530eb6bf2fb2706d6e43ea7d799f3b57e0f528aca:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1NmJhM2E5M2VjZGU5Y2E2NjVlZTAxMzI4NmVhNTgwZWVmOGViNGZkODQ2MzIxMjBlMTQ2MDBmYzFiNGE0YzQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE1M2ZjN2E5OWZjNzlhNThkNzEzMDI1ZTk3NjllMTc0MTQ2NDg0NmE5MDk2NzQ2ZGEyYzk4MTY5OGQwNTk2MmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE0OWZkNWNiZTBmYWJkZGZhMThmZDY3YmQ5NjIwOTMwZTQ3NzkzNTFlOTM1ZDE5N2VmYTQ2N2NmOWI5MTA1OGQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a55926560fbe41e6b28b89c8f5f4b680",
+      "statement": "installGlobalErrorHandlers 为 process 注册 uncaughtException 与 unhandledRejection 监听，并返回移除这两个监听的函数。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/logging/global-errors.ts#L44-L61",
+          "version": "repo-lines-v1:sha256:0166ef27d72a99b0d1712ed76ccbb9e8603d45024d7588a4ae66b8602f102230:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhjYTZiZWY4MjllNzgwZTIyNmQ0NzdlYmNjMjkwODQ1MDRlYTJkNmI3ZTgwODI1ZTlkNjQ3MTZkM2UwYzEzMDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}

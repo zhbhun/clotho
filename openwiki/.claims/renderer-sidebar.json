@@ -1,0 +1,320 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:d453bb83f32f2660f7abc692062a2522cde967372bb82e30a94e7beb1722f7fa",
+  "claims": [
+    {
+      "id": "claim_b982ae62d15448d3ac71c01bae23f9b6",
+      "statement": "SessionSidebar 派生 sessionCount（各组会话数求和，为 0 时渲染 SidebarState 空态，文案随 current/history 切换），以及 close 范围：只有 current 标签给会话项提供关闭菜单，因为关闭会话等于关闭它的标签，历史项不是打开的标签；关闭范围按显示顺序摊平各组会话。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/sidebar/index.tsx#L69-L88",
+          "version": "repo-lines-v1:sha256:86fca87f23aed7e3548ad974c3c4657b86b28d77cf4a1b38e107e2f3644519dd:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkyZmU4MGQ4N2I0NmZlZjdjMmIzN2RkODAxMjJlZmViYWY5YWJhNDk1NTdkNTVkYjgxZDc2Nzg5NTQ4ZDFmNTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ5YjEzMWU2ZTljMTA1ZmEyZjkwNjE5NWVmMDdkNzg0MDc4OTBhYWRiZGM2MmU0NjQyMjdhMzE5NDUyYjRhMzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRjNGY0YmJjZTQ2NjZkYzk3NDI1MTY5NTUwODlkOGNmNjU2YjA0NjY1YTIzNjMzYjVjOWZkODY1OTYwNGRhN2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY5OGY5MDYwN2U3MTE5ZTQ5ZDQyMGRiNmY0OGY0ZTc5NDVmODRjOWRjMGI3ZmM1YjNkOTc4MDVmZGZiZmQyYmUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ea21f3730c1c4656b2eda5629f509986",
+      "statement": "悬停预览的关闭判定不用事件目标或 boundary 事件，而是在 document 上监听 mousemove 并把坐标与容器 rect 相比，因为面板与 Electron 拖拽区重叠会吞掉跨越事件；面板从指针位置滑入，故先给 300ms 沉降期（SIDEBAR_PREVIEW_SETTLE_MS 覆盖 200ms 滑入加余量）。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/sidebar/index.tsx#L97-L122",
+          "version": "repo-lines-v1:sha256:0b09f2885f2dbd1edce234bf5d972330997bff4f33bc3426c865114247286546:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5NjZmYmZhODg5OThkYTc0NjU2YzUwMTk0OTU2YzI1ZjA4NDk0NTc2NjBjMDA5ZmU2M2QxZTlmYTlkYzkzMWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk5NDg2Y2M0N2NkMjNlNzMzYzA2ODdiYjFjMDllNmFlZDY4YWZlMzliNzRlMWViODFhMGU0MDBlOTQ4NGJkMzEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVlNjBkZDc3NzgxMDJiNTUyMjI5NjZmZDNiNTIyZGNkYTgzMWM4OTUzNzZlM2NmYmQ4NzYwYzcxYzY5ZTVlNTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE5Y2JkMDUwNDVjZGE5M2JlNGFlZTdjZjYxYWUyNjc3NDY4Nzc3MTVhZTFmMmI0ZjM3NTE5YTUxZGJmOTdkYTQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f6aed70f021143d8befa3bf0939c6a84",
+      "statement": "侧栏在标签栏最后一个按钮上拦截未按 Shift 的 Tab：若焦点会话确实在列表里则 preventDefault 并自增 enterListRevision，因为自然 Tab 到不了虚拟窗口之外的 roving 焦点行。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/sidebar/index.tsx#L124-L128",
+          "version": "repo-lines-v1:sha256:d275e6c0449aaf9e4a7bc0f5ef1525a8759d3493cb05a90d7bba7f7b2395aa0a:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjk4NjNkY2Q3NDhjYzY4MjhhOTljNDljODA4ZDg3OTJmOGRjMThhOTZkYTU5ZWQzZGEwZTc5ZDVhNGM5MDM0ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjdlNTc4OGQ1ZDlkNzNkMjRhODFkYmMwYTVhNzRiZmE4MmM5YzNiM2FmOTllNTJhZjc5NmU5MGI0NjhhOGEzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2ZhMWQ1MmZlNmY5MDcxYjYzOTI2OThmMzBmMTRkZjBlNjRlMjc5OWU0YmE2Y2RlZmEyOGZhMDY3MTcxYTg3NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTcyZjYyY2RlMDA5MDVkNmZiYWI3ZmUxNjhiZDE4MzFiMWY1M2YwNzhhNjk5ZWJmMGM2YjhjYjA1ZjliZGY0MiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_09188532f1264ac39e669bd0c3104de4",
+      "statement": "createVirtualRows 把组标题与会话行摊平成一条线性行数组：常量 GROUP_HEIGHT 32、GROUP_GAP 8、SESSION_HEIGHT 50；第一个组无顶部间距，其余多出 GROUP_GAP；折叠组只输出标题行但 count 仍是全量会话数；返回 groupRows、rows 与 sessionId 到行号的 sessionIndexes 映射。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/sidebar/virtual-rows.ts#L36-L81",
+          "version": "repo-lines-v1:sha256:77254eb2a8d09e4049049130cab7bcf8e4c4f907ddce4cda405562cf3efa44a5:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlmNWI1MWQ5ZGUwYzdmNjM4MjAxNDNiYjQ4MWRjZTI0YjkxNjA3MjcyOTRlNzQ4N2ZkNDdlMzY4MmJhNzljMmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM2MzBlOGNlZDE0NjI3NzJiOTAyZDVhYWNlMWMzYzk0N2JjMmFkZDYzOGEzMjQ1MDM4MWI1MWZjYjIwZDFkNjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b688b234447845d78fc5c2279a1991d9",
+      "statement": "组标题在虚拟列表里是普通行而非 sticky，因为顶部边缘由上方固定的标签栏拥有；行用 absolute 加 translateY 定位，容器高度为 virtualizer.getTotalSize()，没有 spacer 元素。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/sidebar/virtual-session-list.tsx#L71-L105",
+          "version": "repo-lines-v1:sha256:269bff70a0d45f3553bc0dd08f0b8498405f178299ee4105a2e5928d1f487870:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg3MzI3NzVlZWU3NzAwMThkYjdkNzlkMDM1YTAxNjMwMTVhMDE2ZGUxN2ViYmY4ODg0OTAyZWM2ZDFkOWZjZjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM0MGM1ZDNkYzNhNzczMDc5M2M4OTI3OTQ4YjU1OTY2NDIwN2Y3OWJhODc3NzNjMjE1MDA0NDMxOTYyZmQ0ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQzMDFlMWE3NGY3MjRkMzRlYTNkNGUzOGVhZmNhMjY0NjhkYzQ2Nzg4ZGY2NzQ2YjRmYzQ0YTU2NjZkOWVjODMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d3b5468232a94c81b0954ec8c90445ae",
+      "statement": "虚拟列表在滚动手势开始时读一次 [data-session-item]:hover 的 id 存入 state，并给容器打 data-session-list-scrolling 由 CSS 抑制行的事件命中，命中行的 isHoverFrozen 自行补上悬停色板；手势结束（SCROLL_SETTLE_MS 150ms 无新事件）后清除，:hover 交还指针，以此避免触摸板惯性滚动让 :hover 逐个重新命中行。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/sidebar/virtual-session-list.tsx#L175-L208",
+          "version": "repo-lines-v1:sha256:3e0d08b41de0b59a6f07b72dbd0fd51fa1d4ca224c089b66e60de068c8301281:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVlNDczZTgzOTdmZWY4MGI5YmU5OTU5ZTU4ZmRjZjE0NmIxYTk5MDJjY2JkZmJiNmI5YjlmODM1OWM4NzA2NWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4YTYwZmUyN2RjNGIxMGEyNzIzOTI3NDUyZjFmN2QxZjBiYmExMDYzZGFkNzY1YjA1YWZjZmQ5MDRlYTJjYTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZjOGM1NGU1MjNlMWQ2OTQwY2RlZGMwMmY3ZmYxZGQyYzgyZDIyNDBiODVmMjkzZDRkYzRhYjIyOTE3OGE0ZDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ2ZmVmN2Q1YmZiNmNkOWY1ODNhN2MwOTIwZjZiOWM1MGNiODY0MDYxZDgzNDhjNWViYTQ3NzM4NzQzNGQxNzEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9bdf43304f1f42be9c7176765b8e01b0",
+      "statement": "虚拟列表把方向键导航（父组件 focusNavigationRevision）与从标签栏 Tab 进列表（本地 enterListRevision）相加得到 listFocusRevision，只有值真的变化才 scrollToIndex(focusedIndex, align: 'auto')；定位请求是另一个用 ref 比较 revision 的 effect，align: 'center' 平滑滚动。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/sidebar/virtual-session-list.tsx#L219-L226",
+          "version": "repo-lines-v1:sha256:d8662b6750e696ece24f709b6341a4f8408cec71a52d09fd169a8da8b8fa00e1:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDQ2NTQyMDM4NWRhMDNkZmFhYTM3NTBlOWJmNTMwOGE5OTJiM2U1YzQ0NDhmMzVkZmFlODU1YTExOTA3Yzc2NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMGQ3NWNjYWVlZDlkZTZiZjEzYzZhZGQyMDNiNTRjNzQ5YjU0YWY5NGYwZmU0YWEyYzRhZTgzMTUxYWFjNDUwMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzJkMjdhYjkxNjA5ZTMwYmQwNDM4ZDc2MjNlNTdhYWU4ZmM5OTM5NWM5MTJlZWE5MTM2ZTA1MjhkMzI0YTM2MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTYwZWU5ZWJiZmU1NTIwYjBlMDJmYTBhYzRiZjBmM2E5YjI3ZWFhNmI2ODhiZTQ2MjQyZTE0ODc3MzMzMjY0ZCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_85cb77b552b94bf99121a6d1591a94e2",
+      "statement": "焦点行的 SessionItem 在 useLayoutEffect 里 focus({preventScroll: true, focusVisible: true})，preventScroll 是必须的，否则虚拟行自带的 focus 滚动会与 virtualizer 的滚动冲突。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/sidebar/session-item.tsx#L51-L54",
+          "version": "repo-lines-v1:sha256:b46fcab24b64c60571d1b9dcb932dde0f156ed397b9c2b12f8a43137aa3e11d3:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDQ2NTQyMDM4NWRhMDNkZmFhYTM3NTBlOWJmNTMwOGE5OTJiM2U1YzQ0NDhmMzVkZmFlODU1YTExOTA3Yzc2NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNWJkOGVkYmNmMjRlNDY4NTViNGQ3YmY1NjRkNGQyZmVlYTU5OTdlNGI3YTkzYjI4YmJlMWQ1ZjQ1YjJlZWU0ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYmQyZmI4NGVlYjE5NmIxMGExMDZlZGE5NGNiYTQyMWEzZTU0OTQwN2MxYzU1MjcyNzY0MTNiZjRmOWRjMGRlMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjVlNWE3NWM5ZmQwYWFhZjNmNzJjOTBlZGY4NTg1ODk2OWIzZTA5NDAwNTY0NmU5NjdjNmQ1Yzg4NDEyNDZjNCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_505998eec5724ef7beaf8c8b56fd2af9",
+      "statement": "buildSessionTimeline 先按 compareSessions（updated_at ?? created_at 倒序，同秒按 id）排序；置顶会话进 pinned 组；archivedGroup 为真时已归档会话进末尾的 archived 组，为假时留在日期组里；其余按本地日期 YYYY-MM-DD 分组，标签由 sessionDateLabel 给出；未保存的空白草稿被跳过。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/utils/session-list.ts#L157-L235",
+          "version": "repo-lines-v1:sha256:48a77a125d5bd84155ea9b39e2855ff792699625cb03eb18e51df9b2c0ce2f09:eyJzZWxlY3RlZExpbmVDb3VudCI6NzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYwMGUwNGJmZjEzMGNkNmNhZDllMzRhYjg0YTRjYjEwYTIyZWY2ZmFiMzk2OWFiN2U3MTM3MmU1ODg3NTczMmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM0MGM1ZDNkYzNhNzczMDc5M2M4OTI3OTQ4YjU1OTY2NDIwN2Y3OWJhODc3NzNjMjE1MDA0NDMxOTYyZmQ0ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA2ZDE4NWMzZThmMDJiYTU4ZWIzNWY3MzkwYmU5NDk2NzcxMGJlNDliZWUzMGNjNjlhZDk4YWFmNGQzMzhiY2QifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bc78c22c815d4ec28c79b84e17195205",
+      "statement": "calendarDayDistance 用 Date.UTC 构造日期做差来计算相差天数，避免夏令时与本地时区偏移把一天算成 23 或 25 小时。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/utils/session-list.ts#L56-L60",
+          "version": "repo-lines-v1:sha256:8f010f138e2c61d7584f7f8926bfcb48935b5a55e3c6566a411647198070f599:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzllYmVjNTM1ZmI3MWI0M2UzN2MwMDk2NzFhYjAzZTE1Njk2ZGE0ODQyNzJkYTYxNDVlOTBlMzQzMmY0ZjIxNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDk2NTljYWI5ZTRmMjFlZTdhZDI5NTZjNmE0OGRmYmZjNDhmY2QzZDNhNGNhNjhjYzA3ZjRhM2FiZjNjODVjOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzg3NmVjY2I5ZmQ4YzUzMzAxMDEzMzA3OGQ0NjEyMmFkNzgxMGFmMDUzNjJhYTJmMTIwMDRiM2NkODI2NzJhNCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_c18f1f052e7642beb1898a0a65c01685",
+      "statement": "未命名会话在存储里的标题是常量 DEFAULT_SESSION_TITLE（'New Chat'），sessionDisplayTitle 显示时经 i18n 译成当前语言，因此比较应使用该常量而非字面量。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/utils/session-list.ts#L40-L74",
+          "version": "repo-lines-v1:sha256:2687371e39a0cff945f3984751b7ffbcb0adb28f2d96de7c2cf0114c70fbf8e5:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBhNmZmMmYyMjkzYWE1YWM5YTVhNDE5ZjNkYzZmNTJiYmU3YjIxYWVhZTA0MGU4MDkzZDQ4YzViZTM3MzE2YjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY2MDJiOWFkODBhMzQ5MTg5MjU2OGIwYjliZmVkMjNjYzc2YTFmYjhjNTNlNTJhMTU5YmVlMGRlM2EyNmQ4OTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVmZTdmYTE3MTM1MmVmNDI2MTM1YjM2OWRiZjk1MjgxN2RlMDA3YTE0MzQ3MGEwOWE4Nzk5YjJjNDZhYzM1OWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_cac4baf480ce46c490b8c995373f8057",
+      "statement": "pickOpenOrPinnedSessions 返回 current 标签的子集：工作区里开着的会话加上置顶会话（置顶的即使关闭也仍可达）。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/utils/session-list.ts#L142-L155",
+          "version": "repo-lines-v1:sha256:566caf7ea30202520a350889b9d4ec08a662c63433875fe734cacf60240076ce:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI2ZDZhMDFjNzFmMjJiNjU1MmJmMTUzYmJjMmJmOTUwYjc4MmNmMGJlMGNiN2Y3OTQwZjU0M2Q5NDc4NWJiODciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYzNzBhZDMwYzdiNTY2MjI1YmU1ZjYyZWFlZDJiNmYxOWVmMGQ4N2NiMzI1MTEzOGNmNTA4YTBhZTRhNTk2MTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYwNDJiMTM3N2ZlM2IzZTE1ZjM0MjA5Yzc3OGEyZWQ0N2RjZTg1Mjk0ODAyOTA4YjkyMWFkZjgxNjdlMjk3NWEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7ff38f4782984f79ac3113c6bcfe90f0",
+      "statement": "pickAutoArchiveCandidates 排除已归档、草稿、当前会话、打开中的、置顶的以及非 idle 的会话，活动时间取 updated_at/created_at 与 unarchived_at 的较大值，使手动取消归档获得一次完整宽限期。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/utils/session-list.ts#L255-L286",
+          "version": "repo-lines-v1:sha256:f0eb1cfc838eb5937f52459a4de3ccfdf1413c3930c5d7f277c9a0c841db7864:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNkYzI3MjhiYjUyNzQxYWI4NWI5NDFmNWJjNjdmZWU0ZjBiMjBkNjk4MTkwYzQzOTRhZDc2NTEyY2ZjMTFkM2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_42494e99cd49420598415188f80522a0",
+      "statement": "侧栏拖拽用 pointer capture：onPointerDown 只接受主键并 setPointerCapture，pointermove/up/cancel 监听挂在 window 上并按 pointerId 过滤，resize(clientX) 返回是否该展开并同步 open；丢失捕获、窗口失焦与卸载都会 finishActiveResize，release 包 try 因为捕获在失焦后可能已消失。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/sidebar/resize-handle.tsx#L48-L75",
+          "version": "repo-lines-v1:sha256:a8509b296d675a6765ec8aa1e30b417406250421aca707c7f86c566a6c594ed5:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5NjZmYmZhODg5OThkYTc0NjU2YzUwMTk0OTU2YzI1ZjA4NDk0NTc2NjBjMDA5ZmU2M2QxZTlmYTlkYzkzMWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ2ZDhiNjdlMzA4NWEzZDRjMjMyZTQxZmY0NDNiZTQ5NTViMzNlMzYxNGViY2RjM2M5OTExZDg2MTU3YWI4YjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc0Zjg1NTZhM2FiYjVjYmI3NGJkZDlkNzcxODQ3NDk4MjAwOTA4NzQxNDA4MTAyMDMzZTEwMjcwOGQxM2NjMWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIzOTNlZjc4YjIxMTM5NzAzYmEyMjM1YzRiMTJmZGJlOTA3YjJlMmRjZjNlMTVjMTVjNjdhMWJhMWRlNDJkMzAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5bb8fbb6349845f8b77c62f0ff726d27",
+      "statement": "侧栏键盘改宽：左右方向键每次 8px（KEYBOARD_RESIZE_STEP），Home/End 到最小/最大，每次立即 finishResize，因为 finish 里就是把宽度落盘。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/sidebar/resize-handle.tsx#L79-L103",
+          "version": "repo-lines-v1:sha256:897c1279493efd32be5ab2a4086e1e1a713a93e2849652e5f6566fb8a5b8a0cb:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYxYWZjNWU2MDJlODIzYmIxYjQwZGQyNGQxNWYyM2QwYjYzYmU1YWFhMDgwMmZjZGNiMjhkMjcxYzJjOTg2NjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIzOTNlZjc4YjIxMTM5NzAzYmEyMjM1YzRiMTJmZGJlOTA3YjJlMmRjZjNlMTVjMTVjNjdhMWJhMWRlNDJkMzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg2YzIxNzA4MmU2ZmRiZjVjMGIxZDVmNzkwMTM0NmRmMTMyMzk2N2ZiZmVmMjgwMWE0MDZjYzJhNjc2NjU0MWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8836e61da19d40d7ac5ae6afe2594ac3",
+      "statement": "侧栏宽度分 preferredWidth（用户偏好，从 readUiState().sidebarWidth 读）与渲染宽度（偏好夹到 maxWidth = min(400, windowWidth/3)），因此窄窗口压缩、宽窗口还原而偏好本身不被修改；finishResize 把当前宽度写进 updateUiState。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/components/resizable-sidebar.tsx#L75-L90",
+          "version": "repo-lines-v1:sha256:05852369de04060c7dead04cf667f3b47d57b49ab0dcd6a62ddddb4ef9038e19:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3M2EyODAzNGI0ZGI3ZjAxMjg0NzM3OGRhNTY3ZTZlZWE5Yzc2ODhhYWE0NTIwZDhkMmYzOTliMTY3OTkxNGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0ODllYTg2MGZhYjg1YWYzODNmNDE4MzQzMjQ0ZjE3ODMwZTI2ZjBmOTY1NzVlNzEwYjdjMTliNjgzN2QwNDYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA2ZWVjNjc1OGQ2YWI4YzgyMTk2MzM3NjNlMDFkMmQ1MmU5OTc3NjcyZDJlMDFmMWIyOTU5NTRmYWQ3ODU5MTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUxOTliODYxMjJmMThhZWU3MTFkYTVkMTdjMGUxMjkyMzJhMmYwYTA5MzM5NGM1ZWM2MTU4MjZlZDViYTJjNmEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6c96080a802b4e3fbe972e5ca47c47ce",
+      "statement": "macOS chrome 的历史前进后退按钮的 disabled 来自 useCommandEnabled(commandId)，该 hook 订阅 registry 的 version 计数器并读 registry.get(commandId)?.enabled，因此能否后退与快捷键本身是否可用是同一份真相；点击则走 dispatchCommand，与键盘同一条终点。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/sidebar/mac-window-chrome.tsx#L43-L72",
+          "version": "repo-lines-v1:sha256:82f378977cb8c205c862543fad381f43010789e458bb9e4699cf011c16297da8:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlhMDZiOTFiNDIwZjY2YzNhOWIxZTNjZDJmM2E5MTAzMjRlODE3MjM2ZTMyZjU0YmE4YmZjYmI2MWUxMzQ3Y2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM0MGM1ZDNkYzNhNzczMDc5M2M4OTI3OTQ4YjU1OTY2NDIwN2Y3OWJhODc3NzNjMjE1MDA0NDMxOTYyZmQ0ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_194b6cd45deb4f62ba65d4e85f31cc5b",
+      "statement": "quick-open 的查询第一个字符决定模式、其余是该模式的过滤器：~ 为 projects、# 为 allSessions、@ 为 projectSessions、: 为 sentMessages，无前缀则为 default。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/quick-open/quick-open-mode.ts#L23-L27",
+          "version": "repo-lines-v1:sha256:ae5e91ddf4a57e5981555d17f553797a0bc249c4daa1940e11678ebbface8a8f:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjAyMGVjMWZkMTYxNTVmM2JjMDNmMTVjOTY4NDE3OTBmMDJmNDcxNjFlMzAxMzRlNjAyZTI3YjI3MTVkNmVhNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODhlMDM1ZTI0MzkwNWIzYTI4OGZhYmY2MWZhNWJiZDI0ZGM5NWZjMjNhYTY2NjlkNDRhOWMwMDRkMzRkN2I3ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDM3OGY4YzEyNThmZGM2YTUzYWM0MmYwZTJiMzMyNDc2OWUzMTNhYmNmMDBkOWM0NTA5NDhmMTZjMjJlNDRhOSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_7cccbfdba5e443728b9e7d712fd8c6e8",
+      "statement": "default 面板顶部的模式行用 getEffectiveBindings(entry.commandId, catalog, overrides)[0] 取该命令当前生效的绑定作为 trailing 提示并订阅 overrides store，因此用户改快捷键后提示同步更新。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/quick-open/index.tsx#L277-L294",
+          "version": "repo-lines-v1:sha256:127a9c846805635ff0db971319d98a973440f86bd8498c8fb1e744967cd59e56:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzMWJhYjM4NDRmYjQ1ZDJhMTQzZDU4NzRlNDVkN2I5OGJjMDQyN2Y1YTRkNmY1NWUzNGY3Mjc0ZjJmYzYxMDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJkNGZjMzFkMzc1MWQ3NTM0Mzc0NTdhODFmN2NlNTYyZjI4NmQwMWIwZGMyMGFlNmNmNThmZWQ2YTkwZGJjYWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjliY2Y4ZGJkN2I4Mjg4MThmNTgzNGU2MDgxNWY4ODM1OWZkMTgyYjIyNTE3ODg3YjBlYmY0ODBjZDQzMzAwMzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI1MTJkMGY4NDkzMWY0M2U3MDM5MmU4OGE4NGRlNDU4ZTgyY2QxZDk3NjBhYjUzYmZiZjhiNjBkNzlkMTY2ZDUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c1aee6f564084ad2bfe7f6803cade15c",
+      "statement": "选中一个模式行时把前缀写进查询、聚焦输入框，并在 requestAnimationFrame 后 setSelectionRange 到末尾，因为值要到下一个 tick 才落到 input 上。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/quick-open/index.tsx#L137-L148",
+          "version": "repo-lines-v1:sha256:6a8131175b28c63d61fa1ef5ed44402f9bb1488ec922f17a3a93cba378764a6d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMzYWU5NWFiMmJhZDBjM2Q2ZDZkOGM1OTFkMWEzYmU0NzA3Mzk3ZGMyYTY2YTI5NzNkNDczZDhkZWNiYzdkMjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEzNTdiODVkMGY4NDE3MTczYWM3NzI5ZGRhMGNiMGFmNzNkMzllOGM2YTg2NTRlNjQwMjNiMTI0NGVhZjkzMmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY3MjE3ZmZiNWI5N2YwMjcwZGZkMzQwOTkzMjk5MDk2OTZjMDI1OWIwMjc0YzUxM2JlYTY1ZTQwZTUyNmU1ZTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5be94e13f78c4ffe9f46b12e2869a8e1",
+      "statement": "quick-open store 的 openQuickOpen(initialQuery) 接收快捷键传入的模式前缀，openCount 每次打开自增，使面板已开着时再次触发也会重置查询。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/quick-open/quick-open-store.ts#L15-L26",
+          "version": "repo-lines-v1:sha256:abda09163908890e0bf80350a729a469364e8fd03f31897de91b6a0adf63000f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQwYjU0NzIxMDFiYmFlNjQxMDA4YTc1YWQxZGE1ODFkNDQ2YjZmZTg2NDE4ZTcyZjkxOGI1MmFmNzYwNGJmZTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVjMmQ3YjBlNmZjNGYwYzI5YjhkZjgzMmIzM2Y1NjJmZmEwMzg1MzQ4ODYzNWEzNDNhZTNhMjQ2NDcxNzRhMjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgxOTc5MjllY2M4MDkzMWU2NTMyNzI1Njc4ZGNhZjhlN2VkZWZiZjY3NGYxYWY3NTk5ZDY5OGE3NzM5ZWQ4ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b4c8428d37bd4b75a756c8b07f63a6bf",
+      "statement": "scoreFuzzyMatch 是五档评分：完全相同 1000、前缀 800、词边界命中 600 减位置惩罚（上限 WORD_POSITION_PENALTY_CAP 150，保证晚出现的词边界命中仍压过任何子串命中）、子串 400 减位置、子序列 100 加连续性奖励；跨多个目标取最高，空查询或无命中返回 null。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/quick-open/fuzzy-match.ts#L1-L60",
+          "version": "repo-lines-v1:sha256:334c2a3053e34f0ddabb471ef5b92cab98bd5a2a347bcf065f92f8680a7c3344:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM1NDNjNTYzODA4ZmRlM2M5Yjc5NGM0Y2I5YzNiYmY3MzJlN2QxYzFjODU5YTFlM2QwZGEwZDQyYjZlMzk5ZWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bda4d51b063d45aa84735b58235f56de",
+      "statement": "quick-open 的 rankByScore 在查询为空时保留原始顺序不排序，否则过滤后按分数降序排列，且用稳定排序使同分项保持基础顺序。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/quick-open/index.tsx#L61-L70",
+          "version": "repo-lines-v1:sha256:6784da264468fc8b8afdb6c65927cc0c18bd13d07962c4a0b97c12ed24079260:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg3NjE3NmNmMGY5NjMxOGEwZGFhMGFiMGNmNDNhMDQ4NDMzMmVkMTI3Y2E1Yzg1ZmI4YjdmODQwZmRhYTFmZTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBhZjYzZjZhOTAxMmM4YWYzYzcxZDM3MzdiZmRhZjZhN2VhODgzMDM3OTljZWYwY2ZjNjVkNzJmZWU3ZDg5ZTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU4OTJmODMwYWY4ODMzYTJkOGY1Njk3MGQ4NzY3NTM1OTY5ZTU0NDgxZGRkN2ExYjU2MjNiNjUxOTJjZWI0ZTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e98caf6948f14d39baa9f726e8efe30c",
+      "statement": "useQuickOpenSessions 从 workbench store 取会话，按 compareSessions 排序后切成 active 与 archived，再派生当前项目子集与最近 30 条（RECENT_SESSIONS_LIMIT）；home 模式下项目子集退化为全部，与历史选择器一致。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/quick-open/use-quick-open-items.ts#L28-L52",
+          "version": "repo-lines-v1:sha256:05aaa43dea91184eb9405d30755dfc47b884628c0e122c5e87304a2eb38a6e85:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlmYzAyMDEzNDk5ZTM3ZmI3ZGI0NjQzZjc5MDZmZjE4M2FlNDM2OTUwNGQ2NjAyMTZjNTcyNDQ0NWU3ZTk4M2UiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFjMTg1YjZiMTY1NDEwNGRiYmQ4YzMwZDVlODc4MGNjMTc2MWMzZjhiNjUyNDIxODc1NWUwNjVlNzFjZDJkMWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJjN2VkYTk3OTU0MDgyMzI1YTJhNDJhOTBiM2QwMjU2OGEyZWViNDc3MWZhNWMwNjk4YmJiYTY2YWE2N2YzNjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_740cbab3fd3b4eb7943d326f86632530",
+      "statement": "useQuickOpenSentPrompts 在面板关闭时返回常量空数组，让流式更新停在一个稳定引用上；它订阅稳定的 messageIds/messages 引用再在 memo 里派生数组，直接从 selector 返回新数组会使 useSyncExternalStore 死循环；无选中会话时用模块级 inert store 顶上。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/quick-open/use-quick-open-items.ts#L85-L102",
+          "version": "repo-lines-v1:sha256:43b5ec3c676de70433332731384feb95d049d4a1e0d508091ec4ef82ce01e4ba:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNlY2EyODJkM2E5ZTI2ZjRjYzVmMGM1MjU4ZGQ1NzhjMDA2ZDQ2MDYyNmY2YTM4MDFkMzZlZjI2NzhkMDU0YWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYyY2IwMzU1YjE3MWM5NjNlNjY3MGE1ZDVkMWFjMjUwNmIxOTQ4MDk5NTAwMWQyNTdiYTk3YTU0NDVhZmE1MjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_322a3756b8d84b74b0ef7876b10b943b",
+      "statement": "quick-open 的 SwitcherCommand 配 shouldFilter={false}，因为过滤要跨项目、会话、消息三类混合排序，由面板自己完成；defaultValue 按模式指向当前项目或当前会话。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/quick-open/index.tsx#L381-L398",
+          "version": "repo-lines-v1:sha256:f51541dbaac3c2d718e374de2076878a8921c54d9bd2690c9013f10788a8f106:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1NGI3Y2VkYmQ2NTY1ZThkYTlmNWEwYjU5M2FkMGYxYzExOGRhMTliMTI1ZGRkOGIyZWIwNjg4MDNhNTFmOWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlODhlODYwNWRjNWY4NmYwZDM0MTVlYjA1MTQzMjNjOTY4NjEzOWFiOGEwM2IzNzg5MTdhZDc1MTkwMmYzZmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhlNmFjYmIwMGU4ZWMzZGIzZWIzODg2OTI4MWFlOWZiNDhhN2Q4NTQ3ZWE1Y2YyNTVmNjU2ZWI4MjM4ZDM2ZjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjczYmJkZjQzODRmMTM3MWM4NmYwNGVmNTk0MzNjZjRjMWRmODM4ZmYzMWY4ZjhkYzliZjljNjdhMjEzYzk2ZjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_21cf8d65f7ce407fb42e0c6374140b63",
+      "statement": "项目图标弹层用一个 suppressOutsidePressRef 抵消 hidden file input 引发的误判：该 input 在弹层 DOM 之外，其程序化点击会被 popover 判为外部按压，因此那次关闭被 details.cancel() 抵消。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/components/project-icon-picker.tsx#L78-L90",
+          "version": "repo-lines-v1:sha256:7f56869b81f6efa5f518e41cc41963c7b95ac28884d45b9d4b50a6fea4909f77:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQzOGQzOTRhNjA2YmU3MTU5ZDZmMmFhMzIzYTAzM2ZjMzMxNjEyYjQyNTNiZmQ1NGNiN2QwMGJjZDBmN2Q5NGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUzYTNiZjRjN2RkMjQwMWQ3MjZiMWU4MTQzNGUxZWY3M2FlN2FhNzE1MjlkM2Y1YzQ4YTJjMDg0MWNiMWIxNmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM3YWQwYWNmNzJjZTUxOGIzMTY2YWRjYTYzOGFjMjM4MGZkYWMxZTJmMjA3NmMyYjkxNmE5YjFlMDZhMWZlZTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRhM2I3Y2IwODA3N2ZmM2I3YTQwYzcyZTNhOGNlODUwMTczYmJjZmQyYTY5YTQyNTNjNDA1MDcyNzM4NmYyNmQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_14b84086bd5d47c5936c31f4bd17ac67",
+      "statement": "emoji 数据在模块加载时把 emojibase compact 数据集按 group 分桶、按 order 排序，每条目的 keywords 由 label、tags 与 shortcodes 拼接后小写；group 2 被跳过，故 EMOJI_GROUP_IDS 为 [0,1,3,4,5,6,7,8,9]；suggested 组按 hexcode 从数据集反查条目而非硬写字符。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/components/emoji-picker/emoji-data.ts#L42-L68",
+          "version": "repo-lines-v1:sha256:5b4220fc4d3b147bec3a0014dd733648b98e94a0cd8db131b2828fe871496c3d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlMGM3ZjgyMWZjMjdkMDFiMTJmNzkwMGI5ZDQ4ZDdjZGM2MzZkNjg2NzZjMTBmOWJjNzkwZjQ3ZDJjMjU0NGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1ODBiNzY1MThkYWU5NzlmYWViZDAyMzY3YTI5MjkyYTUwZDk3NjA5MjI1MWEzOGE2Y2UzMDg4MGJhNDI4MjUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ3Zjg0NDcxZDQyODk4ZDRjYTgwODJlNzQ5YmI2OTI2MTgwYTE5YmM4ZWVjMDg1MDEzMjE1OWNlNDIwOTQ1MDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ccbd4d4e976a4f9c9b0e1d3e6c3f566e",
+      "statement": "searchEmojis 是 AND 语义：查询按空白切词，每个词都必须是条目 keywords 的子串，任一词不命中即排除。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/components/emoji-picker/emoji-search.ts#L7-L11",
+          "version": "repo-lines-v1:sha256:a5e7d992db9e79132b9f2f7459fd8bf7a408dc2458a2db565b7aa40a9f7d19c9:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDJkYzc0NTZkMTg5MWZjMDlmZDU5NTQwZTgzNjU3ODUwYzJmOGVjZWZmODQ3MjU1ZDFhZjdjYWY4ZWI4ZThlMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjM5YTc0ZDA0NWEwMWNmNDNkNWI5Y2ZhZWY1NDQzOTJjMWRmYTRlYjNlOTNmNWM0ZWJlOWE5NmJiZGRmOGUzMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_ad0e100f215f4e51a1096d877f6c0f43",
+      "statement": "emoji 选择器在滚动时反查激活 tab：按各 section 的 offsetTop 减 SECTION_SPY_OFFSET(8) 与 scrollTop 比较，取最后一个仍在上方的 section，搜索中跳过；tab 点击置 pendingAnchor 由 effect 执行 scrollTo(offsetTop - SECTION_ANCHOR_OFFSET) 的锚点跳转。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/components/emoji-picker/emoji-picker.tsx#L112-L122",
+          "version": "repo-lines-v1:sha256:3ebecabb7148abc748efd4cc0ae63225670d9408a7db52eebd10ab3637d3daa3:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQwYjAyZmRiZjU3N2I4NGMyYTM4ZGNlMjE3MThmZDZlZWFkYTNmMzViMWM4NTE2MmIwYTgyNjM4M2ZkNTA3YzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNjYTg3ZjE5OWYyZjEwMzAyNmRkNGNkYTYyMzU4ZWIzMTRhYjlhMGRiZTA5ZjJjMmMzZmUxMDEyYmRkYTkxNTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcxZTE2ZTA4Mzg5NWIyYTRkMDk0MjY4ODEwMmNjOGE2MjY1Yjc2MTVmNzQ2MGMwZDQ0MzE2N2UyOGNhYzBjNTMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f7a59c69dfe3419d8bdb71b4475ce396",
+      "statement": "emoji 选择器的 max-h 写在 viewport 上，因为根容器是 auto 高度，viewport 的 h-full 会解析成 auto 导致网格溢出。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/components/emoji-picker/emoji-picker.tsx#L187-L193",
+          "version": "repo-lines-v1:sha256:878d6eaa6e2e1ab8b93463d161ab469831936e77e478d3e67d2fb40b13be43c2:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzg1MTlmZjc4Zjk5ZGQ4NTBmYmMxMjZmNzQ3ODg5MmQzYTVmMDIzZjM2N2JhN2MyNmFkYTQzYmQxNzQyZjhkZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTNhM2JmNGM3ZGQyNDAxZDcyNmIxZTgxNDM0ZTFlZjczYWU3YWE3MTUyOWQzZjVjNDhhMmMwODQxY2IxYjE2ZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOWNmOGFjYmQ4MTZmNWNmMGIzYmJiM2JmNDBhZTI4Y2JlZmEwYTZkOWZlNTFhMWQ3NjhlZjc2ZmI2MWI5ODk0MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDFlZmIyZmE3YWRjOWY3OTliOTFhMWRmN2JmYTNjNjRmMDdhNjJiMzJhOTdlMTkzNzk2ZWU5MWZlYjM1MWU2ZCJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}

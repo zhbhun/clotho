@@ -1,0 +1,270 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:6d003cbacb24e8d1fba37e77f4785dd733af69659e0ccb543a5bcc92defdf03a",
+  "claims": [
+    {
+      "id": "claim_e49eadfbe92b4e1991600e05b03756b6",
+      "statement": "storage.json 与 settings.json 的写入采用同一套原子写：先写同目录临时文件（点号加原名加 pid 加 uuid，flag 'wx' 独占创建、mode 0o600），再 rename 覆盖目标，最后 chmod 0o600，finally 中清理临时文件。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/settings.ts#L230-L252",
+          "version": "repo-lines-v1:sha256:c548ce17b61f96607b51c94c47da512d694509fff4836d08d01d3fd70ccde9ac:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiYTRjZDM2OTQyMzMwZjdlNDMxOWZiOTJlYWQxNzBjYjZlMjIzODMxNjRkYzcwMGY0NWUyMTMwYWE4ODk2OTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJhOGI3YTU5ZWZhZjhiZjRiODlhMGJjZDA1ZWY0MTVkOWQyNjFmMjEwYjIyNDc5N2FhYjdhN2FiZTI4ZDVkZTUifQ"
+        },
+        {
+          "resource": "repo://src/main/storage.ts#L30-L46",
+          "version": "repo-lines-v1:sha256:6dc76720d0a0bc04a63e3bd482aa14b729313845f046bcb4032b84651d337ab8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFlOTBlZTMwZGZiMTgxOWE5YjhhZDdiMjgyN2QwOTU3YjhmZDAyMjQyOGUxZjBhOTliZTkyZjkzMTZhZmI1OTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFlN2VkYTdjYjE3MjNmOWQzYzA2MjFjZGIyNTNjYjFiZmQ2MjVlOGZmMDNjY2QzMzUwZWM4MjNkMmZjNGJmMzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkwMGI1NzA2OTY3N2Y5YjI1NmUyOWI4OTg5MWI0Njg1ODY3MmRkYmY5MjA3N2QxYjkzMjA3OWJjNzUwNGU1OWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fa72886809d943ac98ce0514b629b6d4",
+      "statement": "读路径不因坏文档崩溃：readStorage 只在错误码为 ENOENT 时返回空对象，readSettings 抛出的非 ENOENT 错误交由 bootstrap 兜底，readShortcutOverrides 连 JSON 解析失败都只记 warning 后返回空对象。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/settings.ts#L218-L227",
+          "version": "repo-lines-v1:sha256:2ac74756573ccbe446b56df774cdc01db78b3bfc2ece7000bbae2b91582166f9:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRmNmYyNzc3ZThkNmM3NjY3NmVhOTZmZWFjZTk1YTZkYmZiZmNkOTEyZTljZDRhMmQ4MDE4MmJjNGY1YmI0YWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFmYWZlNWFkOTQ2OGZlYWQzMDQzZmI3MDM2NjQ4NThkYjI5MTdkNTU0NTI2M2RjMjhlMDdhNjU0Y2YwYmQwNGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1NGM2NzljNWI1NmJhNTdjM2FiNGJmODdjNjFmMmUyZWQ0MGEzNGIxZTc2ZWQ0ZmZjYWU1NDc2YTRlZjg1YzIifQ"
+        },
+        {
+          "resource": "repo://src/main/shortcuts.ts#L113-L121",
+          "version": "repo-lines-v1:sha256:590b0068627bfb600ccb62ec5b29fe8b7101d4cc41d68f51494d5905f5e65560:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGY2ZjI3NzdlOGQ2Yzc2Njc2ZWE5NmZlYWNlOTVhNmRiZmJmY2Q5MTJlOWNkNGEyZDgwMTgyYmM0ZjViYjRhZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzUyY2I4N2EyYjViMDQ5NWEwMzdkZDIyZGM3N2FkOGY4Njg4ZGYzZDhmZmE2MjhjZDVhZTVmZWExNzlhMDgxZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTM2ZjkyZDQyNjQxMzY5ZmI4ZTcwZGVhMWFiYzJkNmNkNTU1OGIzNDA3MzIyYjE5MmU5ZmVkYzEzN2RiODFmMCJ9"
+        },
+        {
+          "resource": "repo://src/main/storage.ts#L21-L28",
+          "version": "repo-lines-v1:sha256:a120d26e141c91008d8e44cc086e81fe2fcbad53cdf56de366e2a28c1e8975d7:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2FlMTUyYzZiNzJlOTZjOTE0NzJkY2QxYjQ4ZDlkMjA4NjFkZGM0Mzk3YTRjNDgyZTgxNDgyYTQ4NTk1OTg4NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzVjMjI4ZTVjYTJiZjQyMDNmMTg4MzQ2YzFmYjJkYmJkZDU4ODg4OGI2YWE0YWU5OTUyZDk5ZTJmMGZkZDIzNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2NlNWEzZWZkZTVmODkzZjA0M2I5OGM5ZmYwODZiOThiZDJlNWM1MGIyOWQ0MTI2MjNmNWQ5ZDljODAwODAyZiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_37e6be020a00430598d2d8da7c2e23c8",
+      "statement": "createStorageStore 的 update 与 transform 都由模块级 tail promise 串行化为排队的读-改-写，且都先 persist 成功再替换内存状态；transform 供依赖已存文档的补丁使用，flush 等待尾部落盘。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/storage.ts#L52-L88",
+          "version": "repo-lines-v1:sha256:1c5357973b2bad8d3f07b5d2f868e450afe1d43685ad95520d0353a36b3d9986:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhZDNmNTliMjU4NjRiY2E4N2RjZDc5ODk3NWY0YzU5ZjY2YWNmMGYxOWQ5NjY4NTQ1ZDdmNWNkYjRjOTFlZTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBlM2JkZTFmNjZjMDdmZDllNTM5NGI5ZmQxOWQ2Y2EyZDliYzBlMjY4Njk2MDNhOGQ0YWY3YTI2OWJkMjVlNGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e2436823f3c94c118fafe2809218e5c8",
+      "statement": "app-windows.ts 的 transformStorage 把 windowsState 与 projectState 纳入同一次 transform，写入前各过一道 sanitizeWindowsState 与 sanitizeProjectStates，写入失败只记 storage.write_failed 而不影响窗口继续工作。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/app-windows.ts#L108-L129",
+          "version": "repo-lines-v1:sha256:222732e7e5e91980c0a52ceb204cde53e995105b5b01ef1a10de50e91249f5a3:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhhODA5ZWI3YmMxNmZkZTdiODViNDAyY2Q0NzQzNmRkNDVhZWYxZTg4NGE0NzIyZjc2MzExMTJkOTdiNjZlMTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI5OTkxZDI2M2NhMDM2YWZjMDk4N2U2NzE3MjJjYmU2YzdlNTA2OTRjZjAyMWJiMmM0MDIwMjcwOWIwNjMxODYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAzYTA2Y2IyZjEyODcxY2U5Y2Y5Y2YwYmQ1NTIzN2I4ZWNlZmFhOTBhNjA3MDNlNzRjMDM1NDNiMGQxYTQwNDkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7c159a436c6e4d1f9b0f9302b3375997",
+      "statement": "session-storage.ts 的 assertId 拒绝 index 与 drafts 两个保留名，并要求会话 id 匹配 ^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$，因为索引键同时就是磁盘文件名。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/session-storage.ts#L26-L30",
+          "version": "repo-lines-v1:sha256:efe74e3f7ac8e22e2461045cb86b8e471daab214ae6d074d6e29de0afe96ce01:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjA5MjY4NmRmYTRhNTlkYmIyNTA2ODg1YzJjOWJhOTUzMTQ1NzgyYmQzOWJlN2Q2NjFiMzA2NTNlYjQ4ZDBkOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTZhM2Y5ZWI3Y2MyYjk0M2NiZGYyZTgyNTA4MTI1ODdkZmM3YmIxZWY3NDM4N2M2NmZlNzA4YTQ0ZWY5NzM3NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNhNjM4MTM0ZjNkYWFhMzRlOGE2OTM0ZmJjZjdkNTA5NDFmOGQ2YzE0ZjQyNzIzMzA5Y2YzYzFjNGM0YmVmNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_6dd41a4a09e84a2bbd70560a30d8bd17",
+      "statement": "readIndex 分三层容错：index.json 不存在时一次性迁移旧的 drafts.json；不可解析时记 session.drafts_index_unreadable 返回空索引；否则逐条校验，坏行单独跳过并计数后记 session.drafts_entries_skipped。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/session-storage.ts#L151-L214",
+          "version": "repo-lines-v1:sha256:d964f8009356dd501e359eeeb4cc6a42392e727d055d39d70e3688355ba8bcb7:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI0YTJjZDVjNjM3OGIzMGFkNGYwYzBkZjE0MGNjZTE1NTRiZjQ5NzA2YTJlYjA3YjQ4MmIwMzEwZGQzYjI2MTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQxM2QzZjFkYzYwMjhmODhlZmE0ZDZlMGJmZmU3NTIxNDRkNmIwOTJjNzdmNjIyZDQzZDBhOWNmMTM1N2U0MDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFlNWM5N2MzOTVlODIwOWU1MDM1NDc1ZGYwMWRjZDkyNzY5MGE2NDY1NWNjNjg4MWRmZWMwNTcxZGViMjQwMjgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_483d26735172485daee71528537ddf15",
+      "statement": "migratedProjectId 处理早于 digest 方案的项目 id：存储 id 若不是当前路径的 md5 也不是工作区变体的 md5 就按路径重算，而两种 digest id 都原样信任，以免把工作区条目改写回普通条目。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/session-storage.ts#L37-L42",
+          "version": "repo-lines-v1:sha256:9a01afd525e957b1b37b21613e7fa45bcef545520f6009b5e802d4d4d04e136d:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTY1MDllZjgwYWFlOGNhYWY0YmUwNzY3MzdkYmU5NjYyMmVkOTFiNDRiYTg5ODM2ZjcxY2Y2ZDJkOTFhOTY2MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOGI2NTM1OGFjODE4MDBlZTIwYTk3YTI5MzVjYTVmNjk0MzJjMjA3ZjFiYTkyODEwNDFjZmJjODA2NTNkOWE1ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODYyOTY2ZTE2MDBkODYwMGM5ODJhODMzNzQyZjEyZWJkMDE1Njc0MTVmNjZiNGEzNjFlOGZjM2Y1MGVkYmJmMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d66e017f295540ddb07dacb6ecafd10f",
+      "statement": "resolveProjectId 把 null 项目 id 解析到内置 work 项目的 id，使旧版 home 会话归属 homedir 下的 work 项目；sessionRead 在解析失败或校验不过时记 session.file_malformed 并返回 null。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/session-storage.ts#L137-L141",
+          "version": "repo-lines-v1:sha256:8b1f09a1d4f2f4884eeba9ed0a0d563082e490f3f12011dc74a22266ce1f9faa:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODkwYjE1NDA5MjAzNzkxNTQzODMyZmU4MmMyNWQ1M2JjYWI4ZmMwNGMzMTZkZGQ2NmY5YjA2MDIxOWVkM2U4MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGJmMzVjNjQ3YmE2YTY0NTU4MjhlM2MzMWEzMDgyNGYwOGZiZGM2ZWQ5OGEwNGFhZDEwNjVhYTYyMDU2ZDFkZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWVlNzYwMjZiYTIyMjQ5MTY3MzE1Y2VhMzQzNDkwYmIyNDE3ZGU5YjAyZjNmNzczY2U2MTYwODc3MTcyM2JjOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzEzYTg3YmRmODljOGE2MWNhMGMyMDI0ZWRmNzM4MjhlNzlkYjFlN2QwOGM2ODE1Yzg1YTYxNzY5M2MzNTBiNSJ9"
+        },
+        {
+          "resource": "repo://src/main/session-storage.ts#L319-L345",
+          "version": "repo-lines-v1:sha256:0ca08ffd4e30c7ab3073ac14629d739c1645a73fabf595114ad7e974b4fb3786:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA4ZjdhYmNhOTRjM2E2M2Y4YWViYzFlNjVlMGM2YjA5NDllMGJiZjI2NDNmMTc5Yzc2NTliZjkxMDFmZDIwM2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2NzdkMmYwMzFlOThiNWU5MTFjNWFkNGZiOWIyMTg2YTkzMjUyMmU4ZjQ2ZWU0MGJhYmZhZTNkYTAwZmMxMjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImExMWM0MmRmMmZhMmU4MTkzNzZkMzk2NWUzMTBjMjgxNmIyMGFiMGQ4Mjg2OWU3ZDNhMmJmMzM1MGM4OTA5OWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YTJjMTVlMTE0NjkzZWI5YmZmZmM4OTlkNjg2ZTQzOTcwNGFkZDUxM2UwZTFhMjUwMTlkZDI2MDgwMWFmYjUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d50f53bbe13f45cba2c71bdbf3f2f142",
+      "statement": "任何重建既有索引条目的路径都必须通过 listFlagFieldsOf 把 archived、pinnedAt、unread 等列表态字段摊回去，否则已归档、置顶或未读的会话会静默丢失标记。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/session-storage.ts#L271-L294",
+          "version": "repo-lines-v1:sha256:c960d67eb0840a0876446f74693ed727c3c79b98780769a9b7605b954819d275:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRmMmEyZjk5NmYwOGU2ODBiZDI5MjEzNWE2ZmE0OTc4YmRhMjZlNjAyZDg0ZjMzY2IxZDU5NDc3NWQ0MzA0YjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIyMzUyNTg5YzM0ZDNjNjA2ODU5MzFiNmVjYzRkNTA5OTFhN2M1NmM4ZmJhMjg5NDExNDY1NzY5MDI3MmNhYzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE4M2IzOTJmNzA4MDFhMzM2NzdmYWE4ZDU3MWYzNWFjYmZhYWNiMmVlNjg1MDJhNmUyYjMyOGYyMjNlYzNkNWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImViOWU1ZDhjZTE0YTEyNGQxOWU0NWM0Yzc5MjlmZWIwMTI5ODVmMjVkODZlZGU4M2FhZTRiZTZiNTI2YTExYmMifQ"
+        },
+        {
+          "resource": "repo://src/main/session-storage.ts#L346-L363",
+          "version": "repo-lines-v1:sha256:9dad371451ded10470c4bc5b74f19d17f1a89879c4e849ea8f97e0dae7d3cb79:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE0ZDdhZjY3MDBiNDIyY2VkM2Q2NTc4ZGJkOGM5ZmM2MjI3OWUwNmFkYzFkMGU1NjgwY2QzYTVkYzZkNzllMDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2NzdkMmYwMzFlOThiNWU5MTFjNWFkNGZiOWIyMTg2YTkzMjUyMmU4ZjQ2ZWU0MGJhYmZhZTNkYTAwZmMxMjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFhMjZlMjY4NWJiOTljOTZmYTQ0ZmVmYzI4N2FiYTJhYWM4ZWU3OTgxYzQ0NDExMGZlMDcxNzBhMWJlMmMzYjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYxMDNjYjc5MDg2YzE1MTBlNmNiMDc3ZTk2ODc2MmZmMjI1Y2Y2YWM3NDA2M2FmMmFjN2ExZGJlMThjMzg4MmIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4f87ffe4ac06496bb2f4acca43a8a083",
+      "statement": "sessionCompleteDraft 用 startedEntry 把草稿条目转成已开始的会话，只保留 projectId、claudeSessionId 与列表态字段；sessionBindOwner 记录会话及其 Claude 会话所属的项目条目，sessionOwnership 反向产出 claudeSessionId 到 projectId（null 表示 home 模式）的映射。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/session-storage.ts#L289-L294",
+          "version": "repo-lines-v1:sha256:c32c96f8fa5a0b7b43e2d92afc9c2656c7c48f51c8ebc770eed2114776dad21e:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjNmODM0NWRlOGVmMDI4ZGI3ODg2MzFmNDMzZjc0OWY1NmI4ZDAyZDE1MjkyZTNhNzJlY2ViMjc0ZmJhNDE2ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjIzNTI1ODljMzRkM2M2MDY4NTkzMWI2ZWNjNGQ1MDk5MWE3YzU2YzhmYmEyODk0MTE0NjU3NjkwMjcyY2FjMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDcxYTFhNGZiMGIxZWRjN2UxYzhhYjk4ZDg4N2E0YzkyNzFmNWU0NjQwN2I0NmU0ZmEwYzY4MTE3YTcyMjg0ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZWI5ZTVkOGNlMTRhMTI0ZDE5ZTQ1YzRjNzkyOWZlYjAxMjk4NWYyNWQ4NmVkZTgzYWFlNGJlNmI1MjZhMTFiYyJ9"
+        },
+        {
+          "resource": "repo://src/main/session-storage.ts#L376-L396",
+          "version": "repo-lines-v1:sha256:45f5a3cb3ecbb9ecd65dd2b282e7b86ee2c76dcce111bcd6619b633b982005be:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM4YTNlYzZhODg0MDVhYzg0MzQ4M2NlMTVmNDQ3MDFmYjBmYTllYTQzNzdhNWYyYzk1MzU3N2NkODhmNWYwMGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2NzdkMmYwMzFlOThiNWU5MTFjNWFkNGZiOWIyMTg2YTkzMjUyMmU4ZjQ2ZWU0MGJhYmZhZTNkYTAwZmMxMjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI2YTMzODdmNGM3YWUzY2IwZTIzMzJjNmQ0NzI0MjFiZmE1ZTc4MTlmMjViZTEyNTMzZDE4NmY5MWYxNWY1ZjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMyYjU3ZWNlZjI5Nzc4ZmQxZWJlYmJlOWNmYjQyYmFhYzI2MWUzOTUxYTg4YThjOGVhMDJmMDNiNjRlMzAxMDcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6b23c820928143cfa7558cc771188807",
+      "statement": "listProjectSessions 消费 ownership 映射：未映射的会话（在 Clotho 之外开始或早于索引）归给路径的普通条目，使 CLI 开的会话也能出现在 Clotho 列表里。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/sessions.ts#L128-L176",
+          "version": "repo-lines-v1:sha256:6325b324cd0b73364e4d558d832f51694ef7ce08548b825669798e4954f05e26:eyJzZWxlY3RlZExpbmVDb3VudCI6NDksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNjZjdjZGVhNTFiYjlmOTI1YTFkYWE4ZTAxY2VhMmZhZDc5NmZkZWMyZGYwMjMxMjcwYjAxMzRiYWM3NTRhMjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRjZjk1ZjJhMmZmNDU0NDJlMTM1ZDA0ZjY2ZmIyNTRiYTcwMTBlZTMyYmU4YjNhY2EwMDI3M2UxNzdkMDlmMjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_65f5df5ada4b49dc8c92e8a43cddaf4c",
+      "statement": "从未在 Clotho 打开过的历史会话没有索引条目，归档操作会按 claude id 建立 claude- 前缀的 marker 条目承载标记；取消归档写入的 unarchivedAt 是自动归档豁免时间戳，14 天（UNARCHIVED_AT_TTL_MS）后才会被清扫。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/session-storage.ts#L21-L24",
+          "version": "repo-lines-v1:sha256:285e1f57984a5bd072709caed6e6f53799b2d9ca74153bb79408a4a3fc1fa994:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjVjZjQ3YTE2OGU3YTg3N2EzMDJlYTIyMjZlZWYxZWFkNWEzNTA5NjA3MThlYjE3NTk3ZTgxM2FiNTAxMDIwZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDkzZjUyM2RjN2EwYzJiZGQxNGY4YWYzNjIwNmRjMTZiMWM3MzVkNTk0YTE0NzYxNjBjNTNkMGNjZjUxNDM4OCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMmMzNjBjYWJiMWE3OTM2Y2FkMzY4YjcwYzhmMDJhNGZhY2QwNzg2NGY4NGU2YzQzMGI5NmJkZWMwMjhhNTk2NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGJhYjgwYjVlYTk3NDBmNTUzZTUxMGIzYzY3OWE2ZTA3MjE0ZTE5Y2I1MTg3ZjcxMDQ5YmZjMGVkMGVhMDM0OCJ9"
+        },
+        {
+          "resource": "repo://src/main/session-storage.ts#L397-L442",
+          "version": "repo-lines-v1:sha256:d526bcb3ba3d3258f45c1eb0f61cb745fae0a9d7370ae446b0f9a64355e07af8:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1NDA2NmJhMGI0MDU4NzM4ZTQ0NzEyOGRjYTdmZTdjMDczZDBhNDhjZmEzNGVhMjA1Nzk0OGQyNzhjMWIzMzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2NzdkMmYwMzFlOThiNWU5MTFjNWFkNGZiOWIyMTg2YTkzMjUyMmU4ZjQ2ZWU0MGJhYmZhZTNkYTAwZmMxMjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJjODg3MmJlNWQzZjljYjVlNDAyNzdhOWNiYTAzYjczYWNhNWEwNzQ4ZmU0ZmM4YTZiNzZhODlhNThmMWQ2MWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjliMGM1YWE5OTI2YWE3ZWIwNTgwZmEwYzljM2NjZjdiMDQ2YTUyNWY1NzY5N2M1ZDhhYjJhMzQ5YmI1YWJhMGQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fbbb92891fb143cf85a6d245afe48c5e",
+      "statement": "sessionSetPinned 与 sessionSetUnread 同样用 marker 承载未打开会话的标记，pruneMarker 在标记被清空后删除裸 marker，草稿因还没有 claude id 而直接标记自己的条目。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/session-storage.ts#L258-L270",
+          "version": "repo-lines-v1:sha256:2c414b7c3112f645822ea974c73e9b6bcfd9b6daeb63ef05feaf41cb85c19c25:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmNmE3YjMzZDRmOTc0NjRhOWJlNjU3NzIxNWNiNzVkYThiNDFjMTBmOTY3OGQyMjA5NjA3MWMyYjc4ZjMwNDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI4N2ViNTg0Zjk4NGJlNmYyZWEyZjcxY2U1NDBlZmIyNmIwOGFjODQ1NzFmODVjZGYyMTJmZjlkNjYwNjYwYTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY4MzhhZmEyYjkyNmM1YjMxMTcxMDk0M2I4YmNkOWU2ZWJiNjBkZTAxNzEwZTVkMjk1YTE3MTlmZGIxNmMwMDgifQ"
+        },
+        {
+          "resource": "repo://src/main/session-storage.ts#L483-L573",
+          "version": "repo-lines-v1:sha256:90251cc9a418c43d0ee36b88347bee211f9b824851ace0ea82180ac28e8d72c2:eyJzZWxlY3RlZExpbmVDb3VudCI6OTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIwMDNlMmQyOTY2ZDRiODViNGY5YjNhOWRhYTQwZjA5MDg1ZWQ5NGM2ZGE5M2U4MGJiOWQ1OTAwZDkwYzVmY2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2NzdkMmYwMzFlOThiNWU5MTFjNWFkNGZiOWIyMTg2YTkzMjUyMmU4ZjQ2ZWU0MGJhYmZhZTNkYTAwZmMxMjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAzNjAyZjQ3YTRmMTk0NjhlM2NjMTNiODQzNjdlZGRjY2NkMjdkYzViNDg1OGExMjI3NDU5NTg5MGEzMWJjZTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFjMGVjM2NjNGU0MDI0N2QyMDUxN2JkYTgzNWM4Y2QzM2NhOTYyYzNlMWM5ZWFjZWQ3MjE4ZjU0NWM2ZDQ0ZTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4c63c3b0a62a42b29b3f3f54fbe7cf3c",
+      "statement": "sessionListFlags 按 claude id 归并各条目标记并取最新时间戳，且新的取消归档压过旧的归档：flag.archived 取 archivedAt 是否大于 unarchivedAt。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/session-storage.ts#L443-L482",
+          "version": "repo-lines-v1:sha256:fcabf1f01137f57e892ee94e6b80a63bf21e0f42158fb6d52fa0f20a9a86271b:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVjNzQ3ZGE2MmQ3YWMyZmYxMGM0ZGYzZTQyZjdmY2VhY2Q3YjgyNDE5MGNjNzM2ZTAzOTcxNWJmYWU4MDI5MzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2NzdkMmYwMzFlOThiNWU5MTFjNWFkNGZiOWIyMTg2YTkzMjUyMmU4ZjQ2ZWU0MGJhYmZhZTNkYTAwZmMxMjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJmNzJlYjYyMTg1ZjIyMDUwNjlkOWU5NTdlN2NhZTllZTM3OTFkNjQ0MTRkNjIyMWVmODUxYjRkNmI2YThiMzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQzZDY1ZmJmNjJhOGM2ODhlNmYzMmYzNWNjMTNjZmUyNzQ1MDNiMmE0YTNlNjdkYWEwMTVlOTM0YjM4OWU0MTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_748c9dc13c3a4638ad26c50c87403597",
+      "statement": "sessionRebindProject 先把索引中 projectId 匹配的条目改到新 id，再扫描目录下所有 .json（跳过 index.json 与 drafts.json）重写文件内的 projectId。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/session-storage.ts#L574-L597",
+          "version": "repo-lines-v1:sha256:de5ac3a02fcd2b09b87b857b580f8c91a51592700c34cd805e4f4fd6394065f1:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAzZTkyYjgwMzE3OTdhMDcwNzdlNjQzZGYzOWI4ZmQ3MDhlNGUwNWRhM2VkNTQ4ZWNmNWJlNmE5ZDYyNzBiNzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2NzdkMmYwMzFlOThiNWU5MTFjNWFkNGZiOWIyMTg2YTkzMjUyMmU4ZjQ2ZWU0MGJhYmZhZTNkYTAwZmMxMjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBmZmI5OTRkYzUxODUwODliNDcyZmZiNGFmMTk2ZWMyMzAxYTBiYjE1ZDE5YzAyMjBhY2E2ZDY5ZDFiNWM2ZmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYxMTIwNTg0MDk5ZDMzMTJmOGZlMzBmY2Y1MTFkOWI3ODNjMmQ5NGM0ZTA3ODM3MmE2NjQyMTg0MzBmZmQxNmMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8cf3891f4e20490191c865fd1dee26bf",
+      "statement": "sessionDeleteProject 扫描所有会话文件、经 migratedProjectId 匹配后删除，读不了的文件跳过并计数，最后记 session.delete_project_skipped，以免一个坏文件搁死剩余会话与索引。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/session-storage.ts#L612-L643",
+          "version": "repo-lines-v1:sha256:62a167fadf0fe76486ad2128d6e65dc773a85f35d93fe3ceb35e3517672fe6e7:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwODczZWI3NDBkOTQ4ZmVkZTQyMzlkZTI1ZTVlODhlYWU5YzZjMDAyNjAwZDIxNTJhYjJkNDg3YzZjNzJkNzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2NzdkMmYwMzFlOThiNWU5MTFjNWFkNGZiOWIyMTg2YTkzMjUyMmU4ZjQ2ZWU0MGJhYmZhZTNkYTAwZmMxMjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA5OWNmMGYxMTRjYTI4MmIzNzYyZjIzMzRkNmRlYmU1NTY5ZTlmNTMyM2ExYzhlZWNlM2Y2YzJjZTU0NzY5NTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRmNzM5YTA2YzFjYmIxMjQ0ZTMzNjNkMzhiY2Y5ZmE1MGNlODRmZWQzOTljMjE5M2EzYzdmMDhkNTk5MThiMmEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5de9679a20544538b026b31a1c0d759f",
+      "statement": "sanitizeAppPreferences 是所有偏好写入的入口，逐字段按白名单枚举校验，不在集合内即回落 DEFAULT_APP_PREFERENCES，themePalettes 的每个调色板还要过 sanitizeThemePalette 校验十六进制颜色与 preset。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/settings.ts#L135-L192",
+          "version": "repo-lines-v1:sha256:9fd860400ad10c166ec74f8e054996e1ad7cd3150081bbea1fdf8b4c50b9587a:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjljZjBiYTVmMjdlMDg0ODdkYzIzODRkY2I3ZDBjZjZmMzZlOWZjYzUwOTU3MjE2MTM0Y2VhZGFjZTdhNDBjY2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEzNjZiYThkNjMzZGNiZGZmYzFiZDdiYzhkZGFjYTdmM2E4Yzk2YmFlZGRmOTJkZGViOGI4YTQ5NmI2NjBmNGMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_27edcbcdb8e54b0ea2c84cd9768f0fbb",
+      "statement": "sanitizeDefaultModel 只在值是某个 provider 下真实存在的 providerId/modelId 时返回它，provider 增删后由 Claude Service 重跑，避免文档留下指向已删模型的死引用。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude-service.ts#L140-L162",
+          "version": "repo-lines-v1:sha256:571728644428da5d2ab0b7a46f2b091988c16d7d8281e17512c55a7741672b30:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZmZWQ1NzgwYjQxODQzNjU1NWVhZjZlZjZkYTBjNmNiYmMzNzIyZjg5MGI0NGY2M2I2OGJhZjYxNmM0Njk5ZGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJmZTFjNzE2MGRiYmIzZTkwNzdhMDk0N2U0ODhhNGI4ZjQ5NmM0N2E2Y2FlYTBiMjFkMmJlMWM1YmQyODZlNzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFlNzE2ODk0ODc0ODJmOWNkZGVlZWZmZDc1NGMxZmY3MmNjOWI4YWUyZTNmMzBhNDZlNDY4NTg5ZTllNGYyNTYifQ"
+        },
+        {
+          "resource": "repo://src/main/claude/settings.ts#L100-L110",
+          "version": "repo-lines-v1:sha256:b5a1b16c0b3b64de627fb092f5b17a72e7131c4b2501893efa6d6133e5984ae9:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIzNTJmYzRmMzk3ZjUxODBmOTgzNDZkZjhiOTg1YWMwOGZmMDkzM2Y2Yjk2YWU1ZWMxODIyYjU0OWIyZTEyMmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY0MWIxMjdhOGQxOWUxZmFiYTY3NWMyNTY4ZGM5YWI4NTY5YTE0NjA0MjZlZDJlYWUzYmE1MDEwNDM1M2YwNWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIzOTk1OTFhMmUzNGM1ODNlZjM0MDJiNWI0NzIyMTM2ZGRiOTJiOTVjNDcwODIxOTM2MTNiMTZiOGU1MDU5YTcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_75670e5574df4541b82d28437ef0e0f7",
+      "statement": "createSettingsStore 的 recover 参数是 bootstrap 的兜底：readSettings 抛错时先用默认设置启动并传入 readSettings，之后第一次 update 会重新读磁盘而非基于内存默认值修改，shouldRecover 标记保证只做一次。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L130-L138",
+          "version": "repo-lines-v1:sha256:2c13c97bab697e08d9478410d9afce0d730d8e800955ccadc0129b3dc1d55ca3:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzU1YjEwNmZhYjlkYzA4NTI5NzZkMmE0NTUzNTAxZGZhYTcyNDNhMWZhNTdhYTVlYWFhM2MzNjMzMTZlNjQwYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjU0YjI5OGY0NzdkMDRkY2U3Nzk2ZTUxODEyYTA4MjgzNTNkYTUzZDdmNTA5ZDEyYzFkYzkxNzViMmJmNGU0ZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTdlMjBkMDk4NzhhZmI3OGM3MWE0ZDljYWRmM2UzZjA5NjJhOGQ2NzU1NWI5N2RiMDVhYWFiOTAzNjFhNGQ3OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMmNkMzA0MDMxZTEyZDdmOWFjMzlkMDA3NWI2YWRmOTE3NmZmZDdkMDY2ZGQyZDYxNTY4NzhhYzgwMGVhNjU2NSJ9"
+        },
+        {
+          "resource": "repo://src/main/claude/settings.ts#L274-L304",
+          "version": "repo-lines-v1:sha256:be1529ca35507231f9ea05770bc69cb4591ea8cc2840b9af0b868dcd9ee7f1ef:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMxOTZmNjA1M2YwNGY5NDZhZmZjN2E0Mzk2ZGZhMDEzNGY2ZDlmZTQ4YmE0ZGYzNDJhYzAzNDViZTM2NjE5N2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZjMDllYzA1NWQ0YzkyZWExYmI5YTFhYWZkNGZkYWViODE0Mjc3M2Y4M2FjODgwNGY5MDg4MWNjZWU3NjdmM2YifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9b039711df1f48d38f65b75de2120d39",
+      "statement": "sanitizeShortcutOverrides 逐条校验快捷键绑定：非对象或 key 非字符串记 invalid-shape，空 key 记 empty-key，归一化后是修饰键本身记 modifier-only，无修饰键的单字符或 space 记 bare-printable。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/shortcuts.ts#L21-L89",
+          "version": "repo-lines-v1:sha256:457b06456df7fa35910f8bddd924738fa0d425e4cc4825b6fad8176757205aae:eyJzZWxlY3RlZExpbmVDb3VudCI6NjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ0YTMyOGJjZGJkNDIzZGVhODM5N2U0YTM5ZmZjOTlhMjIzNDgzNzg2OTMyNzllNDliYjI5MWNkNGM4OTRkYTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVhMDE0MzIwM2EyMDBlMmQzNzQ3ZTFkMmJjOTJhMWM4YzczYzY0YjRjYTdlNWExM2QyNmY1NWQ3YWE5YWI0ZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU1M2JmMzQ0ZDNlMmZkNTlhYzc4NzI1NGMxMTMwNjIwYmFkODMzMDM4NDFhNzkxZGZmMTAyZDBjZjg4Y2RmMzAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9957d450eda043fcb247e516b74b0a12",
+      "statement": "createShortcutStore 的 set 会再跑一次绑定校验并直接抛错，非法绑定无法进入存储，reset 则删除该命令的覆盖以回到 commandCatalog 的默认绑定。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/shortcuts.ts#L143-L189",
+          "version": "repo-lines-v1:sha256:5d5998e32548caa7076ac8b417ebeb104ef0945d273ef15c322460588b5b8382:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjliZGY4YjViMjg2NWNkMTIwNGFmY2JjZWZlYjQxNzNkMzBkOGM2MzI1ZDNlZmJmZGUyOTBiOGYwZjg2Mzg5OGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA4NDIzYTM4NTJjZTRiMjQ5ZmUwYWY2MmFkNzdhYzZjMWI3NDA0MzFlN2JkYTM2MWZjNTllYzc0YTdkMzhkMzgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e6206ad59e434289a8815e517dc19686",
+      "statement": "bootstrap 的装配顺序为 readStorage（失败兜底并记 warning）、createStorageStore、ensureWorkProject、createSessionStorage、readSettings（失败兜底加 recover）、createSettingsStore、readShortcutOverrides、createShortcutStore。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L102-L140",
+          "version": "repo-lines-v1:sha256:033df56310fc5c0cee2accad311f07d10c954e505fe4c4e029a967d9c4b99f5b:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1MjE5NmUzNWM5NzJjZDY2YjMzMWNhMTRmZGZlNWQxNmNkNjNkYjNjN2YwYzkyOTYzMDMwODMzYjJlNzIzYzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBmZTY2ZDljOTdjNmNiYmU2YjM0ZGQyNzg2ODkxMGQxZTc5MjRmZmRlYWE2MGFhMWU1MTAxNWE2OGU3NWIyOWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI0NGI4OTI5MDNlYTFiMGNhYTU1MzkyM2I1OGNlZmU3NDIxNTZmOWJmZTFkYTUzMDVhMDEwYTRiMzMxY2NmZjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZkMTk1MzljYTllY2MxMGM1N2IyODg4N2FmMjM3NWE0NWI0NTU1MjY0OWQwYjliY2E1MzkxYTI5ZjU5Zjc3ZTAifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}

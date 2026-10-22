@@ -23,7 +23,7 @@ clotho/
 │   ├── main/        # Main process (backend)
 │   ├── renderer/    # Frontend (renderer)
 │   └── shadcn/      # Base UI components
-├── src/main.ts      # Electron entry point
+├── src/main/index.ts     # Electron entry point
 ├── src/preload/index.ts  # Preload IPC bridge
 ├── icons/           # Packaging icons
 └── Configuration files
@@ -131,7 +131,7 @@ Keep names short while preserving meaning. Split and refine names as responsibil
 - Use unit tests sparingly: add them only when they protect against meaningful, realistic regressions and justify their maintenance cost; do not write tests for coverage, implementation details, trivial code, visual tuning, or behavior already guaranteed by third-party libraries.
 - Do not use Chromium, Playwright, or ego-browser to test the app, and do not run `npm start`.
 - Verify app behavior via `npm run debug` (renderer CDP on 3367, main-process inspector on 3368). Check `curl -s http://127.0.0.1:3367/json/version` first and reuse an existing instance; drive verification over CDP (e.g. `Runtime.evaluate`), and stop the app if you started it.
-- By default, run only tests for affected modules; do not run the full suite unless explicitly requested. Run `npm run typecheck` for TypeScript changes; run ESLint and Prettier only on changed files. Run `npm run package` only when changing build-related files.
+- By default, run only tests for affected modules; do not run the full suite unless explicitly requested. Run `npm run check` for TypeScript changes; run ESLint and Prettier only on changed files. Run `npm run package` only when changing build-related files.
 
 ### Commit conventions
 
@@ -140,3 +140,20 @@ Keep names short while preserving meaning. Split and refine names as responsibil
 - Common types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `ci`.
 - Write commit messages in English.
 - No AI-attribution trailers (e.g. `AI-Co-Authored-By`), even if a skill suggests one.
+
+<!-- OPENWIKI:START -->
+
+## OpenWiki
+
+This repository has a generated `openwiki/` evidence index. It is optional just-in-time context, not required startup reading. All OpenWiki pages must be written in English (code identifiers stay verbatim).
+
+- Do not enumerate, preload, or search wikis at task start. Use retrieval when the user asks for it, when unfamiliar architecture or dependency behavior materially affects the task, or when source inspection leaves an important uncertainty. Stop once the question is grounded.
+- When those conditions apply and OpenWiki retrieval tools are available, use `openwiki_search` for just-in-time context and `openwiki_read` for the relevant complete sections. If search returns `workspace_required`, ask which listed workspace to use and retry with its ID.
+- Use `openwiki_list_workspaces` or `openwiki_list_wikis` when workspace membership itself needs to be discovered.
+- If the retrieval tools are unavailable, read `openwiki/quickstart.md` and follow its links to the relevant pages.
+- Treat source code and tests as authoritative. A brief's unknowns and review items are verification gaps, not automatic requirements.
+- Prefer the narrowest quiet validation that proves the changed behavior. Preserve complete failure output.
+
+Do not hand-edit generated OpenWiki pages unless explicitly asked; prefer updating source code/docs and letting OpenWiki regenerate. When generating or updating the wiki, write all page content in English.
+
+<!-- OPENWIKI:END -->

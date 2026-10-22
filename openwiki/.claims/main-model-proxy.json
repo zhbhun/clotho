@@ -1,0 +1,260 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:3edee0f8ed4c59abf52d10d9dc3c0021b277084caeda8fe4f587f0d773a93ab0",
+  "claims": [
+    {
+      "id": "claim_7e36fa041f3d4ad1973c7b8957764883",
+      "statement": "createModelProxy 在 127.0.0.1 上监听系统分配的端口，禁用请求超时以支持流式响应，并默认用 32 字节随机数生成 base64url 认证令牌。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/model-proxy.ts#L314-L324",
+          "version": "repo-lines-v1:sha256:7a6398466e34d7fe72ea77bd7e13f16dd9b9736baf95e39611f66e02e12b21ff:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4ZjI0YzhjNzMwMDU0ZmFiMGU3MmIyODVmOGI5YTk4NTQ5YTg0OTllNzQzZWVlN2E0OGIwZWI4YWQ5OTIwN2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjExZDY0YjJjM2Q0MTViMTVlNzc5YzJjZWE0NzUzN2VkNDQzMWU0MGI5YmEyZWQ1MzAwM2U0OWMwNGU0ZTEyNzYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM0MGM1ZDNkYzNhNzczMDc5M2M4OTI3OTQ4YjU1OTY2NDIwN2Y3OWJhODc3NzNjMjE1MDA0NDMxOTYyZmQ0ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjllNmFlMDQ1Zjg2MjZjN2Y0MTFkYjZlNzU5MzQ5MDUwYTViZjg3NjE0OTY4NTJhNzU5Nzk4NTAzMzIyOWZlNDcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ea67a4eeb256446ba05ebd246732b0b8",
+      "statement": "代理只接受 POST 方法的 /v1/messages 与 /v1/messages/count_tokens 两个端点，其他请求返回 404 invalid_request_error。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/model-proxy.ts#L137-L137",
+          "version": "repo-lines-v1:sha256:fbdcbe696a09e79e6ffee90c25b626f6c9884db0137b561a01907caab476425a:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZmJkY2JlNjk2YTA5ZTc5ZTZmZmVlOTBjMjViNjI2ZjZjOTg4NGRiMDEzN2I1NjFhMDE5MDdjYWFiNDc2NDI1YSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmJkY2JlNjk2YTA5ZTc5ZTZmZmVlOTBjMjViNjI2ZjZjOTg4NGRiMDEzN2I1NjFhMDE5MDdjYWFiNDc2NDI1YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTU4YTcyNGE5M2IwZTExOThiNzlhN2Q5ZGE4YmYyNDcwMTVmMTQyMzlmZTAyMTNmZWU1ZmE0MmIzMmRjNmFmMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNWE1ODkzOTk5ZTYzZWM4OTE3ZDc4NjdjOTcyYjlmNTExMmFiODJmOGRjMWZmMTNiNzMyNmRjM2RkMTgxOTM4OCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_15f803da8bc5462597fa723b50d45825",
+      "statement": "代理认证接受 Authorization Bearer 或 x-api-key 头，用 timingSafeEqual 常量时间比对，且先比较长度避免比对抛错。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/model-proxy.ts#L97-L102",
+          "version": "repo-lines-v1:sha256:81bc343800eddba656661055e36b0e74d8c9a46aaf19d171e5b128de0114fd98:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjY1ZTlmYzY2NzM5NmQ1YmM4ODI0NWI3ZDgzMjVhZjhiY2ZhNjUxZWQxMzViMzNmZDA5MmRlN2M0OWJlYTI5MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzQwYzVkM2RjM2E3NzMwNzkzYzg5Mjc5NDhiNTU5NjY0MjA3Zjc5YmE4Nzc3M2MyMTUwMDQ0MzE5NjJmZDQ4OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTQ4NDYxYTA2ZjExYWFjYTM3NTUyOWM0MmMyZGU0ODFjNDc4OGIxMTkzNDE5ZTRmOTgwZTc2NDg0OWRhMWNmOCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_74b55a4917004ae6a1cac6daacd479b1",
+      "statement": "请求体的 model 必须是 providerId/modelId 形状，provider 不存在返回 404 not_found_error，模型不存在返回 404 并带上 provider 与模型 id。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/model-proxy.ts#L345-L366",
+          "version": "repo-lines-v1:sha256:f94d3f32df11a3a28fde64627fa90195cfed61cc4c4fb52fffb047d9c8935fa6:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM3Zjg0YWI4NTBhOWZkMjNmNWIzOTBjM2FkNTVlOTA2NDQ3YzFhYzA2ZDMzY2IyYTg3OTU4NWI3ZDMzNTI1YTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjliNjJmNjBkODU5MGE1NzljZjQ2ZjhkNjczNzhjNGM1NzJiOTYyY2VjY2RiOTBjN2E1ZjdiNDJiOTYwNzgyYTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImViNzg5ZjRmNGM1ZDVmYWRlNzNkOWY2ODU5MzQ5YjRhMmFkMTNiMzQwNDY2MTk5YmM5NDZhNjgzM2FhNTQ4N2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgzMTQxMjM0YmNkZDEzY2U5NjcyMDE5ZDA5YWIyZjUzYTQ3N2I4NGIyODdhZmVjMjk5YzI5MjdmMTZkYjE3MWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8b54ddcbacd54d489824c4b18a2f0747",
+      "statement": "replaceSettings 直接替换整张 provider 路由表，provider 变更后无需重启代理即可生效。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/model-proxy.ts#L408-L410",
+          "version": "repo-lines-v1:sha256:769be1e9a04c5b66abfd1309396d4eab447491d96f24df5e481418bd0687b025:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTQ1MmQ2YWYyNWNjZDRkYmU4NGI1ZTNkNTQ0Y2E0NWQ0M2I5NGMwOWVkMDY4NGEyYWNiZmUxMzdkNGZkOGQxZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWYwY2RiOTcyYTdiZmI3ZWQyNDZmOWZmNjcyMzg1ZTU1ZjQ5NjhmYzExMDQzZGM1YjY4NGQ1MWRmYTMxZGJjYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWRhZWNmMzY2NmZhOTBjOWMwMTViMDJhZTBkZjY4YjFiMTFlYWU5MTg5YmI2ZWU5YjY0Nzc1NWQ4Mzc1YTY0MCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTg1ZmQyZTdjNjYxZTljZGViMmJiZjk0YWNmYjdhNWU5YmZhZTQwNjY0MDFhMTU0NWQ5Njc5NWE4NDJhMzViMCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d3180f0e668e4d329802e09a51e0c084",
+      "statement": "anthropic-messages 类型的 provider 请求经 applyThinking 改写 thinking 配置后原样转发，路径由上游 baseURL 拼接入站路径得到，响应体透传。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/model-proxy.ts#L381-L392",
+          "version": "repo-lines-v1:sha256:57c4cac89942cb6d2b0edeb3a31aa83baa5ddaad24915dbfd4a11a3243fff058:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzNDY1YjY5OGI3NTFhYjhiMWZlNTM2ZjQ2NTBlOGU5ZGI3NDhmM2JkNmNiODNhYWM5NmYxNWEyMTc3MDk5NDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5YjE5ODJlOGRkNzQ4MTE4MTQ2YjM5YTJkMDA2MmY0MDgxZTM0Nzc5Yjg2NzVjMjM0YzRmYjEyNGRjMzkzOTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYwN2E1ZjYzZDk2YzE4NGVkMTFmYjAxZjgyZGI2ZjkwZTdkZmZiZjkzNWE0MjdjMjJhMDQ3NzQ2Zjg0NTE5NTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNkZjk2YTM3OTdlYmY3NTE2N2UyODBlNTkzOTk5ZTAxZTRlNWE1NWM5YzlmMjJhZDhiNjdmODA4NTVmZjQyZWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_369fac4713db4fb3bf40b40a6696acfe",
+      "statement": "count_tokens 请求由代理本地应答、不转发上游，因为 zhipu 的 count_tokens 端点在带 ToolSearch 工具时会丢弃全部工具定义、大 payload 直接 502。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/model-proxy.ts#L383-L386",
+          "version": "repo-lines-v1:sha256:b684e7996ddf2e1e064216b35238340c3fbe034a833cc1c150e15e0da164730a:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTRkNThiYzRmZGMwZThkMzZjMTJjMzkxNzAxYWY2ZTkzMTc4MWM4MTIyNjBjZWIxNzZhZjIzZDZkYmU2NzBkYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTZiMDQ0OTE0Njk3MjJlODM2M2E5NGU0MDQ0NTM4ZTAxM2EyYTIxN2UzNmIxZTU2OGJhNjBhY2I3YjRjOGYyZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTMwMDk3N2MzMmNiODhkZjFjYTQ2YjA3NDU0ZGMxOWU3MWVjNjI5NzgxMjliZWE5ZGUwNWY5NWRmYjdiMjA2NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzUwNWFlNjBiYTMwZjY5MWNlOGE2ZmVmYjYxODBiYzA0ZGYwYzE0ODAwYzJiMTZmYjU0NjlmNDRmZTRmNjk3ZCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_fb865d9f0b4d4b74995435039d7928ee",
+      "statement": "anthropicToChatCompletions 把 system 转为首条 system 消息，text 累加为 content、image 转 data URL、tool_use 转 function tool_call、tool_result 转独立 tool 消息，并搬运 max_tokens、temperature、top_p、stop 与 tools。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/chat-completions-request.ts#L171-L201",
+          "version": "repo-lines-v1:sha256:e69ac905f14e7a815ad2cc359c3b3dc82ca26822204d33c0a256f3961e1f0433:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM2Y2JiOGIyMDAxMWUyMTg2NzY1ODhjZWMyYTg5NjRiMmQ3Y2VmY2E2OTQ5MGNlOTljN2JhNDc4NDBjMjU1NTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAyM2VmYjBhOWIxNGI1ZjVkNGQwMDBlNmI3YTY5MmQwZmFhNWQ3YzIxZThjMjZiYjE4OTNmZjJmMTk1OTZhYzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_404ad0abd2174745a4e6e534e0aee00d",
+      "statement": "流式请求额外设置 stream_options.include_usage 为 true，否则上游不报告用量、拿不到 token 统计。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/chat-completions-request.ts#L195-L198",
+          "version": "repo-lines-v1:sha256:48105d3f8c44ff3e243d6e14fc540800702519436e53b6cd2af89561f8f8f4bc:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjk4Njc5ZWViYjQ5MmVhZWMyNzJlNTgyM2IwZDE5OWZlNTgyNmM2NzVlNmQ3Yjk1OTQzOTEyOTU3MDZlYTI0YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjdlNTc4OGQ1ZDlkNzNkMjRhODFkYmMwYTVhNzRiZmE4MmM5YzNiM2FmOTllNTJhZjc5NmU5MGI0NjhhOGEzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzZmY2ZhMTMzOWFlNmJhZmQ2Yzg4Y2U4MzY2OGIwMGM5Njk2ZGY5YjhiYTU4NGE1YzIzYjE2MDZmMDFiYzgzNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDQ1ZjE5YzBmYjY2MTA5YzdhMDZmYzRkOWEyZjEzOTAyODE5MGJhMjBhMTU4ODE0MDZhYzJhMzA4OWQwMWFjNyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_dd794047418c49ca91067f2a08914d2d",
+      "statement": "chat completions 上游 URL 在 baseURL 已以 /chat/completions 结尾时原样使用，否则拼上该后缀，沿用 OpenAI 的 /v1 约定。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/model-proxy.ts#L117-L120",
+          "version": "repo-lines-v1:sha256:15caa76dc979c557d4a0f10f2575895ffbef73551a127fed0d158057c0d55b94:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTE1M2MwYzU2YjcyY2I3ODBjOTU3OTUyNDAxOTZlMDg5MzZhNzgyMjQ3ODVkMTFiMDIxMjFmMTAwNmQ1MDkxNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmVlMWQ2YzhhMDExYWUzZjdiYTU5MzA4YzRmYjNiNzMzYzRkNmE2MmZlYmIzOGQzN2I3NTczYmQ0YWE2ZjIwYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzNhODE0NzBlYjA1YTlkODc3MTEwODUwMDk3YWVkMzEyZmUyNTc3OTliNzI2ZWYzMjg2MmEyYTBlYjYwMjg1NiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_37b7d43878ed43f39116b3d6fb3d095a",
+      "statement": "转发前删除 authorization、x-api-key、host、content-length 等 12 个 hop-by-hop 头，再换上 provider 自己的 Bearer 令牌。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/model-proxy.ts#L122-L146",
+          "version": "repo-lines-v1:sha256:6c0fa680c6a10e390a4f6dd7f912093714512b17c499c12b097b5550e554e699:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxZmY3M2IxNGQ2ZjQwOWNlZjc1ZTNhNWM0MDc2ZjU4MGNmYTBhZGZjMmY1MmJhODRiZGVlY2U1MjBlNDZiMTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU5NjUzMTg1MWY5NDk0YjliNjUwY2Q3MDk4MDgzYzAxOGRiYmI5YmYxZDU5NWY2M2Y2NWMxYjU5ZDE1MTRlMTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA3NWRiMWExMGM1MjNkOGFlYmY2ZmExMmI2YmQyNmFiNWViOTk5YjYwZDc4Y2JhZGEyMzJmNWVmOWQyY2ExOGQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c956b9064f1d48769b678825565e3984",
+      "statement": "chatCompletionsToAnthropic 把 reasoning 转 thinking 块、content 转 text 块、tool_calls 转 tool_use 块，三种块都为空时补一个空 text 块。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/chat-completions-response.ts#L88-L116",
+          "version": "repo-lines-v1:sha256:d6ff3d1422c0e43133945fe6b54a59f8b6581870a6a63f5b333a3f8ccca2d530:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2OGQ1NWI0MmI3ZjExZjg1MmUyMDU3NjE1NjM0MmJkOGIzODM4ODkyMmNhNzZjNWQ5NWZhMDc2NTc5ZDM4MzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcwNzJmNmZhMGFmMjdmMTMxNWI3ODkxNDhlZWE5NzY2ZGY3ZTMwYWM1ZDU0YWMyOGYzY2M4NzYyMDZiMTcyMjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMxZmI4NWRlMmNjMGRmNmU0ZWY5NjAzMDQwNDk3MDU1MTFlMDJlZWJjMDRjZjBlNTAwN2Y4NTk2Yjk4ODRlNDUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ca73ea30ce8f4357a6b759d41a85066d",
+      "statement": "tool_call 的 arguments 字符串解析为 input 对象，解析失败或空串时为空对象，id 缺失时用 toolu_ 加序号兜底。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/chat-completions-response.ts#L71-L79",
+          "version": "repo-lines-v1:sha256:64618fbced9386218fdcd74704fbafc14096c3ab70cf4e5c8f4d84e91d5a7c84:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjRmYmY1NDc4M2I3ODljMDEzNThmYzdlZTM3MWNhZjZkMjkyMTJiZWE2OTY1MGI2ZWRjYThlMjc4NjQ1N2I4NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjQ3NWU5NGE5MDRhYzQ5YjMxNTRkNDY3MmE2NmU4NjI5Yjg2ZGFjNzRlM2UyOTM3YmU2OTI3YWUzZGExMWM1MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTM3OTg0MWIwMDQ0ZGM4NTk1YTg3ZmI3MGYwZmZlYzI3MzUwNmI2ZWNmM2E2OTQyNmMzNTBkODI0NmQyN2E5MyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWRkOGM5MGMzYjRiOWNiNTAyZDU4ZTQxZWI2ZTQyNDk2OWU4MTc5YzI3ZmI2OTVlODVmOWFhOTlmMzI3YTliZCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_b32665ecec4e4647a5c92452237ce0a6",
+      "statement": "finish reason 到 stop reason 的映射为 stop 到 end_turn、length 到 max_tokens、tool_calls 到 tool_use、content_filter 到 refusal，未知值按有无 tool_use 兜底。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/chat-completions-response.ts#L9-L14",
+          "version": "repo-lines-v1:sha256:29613ae639a13e1f5345abb17ccbefcbd5b2d231667e360bc2e31da987905bbb:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzgwZGM5ODkxNzZlMmE3ZGMzZTA5NTdlZmYwZDE1YWE0ODY1M2ZhMzEzNmU4OTg2M2NmZWQ5OGU0ZGIxMGRjOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjg0OWExMjE3ZWI3ZDcyZTIyM2NlNmRhZTk4ZTEzNjNjMGNiMTg1MzI1MTdjOWVlNzdhNTliOWJhNjY5OTJkNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjcxNjFhNjEzNTUxNmRmYjBiM2ZiY2I4ZjA3NzUyNDc2ZjUxZGRjMWY1OTE2ZTU2MDIwNWU3ZDUzZjQzYmJmMyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d7f7142bb81f4a52a0d08ed164e1d5ba",
+      "statement": "上游错误按状态码映射为 invalid_request_error（400）、authentication_error（401-403）、not_found_error（404）、rate_limit_error（429），其余为 api_error。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/chat-completions-response.ts#L16-L21",
+          "version": "repo-lines-v1:sha256:826cdd5417492d1018749a00a9242340c7827654c6dd691361563ed4334fbe35:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmQxYjNmNDk1NDA4YzhkYTYyZDUzNGE0NDRlYzZlOTI5MTJhNjlhMTI2YWViNDQ4MjllZWRkYTVmZDM4MDQwMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjk0MTZlMDlmNzhiYTMxNmMwMzI1NjgyMTNiODU1ZWU3NTZlNDE1NjVkOTE4ZjA5NTE5YzgxZmQ2MjBmNDA2MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGU5ZjMwZDlhZTdhNGEyNjI5MDA0MGEwMGZkMTdmMTI0ZDk1ZmJiOWI5NTI5MzEyZjhlMDFlMzJiYTA2ZTM3MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzk5ZDNlZmQ3NDAwYjIwNzFlMDkwNzQ3MDZiNWU0NDRlYjhlNmRjNmQzZDkxYjYzMmJiODY2NWNkNzM0ODYwMCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_db3afd4143b84d74a303cc9825f82329",
+      "statement": "流式转换器按 index 缓存并拼接 tool_call 参数，直到结束才按序发出，因为 Anthropic 的 content block 在 stop 后不能重开，而上游工具参数分片且可能交错。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/chat-completions-stream.ts#L6-L9",
+          "version": "repo-lines-v1:sha256:cd63913d72de2b97ca3e732a3989328de6892d89624bdf9e0a25943e33cca28e:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWFiZmEyMzQ3ODdlOWYzMTk2OGZlOTJmZDg4NmUwNDMxNmZmMGQ5ZjQyMWZjNWU4ZjcxN2FjMGIxMTRkOTQ1ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTcyYTQyOTM4MmIyZTE0NzE4ZTBlMzdiMDU3MGE4YTE3MDI5OTFmY2Q4NDk4Y2Q4NDA2MGE4YmY0ZjA1MDE3YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYmNkM2ZjOGZkNzBjZjc5NDdkMDMyZmRlMmE5MzRkZjBmN2JhMzJiMTlhOWZjNGI3YTkwZjMyYzhmOWU4MDY3YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzFiNzUwM2IyOWYxNjY3NTVlMjdmZDY3ZGMxMWNiZDY5N2VhNTZmNGVkMzg2ZDQ3ZjYzOWRjNzRjZGQ2M2I0OCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_9815042acf164cf99aca9876737a5804",
+      "statement": "流结束时即使上游一个 data 帧都没发，也会先补发 message_start，否则 SDK 无法解析尾部事件。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/chat-completions-stream.ts#L138-L153",
+          "version": "repo-lines-v1:sha256:bace469a59fe440b9dfe568c26e86f513a1e59fc88e9f3a0ab1e9168aa5e389a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2MDBkN2ViZmQyZjEwMDc0Nzc4MTNlZjM0YWE1MDIxMTdmODQwZDI0MGY5YjlhNTJlNjlhZTYyMDZkMTg2NDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk3ZDg2MzJlNTRlOTI5OGFiYjk1ODcyN2UyZDUxNDA4YWJhZjEzNjYwMzUzNzkxMDE0MGFiZjY1YjMwYWI2MTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNkMWQ2OWMyZTEzNzllNDgwZTZkMTUwYjM3YzVkNjRjMjVhZTAwMWI2ZDIyNjRkN2Y4Yzg0OTJiNWVlMGMxZWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_72d76063a2bb439cb47376bf97316b5f",
+      "statement": "无法解析的 JSON 帧被跳过而不中断流，[DONE] 触发结束序列。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/chat-completions-stream.ts#L220-L226",
+          "version": "repo-lines-v1:sha256:8464d9c7d87f9f3537cf02f174645d34ccbd7a3cf11e05dc644dc529b773ff29:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjg2YjUwYWRjNGJhY2FlMWJhMDYyYTRjMWEyNGZiOWZiNTJkMzgxYmVjNThiMTM4ZTU4MDYwZWM4Mjc4NDVlZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZGRlMjdkODZhYmZiYTQzZjQ1ZDI3NmQzYTU5ZjdhMTQzY2ZiNWEzMzkxYzZmYjdjZWEwMzlkYjQ3OGY1NDY4NyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTczYWYzOTcwYTNhYjM3N2ViZTBiNGIwOGU3NTFhYjBiNDE2MjAxMzQ4MTZkNzkyYjdlZDdiMTNhNTg0MzFlMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDBiOThhNWRiNDVkOGZiNDk5Mjg1ZTJmYWY0MzkxOTQ4MDU3MmJjOWFhMmI0OGMyNTkxNDkyOGNlZmZlNGJhZiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_f839bf8d32704df998ef9fbd1473b50f",
+      "statement": "sessionThinkingFor 对无 preset 的模型直接使用 claude 词汇，thinkingLevel 为 off 时禁用思考，否则启用；有 preset 时经 claudeLevelFor 翻成 effort 档位。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/thinking-mapping.ts#L136-L145",
+          "version": "repo-lines-v1:sha256:f475a2b37e28dd52a7fdc4b8392ff01daa2db0b4d13b65d8dc6cbf8c67940edf:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFhYWRhZWMwNjA4OTQ4ZTJhZWNhZTAzYWIzNGYzZTk4MDUxNjUwMTMyNjBhZjNlOWNlM2Q0OTQyMDc5OTA4MjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAyOWExZGE3MDE2NGU1OThkZWQ4YzllNDQwZjVjZmE3YTMyNzhkODEzNmE4NjczYTgzNmY1YzQxYzA4YzdhMmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_27177c175012443dbf6ed39eb935bba5",
+      "statement": "resolveRequestThinking 以请求的 thinking.type 为开关轴、output_config.effort 经 modelLevelFor 反查模型级别，信号缺失时依次回落到模型级别、preset 默认与 on。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/thinking-mapping.ts#L52-L81",
+          "version": "repo-lines-v1:sha256:3fe315cea3aac6a5ea02e8a85673f4eb8dd7ce0b619007e767cdbed9828b1bd3:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIwNzkxMjM5M2Q1NmQ0ZDE3MWM0YjM1YmE4MmUwZGI5Njg5NjFjZDdjZGRlNjdkMzNjYzhlZGE0NTBkNzNkNjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY5MWIzYzA4YTliYmFmNTg5YjY1YTllYTE3ZDUzNTA2ODI4OTRlNGFkYTM5MjVkZGY5ODJhNGNjNWEyOGIwNmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRlZGY3MmNmNTAwYzdiZDEwZWJiYWY1MmY2MjQxZDM0ZWNlZDg2YjRhZTM4YjkyM2Y3Mzg4OGVmNGM4ODY1ZTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5838eb3df06e41d39aeaf86ca0ad0eda",
+      "statement": "chatThinkingParams 对完全未配置的模型返回 undefined 以保留上游默认，否则用 preset 的 chatParams 生成参数。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/thinking-mapping.ts#L88-L101",
+          "version": "repo-lines-v1:sha256:2b30e88af60c54342d1245c3bb35efeada61e3d2e85032e5b26d36c0eedb5b15:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg2MGIxZjQyMjA3MTFiMWIyNTlhYWU5ZGNmNjE3NzhlZTU3YjJkMDliYmI4MjhlNzA0YWJlYzUwNDg2NDljNzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkxODI2ZmY0YTAyZTBmZjIyN2I4Nzg2NmYyZGYyODdjZTVjZjE1NTMzMzE2OWQyZTYwMmQ2M2JjZjM1YmFkYmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIzNGIzNGU5ZDEwMTljM2UyNTdlNWFmNTMyNDcyYTE5NzUyMDdmZDBkNWQxNmNkNGNlZGM0OTg0ZTFmNTEwZTAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_450559e84c844f6a846d475c6d9e2973",
+      "statement": "applyThinking 按 preset 重写 thinking 与 output_config.effort，保留 output_config 的其他键，两者皆空时删除整个 output_config。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/thinking-mapping.ts#L108-L133",
+          "version": "repo-lines-v1:sha256:a836fefd337428e9f83ff55fe1e49fc426e178e0b8891a913e662cd18b84294e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzZDhjYjdjMWJmM2Q3NmRhNDc3MjBkYjliNGJkYzNmZTkzNmM5MjlmNjQ4MzBlYmE5MmNjNzRlMDZjMDcxYTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ4M2Y5ZTQ2MzY5YzdhYjcxMmJhMWM3MTY3ZTRhMDY2NWY4YmI0ZTBkNTZmZGUzNjZjOTA2YTZkOTczNDAzMDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFiYzYzMjA2NmM1NmI4NWRlOTRhMTBkOGE4MGY2MGFiNjYzY2MwZjAzNzQyNzlkYTBhZjlhZWM1MDhkNmQ2YTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bf460fcca4c74a2b914da83906606923",
+      "statement": "countPromptTokens 收集 system、消息 content（含 tool_result 递归）、工具定义的名称描述与 schema、tool_choice 等所有可读文本，拼接后用 gpt-tokenizer 一次编码。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/token-count.ts#L76-L107",
+          "version": "repo-lines-v1:sha256:68f1d8c8a29196719ce8cc0d4477b3023df0a86ee0f698994184b370f9679e16:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE5OTY2MjY1MGQ3MTViMmRlZjE3MzFiMWY3OTc3ZTgwMGI3YzJhNzdhYjNhNmM2ZmE0ZWVjNzBkMzNiOTg4NTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY5YjJkNmU5YmE0N2QzZDliYTFkYjAzM2M1NjViNDExYjVhOTJkNWQ1ZmY5NDYxZGNjOGZkMmVmYWY5ZjkzOGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f92c7c5221084a8692a24c404515e8a1",
+      "statement": "token 计数在 tokenizer 抛错时退回每 token 四字符的启发式，且空输入返回 1，保证 CLI 的上下文报告不会因计数失败而失败。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/token-count.ts#L98-L106",
+          "version": "repo-lines-v1:sha256:87527c91e0f233358829b49edec972677e85aa07df4a65995f34d2db4276e538:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGYzYThiY2IxMjE5MGI4NGFiMjA3NWI5OTI5OWM3NDdhNzc0ZDg3ZWNiM2U1MDg0Nzc1MTcwNDNlMWE2ZDc2ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjdlNTc4OGQ1ZDlkNzNkMjRhODFkYmMwYTVhNzRiZmE4MmM5YzNiM2FmOTllNTJhZjc5NmU5MGI0NjhhOGEzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjU0OGRjN2QwYzkwNjEzYTZhMzViMzBkNTgxY2U1NjI4MWE1NDJjOWYyYzM4Mjc5NjA2Y2Y4YjM2N2M4MzhjZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_a545867aa13b410184f485eb60a74b26",
+      "statement": "settingsEnv 清空 ANTHROPIC_API_KEY 并注入代理令牌与 baseURL，模型可解析时把同一限定模型写入 ANTHROPIC_MODEL 与 CLAUDE_CODE_SUBAGENT_MODEL，contextWindow 为正时同步设置自动压缩窗口与最大上下文 token 数。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/model-proxy.ts#L414-L433",
+          "version": "repo-lines-v1:sha256:a25620fedbe49e29662ba1ee2957376c20150fa086abd1dd82fffbe769a75aca:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNjMmNjNGE1M2UxZjU2NGRiNTYyMTVjYjk0ZWE0ODE4ZDY5ZTRiNWU4MTUyMGUwNTgxOTQwODU5MTZmZTZmOGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU4NWZkMmU3YzY2MWU5Y2RlYjJiYmY5NGFjZmI3YTVlOWJmYWU0MDY2NDAxYTE1NDVkOTY3OTVhODQyYTM1YjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZiODY1MTcyYTdlOWFkYTc4MmViM2M3MTQyMTI1OGU2Y2JmNjhhY2M2YzQzYmJjMWFlNTdiMjgyYzc4OTZhNDcifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}

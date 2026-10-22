@@ -1,0 +1,380 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:6b8b4864389332ca8ee74910123c909cdea79c27e2780fb665488d44f7a83d84",
+  "claims": [
+    {
+      "id": "claim_a2906a096d0041df84bcd2c664b95b1b",
+      "statement": "WorkbenchPage 由三层 provider 组成：ProviderUsageProvider、ModelConfigurationProvider 与 SessionControllerRegistryProvider，最后渲染 WorkbenchContent。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/index.tsx#L31-L41",
+          "version": "repo-lines-v1:sha256:18d5f55609f3df2b98de191e231f73c28fe3024c9985bc92021c562f2c365270:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2MmQxOWE2MGU0OGU5NzNmNGVlNjJiZDM2NmRiZWZhMmVmMjRiNTU1NjQ4NzNhMDg4ZGY3ZjVjZjQ5MDkxYTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhlZmUwYjdjNWYyZjc2YTlmZDViZDViYWFlNjQ5ZGFmZjFjMDE4YzkzODczNGRhMGI0OTQ3NTMwMDk5NGRmMGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUyYTI5MzYwYzlmNzUzZmIwY2IxYzA5NGE1NDI0NjQ2ZWQ1Njg1MzBiMTFjZjU3ZWFjMDAzZTU3ZjY5MTMyMzMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c14593ab8fc145ecac02b06f96e10c4b",
+      "statement": "会话错误经 handleSessionError 双写：controller 的 runtimeStore 收一份，workbench store 的 setSessionActivity(sessionId, 'error') 收一份，后者驱动侧栏的活动标记。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/index.tsx#L55-L61",
+          "version": "repo-lines-v1:sha256:5e25b29f9e1fecb93c63cd1b3bd23668730950e3ecb39f0e78354669b9f3bbe7:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTNjYTIyOTJlOGFhYzU5MTM4ODk1OTg0NWRkYTc4OWQ3ZTE1MjJhYWY2YjRkOGQ3ZGJjM2Y4ZjYyMWYzMzY4YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTYyNjc5MzVmYzYzMzQ2NWQ4NDhiNDBhNGVkNjk2N2U3YjdhMzIzZjgxY2Q1M2MxMTBhZTIxMDI5Njg3YWExMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMmU1MTQ5MjM4MWQ4MzdkNWViOTc0ODI0MDBkYWZhODQ1MzM0OWM0ZThhNGIxZmU1MDJmN2ZmZGQxMjk5YjIzZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTViNTM2M2M1NDM1NTg3ZGIyZjY1ZmE4YTRlMWQ0N2Y0NTNlODkxYzlkMmY5NDgxMGQxMjkyMGVjMzk1ODYwMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_19d76acf13724df696c08348a650365e",
+      "statement": "设置页由 isSettingsOpen 状态驱动而非路由；openSettings 在打开时把当前焦点元素存进 settingsReturnFocusRef，供关闭时归还，workbenchFocusRef 作为兜底焦点目标。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/index.tsx#L67-L74",
+          "version": "repo-lines-v1:sha256:594683165196793a825348107570b6a954119ed51b6a1115c026ebad5ca17a43:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWU0YTlhM2Q3MWI1MmU1NDViNWM1MzljODc1ODZlOGEyYmQzZTJkNjNlZDYzZGFhNDliZTYzOWM0NWNhYWY3YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTBiYjZkZWQyYTVhZGE0YjhjM2JjMDc5ZDQ2M2E5Yzk3ODc0Y2VmZDM3ZDRjNDgxMDBkYzU4ZjA4YzBmMzFjNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMmNjYTgyYjcwYWViZDU3YjhiM2Q1YTE0YWE3M2M1NzBhOTg3MGU5ZTBlMGZkOTI0Y2E0OWUxZmIwOTU3YTdlNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjIzMTAwMDI0OGFjNjcwYzk5MDc1MjgxNDc0Y2NmOGY4MjAzM2EyZTgyOWM2OWQzMjA1MDQwYWJkMjNkN2NhNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_3e18eb1dd5d44a088968a7fbdecf73b8",
+      "statement": "useWorkbench 只是把 useProjects 的结果摊开并加一个 selectPromptFiles（转调 claude.selectFiles），真实逻辑都在 useProjects 里。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/hooks/use-workbench.ts#L10-L25",
+          "version": "repo-lines-v1:sha256:0f90d83861b96927a9a043a585a06ca59c05f2ad33309c593515c361b7f6b700:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNkODkxMjhmODk0ZWI2YjQyMTA4NGY4MjM3YjMzYzBmMWNmNmNlNjEyODIyZTc2MjZkZmUyYTlkYjRjYWY1ZGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZlZjEzYmI4NGY0NGMzMjgzNWQwYWFlZDE3MjBiYmE1NjM3NzBhYTBhMmYzZjkzMGE2ZTBkMzlhN2E2ZDFkYzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9974027120f84569a0ebad0bdeda001e",
+      "statement": "refreshProjects 用 refreshRequestIdRef 做请求序号竞态防护，慢请求返回时若序号已变则丢弃结果；它并行请求项目列表、每项目会话、每项目分支与草稿索引，单项会话失败只记 projectSessionErrors 并保留 store 旧值，项目列表失败则记 projectListError。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/hooks/use-projects.ts#L254-L339",
+          "version": "repo-lines-v1:sha256:ca34bd65207d89b1867899b2c6f53f60398602df810de64283e9cb14d511b3bb:eyJzZWxlY3RlZExpbmVDb3VudCI6ODYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhjYmU3ZGJmODBmNzNmNzZlMDkwYWEwNzhlOTA5OGRiMDViNmM2OGQ0M2JlNjI1ZmY3MTNkNGFjMDkxZjlkODkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRjMGM1N2RkY2M4ZGNiMmRkZGJjNDM4ZGE0ZThjMzIyNTViNmU1OTg1NjkwZjliYjQ5Yjc0NDM4ZWNlZmY2OGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMzM2EwZTJkY2YzYmNkZThjYWVjZWVlZTUzNTFkZTY1N2IxOWZmZDMyY2ZhNmRjNzQ5ZjJmNTlmNzFhMzI5NGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU5ZmJiNGE1MmM3ODFiNzAwZWNlYmYyMWJhNzc4MjAwMWJkYWU2MmViMzI2ZjYyZDIzMDUxMmFiMTFkYTVlOWMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7c0ccb69a8264014a4e9f718776e87ab",
+      "statement": "项目窗口只加载自己那个项目的会话（按 pinnedProjectId 过滤），但项目列表仍全量返回，因为切换用；草稿索引同样按项目过滤。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/hooks/use-projects.ts#L264-L271",
+          "version": "repo-lines-v1:sha256:7c1f23721bb8669242219469c13aa68ce18cd7e2cebe494c8017f10dc1cd18bf:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNWY2M2RhZWVmYWI0MmM5Zjk3MTMxNjAyYmIwODBjMDc2NjQwODYzNjE5NWY1ZDExYTcwYjVlM2Q3YmExYTZlNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjllOWQ4MzU2MDIxMzY5ZTFkMzI0M2JjZTY5NTFiODkxYjAzYjNjYzI0MDY4YzllOGY2YzU5ZDkzZTc5NzJkMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTNmZGU2YTk5ODIxNWJmMTUyMWE1MTExZDc5OTYxZjAxZjI4YzA3ODRhM2E3MTUxMTc5ODk4MTc2NzZlODBmMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTU4M2MzZDI3ZGY1ZjNkZDg2MzY3YjEzZDUyYWQ1MjZmYjcxNTBhYTU2YTNhNzE2ZWYyODA0Y2VhY2MyMTNiYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_0c048b60858e43f888b5f5caefb8b36a",
+      "statement": "启动时 describeWindow 与 workbenchPersistence().ready 并行等待，都落地后才 refreshProjects，因为窗口身份决定目录加载什么，而持久化的界面状态必须先到，恢复出的标签页才能对着真实目录做 reconcile。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/hooks/use-projects.ts#L341-L358",
+          "version": "repo-lines-v1:sha256:cea7af5d2891a9e29fc42429a716a2a509bfb66c19cf07f47246c9610ebc59bc:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5NjZmYmZhODg5OThkYTc0NjU2YzUwMTk0OTU2YzI1ZjA4NDk0NTc2NjBjMDA5ZmU2M2QxZTlmYTlkYzkzMWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUzNTcwNDk3NjY0NGY3MjlhZTI1YWQxYmM2MGQ5NmEzN2RmNDljMzJkZWE0Y2YzODFiOWRiYjVkNWI5MjAyYTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE0ODczNzY1NTdkNWYwZjY1MGRiYmIxMWEzOTM3MWVjMzNmYWFmNmNjNDUxZmQ2NDZmOTJkOWQwMzNhNmU1MDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVjZjAwOGJkYWI0NDcyYTUwMDUyMmRhYWJiM2IyY2FkZTRkZDlkOTZlYTU5YWI3MDI0NTUwNWNhYTYxYzNlMzQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ca80fd546e874140848e2077f3cb5262",
+      "statement": "两个推送触发目录刷新：catalog-changed（别的窗口改了项目）与 window-registry-changed（钉住的项目列表变了）；此外项目窗口或有钉住项目的窗口在重新获得焦点时刷新，同步多窗口下的改动。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/hooks/use-projects.ts#L360-L394",
+          "version": "repo-lines-v1:sha256:0326f323cf393208ea45f88292d1130d65dfb099cff9027153c85b015611536d:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5NjZmYmZhODg5OThkYTc0NjU2YzUwMTk0OTU2YzI1ZjA4NDk0NTc2NjBjMDA5ZmU2M2QxZTlmYTlkYzkzMWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM4NjQ0MTEwNmMzNTM3M2YyMDJmMDM0MTA5OTgxODIyZmI4MWVhZGIzZDlmMzQ0Yzc5NmE3OTkyMjMyNTgzZDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgyYWZkNTk2MGUwZjk1MWFmN2M5Yjc3NWJmNWZiNTJhYjEzYjc5YjUxZjFjYmZhNzYzM2YxNDU2ZjdlMmE1M2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY0YjEwNDdjNWU3ZWIyYjhhYjRkODIwZTljNDlhNGEyZGI2ODFkMmQ2NWI2YjM3Yjk4YzM4Y2FhMDJmOWY1YjEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a87e698a4de54d759dd0ea30df26e597",
+      "statement": "buildSessionTimeline 被调两次产出侧栏两个标签页：history 用全部会话且 archivedGroup 为真，current 用 pickOpenOrPinnedSessions 取任何工作区开着的加置顶的会话且不带归档组。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/hooks/use-projects.ts#L96-L150",
+          "version": "repo-lines-v1:sha256:eb069f3a7467f6d2ec36349a6220ce6d159363e98a8e6310e8a11d89f3ce2527:eyJzZWxlY3RlZExpbmVDb3VudCI6NTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRhMDlkODFkYjhkMGNkOTQ3ODU2MWE0MTU2OGM0MGUxNjY4MmY0NzE1ZWZjNWIwNzE5Y2ZhYzQ2ZDBlODBiZTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI0YWRhYzM1OWJiNjE0YjE0YzNlM2FiMjllMDA4Nzg4MjBjN2JiNjE2MTEwMzNkYTcyNjU1M2JjYjk0MzBjNzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUwNmE2ZjYxMDViZDRlNDdjMGZlNzJiZTg4NmE5ZGUxYmQ5YjZhM2U4MDkxZWJlMTBiYjBhMGVhMTI0YjZlMmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFmMjNkZWQyMjQ4ZTVhZGM4Mjg4ZWEyYmY5YWQ1ZTRiMGM0YmQ3OWVkMTMxMjMxOWRmMmEyYWM5MTk1ZmYyYWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_836c83faf3d24c69ab6c2e96f5ae9186",
+      "statement": "tabSessions 是当前工作区标签栏的会话，过滤掉未保存的空白草稿，因为它就是新聊天界面本身、还没成为标签；workspaceSessions 在 home 模式下列出全部会话，因为 home 会话的 cwd 是 home 目录、project_id 从不为空。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/hooks/use-projects.ts#L163-L190",
+          "version": "repo-lines-v1:sha256:974772601f34640c05680763b6c6d38e81de03370545af7b3c1986011b0f8c56:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1NDkxNTIwNGUxMDM4OTliMzJjNDdjM2ZkMzlhZTc3MDFkZjQ5MjY5NDk3MjMzMWZkNDEzZGU3ZTMwY2QyMzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2MjY3OTM1ZmM2MzM0NjVkODQ4YjQwYTRlZDY5NjdlN2I3YTMyM2Y4MWNkNTNjMTEwYWUyMTAyOTY4N2FhMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUwN2EwOTU3NmI4OGFkMjY5YmFmYWE4MTJjNjgwMTZlMmQ3OWFkODg2ZDg1NjJlZWIxOWZkMzZlNTMxNWExYjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM4ZmRmNTIzOWYyZGQxOTU5YjVjY2I4YzJkYmNlODAyMjhhNThhMTE3MjJiMDc2N2FiYTBhOTc2ZjQwZmIzM2YifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6b9b4e04885144f1b49eb1481279c8c5",
+      "statement": "ensureInitialSession 在每个工作区首次加载目录时运行：有选中会话或已初始化过（按 workspaceKey 记录）则跳过；否则选该项目最近活动的会话，没有就建空白草稿；findHomeProjectId 把未选中解析到内置 work 项目，让初始草稿与候选历史共享同一 projectId。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/hooks/use-projects.ts#L219-L252",
+          "version": "repo-lines-v1:sha256:f7e0aa52b43af0b539d2603445b03024d68e2f0dee9b84496bb366a089b990c8:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU4Mzc1ZjZjY2RhNGZmNTJhZGVjZTQxNTFiMDI3MmIzNzdmYTAwYmUxMzcxYmJkZmUzNjBiNDU0Njg5YTAwM2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2MjY3OTM1ZmM2MzM0NjVkODQ4YjQwYTRlZDY5NjdlN2I3YTMyM2Y4MWNkNTNjMTEwYWUyMTAyOTY4N2FhMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMwNDlkNGU1OTNiMTc4MGIwZmNjNDgzZWQzYjQ2NWYwOWFlMTA1MTI4MjU0MDZkOTdiZTA2MGU5YmU0YjhhMjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU2YzdkNWM3YTE3YmY4NzBmZWU2ZjAwNDk1MTMxOWZkM2QzMmIxYjE5NDFjMzM0ODYxMGY4ZmFlNjllYWRhOGMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_da1ef363f8bc4d1eb451366243d0c7bd",
+      "statement": "工作区键由 workspaceKeyForProject 用 project.workspace_id ?? project.id 生成 project:<id> 形式；项目不存在时回落 project:<id>，id 为空则为 claude；会话无 project_id 时为 claude。用 workspace_id 让同目录的文件夹与工作区形式保持分开的历史。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/stores/workbench-store.ts#L151-L173",
+          "version": "repo-lines-v1:sha256:733d1afe7c01dcc4b3b4c12ad54df0bbc0be1560da762e5ff6d52991ddf649e2:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2MzQzODliOTE5YmM1ZjlhMzM0OGIyNzY5NDdkZTIzYWU3ZTZiZTAzMTAyZjIwZjQ1NjU2ZTkzZTk0YjMwMTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEyMWQ4ZWVjYzllNmMzYzM5MzNjNGZiYTRlOGQ5NzczZTZjNzNlMWNmOWY1NjM3YjUxZjg3M2I3NGYzZmU1OWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE3OTFmYTAyZTYyMTZhMGU1ZGZjOTRmYmQzMzUwZjc0NGI1Y2ZlOGMxYjhhZDUxYjA5Nzc4NWE5OTg1MGU2ZTMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ae76f64897424cbca8c3d28e7c580cd0",
+      "statement": "reconcileWorkspaceTabs 把各工作区标签页 id 与当前会话并成去重列表，逐个按会话重新归属工作区；活动项里指向不存在会话的条目删除，其余重新归属；最后当前会话压过一切，其所在工作区的活动项必须是它。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/stores/workbench-store.ts#L175-L215",
+          "version": "repo-lines-v1:sha256:87b3a0ed1060d652f482443fabbbfd4a9f5d416091b0552db9e587209c959a9c:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM2ZTU4YTE3ZmNhYzk4Y2JkNzIxYTdkZmIyMTliYjBiMjU1MGQ2M2M2OTI0MDYwZjFkNmYwODdjMWFhMTljOWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZkNzc4MDU1MWUwMjk2MGQzZGUyMDRkNWJiOGJmYzUzMTc4OWVjODUwYzhiZjkxYjVlMGJlYTAyNmJkZTlhZDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVjZjRlYjc3MTg5MGYxZGI1ZjgxOTJjOThhYmEzZWZkM2YzMThhOGVmOGM0ZWVhOTZiMjNmMDNlZWI5YTBmNGYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5602dadcbfe44948a40ab030124c90ce",
+      "statement": "catalogState 按 claudeSessionId 建索引复用本地 id 使用户看到的 id 不变；有 custom_title 的会话不被目录标题覆盖；wasStarted 记录本地已把草稿标记成非草稿，防止目录里的旧 drafts 读把标记打回、让持久化订阅者写回草稿条目。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/stores/workbench-store.ts#L301-L335",
+          "version": "repo-lines-v1:sha256:832a0ef06af06d6aa730e50f286b9ddf39f2ef9369315f8be611572ff7dc61fa:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJhYmNjYTc0ZWIyNTRiNjk2Nzk3MTMxNzIyOGNmYWE0N2I4NTU2ZmZjZTU3YzBiZGIzYzgzYmE1NWE1ZTZjOTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY3OTZiZWQ5YThiZjU2MjZjYmU2NjU4NWIwZjA0MmI4MDg1NTFiMTk4ZGQ0MDE4MGQzOWI3M2RjZWIzZDQ4NmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI4NWNkMGE5YmJkZmMxOWUxOGZjZGEzZDIzNTkyNzc2OTBmZmQ5ZWFiOGE3MTVlMzQ3NDVjODVkMTk2YWFlNTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5910fa13ea4d4d2c9e381c45eeffcde8",
+      "statement": "目录对账时本地 id 的会话（claudeSessionId 为 null 或 id 与 claudeSessionId 不同）以及 home 会话即使目录里没有也保留，因为 home 会话按归属被排除在每个项目目录之外，目录永远恢复不了它们。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/stores/workbench-store.ts#L353-L364",
+          "version": "repo-lines-v1:sha256:4d93ed2e94fa22d62ad1b601cc094ff656d1ad3e1f672f176060c03bd4afed8b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIxMTE3NTE0OTFlYTJiMzYwOTRlMGFhNzQ4OTQ2ZjFhNTdjNzMyMDQ1ZjU0NTlmODk4YmZmNTE4ZTFhNzJkYWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk3ZDg2MzJlNTRlOTI5OGFiYjk1ODcyN2UyZDUxNDA4YWJhZjEzNjYwMzUzNzkxMDE0MGFiZjY1YjMwYWI2MTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMzYWI5NjNhZjEzMjlmZTc2M2QzZmRkMDc5MTVmYTNlZTliN2M3ZGU2MDk0ZjhiZmIwNmEwZDcwMjA4YjU3NzQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9785f6c18c8c46658fe766b6e951a4a5",
+      "statement": "未读标记只做种子：session.unread 只在运行时对该会话还没有意见时写入 sessionActivity，防止一次慢的标记已读往返又把会话标回未读。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/stores/workbench-store.ts#L417-L423",
+          "version": "repo-lines-v1:sha256:ceb372e4c033f50537541de80ed30d305ca174e104d2916905204e01a8e8566a:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2JlNmYxMDM4NGQ0NDcyMDA2M2M4ZDYzNzA2ZTA0ZTRjNGExZTFhYmQ0YWI5N2EzZWQyYTNhYTAwYjU3ZjIzNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjdlNTc4OGQ1ZDlkNzNkMjRhODFkYmMwYTVhNzRiZmE4MmM5YzNiM2FmOTllNTJhZjc5NmU5MGI0NjhhOGEzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDcxNDVlMGMwNjdkMjg1MDAwN2M0MzNkMGNhY2E5YjhiZjZjNGM4ZTc4ZDMyYjMzMTY4ODQ3MDkyYzY5M2EwMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzg0ZDM2YTZlZDk1NGUxYWRkNmUwMWE2NzUzZjA0MzVmYzRlNTY0ZjAzYmRiZjg5Y2ExZWZlMDdjNWQxMGJhZCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_686ae3c559b0440d81bd8044734dadac",
+      "statement": "置顶列表从会话自身的 pinned_at 推导并按时间排序，id 列表只是它的投影。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/stores/workbench-store.ts#L424-L429",
+          "version": "repo-lines-v1:sha256:9eb7f4359e021d26c222c0cb42ed5b0555931c6d0578aa5e18326b32a24539f5:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTk3ZDExNWFlMTE5M2U0MDcyMTU2ODQzOGNiYTQ0ZWViN2M4ODFhNTAwYjdkOWQ1ZWI4N2E5YTQyMWEyNmZkMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiN2M0YzZmMWFkM2JhMzkwYjQ0OTIxYmIzNGNmNDFjZDY5MmZmMjA0M2Q5NWQ3N2VhMjY0NzY3NDEyOWVhNmExYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTBhZDhmZWE5NzdjZjEwN2ViYTA2NGM5Nzk3NDM4ZTA4NjM5YTBmMTdjZWQ3OTkxZDFjY2Y0YzZjMTYwOGNjYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDg1OGI0YWNjOTVkM2M1M2YxYmNkNzUwNDExYTRkYjE5NjY4YmI5MGFlYWRiNjQ0NTY5NWEyMTU3ZGViNWZlMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_57fe9ddd3cff4a28bc262e287e6d7583",
+      "statement": "closeSession 从标签页移除会话并用 removedTabState 算出该选哪个邻居，若关闭的是当前会话就切过去；工作区最后一个标签关闭时新建空白草稿避免落到空表面；它特意不改 activity，因为会话在后台继续跑。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/stores/workbench-store.ts#L627-L672",
+          "version": "repo-lines-v1:sha256:3c90963f592c2aacf252c28e6e3468156d6f98c8cebefbebd799e9c750f46427:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQzYjg5MTdhMjY0NTkwYzNiYmJhMTVmMjg1MGFkMmM1MzRmODE2ZDU0OWZjYmE3MjA2YTk4OTUzYzBlZjU5YWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5OTBlYjZjY2RiMGZlZmNjM2M5YTg4M2M4NzljOTg2NmJlMzM5MzFjYWFhYmYzNjYyZDdhYzRjNDEzZWM4YjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNjNzQ3OWYwMzU3M2RmZTk0Y2JjZjhjOTlmMjNiYTdjMzM3ZmVhZTRmMDE3MTE4M2E1NGUwZDFiNWUzZDYxMjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQzYzhhMWQxODY0ZjQ4NzIwNzJjNmExNTY5Y2NiYWFjMTVlMDU0YWM4ZWFhYmQxYWFjMmY4NzhmOTgwZDVlNzgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_62bc474968cd4ec794c1dddd5ae50732",
+      "statement": "bindClaudeSession 处理本地草稿首次拿到 SDK id：若另一条目已占同一 claudeSessionId 则合并两者，项目列表、标签页、置顶、当前会话与活动会话的引用统一改指向存活的 id，并调 bindSessionOwner 把会话钉到其项目条目。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/stores/workbench-store.ts#L778-L838",
+          "version": "repo-lines-v1:sha256:01a5f6ab2daf9104eea9a415b872f7717d7ee8e6b97ec7b008f5314e66becb61:eyJzZWxlY3RlZExpbmVDb3VudCI6NjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJiM2IyNDg0MTJhMGM2NDI2MDk0YWEzMmNiNjVmOTZlM2UxODA0YWM5ODE2MGFhMTI2MTc2YTJlNWY2Y2FhNjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkNWNkMmZiNGYzZGY4ODQ1MTUyNTViMzk1MjNmMmY4YjU0NzJiZWVhOWY1NjZmZmNhMjA0ZGI4MDI1NjEwNDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUyZDk2MTc5MGY3YmYzODMxNTJiYzg4MmFiZDgyMmFkODgwNmVkYzQzOWRiZTQ2M2YxOWZjNDIzOGY3NTQzYTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYzMjlhOGFjM2NmODIwNTY5MDAyNmIxZjM4MDYzNDQxZjE0NmE5NWMxYjgyM2QwYmQ1ZWQwZDFiMzQ3YWEwNjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9b1e4ee346ab4c6cb8128f6fd076b81d",
+      "statement": "setSessionTitle 设 custom_title 与 title（用户显式命名，目录刷新也保留），setLocalTitle 只改 title，因为派生标题不该钉住占位符盖过 SDK 后来返回的真标题。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/stores/workbench-store.ts#L673-L697",
+          "version": "repo-lines-v1:sha256:655c19ed37a17fac7e9cc7d41d2eb2edf32500fa7de53a94a8f48a7495a61ce2:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1ZTI3N2ZiMmJlOTY1MTdlY2ZjYTI2NDJlMzA3MDU0M2UzOTE4MDcwMmVhZDlkZmZhOWIwYmE4ZmJjNGU1NjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5OTBlYjZjY2RiMGZlZmNjM2M5YTg4M2M4NzljOTg2NmJlMzM5MzFjYWFhYmYzNjYyZDdhYzRjNDEzZWM4YjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNmMDQ1N2IyMzRiMjA5Y2VhNjA0ZTIzOWMzNWVmNjZiMWI2MDdhNzllZjFhNmE0Nzg4YWNlYmE3NmNlYTVlMDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkwOGFmMDRjNWU2OGUyZjU5MDdmNmQxY2NjM2Q1ZDM0Y2NlZjliMWVjMTUzMjU0OGNjNmQyY2U1ZWQ0Y2NiNzEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_99cccf323bc944baa9ef87a01a206ae7",
+      "statement": "setSessionsArchived 归档时同时取消置顶，因为归档的会话不该继续占着 current 标签里置顶组的位置，并把 pinned 标记同步写回主进程。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/stores/workbench-store.ts#L727-L763",
+          "version": "repo-lines-v1:sha256:2d8b6eac204af96a0c7192293432cf234c16160e97048a2e61e9f9a169960be3:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMxNDFlMzkwOGNhODIxNjI5OTljYWJkNWFmNWZmMzUwNDkyYmNjNWM5MjY2OGYzOTYzYmMwY2Y0MGNhM2E0NTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5OTBlYjZjY2RiMGZlZmNjM2M5YTg4M2M4NzljOTg2NmJlMzM5MzFjYWFhYmYzNjYyZDdhYzRjNDEzZWM4YjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVmODJiZDM1OTJmZjhjODExNDVmMDZhYjZjMTRlNjhiZTk1MjJhNDE1ZmRkN2NiODc2MWQxOGY2ZDJlMzI0MWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3ZDUxODQ1Y2Y1YjUxODgwNmYzMzRhMjA0MDczNzE5YjM3ZTg3N2YyNjFiMGViODk3YzIxN2I1ODhjNDIwMTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c20eed0caf4343239b7fdffe5ef48bf6",
+      "statement": "setSessionActivity 对 success/error 事件分情况：当前选中的会话解析为 idle（用户正看着不算未读），其他会话才是 unread-success 或 unread-error。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/stores/workbench-store.ts#L764-L777",
+          "version": "repo-lines-v1:sha256:888022a9586d881db1fc9e28d0586e84cfcdb7e4bf9bcb73c385e47848c1a970:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU0ZTZmZjVjYmQzMjZiMGIwYWIzZmMzZTNmZTQ3MWQ0YjRiMmZjNWFhMGU2ZmNkNzE3ZjM4YmIyNjY3YzY4YWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5OTBlYjZjY2RiMGZlZmNjM2M5YTg4M2M4NzljOTg2NmJlMzM5MzFjYWFhYmYzNjYyZDdhYzRjNDEzZWM4YjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYyODY5MDYxZGIzOGM2YWMyZWI1MDJmNDJkNDI0ZjJmOWE1MmFkNzkwNjA3YzdlMzU4ZTJlMzQ3MTAxZDdmYWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU3ZmNjZDhlNjcyYzA0ZDVlOWI1ZDE3YzJkNDFlZmQwZjBkYjkyZWJlMjZjMTQ3Y2E0ZTVkNjYxM2QxZWZmY2EifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a8264906c707431ebb1b648464986133",
+      "statement": "detachWorkspace 先算出要交出去的载荷，再删该工作区的标签、活动项与空白草稿，若它是当前工作区则清空选中；attachWorkspace 接收移交来的工作区，标签取并集，活动项按移交方指定、本窗口原有、第一个的顺序定。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/stores/workbench-store.ts#L903-L960",
+          "version": "repo-lines-v1:sha256:925d62f3b5ba6b754fa951f380abee1d9498475760cfcbc55fb6b9a8df2529d5:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU4YzYzMTBiZjNlNDI0OTNkYTU2NmQ3NWI2NTI5MmRmOGVjNzNlMWVlOGQ0NDc1OThmOTU1NGY4M2YxYTgwM2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5OTBlYjZjY2RiMGZlZmNjM2M5YTg4M2M4NzljOTg2NmJlMzM5MzFjYWFhYmYzNjYyZDdhYzRjNDEzZWM4YjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEzMjQ0OGI4MjQwMDM5YjQyMThhNDliNGUzYzExZTExMzZmYzRlMDQ0N2FlMDE3YmZjYjBkZGVkOTc1YzU5NDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk2YTc1NmYxNjNiZmUxMTFjMTJiZmVjYjQ0NTMwMzg0MDE4MGZjZGMxN2NiNTRjODNjZTRhZWJlYTBjZjQ1MWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8931d76ba7154b9fba0275ef1aec270c",
+      "statement": "restoreProjectWorkspace 用于目录落地前种下持久化的工作区，此时 key 只能用项目 id 兜底，因此必须同时种 currentProjectId，replaceCatalog 才会用真实项目重新归属标签并推导真正的 key。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/stores/workbench-store.ts#L961-L980",
+          "version": "repo-lines-v1:sha256:321d8a8acd782d8c05f132cd9d76e15284f54146aca148a591e2b62a55576dfb:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhjYmY4ZWE5MzE4YzJjZWJiNzE0YTA2YjU1NjA2OGVhZThlMmMyMGE0ZGM5NDk3ZjU4OTA3MDhlZjhjMmZmYTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5OTBlYjZjY2RiMGZlZmNjM2M5YTg4M2M4NzljOTg2NmJlMzM5MzFjYWFhYmYzNjYyZDdhYzRjNDEzZWM4YjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUyM2FlYzViMWYzMGZkY2FmZTkzZTUxMGMwNTBhMjIzZTY3NmZjMDJmYTVhYWUzYzhiMzUxYTkzYTM2YjQ4OTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM5MDg1MWU1NDk4NzRlN2U2MzU2OWY1NjY0MjcyN2Q1ZWRhZTg3MDFhZDc1NzExNzFlOTViNTIyZmU5MGVjYWMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0a1c6bdb36b2487d8696af9a684d1790",
+      "statement": "windowUiState 返回整个窗口的载荷（当前工作区键、全部工作区的标签页与活动项）；workspaceUiState 返回单个项目的载荷，过滤掉未保存的空白草稿，活动项若不在过滤后的列表里则退回第一个。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/stores/workbench-store.ts#L108-L129",
+          "version": "repo-lines-v1:sha256:70a5e4e8f9a18635573e051d97c457450faf9b5c4a310a11167ac09200604dde:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE5MWQ4NjVlOGFkODE3ZmIwYTZlZjExOTdhNmUzNzFjODhlYWQ1MWM4N2M2YzIzZjIyYmRiMDQwYjM5ZDkwZmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQzNzU5YzJlZjhmN2YwODhlMDljYzRmNGRkNmM3MDEwOTRhNGUyNTVmNjNjNzI1ZjI1MGFkZWUzZDgzN2Y0MWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRkNjQyMmNhYWJjNjM5ODBkZTk2ZWM5M2UxN2EwMWY1OWQxNDMwZjNlNjcxMTBmMWY2MjJiODFjNmQ5M2YyZTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bd6e0d8be685472eb9e08943f7cf5d3f",
+      "statement": "session-persistence 是 write-behind 存储：update 立刻改内存，落盘等 FLUSH_DELAY_MS(200) 合并一批脏记录一起写，写操作经 enqueue 串成 tail 链，writeDirty 一次遍历写完全部脏项。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/services/session-persistence.ts#L72-L123",
+          "version": "repo-lines-v1:sha256:b16de3fb86d5654fa9e816fae8fb7ecb25ce7c0d54de94bd2e99978c84a262fe:eyJzZWxlY3RlZExpbmVDb3VudCI6NTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZlOWQzMDhmYjJkMGMxZGZjZTRiMzJmOGVlNWYyMzBhYzU2YjQ4NTIzOWY0NTAwM2ZiYjhkZDU4MzE3N2VmYTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc1M2E0ODU0NjcxNDhhYzFlZTg5MDZmZjIxYWIxOGE1MjdiY2E4ZWZlNGYxNGRkODJjN2M1MTgxMjZhY2FiNDkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_75b92aefb781482baaabb2f2362cf833",
+      "statement": "session-persistence 用 removed 墓碑集合：remove 时记下 id，load 回来时若发现已删就不回填缓存，否则一次在飞行中的读会把删掉的会话复活。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/services/session-persistence.ts#L79-L81",
+          "version": "repo-lines-v1:sha256:4dfdb806cca75340e003b4b62fb07b6da6503e0ea3f7fb0ae71d2a2ce7507166:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2NiYTU5NGFmNWIwODA4YTg1YWVhYTdmOTI0NmJkMTVjNTcxMTI2ZWNmYWFhNDZjZmI0ZjNhZWEwNWJhMjk1OSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2M2MzdiM2ZkNWU1YThkYmZkZjg0NWZlMzQ2ZmNlYjIyZjRmN2E1MjViZDI2M2RmMDdhZTg1OTNjZGE2MDc2YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjBmYjdhZDg0Y2FlOWJhYWUzNzM3NmU1MTc1NWFmMTM0MDRhYjFmMjU5NmU2NDJmZDYzZmE0YmE0YjRkZTc3NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTYxMjFlYmE2Y2Q5ZjZlNmYwY2MxOGRmMjQxMDZiMzViNTEwZmNiZDJhZDI2NzhlNWEwY2Q0ZjY1NDNmMmYxYyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_f6dbc1c80e044611bbbade6e5f16a103",
+      "statement": "SessionRecord 用 selectedProviderId 与 selectedModelId 两个字段，磁盘上的 LocalSession 存一个 provider/model 字符串，fromFile 与 toFile 负责切分与合并；只有 LocalSession 写磁盘。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/services/session-persistence.ts#L28-L70",
+          "version": "repo-lines-v1:sha256:7888354dcbc63587bff93191b624abb13d0a875dc684e8b3b9da02fd23a1c8f6:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAzNmRkNzI5MjY3YzFjZjc4NDM4Y2Y0MGQwYzE3OGZlZTliZTQ0YTNjNWQzNWY2MDQxMTVhYThkNWM2MmVkYjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZhNGVmZWU1MDdjNjZhOWY1NmM5ZTRmYzM5ZmU0OTExMGY0OWI1MjdmMTFkN2Y4OWRlZDM5ZDZhMTgxYjA4ZmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc1NGJmZjBjNGM5MzIxYTU1MzQ1MzgzMzJiYWE1OWZjNTA2MGY3YzJmOTMwZmFmMmM4MjRkODk5ZDQ4ZmUyZWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0f6dd8fa358f4130bdfc48a90d58c9ff",
+      "statement": "session-persistence 的 initialize 是空的：启动时刻意不逐个读会话文件，改为按需 load。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/services/session-persistence.ts#L148-L150",
+          "version": "repo-lines-v1:sha256:c2d7b96523fec93cc6206c46b807ba2345b8b2bca6751393650545984b23d4fd:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDk1ZmEwZjExMTdiNWVhNDA0MzQxNDBkZGUxYTM0MGM3MjBkZGJmMzI2MjEyZTE5MTgzOGQ0YjE1NmQzMTZiYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYmM1OGMyM2MwNzIwY2I2ZGQxZDE1YmFiNTIzMTkzMWY3MmY1MTg0ZTVjZTAzYmZhODZkNTA2NzY2NTlmNWJiYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTAwZTZlMzE1YzMxMWVmN2IyMDE5ODE3NjBmMTQxMWFhYTQxMzdmYTE5NmMyYmJlMzYyNzZjZTkwZWFiNjE3MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTFlNDY0ZWI3Zjg5OTNlYTRkZjhlODM4MGQxZDMxMGJjMTkzZDZkZWNkYjZiMTg0ZmRiZTY2ZGU0N2YyYzAzNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_ee6583ee673341dd8f1fae273d4bdc38",
+      "statement": "session-records 提供三个草稿状态操作：materializeUnsavedDraft（获得内容：推导标题、翻标记、写输入文件与索引）、persistHiddenDraft（有内容但不显示：立刻落盘防丢失，但保持 isUnsavedDraft）、discardHiddenDraft（内容被清空：删掉痕迹）。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/services/session-records.ts#L20-L56",
+          "version": "repo-lines-v1:sha256:3c7bddf64e24e62f39ed03bfb5e1bad673a46a0d33f2525b17417d98b36bcd03:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY1ZjhmNTNlZTQ5ODY0ZDQ4MzQxZmM0YTE0ZTcxMGU1YWIzNWY5N2ZlOGIwMTRjNDgzODExMzcyNGJjN2ViZmQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c0205a592113462aa92bf89256a43535",
+      "statement": "workbenchSessionPersistence 订阅 store 只维护草稿索引（updateLocalDraft / completeLocalDraft），不写输入文件；create 后显式 flush，因为用户主动建会话是刻意动作，不等合并的 200ms。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/services/session-records.ts#L59-L96",
+          "version": "repo-lines-v1:sha256:d78d7ac581b12a6969d370f4f1b79106c316320ca25c7432d04d1c3764e8d92f:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjljNDQ4NjlhOWYxZDExMWRiM2YwMTg3MmIwZjNkY2JkZGMzYWRiNjY5OGI1OWRhNzRjZGYxMTFkMjBiYTdkMDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkNWNkMmZiNGYzZGY4ODQ1MTUyNTViMzk1MjNmMmY4YjU0NzJiZWVhOWY1NjZmZmNhMjA0ZGI4MDI1NjEwNDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg2ZWY5ZGMwM2RkY2JlYzhlNjBhYWUzNmI0MjAxMjlkMjNmMzcwOGE1YWRkNjRmMWM0ZGNkZDc0MjhmODVlMWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjExODg1YzkxMjZjOGJjZmE5OWY0ODFhZDQyODExZWVkZTlmYjdhNWU5ZDVjZmZiNmYxY2JiODBmY2NkNzllZjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b235a5f365f44a60949f8c571b638ee2",
+      "statement": "workbench-persistence 的写入目标取决于窗口身份：free 窗口写 windowUiState 到窗口条目，project 窗口写 workspaceUiState 到项目状态；身份未知期间的写请求挂起，restore 落地后补一次。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/services/workbench-persistence.ts#L63-L79",
+          "version": "repo-lines-v1:sha256:7b64a25847b080b4b1f319f4ffbbeac309b7a5dbb992131f24589292258bd72c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkyYTAzNTI2ZWYwNGJjNjYwOWY0NDRjNjJiOTQ3M2Q0ZTE2N2RjMzU0YTJlOWM0NGFkNGVlNmRmY2Y4NmJmNTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk1Y2RlZmJlNGEzYmQ2MTY2MmQyZGJmYjcxNTEyNWVmZjA4OTkzNGQ5MDI3MWU5OWJjY2E5M2Q4NDJiZDAzNzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdhMWY0MDRjNGM4ZWNkYzUyMWQ3MGM0NDI2ZjQ3OWNiMzFjYWQ3OWJlZDkwNGEwZDRiODllZDFiZTJlMzdiZWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_76f9083b1534479a83a2c6e20ea009aa",
+      "statement": "写界面状态前有一道保护：项目工作区若在目录里还找不到该项目，这次写直接跳过，因为用空工作区覆盖会把已存的标签页清空。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/services/workbench-persistence.ts#L71-L72",
+          "version": "repo-lines-v1:sha256:0124c030a17caded5e6fe76d91750d210b85e2e7230cff9cf8e3f4db7c8eeaa0:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYmYwNzAzZmMyZGJkNzY4Y2Y1Njk5M2NkZjg4ZmM0NGE5MzNlMmVkNjE1OGQ3NjZiMDY0NWNiODE1NWQ1MjdiNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZWNmZDg1ODk1MDkxZTUwZjNjYWNmYzNhODAxYmQyYTcyNTVkMDZiZjYyOTc0ODFhZjk5Yzk5ZjliNDkwMzk5NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWUyMTFlZjFjYTUzODY3MDczZGYzNTNlMjE1YTNhNmEyMjY4YTcyZWNjMDE5MGQ5MDUyNmQ2ZDFmNjYzMjcwYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNmE3MWY3ZDIwYzFmODJiYjM5Y2IwYWIyMzhhM2JjZDFmYTBjOWZkZDIzM2RjNmZiYmYzNDIxYjRmYjM5ZGJmNCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_647fee8a1ad84d44bcfd68168f85759b",
+      "statement": "未读标记经订阅 store 比对 sessionActivity 变化，转成 setSessionsUnread 写回；与新目录条目同时出现的活动不算变化，那是会话索引种下的种子，只有运行时已知会话的状态迁移才写回。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/services/workbench-persistence.ts#L93-L110",
+          "version": "repo-lines-v1:sha256:f3609cca9632c650370fce0a7b7236ddc1360d8b68f0922e93ae8adfe34efd3d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIzYTIxMDk4ODk3ZWQyZTc2MWFjNTc3YTdmYTlkNDczN2YyN2M3OWIwZjI2NDVlNzAyYTFiYjU0ZGI2Yjk5ODQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFlZGUxNTgwZDI0Mjk5ZGU3ZDYzOTc0NzY1NmVmZDZlYTNiODFmMzdhMzQ5MzVmYTVlODBjYjZlOTA0ZWE2ZGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYwOGViMzEwZDVmZTgwMGI0NDJmMjA3NzQ1NzViYTNhZjU2YTUzYTFmZmYxZTcxOTBlZGNiNjUzMmQ5M2QxMTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5ff7fb60665b41769269e678e0728f1e",
+      "statement": "restore 分叉：项目窗口读 readProjectUi 后调 restoreProjectWorkspace；free 窗口读 readWindowUi 后直接设置当前工作区键、标签页与活动项三个字段；读失败记 window_ui.read_failed 警告。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/services/workbench-persistence.ts#L128-L154",
+          "version": "repo-lines-v1:sha256:44854606686ef0f9d7c87850debf7c7f42b8ef6d10692cb5412dbefff32ea89f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1MTg2MzkyOWZjYmY1OWU3ZTU1N2YwM2JkNjkxM2M2OWM5MGVjNzQwNzI4MzhiZjgxNzc3OTNhZjIwMTAzN2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY0NzVlOTRhOTA0YWM0OWIzMTU0ZDQ2NzJhNjZlODYyOWI4NmRhYzc0ZTNlMjkzN2JlNjkyN2FlM2RhMTFjNTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ0MmRkMDEyYmMzNmExYjllNzBhZTM1OWFmNWRkNDMwNjQxOGY4NmUyZWJhZWY2ZDIwOGFkYjZiNzU3MWUwNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQzZjdjMzc5NjAzMzE3MGRmNzQzOWVjZDlkNTExZjMxOGY1NDFiYzE0ZjlmMDA4Y2RjNGM0OTk5NTE4M2YzNTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_aa06b29073bc4031b681a588218a68e3",
+      "statement": "workbench-persistence 是单例，由 workbenchPersistence() 首次调用时创建，其 ready promise 被 useProjects 在启动时等待。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/services/workbench-persistence.ts#L165-L171",
+          "version": "repo-lines-v1:sha256:8135d1fe9340ec590d795dcd211adf2f8c409fde11bd670d39c105e9a973dfe7:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTEyYjVmYzkwNTAwNDFmMDI2YzZhNDJiMjFjYTQxMTBiMDhiMWEyOGRmZWNjZmQ4YWIzZDlmMTZlYzk2YTg2NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmI1ODBlOTY0ZjgzYTQ3M2Y0M2Q0NDM4NDYyOTQ5ZDY4YjU2MDBmZGE3ODdmMTYzNzQ1ZDAwZGU4OWNiZjM2YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_dcd214e3b8ee423c9e8db83f8090f636",
+      "statement": "main.tsx 在渲染前调用 workbenchSessionPersistence.start() 订阅草稿索引，并注册一次性的 pagehide 监听，依次 flush 会话持久化、应用设置与日志，失败分别记 persistence.flush_failed 并带 target 字段。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/main.tsx#L36-L58",
+          "version": "repo-lines-v1:sha256:931399ad5679b20f3eed70d481cf21306b37cce4e8caaaba2dd01b248aff5096:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMxMDljYTMyNjZkNGFiODVkMjMyZWUxODQ3Njc3OTExOTQ5MzA2NmVlMmEzOGJjZTZmZDAwZjE2MGE2MDc5MjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYyYzcyNzIzOWUyMTQ5OGM1MjhjZWNlNzRmMTU3ZDE3ZmFmOWE0OTNiMjU0YTVmNDgyYWYzOWM4NTlmNWVmYzYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcwNjNjMzQyMjg0YTA4ZmYyNmEyYzhmNGNmMmZhZGEyZWY1ZTBiNzQ0MGM0YTU0NTBkYzVkNWJhNmUyMDgwYTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM0ZWNhNGZkYjg0ZDUyMDQxODcyMWNiZjEwNmY0MzVmNDRkYjQwMWZkNzA4ODc3OTIwMTg1OWQ3NTUxZDljZTIifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}

@@ -1,0 +1,274 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:174d1d818c148b30a07e9e3e085304c7b2f8452af0f78ad507d4c24f69ed52d4",
+  "claims": [
+    {
+      "id": "claim_7d989ea46c1645078adcca84377516f2",
+      "statement": "Claude 会话转录文件存放在 ~/.clotho/projects/<munged 项目路径>/<sessionId>.jsonl，目录名由 projectDirNameFromPath 把项目路径中所有非字母数字字符替换为 '-' 得到，与 Claude Code 的 munging 规则一致。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session.ts#L274-L284",
+          "version": "repo-lines-v1:sha256:e187f10927faf18668ea203ba8cd7ddbdee9f8a2862486a8826fd927253f74b4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMwN2E3MWE4YmZiZDlhMTViMmM2NWE1YmU3YjlkNDM0M2M2ZTg2YWU1NmM4ZmE4NzkyMDI5YzgwNTdkNDcyNmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdiOWQ5OTQ2NTFlOWU4YmI1NDJkZjVkNTdiMDM5OTFmZmNkNzMxMTlmNWQxNzkzMDM1NzQxNmVhODVhNzRiYjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIxYzIwM2VkOTM0NGM2M2ZjNDk0YWJmOWJjYWY1Y2UxMjM5ODBmYjk4NzZhZGFkYWU0NTBjOWIxYWQ0YmJmMDgifQ"
+        },
+        {
+          "resource": "repo://src/main/claude/sessions.ts#L24-L27",
+          "version": "repo-lines-v1:sha256:c8ef0736bc73aeb35a40aca07a765eda323916ab80011a650e08bc27e9068274:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDAwYTNlNGM5NmY4YjU3M2U4YjNiOGRiNjhiZDRjMDg1N2VjZDU3NTQ0ZjBiYTgyYTUzZWNhOTU2ZWM1YTc2YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2RiOTQxZDQ5YjdjYWZiY2NjMzY2ZmIzZjk1ZGY1NmVhYTZlMmY3YTVkZjViNmI2NWQ5MTBhNDI0OTIwNTljOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTY0NWNiZTQ5NWYxYjI5ZDRmNGZhMjk0YmUwMzlkZDExZjI0NGVhMmYwYjZkM2YwM2M1ZjA0Y2JlY2I3NDkyYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_1f627f6ea09f42ce94d37b76969ef406",
+      "statement": "项目 id 由 projectIdFromPath 计算：路径经 path.resolve 后（可选追加 '#workspace' 后缀区分工作区条目）做 md5 散列。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/sessions.ts#L15-L22",
+          "version": "repo-lines-v1:sha256:7236df7a13fc6699099003bcbeb7a69891aa836e0cebfee610c79c3476062ef4:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDcyODhkNDM2MDIwOTcwMTFkMjZmMGYxNWRhYTdhYmM3MmU4MTdmNDlhNTFmMGIzOWU1MjFiNDBhNWYxN2M5NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDJmNWM2MjA4MzgzNjhhNzE4ZDk0ODViMzViZDY0MGEwOGQ3ODQzNzRlNDZhMjI0ZDliNjY0OTQ2OTAwOTdiYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTJiMDg2YzIyNDYyOTk3MGRjODM0NDM3MWM0MTM2MDYwMzNlNThiNmZiZWViM2IxMzcyZjcwZmE4ZThjZjMzOSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_3ec5a158bb2a49379a93815b16414cf8",
+      "statement": "子代理元数据位于 <sessionId>/subagents/agent-<id>.meta.json，工作流记录位于 <sessionId>/workflows/<runId>.json，进行中的工作流数据位于 <sessionId>/subagents/workflows/<runId>/journal.jsonl。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session.ts#L363-L386",
+          "version": "repo-lines-v1:sha256:3581a9d200e991f66835ccda7c776a5868e2048d805e5c40ecb54001d0d3e104:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJkOGU3YTIzMDQ1OWU2YWVmOWVmYzRmODgyYTk1MzAzMDNiMjk1MDI5M2M4NGY2NTZlM2E4YzkwYzNjYWY2NzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwNDVhMWVkNzUyMWU1MGVhNTBlZGNlMWE3MTYzNTVlMWNmMjQ4MDA5NzRhY2JlN2M2MGI0YzQzMzEzNThjMjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg2ZTc2ZmY5ODQ2ZGFjZDU5ODY0OThlOGQyMDI4NmQyYjI0ZGQ2NjI5OWM4M2ZlNWNkNjRiY2QxYzg5NGFiOTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdkMjhiOTc0ODZlMGQ1NzQ5MWUxMTQ0MTAxMDE4ZjYwODRlOTRmYjRiZjZjMmI1YjFiODQyNjg2YjZjYTg1YzMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2ade8d8b083f43b991569c3c1611e1f3",
+      "statement": "parseSessionEntries 逐行 JSON.parse 解析转录缓冲，只保留带有字符串 uuid 的条目，静默丢弃解析失败或无 uuid 的行。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session.ts#L43-L56",
+          "version": "repo-lines-v1:sha256:f772ad2d5822393787dca82bd9c5152bec25dfb492f1e160fa86103ae4aad8e5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM1YTdlMzRmYWY4OGU1MjQyMzA4YzFlZjI5ODRkNDZlZDllZGRmZDU2YjRjMmViNjQxYjRlNTBkZjI3YzMzZTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQzNGRlZTY0ODg1NTg5OTk0YzU0ZTAzMTQyNGE0MmUwOTVkYjEwZTIyNjEyZjAzNjdjMTY0MDE5M2JlMThmODAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk5M2M2MDBjNjBkZTBiYjRkYTAxNGZkOGM3NDhmOTQ0MWFlMjUzZmJiMjQ3MDA2NDUzOTM0ZGI3MTU4YzhkYTYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9f6ab63f1ae54bcebf86bb1c37daf9ea",
+      "statement": "buildMainChain 从最后一个既是叶子又是会话型（user/assistant）的条目出发，沿 parentUuid 上溯重建主对话链，并用 visited 集合防御环；没有条目带 parentUuid 时直接返回全部索引。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session.ts#L95-L153",
+          "version": "repo-lines-v1:sha256:50a65c70fb4c4bb47d5cc4b13fd7acb344a324858d1d4d1f6efabdde516a8e7b:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgxOWE2Y2ZjOTVhMzA2NWY0NjVlZDMxZWZiNThiODM5ODg2ODE3NzI0ZGU1NTdlNGZhNDhjY2JkZTNkYzkwMzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYzNDU3OGZjMjg3Y2NjZTQ5ODQ4OWNkOTkyYjI1YzBjMmU4YmY5ZmNlYWY5OTQ1YzdlYWI1YTI3MDg5Y2RkODUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBmYjVlOWUwM2FkOTk3NjlmYTY4NDI3NTFhNzJmNGFjMjU2YWJjYzIzMGI4YjM1YWQxY2YwYzE4YjUyYzkxZGIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_55742856b24e4d279e5108cfb0a0cd89",
+      "statement": "finalizeChain 过滤掉 isMeta、isSidechain、type 为 system 以及带 teamName 的条目，只保留主对话消息。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session.ts#L155-L165",
+          "version": "repo-lines-v1:sha256:3fff7783ce5d8a2ae6c8362735ba6cc96d5c6cd8f55456971e17229de79312d8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwMzZjNGMwZjY4NjNjZWU2MThiNDE0MDg0ZjEyOGM3MmQyZGVhMGVkNzE4OTNhMTQ2YmJiMTIxOGZiZWMyZDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEyZjMyMzQ5NmUyYmM3YmIzZTQwNWVkZGU0ZDI0M2JiYjYzN2VkMTk5MGYwMmU2NjcxZWVkNmJlZDdkMzBiNTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQzYTYyZWYzMDJkNWJmNGRlYWJiMTZmYWFhNjEwMjlkY2UyYmMwOGVjY2Q0ZmI4Mzk5NGVkZjE1YmJiYWFkZjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fbbc8bfb8e0044179201efe0a7c8ab3b",
+      "statement": "resolveMessageEditAnchor 要求目标必须是 user 条目，沿 parentUuid 上溯遇到的第一个 assistant 给出 resumeSessionAt 锚点；若一路到根都没有助手条目则返回 strategy 'fresh'，环与缺失父节点都会抛错。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session.ts#L58-L93",
+          "version": "repo-lines-v1:sha256:5095f48b6791de03ac6c72cb70a85e781202a4786b94a7230e20fb60bc00d516:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFkNGQ0NjE2OTYwZmZlZjQ4NTRjYzM0OWEzMmYxNWE5YmVjNzhmZmVlNmZiNWY3ODJmYjQ5MTRmOTQ0NDBhZTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYwNjNjNGQxYWY4Y2Q4OWJiMGJkZDc2NTdmZmNiZjY4MDZhNjEwZDc5ZDZjOGQ0YzMwN2MyNDFkZjM5MDA1MjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFkOTYzZWIyMGQ4MTkzNzhiM2NjNTU2ZmZkOWU5NDc2NzEyY2YwODRiN2QwZGM2Y2ZiOWRmNWI5ZTE0MDJhOGEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_951146a39f754a0bafb8a8019a9ee692",
+      "statement": "loadSessionMessages 并行调用 SDK 的 getSessionMessages 与直接读取同一份 JSONL 的 loadRawSessionEntries，再用原始条目对账合并。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session.ts#L286-L307",
+          "version": "repo-lines-v1:sha256:9d443266c98f568748b013c9704c0108157c5439cba4c18ed6c6fd79ccabdb1e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBiNTdjZDc3YWZkZDVlMTIyZDY0ZjA3ODA2NjhkYzUzNmQ5ZWY2OGIyZTVlNTA0OWFiNTlhN2YwZGMyMzU1ZTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk2ZjRmMTcwODA5OWJiYjEwOWE3YTEyNzIwZjM0ZWM5ZWFhZmI1ZTNlNWY3ZDI5MTM5OWQ1ZTE4ZmJhNWM3NmEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_de1c2861a9a84345a77e3c5f2809da0e",
+      "statement": "mergeLocalCommandResults 把 system/local_command 条目按 parentUuid 插回对应消息之后，因为 SDK 不返回本地斜杠命令的输出。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session.ts#L209-L236",
+          "version": "repo-lines-v1:sha256:a92ba23722621cab06c6838a7f2e097ac0a7afa49dc70901156ddf88244028bc:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZmFlYmZmY2IzNjExZjAyNmJkMDY3MWMzYmE2NjhmZTZmMTU2Y2JlNzc2OWNjZTUyNTZlYWZjMWY3MmNjMzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRjZjk1ZjJhMmZmNDU0NDJlMTM1ZDA0ZjY2ZmIyNTRiYTcwMTBlZTMyYmU4YjNhY2EwMDI3M2UxNzdkMDlmMjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY2MjIyNjExNjk1Y2EyODhhNmQzNTQyYzIxNzU1YjQyZDBkMDhmYzQyZjYwNTliZTRiZDU4MDk2MThmOTZiMjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5324b2541f40457a9ab56614707e2e0e",
+      "statement": "mergeApiRetryEntries 把 source 为 request_retry 的 system/api_error 条目按其在原始转录中的位置排序合回消息列表，使重新打开的会话能重放重试卡片。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session.ts#L244-L269",
+          "version": "repo-lines-v1:sha256:729ad72ded0448f484a656fa713f084e1497e85d15f20b192766f110aff97a05:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlMzJlNGI0YjcyOTUwMzJmNjcwMjMyYzVmYTQzYWIwNjYzYWVjY2ViZTdiMDRhZjgzNjYxNmNiY2Q4NDFjNDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUyMWEwMDIzYzBjMmUyZjM2OWQxODRhNmRiMDFjNmE1MzI5MGZjYjRkOTIzMDExMWE3ODNmY2Y2MTRjNmMzY2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI1ZTA5YTA0ZTg0M2QxZWE0ZGYxZTk4MDg1MDhmODhmODVhZWIyNjkwZjVjNjg5MmFmM2Q1OGE4ZDJjNzA2MWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4f710003e8bb4eb7b5eca36fdea98a3e",
+      "statement": "restoreMessageParents 沿原始转录条目把指向已过滤条目的 parentUuid 上溯到仍在返回集合内的 uuid，修复前端消息链的父指针。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session.ts#L179-L207",
+          "version": "repo-lines-v1:sha256:50778964cd260a295f98c5eb5f90a5da5ec19f7f519d2b8da1e89920f50137f0:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA0MGY5N2IzMjc2MzFhYWVkMzE2ZjBjYWY2NDI0MWU2ZWQ2NmU0ODExOTUzODA1N2M0YzBhZjhjM2I1MGM1MTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYzYzhmNzEzYTliMTQzYTk3ZmIyNDZkMzA4YzFhZGIwMDc0ZmJlN2IxN2Q0NzdkMTU3NDZlNWU0NTBlY2M4MjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_05bc08ff06334fda8ff39313c423707c",
+      "statement": "loadSessionMessages 最后对每条消息调用 enrichTaskNotification，把后台任务的 <task-notification> 条目转成 system/task_notification。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session.ts#L304-L306",
+          "version": "repo-lines-v1:sha256:7ac2d8ded9acd2f689fae54c732284448b1d6814c64b45980db3d5843d1385e0:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiY2Y4MTEzNThlMDViNDlkOWUxNTI3MDY3YzE1MTQ1YTI2OTYxNTVlMWJmZjBkOTkzM2FhZjY0OWRjZDcyODQ1ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTYyNjc5MzVmYzYzMzQ2NWQ4NDhiNDBhNGVkNjk2N2U3YjdhMzIzZjgxY2Q1M2MxMTBhZTIxMDI5Njg3YWExMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTIwMDAzZGVlN2FkM2Y1NGM2YWQwN2NjYzFkODYzMzJjYmIyOTJhNTFjNmRkYzU1MDI0N2I1M2IzMWNhYTRjMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2M5ZjYzOTRiNmNmOTUzNzBhMzczYTI0ODY0ZjQyYzE5OTlhYmMwNDU0YzhmZGEyMGVkM2Q0OWMwMzU1Y2QwNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_b358ae55c4d041ac8f133091d87d1feb",
+      "statement": "extractSessionMeta 从转录的头尾文本窗口抽取 SessionMeta；首行是 sidechain 时返回 undefined，标题按 customTitle、aiTitle、lastPrompt、summary、首个用户提示词的优先级取值。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session-meta.ts#L211-L242",
+          "version": "repo-lines-v1:sha256:ff3000be89112454e7216a1c3265a45de67c5405db187bf60d71cb6d3d53f628:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMxZDhjYjM1YzBmMGVmZjdmN2MwNzNmODUzODRjMjZiZDAwZTcxMDYyYmY1MGYzOGU1ZGI3NzZkMDM0NTlkNTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3YTY4ZTAyNWNiZDRjYzFlYTczMzNmM2EyYmQzMGU2OTYxZDEzZjZlZGFiMjI2Y2Q0ZjI3ZmYxOTVmNWIyZTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_99cbeaf8c6d54ff2929846c93945ada2",
+      "statement": "fieldFirst 与 fieldLast 不解析整行 JSON，而是在文本窗口中查找 '\"key\":\"' 与 '\"key\": \"' 两种形状并用 extractValueAt 扫描到收尾引号，fieldLast 保留位置最靠后的一次匹配。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session-meta.ts#L136-L171",
+          "version": "repo-lines-v1:sha256:cd1b47d553c8a67582c8bdce259ffd9645bd299efea282005f215f03b0d71e59:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJjNTA0YWYzOWZkZGRhNGQ1NDIwYmYyYzI4OGI2ODhlNjIwMmFiNDhhMjg3ZjQ0NzBjZDMxODdmNTJhMWNlY2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhlMmNlM2ZkYzMyNTAzNjNhYmFlNzQwMGZlMTUzZWM4NTNiMmIwYTVhZTFlMDEyOTc2MTJiMGI3Y2JiNDMyN2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg4OTNmMDBlMDdhNDA1MGIxM2U4YzFhZGU0NjYzNTQ5MTYwYmU2YWM5M2FiZTczYTI2MzE3MmMzNzllZmUxMjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2b74a5cf4413493aae0c2c4dc179ed4c",
+      "statement": "firstUserPrompt 跳过 tool_result、isMeta、isCompactSummary 行以及本地命令噪声，命中行经 textFromContent 取文本后过 cleanCommandTags 把 <command-name>/<command-args> 还原成命令名加参数。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session-meta.ts#L173-L209",
+          "version": "repo-lines-v1:sha256:907bbfb5d7b3e73c2aeba1f4ed31b21cfb9c7fad5603a1f911d52524167358a6:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1YjM3MTljNTZkZjFjMzRlZDkyZmZkZjIxODlhYzFmZGRiMDYyMjNkNTM5MjAwNzhlZTMwNjczZTQ3YTY1N2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMyMzAxYzJkNWNiNzBkYjZjMjRlZDVmNDU1Y2IzNDg3OWYwYWI0YzA2NGFhOTk3NWY4YjlmNGY5YTMwNzE4MWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYwNjE0NzdjOGQ4MjE1NzI2MDc5NTkxMmVmNjY2OTAzNTE3YzEwYzI5ZjhhNDQ4MmIwZTgxZTUyMWFkNzc0MTcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f0c995bd91ce43eeba1c9039c2c7b08f",
+      "statement": "sessionInfoToClaudeSession 用 summary、customTitle、firstPrompt 依次取标题，三者都为空时该会话不出现在列表里，时间戳统一除以 1000 转为秒。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/sessions.ts#L33-L63",
+          "version": "repo-lines-v1:sha256:a477807e13708d8f7095b3e1a1a8280a630002e4e313146904af012797fdd7e2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkwNzhlOTJlOWYwOGQxNTM5YTIyODViMDJhY2Q2ZmI1ZGMxN2ZmMWM2OTcwODk5MDgxNjQ3MDQ0NjZkMDE1ZmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI2ODQ5NjE3ZGE5NjAxZjZmMzkwMTMwMDVkYzM3MTViZjEwYWIyOTU1NGMxMGM0MmM5MGZhYmIyNWMzNzY0OGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEyYzM0OWZiN2JkN2RhN2UxYWUwOWZhYmFlYjczMzliMmIzZTQwM2ZlYzIwYWU4NWNmYWU0ODhjNGRiODBkZDgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f78a88f71bb94b29825576e27fbd2b3c",
+      "statement": "listSessionSubagents 由 SDK listSubagents 给出 id 列表，逐个读取 agent-<id>.meta.json 并校验 agentType、description、toolUseId、spawnDepth 四个字段，任一条不完整即丢弃，createdAt 取 meta 文件的 birthtime。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session.ts#L329-L387",
+          "version": "repo-lines-v1:sha256:3eb0b626d0b206107e5b051882632d3af9dfe75dce9e843abf77a6a1c42ac044:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwMmNhMDMzMzlmYjlhYzQ3ZjBhYzYyMzlkZTQzZmZjOWY4MWViMDgyM2VjZmU2Yzk4Y2I4NTkxZTBjMDZjN2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMzY2NjY2I5Y2I1YmVhN2Q1ZGE0ZGI5ZjQwYjg5MzE0ODg2YTdmYzQ2YTIxZDJlYWJlNDZjMGE2MjgzZmViZDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJjNDY0NTU4MDk5MjE1MTIxMGUwMDI5ZjMxOTNjOWVmMjBmOGVkYzEwMTg5MWRjMGMwMTQ2NzM2YjkwOGFjNTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_347e2b8524294f2baa48ae238bc90af4",
+      "statement": "loadSubagentMessages 走 SDK 的 getSubagentMessages 并逐条过 enrichTaskNotification，子代理消息不做父指针修复与合并。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session.ts#L389-L406",
+          "version": "repo-lines-v1:sha256:ba3187d640caf4eb2f1ce2519ec439bcb40cc2abc5752c58d410ed740046fbbf:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFlZmEzMTIzNmMzNWE1MzQzZGU1NmI3ZGVkOTJkOTA3YmY2ZTc1NjlhOTljZDUyNmNjNzBkZDc3MDA5YjYwYWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk5MDY2MTc1YjgzZGJhMjc0MjI2NmFhZGExNWUzNDdlNTdmMjMzMTM2NDYxODNjZTRkNmZhYjlmZmVmYmRlN2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMzZjA2MTViMTgwNzE4OGM0MWQxYmQwYjNkNzc5YzBjN2ZmMDg4ZmE0ZjE2YjY4MzcxYmQ1M2VmZjdkZDc3YzEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_20fd7eae4f36484d9704a4cbcbe9081e",
+      "statement": "loadWorkflowRuns 优先读取 workflows/<runId>.json 终态记录，读不到时回退到 loadLiveWorkflowRun 读 journal.jsonl 构建进行中的近似视图。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session.ts#L674-L702",
+          "version": "repo-lines-v1:sha256:5316e074fdf3f392d1b37afab1b969c625073353ba66eac6bcbccc8950600cfd:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ5ZTNlMzUyOWY5YzMwNTYzZDNmY2UxNDc2YjUxOWRiY2Q1MjdmZGI4YWU0NDllYmNjMzY1YmFjNThmMjhmZDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIxNzk3YTkyMDg5Njc5YzdjNmM1MjE2ZDhiZjc1N2Q1MWYwNWNhYjdjOTY2ZDgwZDU0NTY5NmMyYmQ1ZDU1Y2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQxYjU5MTBlZGFmNTUxZjZlNTAwYjE0ZDAxMDQ5NTIwYmM0ZjQzZTE2OWM3YzVjNmE5YzcxZTFlMTA5ZGNlMTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9ab66499f3724406ac913e05946bb07b",
+      "statement": "loadLiveWorkflowRun 从 journal 的 started/result 条目收集 agent，逐个尝试读取其转录取 promptPreview 与最后一次工具调用，没有 journal result 的 agent 标为 running，整个 run 标 status running 且 isPartial 为 true。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session.ts#L618-L672",
+          "version": "repo-lines-v1:sha256:80dffdb5b9f6c47fdb98781d04fccae15e9f1247434c705cc306f16487069a4c:eyJzZWxlY3RlZExpbmVDb3VudCI6NTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEwOTQxNjhhM2FmNjJkZWMyMjc5MDRiMTFkMjAyZmU4NTdkZmU3NWZiYjI2MTViOGNmNzM2MTE0YjY5ZWJmZGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY0ZTU5NTZiNmQ3OWQzNzg5NThmMDhkNGE4OWZmMGZiZTA0MWFiNDlkNDc1NTczMzgxYzA5Y2IwMTc4YmEwNjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc1NmIzMTM2NDg0ODYxYmMwMWRhNjZjOTZiMDYyNmI4OTEyY2VhMzc5Nzk4ZjAwNWYwMjdjZjM5OWU0ZjcyYWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_40a9996845a8442cbb982a328588ad32",
+      "statement": "parseWorkflowPhases 合并 phases 数组与 workflowProgress 中的 workflow_phase 条目，按标题配对并去重；parseWorkflowAgents 只收 type 为 workflow_agent 的条目，缺省 state 为 queued、phaseIndex 为 0。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session.ts#L439-L501",
+          "version": "repo-lines-v1:sha256:aa26635bf36e9847f07c43c55b79ea76e0bb3e877ce3e34319b201fc1ba56261:eyJzZWxlY3RlZExpbmVDb3VudCI6NjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhkNmJjYTBlYzcyNjc1NzBjM2YwMmZjNjE5Yzg0ZGYxNjJkNTkzY2Q3MGQyOGUxNTBjMWQ1NzU5ZDE0NWFiZWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFkMDNjMzAyZjgxYjUyYTEyNTZhZGUyMzg5NWY1MWJiNTY2NWFlMTQwNzMyOTVhNmEwNzg2NzA0NjI1OTY3MmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZhMDc5NWM4MDkzYTZkNTk0ZjE0NTg2Y2Y4N2NhNjM4MmYzNTBiMjQyNDUyY2U3OTA4Y2E5YmVjNGVkY2MxODcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a4a8d4da4b534d6d9858c115f46911bd",
+      "statement": "dropTrailingTurn 物理删掉被召回用户轮次及其后所有行；目标行不是 user 条目、或其后还有真实用户提示且未显式 allowLaterConversation 时拒绝删除。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/transcript.ts#L93-L176",
+          "version": "repo-lines-v1:sha256:2ee93eadaa3442a7fab1f58b437d725d623d9458f7910f3a16bc16a68d814bd8:eyJzZWxlY3RlZExpbmVDb3VudCI6ODQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI4NzA2NjhjMzBjNTMwMDNjNDU2NjFlZGRmOGFlNzliZThlZjU2YWNlOWE4MmYwYTE0NzJhZWI2N2FlMTY0ZWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVmMDY0YTJiOTNiOWQwNTM4Y2UxNzAxOTY1MTg0NzAyZjE4ODhmOWY1NmQ2MmUzZjhmZTdmMmQ2NTM5ODhkODYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA5ZTk1YWJlMTJjYmE0NGY0NGUxMWQ5NzY5YjFlMzJhZjM5YTYyNDQ5NThlMDdhOGMyMTQ2Njc2Njc4NmRhZjkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3938e4b543954f76a35c3b36b510df92",
+      "statement": "dropTrailingTurn 在定位不到 uuid 或删除后没有任何会话型条目剩余时，会删除整个转录文件并返回 removedSession，让预留的会话 id 可以重新开始一次查询。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/transcript.ts#L124-L166",
+          "version": "repo-lines-v1:sha256:49c064bcea85fbb3fdedd9b2c698a38f3375769ded0fb1417a48deeaae004d84:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNkNTZkODkzMjBiMDUwYmIwMDU1MTZhYzY5MWI3ZGJiMGI2OGQwYjE2ODM5NGVlYjY3ZDE4ZDA4NjM5MDIyMjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQyZjQ1MTIwMGU4NmViNWI4ODcxNDhkNTRkZDUwZGUzZWQzNWMwNzRhYzgwY2FhYTdhNTY2ZTBiNGVjZGI1MmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFmNTU0YWJlNDcwMzc4OGZjODBkOTliMTk0ZGRiZjk2ZjgwMTNjZTEwNzJmMWE4OTRlMDhlYjhjNjdmOWFjMjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_94ea3a7364eb42179b573ba22928ab52",
+      "statement": "purgeDeadPairs 删除两条根用户提示之间没有非合成助手回复的死轮次，删完若无会话型条目剩余则删除整个文件，否则重写文件并返回删除条数。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/transcript.ts#L186-L250",
+          "version": "repo-lines-v1:sha256:aa70a51f77d21a026731bc01af90d1f5837d275f858af1c9f55bd73da82513be:eyJzZWxlY3RlZExpbmVDb3VudCI6NjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzZmU0MmI0ZjEyMzFlYWI2MmFmZDY0ZjU3OGVmMWFkZDQ5MjQ3MmM4M2U1NGFhMThhMjljNTkyY2MzZTZhYTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA4MGViMDgyZDhiMjUwNDg5OWY3ODNiZDY3ZGYyOTAzMDZjZjE4OTM5NjZmMDRiNjBiMmU0NGFhY2FlYzMwM2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d920496870f74b29b92e4397f0c14b8c",
+      "statement": "transcript.ts 用 INTERRUPTION_MARKERS 排除 [Request interrupted by user] 标记，isConversationalEntry 定义为真实用户提示或模型不为 <synthetic> 的助手回复。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/transcript.ts#L17-L66",
+          "version": "repo-lines-v1:sha256:8166e395f058f4841d87b30f1069b8fcfdea331f9886bb2234154a45a139fe4b:eyJzZWxlY3RlZExpbmVDb3VudCI6NTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEwOTA0MWRiZWY4OWI2Yjk1ZTQ2MTA2NTA1MDQ3YzQ3MDdmYWZlNzE0MTc2NTQ4OTA5NGU3OWMzZjY3YjFjMTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVlNGYzOTNkMzc0MTY4Njg3YzUxNjIyNTZmZmE4OWE0ZjEyZTAwZDlmNDg1NGY1Yzg4Mzk3NTFiYmZkMmFkN2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM2NmI0YzVlNzhhYWU1MmQ1ZWU0MDJhNTU2OGJjMWQ4NTFjODA4ZWRmZTUyNzgwYTliOGY2NWM4MmRlNDc4NDQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e79d940549b24fde83283b219ab8197f",
+      "statement": "两个转录手术函数都先用 assertPathSegment 校验 projectId、sessionId 等路径段不能为空、'.'、'..' 或包含路径分隔符。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/transcript.ts#L33-L37",
+          "version": "repo-lines-v1:sha256:b1582aaabddfab1a82dc3c494212fdd6dde9fc53d608a26028e3259a352cf0d0:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYmYwNzk2ZTJhZTQyZmFkZDljNjllYWY0Y2JjZWEyNGY1MzJiZjNjY2JjNzJhYzdlMjY2ZmFlYTdjMTNjNzgzOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmI1ODBlOTY0ZjgzYTQ3M2Y0M2Q0NDM4NDYyOTQ5ZDY4YjU2MDBmZGE3ODdmMTYzNzQ1ZDAwZGU4OWNiZjM2YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzIxZWM0MjIzMTMxZGRmNzFiNzY5Yzc0YjkwY2E2NTM4NDFkNzgwZDFkZTM0ZGZjYjkxYjQxMTBkNzJhNmJkNiJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}

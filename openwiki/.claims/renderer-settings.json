@@ -1,0 +1,260 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:385c74e5214108fb5ba7e2ed7fba3c80e589835b489415401acc726ab41c53c9",
+  "claims": [
+    {
+      "id": "claim_11af0760c9cd4514af558ba81d2996aa",
+      "statement": "设置页渲染成全屏 Dialog（贴满视口、无圆角、无关闭按钮），左侧分类侧栏、右侧当前分类内容；五个分类固定为 general、models、appearance、shortcuts、projects，general 内含语言、权限与会话三块。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/settings/index.tsx#L51-L59",
+          "version": "repo-lines-v1:sha256:58a94f76b64a973718bbf3a502ea7a32d63ad328ddee830dc7af7693c6b2448e:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzgwYmQ5OWM1ZTYxMzU2YTdkMzNjY2VkM2ExOWM4ZTRlZTA3MDBiMGJmMWI4MWQ0MDE1ZDU2MjA3MGQyMjhmZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmFmZTdjYjQzM2JmOTVkNmFjZDY4ZGZmZTU5N2VkY2I3MDQwMWYxM2I3MTE3NDc3N2M0NTU5YWVjZTgxZDhlNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzRmODdiMzY1MDcyOTE4NGI2YmUyNjA1Y2IzMjI4MzU1Nzg5NDIzNDNhNGE4NmVjMjE5Y2RjOWFhOTA4NGE1YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTliYTdjZGQxNzhlNDlhZGUwY2Q3OTRmMmVjNzYwYjUzYzUwN2IxNDJmMTU3YmUyNDQwMTQ4ZWNjNzMyYzMxYyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_c8d87b9ddd5d4e5581ae4c9032cc8021",
+      "statement": "切换分类用 hidden 而非卸载，五个分类的 DOM 始终存在只是隐藏——切换不回丢滚动位置与内部状态，代价是初次渲染要建起五棵子树。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/settings/index.tsx#L159-L174",
+          "version": "repo-lines-v1:sha256:60140b05043954606530d2e2be66e332087e4c98bc51a36b2ffa607472f6fb12:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU3MzJlYTIyNDY0YjE0YWRjNzRkYmJiZGNhNjNmNmU1MWJkNzhiNzg2Y2NiZDE5YWEzMTA3NGRiYjc2Y2YzYmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2MjY3OTM1ZmM2MzM0NjVkODQ4YjQwYTRlZDY5NjdlN2I3YTMyM2Y4MWNkNTNjMTEwYWUyMTAyOTY4N2FhMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVjMzI3MTAzNDYwOTk3Y2IwMTgyOGU2NGQ4MDMyNmIyMTkwZWMyM2E0OTVkY2ViNjdjMmEyNmUzNjFiZDExYjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU5ZjBmM2FlODU1ZTZkNTM4ZTIzMjIzZTA4YmVlM2FhOGQ0YjdjY2MyNzg1ZjkxMDkzODJjMDYyNzhhYzUxODAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d08735dfb3ec402381f0e75b62415018",
+      "statement": "侧栏键盘导航支持 ArrowUp/ArrowDown 循环与 Home/End 到首尾，配合 focusedCategoryId（仅对应按钮 tabIndex=0，其余 -1）实现 roving tabindex。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/settings/index.tsx#L199-L222",
+          "version": "repo-lines-v1:sha256:f755d028581d268abb8ef6c62466d7ca96de250659755fbbf3142e9832234268:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2Nzk1Njk3MTQ5NTUzYzBmNTVkYTViMGUyZjFhYzczYzgyNmQyNmQxOWI2YTZhYzhlNDRjNDFiN2E1ZmMyZTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBiM2NhMWZkZjkxYTZlOTYxY2E0ZDkwZGIyMjFjYjhhNWQzOWNiNjc0ODZlMGMxNTlhYWQwNTU1ZjdkZDRkNTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFmZmY3OWM4MzU4YmEyOTNhY2U1NjY4ZDM1OWYxMmIyZDI4MmQ5ODBhODNhNGI3ZWMzYmU1ZTgzNDMyYjM0MjkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_55daac6ce44d4afb9c7526c1bbeee7fb",
+      "statement": "关闭设置时 resolveFinalFocus 优先把焦点还给打开时的触发器（要求 isConnected 且 tabIndex>=0），否则在 queueMicrotask 里给 fallback 目标；整个 Dialog 包在 ShortcutScope scope=\"settings\" 里。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/settings/index.tsx#L97-L113",
+          "version": "repo-lines-v1:sha256:3c2b71d72526e3109c85bf697fa50f61aae2866ef3ecaf8d6d934b2137a3a3f8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI1OWJiZmRmNDZhNjYzMWNhMWI1M2RlZTQwZWY2MmEyMzJmMjFiYmYzM2ZjNWMxNmY1ZWY4M2E4OTJhM2UzNDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM0MGM1ZDNkYzNhNzczMDc5M2M4OTI3OTQ4YjU1OTY2NDIwN2Y3OWJhODc3NzNjMjE1MDA0NDMxOTYyZmQ0ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQyY2RkN2M0ZGI4YTI1M2Q5MmIwZDUwNTYwZmY3OGUyZThjMTdiOTdmYjhjYjczYTdkZDJkYmNmNTRkY2ZkZTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0846f6840c78498ba9d722aae3c54e73",
+      "statement": "model-configuration store 是每窗口一份的应用级模型目录，由 SessionControllerRegistry 持有并注入每个会话 controller，设置页与 composer 共用同一实例；initialize 只在 isSdkInitializationComplete 为假时生效，并把 provider 推导出的模型按 providerId+value 去重后追加。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/stores/model-configuration-store.ts#L51-L86",
+          "version": "repo-lines-v1:sha256:330ddf5c0884c752a6f3f8534e5ec2a24e542d160abcbbed5bc40fbdf6f7b9b8:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxZWYyYmFjM2NiMjcyZjZhODcwMTA0ODJmNGJkNTY3ZTg1NjZjN2IzNDg4ZWM4MDZhNmMxYmI2YzJkNDZlMWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2NzdkMmYwMzFlOThiNWU5MTFjNWFkNGZiOWIyMTg2YTkzMjUyMmU4ZjQ2ZWU0MGJhYmZhZTNkYTAwZmMxMjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjllNjQ1ZDhmMjE1MzJhYzBlN2VhYzM5NjQ0YzExNmRhMjBhOWY5NDY5ZDc1MDE2NmYyZDI0NTgwYWFlZmU2MDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1ODBjYjgxMzA2NjdiMmJlNDdkNDIxZmRiMTJhMDMyODI5ZDBmZjdmYTZjZjFiZjlhYjQ0Mjg0NTE5OTYzZmMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e1cffcd16c8744949d20c05a60593108",
+      "statement": "replaceSettings 在设置页增删 provider 后调用，用 claudeModels 加 provider 模型重建可用模型列表。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/stores/model-configuration-store.ts#L87-L95",
+          "version": "repo-lines-v1:sha256:0698f9e017c383b86fa54ed531dce06a152738d5b4c9499f05521f0b72bf9686:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTQ2YWRmZmZkN2IwNGRhYzQ2M2UxM2U5NDFmMmJkZGFlN2UwNDljMzc1YTQ3ZTBhZmQyMTdjODFiYWQyMzViOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGMwNTdkMGZjNjY1NGVkYmRjNDQzOTQyOGQ2ZmYzYjIyNGQ2NmRjOGNmMzI5ODA3ODA1YmExNTYwN2VmM2VjMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTE5NTE3MWQ4ZWQ2NDE2ZWNkMzQ4ZWRjOGQ0MzZhMGRjNTg3NWU1NmM4ZTMwOGY5ODhkZmJiMzFmMzlhZDg0MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzczZmJhOTlkMjU3NzVjYjhhZThmNGFlMDBiZDFhNzI1NjkzOTZmYWQ1YmZiMTc3MzU2ZWQ0MmNlMzE3NGNmMCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_4cacb83b809841d192aebecacc1e2d03",
+      "statement": "provider 编辑对话框把触发它的按钮元素存进 editorTriggerRef，关闭时按 closeType 判断是否归还焦点——只有键盘关闭才还，鼠标关闭不还。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/settings/components/provider-settings.tsx#L127-L142",
+          "version": "repo-lines-v1:sha256:748689f9056f353cd2d98c7c7d0d4c1960d124f13be112cad983fe86cfa2ab60:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZkN2JjYzk1MjE5ZmMzMzkzMDk2ZWRjZWEzMTMyMTQ2MWQzZDJmYTZiMWFlMjllNDRjNWQ0NTgyYzRmMTFiYzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgxY2FlMjMyNWE1ZTgxNDJiNDA2YmQ3MjIwNDZlNGRiZTAzODVmM2MxNjI4NDBlNDdlZDY2MTY5ZTFlYzZmMWIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU1N2EzYzU1ZWUyZGJlMzk1Yzc3MTQ0Zjc1MWYyNmZhODU4YmJkNTc4MjJlNTcyZGYxYjY0M2U0YTg3MTE0MGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc0NjFiNjA2ZWRjNWJjMjdhNDE0MWU0MDA5YTNhYmVhNTRjYWUzZTllZWM3MzM5N2RkZDc1MDJkMjM5NjYzMmMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6a60ceda203a4050a7d16025da7fdefe",
+      "statement": "provider 保存前校验：id 非空、格式合法、新建时不能与现有 id 重复（编辑自己不算），至少一个模型 id 非空，上下文窗口合法。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/settings/components/use-provider-editor.ts#L65-L94",
+          "version": "repo-lines-v1:sha256:145be2c5ee61ae4e2e74a5c535b7b9f46ecec38b330188b55407a2ba57fbb3f1:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhkNTcwN2Q0NDdkNmY1Y2M3MTc2OTRmZGY2MjA5ZWI2NGIyZmJjNTUwY2E5ZDg4ZDc4ODExMGUwZGJkODcxYmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZmYTE3OWZjM2M0N2ZlNTFkYTVlNDU1ZTYyZDM5MDYyMDk5MGM5OTQxNWJlYTdkZTY3YTUxOTZmZjc3N2Y3N2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFlNThkZmFiNGYxMzM0OGI1ZGU0ZGY1ZjYzYmE1NWY4MTA0NWZhOGExNTY4YzI2ZTg4ZmNjN2NjYjk5YzE4NzYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f5cc3dce9148482885ab9d08c44dbb74",
+      "statement": "删除 provider 成功后先本地删除并丢弃用量缓存，再 getDefaultModel 刷新默认模型——被删的 provider 可能正是当前默认模型，主进程会把它清掉；失败只弹 toast，本地列表不回滚。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/settings/components/use-provider-settings.ts#L66-L99",
+          "version": "repo-lines-v1:sha256:fd02758b89985ac5948d3f5b31d730bf8b3cd6e50a0ef103215338cf3802c108:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5NTY1M2U1NjJlN2VkYmQ5ODc0ZjdkYWFmZGQ2ZDI2NWZmMWIxOTVkNjZjMjQzZWJlYmYyMThmMTIxMmUxNGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQwYWJhMjUzZThjYzlmYWI0Njk1M2YwMmZmNDhhZmJkM2EyMThlYWNmNDBkZTVmMDA1OTBiYzViMmFiYWVkYjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNjMjU4ZWIzODkxNzIzYzg1ODdhNGNiNzFkZWI1OGMyYTNkN2EzMjg0MjdhOGI0MTAxZDEyNDhlZDJjYjYyOTAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_453faa6ab82f403393d01db7ec033569",
+      "statement": "改 provider id 会重算模型：autoThinkingForModel 按 provider 加模型 id 推导默认思考预算，未手动改过的模型跟着换成新 provider 的默认值；改模型 id 同样触发该重算并清掉该行错误标记。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/components/model-configuration/use-provider-draft.ts#L43-L57",
+          "version": "repo-lines-v1:sha256:08d7ee543181bc909e1873d2fabb7ceb65f0263a981cf2051acf33e26c1df4c7:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1NmFkM2YwMTk3NDdjYjk2YzcwMmM0Yjg1YjMyOGUwMTYwNmZjMzhiOTMwYWM0MTBjZjU0OGY0MjFjMDBiZDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJhNWY4MDA2MDE5MGIyN2M0ZmY1ZDM2YzM3NmQwNDZkZGJmMTE3NTBmNTYyMTM4MThkOTc3ZGI1MTIwZTM2NTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE2NDZlYTNjMjRlOGM5ZjlkNTcyY2I0ZTYyZjY4NTkxZGNkMWM0YmUyNDM3MGI3OGFjZjc2NDA2Y2FmOGYxMDQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8e594d2338db46b2956fb3f48c919e44",
+      "statement": "内置 provider 预置表只收录原生透传 Anthropic 请求的 provider，排除官方无 ANTHROPIC_BASE_URL 的、OAuth 类（github_copilot/codex_oauth/xai_oauth）、非 Anthropic 格式（openai_chat/openai_responses/gemini_native）与 AWS Bedrock；列表按名称用 Intl.Collator 排序。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/components/model-configuration/provider-presets.ts#L4-L11",
+          "version": "repo-lines-v1:sha256:5bac6051d4c0499e4c8805d73cf7b55de9ce620f971dcee6e734d375655740fc:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjBmMzFiOGRmNTM4YWU1ZDYzMWNiZTQwMjA3ZWEzODJiZjRlYmI3ODU5OTcwOTYwOTM3NTkyMTRkZmVmMzU5YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZGMwNDk4YTZlMzhhNzc4NTM4NTg1NDgyYjVkOTliYWUwZTc3OWE5ZmFjNDU3ODdhZmU2NDJkZDFkMjNjOTkwNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMGY2MmNlYTRlZGY2NTYyYzA4MjU1YmQxZmZmZDZkOTVlYjcxN2Q0NTFlNjZlZmFjZWIxNWZlMmEyZDcxMDRhMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDZiMzVjZTEzZDU0ODJkNTY0ZGNiOTZjZTY2YTE5NmQ0ZjRkMDdmMGQzOTU5NDNkM2RjN2ZjZWI3ZWM2MTdlOCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_31e248db06494050b92bc7c6eb8882f1",
+      "statement": "provider-usage store 由设置页 provider 卡与 composer 模型菜单共用同一份缓存，目的是两边显示同一结果且不重复发在途请求；白名单门使不支持的 baseURL 从不收到试探请求，pendingIds 去重在途请求。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/stores/provider-usage-store.ts#L34-L56",
+          "version": "repo-lines-v1:sha256:d8f21db04164a04dac206e031683d1dc23f1e20728505dae2a59034a7535fd12:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ2OWY3ZDJhMTI5NDdlOTZhZjA4NmYyOGYxNDA4N2QyNjA2ZGQyY2VhMzE5NGMzMGY5YmIwNWFiMjQ4YjNlNjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIwYzJiNGY2YmMxOTRhNmIzNWI4ZTc1OGRjNzM2M2ZkMzhkNzE3NGUyYzQ5MGI1ODg5OTMwNjFiMDIyNGI3YWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ1OTc4OWY1Y2Y4ZjljMGI2YTc5YTdmMGM1ZTRmY2ZlNzQ4NzM2NTk3Y2FmYzkzNmYwNTY5MDY0ZDNmNDg4NjEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bc5afdbb902f4f378a5a46df6aef16b6",
+      "statement": "isWellFormedQuota 要求 success 为布尔、windows 为数组、queriedAt 为数字，不达标的响应直接丢弃不写缓存，防止后端不匹配时污染共享数据；网络失败 reject 并留旧快照，确定性失败作为 success:false 存下。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/stores/provider-usage-store.ts#L83-L91",
+          "version": "repo-lines-v1:sha256:77ddcbb3d92368b771d3d570f68cb2e59a13bc26a703d1ae033c5069cbe4a5d6:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYThiNzhiYjBkM2E3NGQ2NTM1OThiMjA2MWVjYTZjOTAzMDc2MWMxZWY1NGU4ZmYxNDE5ODE4YzYxNGJhOTJjOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWUxZDQ3NzI1YmZjNjY2NTZmYmNmMjMyZTg3NjI0NGFjM2MxYWQyZDI5YTE4OGYxNDg0MjljODU2YTNkMzg0NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_b67bddc9d72244dc90078ea9af241c54",
+      "statement": "provider 用量徽章最多三个同心圆环，最外层是最短周期（按 RING_PERIOD_HOURS 排，5H<7D<30D，未知周期排最前），半径 7/4.5/2、描边 2；balance 窗口不进圆环而单独显示余额，tooltip 给重置绝对时间。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/components/model-configuration/provider-usage-badges.tsx#L45-L60",
+          "version": "repo-lines-v1:sha256:c3721a517c6ccb82dc7e36db4ab25e7989ade69a6274049214426aa73fe9bff1:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE4NTQ4MDBhNzUwNjc5MzcxMWRjMTEwMTFmYTQ1ZGJkZTY1MTdiNWMxYjFhOTQ0YTI4M2I3N2Q2NmEwNzk2MmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkwM2QzNjQxODgyYzA0N2QyNjcyN2I3N2E4ZWZlMjFkZjMzYTEzOGE1ODYxZGU1NzZmZDgzY2FjMThjZGRlMjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRmMDcwNjc2MTA5ODNjZTcxYjA0NWZkZjgwOTZjNzQyYWU3MDFlZWM1OWViNGI2NGM2ZDM1N2NiNWEwMjM0MjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU1ZTE1OGZhODQ2YzBmNDc5N2E0MDI3MWM1Yzk4ODJjMDViZmQxY2NiN2ZkODhiMjJkZDI3ZDllMWI3M2IzMzcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_50cef90a3bf547779f7b88579fcaa7b8",
+      "statement": "主题预览缩略图用 color-mix(in oklab, …) 从当前调色板三个色值现场计算：画布色是背景混入 7% 前景、线条是前景混 58% 透明；system 选项的预览被 clip-path 切成左右两半，左浅右深。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/settings/components/theme-settings.tsx#L56-L93",
+          "version": "repo-lines-v1:sha256:eca48fbfd2cb568ad825c1ec39334077f987e066e19ed1bc2bb152225ba59da0:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUxZTk5MjZiNDE4OGQyMzRmZTFkM2RhZTk3YWQ4ODc1MmY0NjdmZDU3NzNiMGFkYTg4Yzk4Y2M0YzJhOWNhNmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyZGU4ZTdhOTJmMjAxNDE5M2UyMzliNGEzOWVlZWFhYTVlYzc5Y2M2Y2Q5OTYyNTAxNzc2NWQyODMwMDYyOTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM0MGM1ZDNkYzNhNzczMDc5M2M4OTI3OTQ4YjU1OTY2NDIwN2Y3OWJhODc3NzNjMjE1MDA0NDMxOTYyZmQ0ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRiM2Y1NjFlMTcwN2JjNTc4OWFmZmYwY2Y2OTM2ZjQ0ZTE2ZjNiMWVlOGZlNzQxZjRiM2ZhZjQ3Y2ZkODM0MzMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_512b48379844492f9abbf53c3fda8089",
+      "statement": "预览用 oklab 而非 oklch，因为预览色板会踩到 Chromium 的分色相 bug；浅色画布上的分割渐变用 --split-tint 变量（浅色页 18%、深色页 45%），该值必须与常量 CANVAS_TINT 手工保持同步。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/settings/components/theme-settings.tsx#L20-L26",
+          "version": "repo-lines-v1:sha256:250fa2e20d258c91a53f1ccdd3ae79ece274204dbeee3cb27f4e012d816eeba5:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTM5ZDIwNTNkNmFiYTU2MjdlOWJkYTY0MTg0M2IwYTBmMDY4MDlmNjBiNDQwNWZkMDAzYjFiMzAxZTkzNWE5ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZGY1NDkwMmVjOTg3OTk5ZTBmZWViM2UzMTczMWNjZGZjN2JlZmIwNTEyYjZkNDFhNjNmZWFmMzlkMWYzMzIyYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNWJkODdiOWNjNDUzZjU1YzhkY2VmNjdhZGNkMGFjZDYzMDY2OWQ0YTc0NTQ4OGUxNjljYWNkNmY3NGQ5NGUyNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjE5YmU0ZDZjMGJmODA3NzNkMjljMGVhMzJlOTY4YjhiZDUzMDkxNWZjNmRhOGRiYmIyOWVmYTQyZmZiY2VkZiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_4279190d6cf946b3a75e66733c211d06",
+      "statement": "调色板按 variant 显示，且当前主题下不显示的那一侧被藏掉（theme 为 light 时不显示 dark 调色板）；每行 accent/background/foreground 三个颜色输入，预置下拉只列该 variant 的，当前为 custom 时额外加一项自定义。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/settings/components/appearance-settings.tsx#L131-L147",
+          "version": "repo-lines-v1:sha256:595873d6dbc580405d6d4ef731f9968d535df598025b7f064939f1684c3e74ac:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ0YzM4YzE1OTcyN2JkYjliOWE5ZDBhODdkYzJmNzU2ZGVkZGZkMjNhZmYxYTgxMzhmMTc4ZDVmNmQ0YjRjMDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwMDhlYWM3NTAyNTk5ODkwZDNkYWVmMjI3ODU4OGEzZTIwYTVlYWJiYTA3YTZkNTU2MjQ0YjNkYjhkOWZlZDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM2YmMxNWJkNmM4Y2U3Yjg3ODE5NDNiMjMyODIyMjYyMGI0ZDA5OGRlZTg3ZTEzMzY0NTE2MmNhZmZmODk0MGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRmZDlkMGU2MmUzM2FkY2U2ODgyNjNjMzlhYTQ5NDg0NDI1YjU5ZDJhYjEyMWEzMmZlMmViZWZiZTE5OTRmMDAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ddb64b6b4d7f41a1a09055baa45b4b60",
+      "statement": "resolveThemePalettes 在读取时把非 custom 预置重新解析成具体色值，预置改色后旧偏好里的 preset 名自动跟上新色，解析不到才回落默认；isThemePalettes 校验要求三个字段为 6 位十六进制且 preset 名在该 variant 列表里或为 custom。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/services/theme-presets.ts#L256-L267",
+          "version": "repo-lines-v1:sha256:c466a98de15a904213d6ad52f0751ab95f5d127f0fc736b0880e3399f80440cb:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxM2U0ZWVlNDQ2MGU1ZDNlNjUxNDU1ZDdkN2M1ZjNkMDlhODBlYmE0YWMwZmVmZjJiZjA2ODU0NDkzNzhlMjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRhYmUyMzc1NzQwNGIwZTQzN2Y0ODIzM2JlNWVlOTViOGJiZWIzYmJhOTU5ZDA4ZjM2MGQwNDg2ZTUzNzYxOTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3519af0ce50e41b585f7fa3ed486bd4a",
+      "statement": "快捷键设置是一张可搜索命令表：搜索框用 useDeferredValue 防卡顿，overrides 直接从 runtime.overrides 用 useSyncExternalStore 订阅而不经过 React state。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/settings/components/shortcut-settings.tsx#L69-L84",
+          "version": "repo-lines-v1:sha256:e53f6bd5dc66e6b33589cf62f883fee1dd1ff10411884349375054afa19e3b52:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQzZmQ5NjE0Mjk5NmQwZDg4ODg4ZTcwOWY2NTM2YzUwNWU5YTJhNWUyNDc3MmFiN2Q4YTc3YjM1YjNjMjY5OTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4YmJhNGNjMjM5YjA2NDUxYjM3MWIwYTYyYjVjYzdlZmVkMzZkN2QxMDdhZTUzMTJmMzJhNzZlNDNlOTBhYTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM0MGM1ZDNkYzNhNzczMDc5M2M4OTI3OTQ4YjU1OTY2NDIwN2Y3OWJhODc3NzNjMjE1MDA0NDMxOTYyZmQ0ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVjZjAwOGJkYWI0NDcyYTUwMDUyMmRhYWJiM2IyY2FkZTRkZDlkOTZlYTU5YWI3MDI0NTUwNWNhYTYxYzNlMzQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_93f9a595a28e4a5e9a8b8fa3b7132b6d",
+      "statement": "快捷键工具栏吸顶：useLayoutEffect 量工具栏顶是否越过滚动视口顶，是则加阴影类，视口滚动与窗口 resize 都会重新测量。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/settings/components/shortcut-settings.tsx#L96-L120",
+          "version": "repo-lines-v1:sha256:4b04ebea11f8a115468b220aa7cb296b35b70b183e78edfe3705ad39a33a04cd:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ0NjU0MjAzODVkYTAzZGZhYWEzNzUwZTliZjUzMDhhOTkyYjNlNWM0NDQ4ZjM1ZGZhZTg1NWExMTkwN2M3NjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU2ZGU2NTIxNDY3ODU3NjEzNDZlMmNlNTIzNGVkMThiMWUzZWE3YjhjMWE3OWQ1MzU5OGQzYWEzMGRlNmRiM2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY4Mzg1ZTE3OTRmMjRmYjJlMmYzOTZiY2IxOTViMzhhMmE4Mzg2NzAzM2FhNWRmY2ZlODcxYTE0MDQyNGE0ZmMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2ba7ca6881764dfa80ce974ab3ddb6a6",
+      "statement": "录制对话框打开时调 runtime.capture.begin() 独占键盘，interpretShortcutCapture 把按键事件译为 wait/cancel/clear/invalid 四种结果；拿到合法绑定后立即 findShortcutConflicts 查冲突，保存走 overrides.set(commandId, [binding])，空数组表示清除。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/settings/components/shortcut-recorder.tsx#L37-L89",
+          "version": "repo-lines-v1:sha256:33c321ab8beb083fa7e94f2832d51238a28f4ef6b18a6b7efd1b077dca33a172:eyJzZWxlY3RlZExpbmVDb3VudCI6NTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5NjZmYmZhODg5OThkYTc0NjU2YzUwMTk0OTU2YzI1ZjA4NDk0NTc2NjBjMDA5ZmU2M2QxZTlmYTlkYzkzMWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc3YTM1NzJjNzJmNzk0M2E4Y2VlY2QwMWQ5NmI3MWNiODY0NTE5ZTJhOTUyZDliOTU4YzFiNWIwNjg0MTBjMzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAyNGQxZjViZjZmMTE3MzlhNWYxMTZjNTNjODdmNTdlNjEzYjRjMDcyNTJjNGM2N2IzZWM5ZTU3YzAwODFkMjMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5f0e035932974cf691821f5a7dbc073c",
+      "statement": "快捷键冲突分 hard（同作用域被另一命令占用，不能保存）与 shadow（被更具体的绑定遮盖，可保存但会失效）两类。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/settings/components/shortcut-recorder.tsx#L52-L53",
+          "version": "repo-lines-v1:sha256:7a0bf7514a6af362d217098c15f056636956444f08ceb41a0cc5b66ee7d8fc49:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYmRhMDc1MDdkMTQyNTczMjRiYzk4Y2U2MDhmZmRiY2NiZTRiNTQ4MTcyYmI0YzgzYjU5MDY1YmU2Nzk2YjdiNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTZjZWZhNGFjMDg3MjMxN2U4Y2Q5ZWM3ODI0NTJmYTYwMTk1ZGNlZmE4OGJkOGIyZjgxOWQwN2Y5YTlhMmJkYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYmQ4ZmViYzM1NDJlMTM2YjVkM2I2MmQ2MjIzOTg2MmZjMTYzMDljNjMyNDU2ZTM4NDcyYTAxZGU1NTM4Y2I2YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjQ4NDgwODg1NjNlZDI0NzBlMDcyMDI0NmUyZGE2ZTgzNTFmZDIwYzIxY2U2Njk1MDdhNTI3YzNmNzQxYzY1ZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_87379c6b28e548f18231ad8bcf5c8953",
+      "statement": "项目设置只列出用户显式添加的项目（isUserProject），每行显示图标、名称与路径，悬停出现编辑与删除；增删改由 workbench 通过 props 传入，设置页本身不发 RPC。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/settings/components/project-settings.tsx#L44-L52",
+          "version": "repo-lines-v1:sha256:96d79b5bb54418302102350bc185b04122aeec06ceae2bd63ce839a39137e8f1:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDYzMDZhMjg0ZmUwODc1ZjVjNjNhMTg0NGUxZTk0ZDkzOWVhNGE4NzVhMTI5ZDMwODA4ZWQyYjI3MmU3MzZhMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYmM4MTEzZDdkMTMzZjllNzI1MDlhNjQ1N2Y5NTZmNDQ5NGY4ZDM3NjNjYTVjZDc1MmQ4MTQyMzUxNmRhNmQ4NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjc1N2NlZmFjOTM4ODE4MzA5NDIzMjI2OWU5MjE1YjkxZjIyMTBlODRjMzc4NzY4MGIyY2EwN2M5ZjcxOGZlMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTk5OTc0OTk1ZmExMGY3YTEzNTIyMzMxYzg4NTljYzVjNTdmMmIwNTlkZDZlN2JiYTNhMGNkNGQ0NTkxYTdlYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_bb81d355b0a6466ebb662b025b66a535",
+      "statement": "会话设置只有自动归档一项（0/1/2/7/14 天），采用乐观更新：先改本地 state 让界面响应，保存失败再读回已确认的值并弹 toast。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/settings/components/session-settings.tsx#L86-L97",
+          "version": "repo-lines-v1:sha256:48eeb55e9c5623b3e5d57e736d691516fd10cce74b3e0dc723208e1a4aeb6a70:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIxZDNhYThmNWFkODg0ZGNmN2UyMDI4ZjQzNTNkZjA0MGY1MzhkNzk2NDdhODc2MGYwOTU2NzM3ZGRkZDExOTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJkNGRkYjVjNGZjOTgzM2MwMGQxMjhhNGEwNzU3OTdmOTNlMWQyNTNkNzczZjI5NjUyYjM3MjhkMTFlMzczOTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY5ZTNmOWYyMWE2NTg5OTQxYzUwNGNiZjcxMThkOWU0M2U2NGQ1NGIxMDZiZTYwNGUxYzc1MWI0NTJiODllNzYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_41592ad343e84897bd908d18c6d92bd8",
+      "statement": "语言设置是一个下拉，14 种语言加跟随系统，语言名用各自语言的写法显示（简体中文、Deutsch、日本語）而非翻译成当前语言。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/settings/components/language-settings.tsx#L19-L46",
+          "version": "repo-lines-v1:sha256:d53eb1cf04371e55f19c65bf95ba963f728ef0632769259ac26c9f1c5b325aa1:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4YTJiYmIxYWNkMzJkMWI4NDE0MjZhMDE4YzMyOTU1MjZhZDAwNDJiZWNlZGFmMDQwNGExMTI5ZjNmZTgwM2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2MjY3OTM1ZmM2MzM0NjVkODQ4YjQwYTRlZDY5NjdlN2I3YTMyM2Y4MWNkNTNjMTEwYWUyMTAyOTY4N2FhMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZkMGI0Mjg5Mjg1YTdjNzQ4YjU0OTg0Yjg4OTQ1MTE5MWM2YjI4MTg3ZDI0NTU4YzQ2MzFjZDg1NjYwZTZmMzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFjYmUyNDc5MGQ4Y2ZiMTQ1NmZjZjMzZTljMjU3NWJhNDc0NDE2Y2Y5ZDQzNmQxOGUwOTdhYmNiZDM1YTA3ZmQifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}

@@ -1,0 +1,360 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:9db0e1b4dfe21cd276f90b4e1a600cbe92261736a642f9b6684d593c66e38410",
+  "claims": [
+    {
+      "id": "claim_940f1966f37942b8b121c2374d3b108b",
+      "statement": "ClaudeEventSink 定义 onOutput、onError、onComplete 与 onToolRequest 四个回调，bootstrap 的实现把每个事件广播到所有窗口，renderer 只处理自己拥有的流。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/runner.ts#L45-L51",
+          "version": "repo-lines-v1:sha256:be2fbd9460c9880f755c33c1f640c4739bc20cecc81a29e04a3a8293368db603:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDdjMjBjYzMyNjFjYjkwNDRjNDNjMjAxNDI2MjZiMWMyZGZiZDIzYTdkYzc1NGY5ZDMwNzVjZDg3ZDRlZDkxOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjMzOTg5ZWMyODJlOTljZTIzYWVkODRhNTM2OTg4YWIyNGJmODIyZjMzYzcwZTcyMmY0NTZiN2JmOThhY2YyMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDM3MTU4MjIxMzQ3MGYwOTQ4YTJmMDM4MjJjNjI5NzdlYWY3YmE4ZTMzYzkyNGFkZTFmZWQzZjA5MTIyOTQ5YyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_7d50bf17c2eb41bdac6465c8f6967911",
+      "statement": "normalizeOptions 默认 cwd 为 homedir、开启文件检查点，并注入 ENABLE_TOOL_SEARCH 让非核心工具 schema 延迟到模型用 ToolSearch 拉取，避免代理会话每轮重发全部工具 schema。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/runner.ts#L330-L363",
+          "version": "repo-lines-v1:sha256:9bcf5bc54c1dba28d652449fb576f8316b33b5ed8a63f33013bc52fab9cbc62d:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkMTgxNzFiODQ0MDMzZDBmM2NkYmM1N2YyOTQ2NWNhMGVlOThhNTc5NWNjNjJiMWYzNTU3ZmY1OTNmMjUzMDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI1YTJmYWZkNzRhNzllNDk4OGNlMTAwMTVlYWFiMjA4MWRlMzc5NmVjZGM2Nzc2ZmQxZTk4M2IwZjg5ZjI4OTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU2MGZmOGVlNWNjOTg1ZTA4M2I1OWZhYjRlNjg3YWNlODYwYWM3NWFiZDU3Mzk5MTZhMjczOGYwZGVjNDFlODUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0c39a63e732645d79768817d98298fb7",
+      "statement": "未显式指定系统提示词时使用 claude_code 预设，避免 SDK 会话只跑在两行的 stub 提示词上。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/runner.ts#L344-L345",
+          "version": "repo-lines-v1:sha256:2ec12dc17f12692c3572aca2512a5edf7b3bdc403f16839f46e903f47e5c5ece:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5MWJlMjIyNDUwOWFiZWM2MGM1OThlNzE4NjgxMzk3MDQ1MTcwZTczMWZmMjQxZDMwODljZGY5MWViOGEyYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmQ4NzQ1ZTZlYzlkOTAzZGExMjY2YWE5YWUwZmI2MzUyMjQyNGRkZDNhZWJlMTYzZDcwMzNiZjkxNDU4ZjVlOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2Y3OTY5OTNhMWNhN2ZjZTAxMjYxMzExYWQ4ZTgzZjcwM2NkNjQ4NTlkNTIwMjVkZjYwZWRjMWM4NjYwYmQ0ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiY2I2Mjc5OTM4ZmMzOGQ4NmM1MzIyMGM3OWQ0OTMxYjJlMmQwNTY1MDJjNDBkZGI2ODg2MjJmZDcyODkyMmE1MiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_56303cbb1ca1491b9db9502583399feb",
+      "statement": "normalizeOptions 用 resolveClaudeCodeBinary 的结果设置 CLI 可执行文件路径，打包时优先 asar.unpacked 下的副本。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/runner.ts#L348-L349",
+          "version": "repo-lines-v1:sha256:6e3e246f8febd63f3946ea1badcbe80772519227c2e901dc44d767cf4904dacd:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTQ3ZjgyNzBiNzgxMDc1ZTExZTU0MjIxYzA3NmVhOTMwZTZlN2E0NTA4NDRiZjkwMjFmNWQ1ZWY4ZWFmNzcwYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjNlOTc0MWQxYjVjYmRjZTVlYWJjMzE5NTlmNGVmMzU1NDNiZmE3MGUwYzNmMjRiY2I5ODliM2VlYjFjNTM1NiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODg2NDM4OGU1YWI4MTNkYjI3YWMwMjA1NWM5MzIzZTJjZDhjZDM4NjYyMThjZTc4ZTI5ZDk0NzNhNjAxNmE3MSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjk3ZGNhMWNlMzJmMWRlMDI4ZTQ0MzUwNjk2NDEzZjRjZTM3Mjg3NzgxNzVlYmM0ODg2NzI1MjBlM2M4ZDQ1NiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_94edb8fd0c0d4cd889df5552ff1a181a",
+      "statement": "claude/ 前缀的限定模型去掉前缀交给 SDK，其他限定模型注入代理环境变量并按模型的 thinking 配置设置 thinking 或 effort，且每次查询都重新注入以覆盖会话内的 /effort 选择。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/runner.ts#L350-L361",
+          "version": "repo-lines-v1:sha256:cd8c4b8c60ae92baa9a68c75be278b1f0dd49152070a7778251408311fafb827:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5NDZkM2VhYTZlODIwM2FiZjI4MDdkYmE2NTgxOWZlMDBhN2NmZDc2OWU0YzZiMGI2MGZmOTNjM2ExZmRkODciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIzMDA2OTlhZGRmYTgwNzc4MTc4ZDlhODg3Nzc5NmE0OGZjMGIyODdlZTFmNzdhMGMyMDBiNzhiODBmOTA2OTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA1OWMyNDE4YTZhMjYzMGY3NDMxOTJjYzdmZDg0MDI0YjlmZTViYzdlZmFjNzNlZTAxMDg4MDI5YzU3NjczNmYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0532c761061f44a28f0f28934c46152e",
+      "statement": "permissionMode 为 bypassPermissions 时整个 canUseTool 回调被省略，因为 bypass 在回调之前就自动批准，省略可保持行为一致并避开 SDK 的 shadow warning。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/runner.ts#L552-L558",
+          "version": "repo-lines-v1:sha256:f09503e3f53adf0d74ead1916432d797b57274220e52f32cccfb752d45caae91:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGEwNDc3ODIwYzBhZWQxNzlkODdlNzMzODdjYTU2ZDU2MmNkNzc2NmYwMWE0ZjE1MjU3NTAwMmQ5ODZjYjFhNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWY2YzBjMTIxMGFmMzg1ZWQ1ZjEyMGIyZDVkODlmYjJmODU4OTNkYjMwODhmNjQ2ZGE3ZDRkNzZjMGE4MmQxZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTFlZDZmOWJjMTdmMjVkMDBmZWQ0ZGYyNmE2MGZhMDVmNzEyNTU5ZTgxODdiNmNmYTY4M2JkMDFkYTMyYTJmMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDFjZTlhNGMxMTlhY2Y4Y2I5ZjkwMzQwZjQwN2I2ZmE5NGFkZjAzYjU3NzcwM2NiOTI2NWU2ZDkwZjA2NzE3MyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d47d5137ff634fd1900fd0d00a7ead43",
+      "statement": "SDK 会话默认打上 clotho 入口标记并强制开启 TodoWrite 等任务工具，前者让会话不被当作程序化会话而从列表与 claude --resume 中消失，后者避免任务进度 UI 空转。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/runner.ts#L36-L42",
+          "version": "repo-lines-v1:sha256:2dd31ede3ddfda0a273b1304a11242917616e4fda5d48a08498dc4f01a1f4cb3:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmNjZWExNzIxNjJmODVmMmEzYTBmYTY4YjdiN2M1ZjRmM2E3ZjMyZmM4YjU0ODg4Mzk1ZjIyMDlkNzhmZGU4MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzQxZDRhYmEwNmI0YzlkMjU3YjYxMTI2YWNiMzM0MGY4MjdkYmM1NDc2ZDMwOTIwOTQxMGRmNDc4NjZhMzgwYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODE5MGU2ODY0OGQ0NmE3NDA1NDk0MWQ5Zjc5ZTk2MTM3YzdkMDNlNmNlMjcwNWMzOTBlMGMwMjBkN2MzMjk0OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDUyNDIyMzY1ODllZjA5Njk5ZDllMzkzYzViZDY5MmExODQxYjljYTA4NjI5OTFjNjI3YzI3N2FlYjZjNDA2YiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_b60cdc5d491c44f0a01b174137551c58",
+      "statement": "streamQuery 以首条 system/init 作为就绪信号，因为用户消息只在 init 之后才写入会话 JSONL。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/runner.ts#L252-L268",
+          "version": "repo-lines-v1:sha256:fc8bdd218ab1bd719a0917bb12e7efae4870e057a4f28ae68d21096c2023a7d6:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNiYmVkMWQ0MzRiNWE0MWFlNjg2YmU2NjFmZmYyZWVjYWY0NjUwNzkxM2E2OTFmZjc2ZDk4NjgxY2MxOWNjMzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhhODE2M2VlNzFjMTA4N2I1NTY0NTk4Nzc5NmM1NDBiZDU0OWRjMDIzMjQ4ODE2ODc0MDRmZjAwYjM3ODVlMDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJiYzE4ZjYxOTI4MTBjOWJjNTJiZTAyNTQ4MjAxNjk5OWIzYmI2N2ZiMmE4YTg5OGM1Mjg3MTZlNTZmMmJkN2QifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f7d4783450164098ab4502b31abc5526",
+      "statement": "常驻会话查询以 tolerateResultErrors 运行，使中断产生的 error result 或失败工具只结束当前轮次而不杀死整条流。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/runner.ts#L265-L267",
+          "version": "repo-lines-v1:sha256:4cadc849a0485209bd794dfac381efc684b1366a85e316796346a753908cf90a:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjU0NWQ0ZGU2ZjVhOGMzNjcxNjgwMmJkODljZTM4OTBkMDJkZGFiNjgzMjNhODYzNDBkNGMyZDVkNWMyMmY5OSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOWI2MmY2MGQ4NTkwYTU3OWNmNDZmOGQ2NzM3OGM0YzU3MmI5NjJjZWNjZGI5MGM3YTVmN2I0MmI5NjA3ODJhNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWVhOWM2NThlYjAyZWRkMDExZjBhMTMwNmUyNTFkNTQ2MDk3YjM4OWZhNTI3ZGQ2MmI5MThkNmZhNDAyOGNhMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiY2Q2N2ZmNDhkZjg4YWE3NzZiNjU5NjVjMjJiMWJiZWZkMTA4ZDY2M2NiYTc1OGQ5MWY4ZDNiYzQ2OGI1NzUzYyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_838d6cfe534e4431aad5a866a365f05e",
+      "statement": "查询收尾时先做 SDK 的异步 dispose 再等待子进程退出，因为 SDK 消息迭代器会在子进程退出前结束，必须等子进程把会话记录写完才能安全删除或复用记录。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/runner.ts#L283-L287",
+          "version": "repo-lines-v1:sha256:2fad259639132f788a71359911dd3674e018a776103c3aea9a47cccdbaeef5cf:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg1ODUwY2IzMDM3YWQ3NmZmMGNlNmI4MzFjMGU1ZDI4NzM5NDE4NTc3ZWVlNjhlZDk5ODg4YjFmYWRkOWE2ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTg3ZDNjYmFlNTUyZmM3NGM2ZjAwZjkzZTJlYmRhMjEwMTRmY2UzOTAyOTk0YzAyMzVmYWM3OWNiNTc0MzRlMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMmJhMzJhN2VmYTI1YmJjZWVmOWIxN2NiMDIxZGI4NjJjNTgwODEzNTViMjgwOTg2Mzk0MmJhMWRjY2MwYjdlZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTJmN2Y1ODA0YTY4ZjFiZjZkYzY1OTc0ZjRjN2FjYzc5M2QxYWRjMDRkYzRjMDRhODRkM2U0ZGFiOGJlMGI0NiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_a956931e0c864a0ba3169f8e4bb5274b",
+      "statement": "requestToolPermission 按工具名把 AskUserQuestion 路由为 ask、其余路由为 permission，并以 streamId 加 toolUseId 为键挂起等待前端答复的 promise。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/runner.ts#L186-L233",
+          "version": "repo-lines-v1:sha256:4a30269073ae45ac298a5df9172a2976793bb4a8ea798726c4d3bb121beb7ddd:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjZWI4MWJiZjBhNGZlNTg1Yzc1MWY3YzI2MWMwMjhmMmE3MTFhZjQ4NDllMjczMDlmODE2ODQ0ZDA3MzJkMzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIyMzUyNTg5YzM0ZDNjNjA2ODU5MzFiNmVjYzRkNTA5OTFhN2M1NmM4ZmJhMjg5NDExNDY1NzY5MDI3MmNhYzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJmNTZkZjRkOTllNTYzMjU2ZWEwMjBkNWM4YWZmM2I1OTZhNzAwOGQ3YjVlN2QxMWMwOWUwZWEwNzgxZjQzMWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImViMTY4YmE1ZTExZGY1MDEzZjJlMjY5YWM2MmEzOGVhY2NlMmE4ZTNkZTJiZGYwZjljNzkwMTk2NjZjYmM1MmQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4bad298c878e4017abc2e11ac7f2177c",
+      "statement": "respondToolRequest 按 streamId 与 toolUseId 取出并删除挂起的回调，结果缺 updatedInput 时补上原始 input。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/runner.ts#L159-L170",
+          "version": "repo-lines-v1:sha256:c13a1ac95565d082853e09cfb7e1b29001cc9aa86df25275cdbeb55d8dcac4d0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhlNDVkYjhlZDg2ZTBmNjNiZGIxMGRmZjljOTk0Y2ZlMGM5MThmMDdhYjMzNGMwMTc1YWI2MjRiY2M2MWE4MzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhmNzQxMTM3MzFjNTM1ZjRhMDI1NzQ0ZGIxOGVjY2VkNGJhNTNhOTE1MDk2YTA2YzgzYTdkNmEzODg3ZjYwZDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNkMjgzNzdjNjMxNWI2MzE3YWQ5MTI4OWI2ZDQ4MjY0ZWFhZWQ0ZjAwZThjYjQ2OTE1MWM3Nzc2ODFkMjk5YjcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bf596ccb551344e39507292dba0bce7b",
+      "statement": "工具请求在已 abort 时立即拒绝，abort 事件触发时若仍未决则删除并以 Interrupted 拒绝。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/runner.ts#L211-L231",
+          "version": "repo-lines-v1:sha256:7e5afb17447cadb592a39c969db9d0f88965d6d95262f98c9561eb335b98a0fe:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQxNWVhMzEzZjExZDMwODIyODEyYTljMDc4M2MyNmVmNmNhOTA5MDVmZjU3ZTQ5YTYxZjJmMzNjMGIzYzZkNTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJmNzgwY2RhYjRmZTY2OTljMzk5ZTZkNzZlYjdiOGQxZDNiNzk4YmQ4NDM2MmM3OTVhZmNmZDhhM2E5NGYzNTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg4MGYzNWUzZGRlY2FmYTI0YTRhMmI1N2EwN2I5MTg2ZjY2MmE4YjY2MzEzYWE3MGI0MmRlZjkxZWMyNmU0MjgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_87047767919f4da4b91f39ab8e548fa4",
+      "statement": "startup 用一个永不 resolve 的占位 prompt 等待初始化结果（默认 60 秒超时），结束时经 closeThrowawayQuery 完成清理。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/runner.ts#L390-L428",
+          "version": "repo-lines-v1:sha256:0a1418c12ed4d70b09990ad75733918ba61e976a91f91cb0c962bdd1200401dc:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRlOWU3MzU2MDU3ZGY1ZDA5OTQ0MGZjZmE4MDhmYzZmZWQwNDJjYmU0M2Y0OWNjNDllNWQ1ZmMyYTQ1NzMzMGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ3MTk0NGVjMWIwNGU5ODkwZDgzNGE5NDRjODRhMzc4ZDU3YjBmOTA3ZDlkYzVlN2RiOTc3MjJiOWQ2Yzk4ZjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_050d2d8ab04d489890db0f2106adeee8",
+      "statement": "一次性查询的清理必须依次调用 close、异步 dispose 与 waitForExit，因为 close 只启动清理并丢弃 promise，而子进程会持有被恢复会话的锁直到退出。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/runner.ts#L380-L388",
+          "version": "repo-lines-v1:sha256:daaab6806ae2ef6aff6fd135b0e886bb01cb8073b71160abd56a4ee309c27022:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmY1OTc5NTc1M2I0NzgwMDhlMmNkNzI5MTBjYTk3ZjU4NGZmMWFlYzExZTc0MGMyNzhiNzE0NmNmN2ZkM2YxYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWQ1NWIwZjc0M2FjMmUyMzY1ZDUyNGMxMDEwOTU2OTdlZDNjMTg2ZjcyZTgyN2Y1YTgxM2YyOTg4ZDI4YTk2OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTEyNmIwZTMxNGE2N2Y0MzAxYzMyMGJhMTBjNGZjOTg5MDJmMzI5MjI1NzE4ZjRlZTI4NDRjZjBmNzI5Y2JlMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_f457b2decd0a4b4fbb123b9564e4b705",
+      "statement": "interrupt 命令在查询已初始化时调用 SDK interrupt，未初始化时直接 abort，因为 init 前 interrupt 可能丢失。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/runner.ts#L585-L590",
+          "version": "repo-lines-v1:sha256:cc59369fb8197db16d8869bd204c65092613594917a12dbe528ac9d8509d9227:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTYxNzMwMDM2OGRlN2JlN2QyOTYyMGVjNWM2MDA0OWU0NmJhODY4MWQ4NjgzMjYyMTIyMjlmZGU5MGNiZjJjYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGNkOTkxZjRiYjU5YTQ4ZGY1N2VjYzllMDg1NTE1MmEyMTBjODQ4Njg1MmU2ODhiNGY3NmI2YTJiOTRlMmU0OCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMmRlMDI1ZWIzODg4OTRjMWRhNTBlMTYyMTY3NjI1Y2QzOTI0ZDkzZjJhNTFjY2ViYjU3YWE3NzljOWU0MzJjMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzljMGY5ZGY4YWE4ZmZkYTZkYTI5NzlmMDFhMTY0ODg3OWM4NzJkM2ZhYTA2MWY1ODY5NjAwOTVkMjkxY2Y0YyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_2399d5aca1d741889cafaefbef7107ac",
+      "statement": "closeQuery 先 abort 再 close，并依次等待异步 dispose、子进程退出与流结束，因为仅收到消息流 EOF 不足以安全删除或复用记录。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/runner.ts#L640-L645",
+          "version": "repo-lines-v1:sha256:7f831c2266528a836356a3daa7d10fa96c2b3b7ec86840d8f1c339508716e287:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjdhZDAyYmM4OGM3ZTlkZDBlY2M2ZGI1N2E2NTFiNGUxODVjYzIxMmFiYzk4OTgzZjVhMmYyNGZjMWZjOWJhZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODNlMDczNGZmMDNhMTYwYzEyYzgzOWEzMTFlNDJkMTQ2NWJhYzRkZjM2OThmY2UzNWQ3NWM1ODhhNjVhOTQ0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDBlMDQ5OWMxOTUyNzViMzk4YzU0YThhNGE2OGQxMTc0NzIzMzQwZmJkODY1ZWYwZTEyMjhhMWIyY2JlYjQwNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjIsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTgxNGViMjhlNDIxMTIyOTcwMTllMjU4MGZkZmJjZjA3MDk5NzFlM2E5OTJkZTQ0MWM3NjllMjU5NzI3YzMzYyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_c6ab3cf1375f43bb802634a92f809480",
+      "statement": "sessionRecycleGate 以轮次进行中、未决权限、非 ambient 后台任务三项判定能否回收，任一存在即不可回收。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session-registry.ts#L113-L123",
+          "version": "repo-lines-v1:sha256:c58ea6e67d13bee270c47da361b098e35ddb123b94d64c55097526a1add2052d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZkMjI5MzRjY2IxNzgwZWViZGE1ZWNjZjdiNTQ5ODc1MTRhN2NhODcyZWQ5NjE4MTEyZmM0MzVmMzQwMzI5OGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY1OTA0MDI1M2I5MjlkYzQ5NmJiNGJjZjU5YTkyNzExMjg0MWFjMDIxYTNmYTBmMzZkYzgwM2NiZmZlY2FkOTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgzMWFmOTJkNzYzYWY4M2UyMDVmZWVmNzQ2MTBkODNkZDJiZGIxZGFhNzRhM2I4M2I5MzVhNWEwY2I5ZjZkYmEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9faea88817014c348f54360620d1447a",
+      "statement": "空闲定时器到点时若门禁不允许回收就重新武装定时器继续等待，而不是放弃回收。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session-registry.ts#L233-L248",
+          "version": "repo-lines-v1:sha256:6ec6c4d89b7aa88cf4c97f83aed8d8ab7512e71468e749e4d97943494c8c04d7:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2M2NkZjFiNGQyMDJiYTZiOGU0YTVmMDhkY2FjYWZlYjczMWY2MTcyZDFmODQxNWY5YTI0OWVkOGQ3NmEyMGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk3ZDg2MzJlNTRlOTI5OGFiYjk1ODcyN2UyZDUxNDA4YWJhZjEzNjYwMzUzNzkxMDE0MGFiZjY1YjMwYWI2MTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk3YmFjMDhjNTI3MjRhOTE1MGVlMzJlNmU1NzcwODE0MTZjOTY4ODg2YWFlNDNjNjgyNzZmMDNiMjA0NmViMDMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_09d9e6eeb3e841169f1983cd960f2d28",
+      "statement": "recycleCheck 在没有条目时视为已回收，门禁不过时返回忙的原因，其他窗口仍在查看该会话时返回 open-elsewhere 以保住热查询，只有全部放行才真正回收。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session-registry.ts#L456-L469",
+          "version": "repo-lines-v1:sha256:b452c11668cecdd7f6b9ae41bd48ea04789eb2ed243a01858b2c49819b64b44b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0YzQwMGM0MDg4MjVmOTFhYmJkNTZiZjkzMDdmODI3Y2JhOGFmNTI3YWFhNzZlM2U1YTU1NzFlNmQ1ZGJiYTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQzNmQ2Yzk3Y2I4MjUwZGM2ZDZhZTY1MDM3MzE3NGQwYTIzYzIyZTczMjVlNTI5Y2Y5YWZmZWFkMzZiNGQ0ZmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMzOTJkNjcwNTAzMmJmMzY4ZWI5ZDk2MTRlYzFkYzdjYmMzN2E1NjNkMWJhZDg0OGQ0NmY4MDA1ODg2ZTY1MDQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ac6e7db971af4069b3eeed1f466b5bfe",
+      "statement": "viewOpened、viewClosed 与 dropWindow 维护会话到查看窗口集合的映射，窗口关闭时清空其持有的全部视图。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session-registry.ts#L477-L493",
+          "version": "repo-lines-v1:sha256:023062519102f00c2fee0f23ca437a99dc79cf53dc0008afaf57a7e9cef885ae:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFhY2IwYTc5YTExNGFiNzJiOGI2MmM4YWNjZmY3ZmZlYWFlNGIyOGFkNGEwNGQ1ZTRhZTkyZGUwZDY1NDk2YzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlkN2ZkYjQzZTM0NzhhY2MyOTVjYmZiNTcyODA3NTIyYjVkOGMxYWNmYTgxYzEwYjEwM2M2ZWYwOGZmMDhkMjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgwOGNhODcwZGI4OTIzNzYyOWUwYmRiYjk0YzI3YjQ1ODBhNGE1MmE4ZWNjMTQ5NDlmNDM1ODM4NTMzMDQxNzUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bc57e119ed3b42c39c2b247f89501686",
+      "statement": "applyFrame 在 result 时结束轮次并清空重放缓冲，在 user/assistant/stream_event 时标记轮次进行中，并用 SDK 下发的全量后台任务集覆盖本地集合（过滤 ambient 任务）。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session-registry.ts#L161-L178",
+          "version": "repo-lines-v1:sha256:8b354626dd6fde0088704bfb54a6a473c7aee5c2e16ae26bde69102235acdfcc:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2YzU4YThkMGM0ZDY0OTFhZThjZjUxYjk4YmEzZDQzY2E1ZDE4NDA5MGNhNzBhNWFlNDZjYWQwM2VlNWMxMGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgyZGRiMTIzOTg3YzVmZDFjY2NjMjAxM2JhYmNhZWVmZjNhZjE3MzUzZDE2OGY0OWY4OTI2ZDI4ZGUwNjMzM2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJjMzA1MmQ2Njc4NjQ0MmE3MzQ2NTMxNDIxMTM2YzI3NDlhODA1MTkwNzYwMjJiZDlmZWI3YjhkNGUwYzI4YmQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f61a760d0c444599a5a51ac9439d2a0e",
+      "statement": "会话查询的重放缓冲上限 500 帧，超出后不再追加。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session-registry.ts#L177-L177",
+          "version": "repo-lines-v1:sha256:cabc2b394a38aff307df77b75dc923974dc95944e8feb2132a566a8b6747b3f1:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiY2FiYzJiMzk0YTM4YWZmMzA3ZGY3N2I3NWRjOTIzOTc0ZGM5NTk0NGU4ZmViMjEzMmE1NjZhOGI2NzQ3YjNmMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiY2FiYzJiMzk0YTM4YWZmMzA3ZGY3N2I3NWRjOTIzOTc0ZGM5NTk0NGU4ZmViMjEzMmE1NjZhOGI2NzQ3YjNmMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzU0ZWExMjQxM2FiNDljM2Q5NWJkNGFjMjRhNTJjMzc4MmRiOWE4NDFmNWViOThmYTE4OTY2NWIyNjg3OTVmNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2ViNDM0MDcxZGEwZWNlMjY4YzY3NjI3YzY5OGI4MDAwNTYwMjBmNmM0ZGJmODMyYjMwMDI5ZmE2YjY4MGIyMyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_53e977511be14239ad98fcf5845b3ae3",
+      "statement": "快照中的待决工具请求取条目记录与 pendingToolRequestIds 的交集，只报告真正还挂着答复的请求。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session-registry.ts#L133-L136",
+          "version": "repo-lines-v1:sha256:da9afe7493216e2f9e6d2be446fe48f245b579ceebce991972e741f13ccf938d:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGMxODY1ODJhNjE2ZjcxMDAxOWUxMWE3ZGM3NzAwNzc0NzUyNDM3MWI2MTYwYzZmNmUxYWQ4YTc4MTdlYTRmMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZGNmOTVmMmEyZmY0NTQ0MmUxMzVkMDRmNjZmYjI1NGJhNzAxMGVlMzJiZThiM2FjYTAwMjczZTE3N2QwOWYyMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGZjOGZmNWZlZDBjNjE1YTJhZDJiODEwMDZiZDAzMWY5NjBhOTIxM2Q1ZDUyZjY0ZjViMmZkY2Q1MWFiODVlOSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_03c5bc6cfa374d2c99e80b433a380d27",
+      "statement": "teardown 最后才结束输入队列，因为 SDK 在 query 中会同步拉取第一个 next，队列必须提供挂起的 promise 直到查询真正消亡。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session-registry.ts#L255-L258",
+          "version": "repo-lines-v1:sha256:a644ad96f4b7d7a1afaeb76fda001866e1f6e63cb092db2ca7adb750a46c9c0a:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGZhMWQ3ZDMwYzFhNDE5NTI0YzQ0ZDVjZTVmMDkyOTRkZmFhNjFjMmI4Y2ZhMGM4YzU2YzgyZmMyMGZhZWZiZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNWVkNWJkNTRlOGU0ZWQ4YjZmN2Q3ZWQ1MmVmMTQyMTA3YjY4ODQ3ZmM0MGM3YWNiNTBlNjRmNWNlM2M4ODE0MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjFjMGEwNjczOGIyMGI1ZjFlNDgxMTQ3MWU1NzI5YTkyNTQ3M2Y1ZDU4ZWMxMzQ5ZWIwMjJiNjlmNmQ5NWY1YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2MxNDNmYWJiZDlhZTY5NzMzZGFhMzRhMGM2OTUzZTdkYWU2ZGExYmVhZjE0MzQ4NTU1ZTM3YTk4YmZiMTNlMCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_336edc6c33be4ed5880f095c70c99fc6",
+      "statement": "同一会话的生命周期操作经 chain 串行化，ensure、rebuild、recycle、close 与 setModel 不会交错执行。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session-registry.ts#L209-L217",
+          "version": "repo-lines-v1:sha256:05de546fc9cd4a12e2891203942d36f28a0458083f157bddb6e66eb936f0bc19:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGYzNGUxMzE0YTBlMjBlZTNiMjc0YmFkZTRlYWU3NWNjMzNmZDMzMTQ4MmJmYzYxMzQ5ZDE1NTczNmU3ZTUxNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjdlNTc4OGQ1ZDlkNzNkMjRhODFkYmMwYTVhNzRiZmE4MmM5YzNiM2FmOTllNTJhZjc5NmU5MGI0NjhhOGEzZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjczNDlhODIwOWNjM2M2YzQzNDJiZmM1MmQzZGEyZGQ1NzE5YWVkMThmNWIyODcyYzM4Y2IzMTBiZTkyOWQ1OSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWRmZDdkYzY4Mjc2NWY3YmM4ZDc1OWQ5ZGY3ZGM4OWU4Mzg5NzIyNTZiYWVhZGEwMTM0OTU1MmJkNjRhOTQwZiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_f1e82366b0894ec39b945563898746a1",
+      "statement": "ensure 在有 claudeSessionId 时改用 resume，没有时清掉 resume 相关字段并把 sessionId 设为调用方预留的 Claude 会话 id 或退回 clotho 会话 id。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session-registry.ts#L342-L353",
+          "version": "repo-lines-v1:sha256:f489629f7fa47a67699d847f02f05e48351fce8abda7fe3fcb757db4a8c7cddb:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNkYTZjNWE5NzI5MGUxMjlhMWEyOTdmYWFhZmU0ZmIzNTQxNjk1ZWE3MGM0N2YyZjFkMGM4OWJhYTZjOGI0N2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQwNGI2M2NmOThhODJlZDcyMDY3ZGJlNDUyYjcxYjVhYjUxZjA4MjcxOGM0ZWU4MmEwYTJhYWY4MjIxNmNhODEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc0YzE3NjQ3MWJlNDY0NDRhYTM4MTA4YjZjODQ5YTc4ODMwMGVkZjhkMzc3NzVmZDA4ZTBmMDc4YTAxYTNmZTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e1fc0efab3184a04959cc2ee57815c92",
+      "statement": "push 把文本与附件组成用户消息，合成来源标记 isSynthetic 以便 CLI 以 isMeta 持久化并排除在渲染历史之外，推入队列后还额外广播该消息供各窗口去重后显示。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session-registry.ts#L381-L396",
+          "version": "repo-lines-v1:sha256:4fb959729f826d577c089e6ef77a5149b2f3257faacb2c2ef3acec6a976bf830:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMyNjc1OTY1MDI0MTgxNWJhZjZjNDE0YmE4YjIxMWE3NzNlNTBhNzM1ZDUzYWQ2NzVjNmJlYTIwMzJhOGQ2MjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA2NjI1NGQzMzg5M2I3NjMwMGVjZTVhYWIxMzM0ZTMyYzZkZGE3NGRmNGFiZTQ2MDZjZWQxMGIyMjg0NGMxODAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY0Nzk0MmU4Mzk5MzIyNWQyODRjYjg5MDlhMDNjYzlhNTQ0NGY2NTliMDI4ZDE0MmVhNDQ3MzI2OTNhZGI2MzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjliY2RhNmVjYTg3MTU1MTVkNzE3MTViZjJhYzM1NDQ3ZTBmOGFjMWQ0MmI1NGQyNjA3ZTJlZDMyNGYzNDA4ZWMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3c8cc575ca5646d0aad4c83fcb9e4bad",
+      "statement": "rebuild 先 interrupt 再对全部未决工具请求一律拒绝，最后才拆掉旧查询，这是验证过的停止顺序。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session-registry.ts#L408-L420",
+          "version": "repo-lines-v1:sha256:a2d35333d33e466e72e209e62f1afb29fb0778c67da09677eb76af35b4370e79:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY3YWRhMWMwMzQ4NTdlYTA0NThkM2NmYWY3M2Q2Y2ViYmNhODY0NjkzYzU0OGM4YjdhZjE4Mjg5MzM3MTE4M2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg3MDUwYmYzZGZiZmI4ZGU2Mjk2OWJhYzJlOWIyZTAwMDRjNTRlYzM0OWFkODY3MThhM2Y5OTM0MDEwZTdhYmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVmY2RhNjhkOWY2YWFhMGI2YmNmNzY5MDE4YzM1YzA5YzExMmMyOWRhYzQ5ZGY1MmQ4NmQ1MDZhODQ1ZDAyMzkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_26dfffd5d5a1442d850a11babcaa46f9",
+      "statement": "编辑引发的 rebuild 以 allowLaterConversation 丢弃被编辑消息之后的轮次，并在记录手术报告会话已移除时把 resume 置空。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session-registry.ts#L422-L437",
+          "version": "repo-lines-v1:sha256:e0ea7ef8f813b2ef0d886c06c3ed0b5f3a90ab5b9aec79f5c7b8795721cd9b84:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFjOWIwNzNmOTFiOTMxMjZkOGMzYTc4Mzg4ZjA1YjQ0MWE4YzI5OThhOGJjODRmNWJlODg3MjE4MTY3YWQxMTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyYWQ1MWNkNzhmYTMyODQ3Y2NjMTMyZDA5YTMyNzZjNDRhMGE4MTM1ZTUzZWUxODg0MTAyMmFjMWZjYTNmYmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE5MTdiOTkxYTFkYzU5OGY3Njk3ZTQyNzFlYjQwNjcwZmE1Yzg1MjhhMjM5YTljMDMyOThiNTNlMzFmMzZkMjMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_563b10e9c7c34b55914432c61a5b7668",
+      "statement": "setModel 在 claude 与代理模型之间切换时返回 model-class 让调用方改为重建，同类切换才走 setModel 并补放新模型的 effort 档位。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session-registry.ts#L501-L531",
+          "version": "repo-lines-v1:sha256:14ce7723a69357dacd495abda2b3ea4494499adf8c9dd66159aedb619e4d813d:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA5NDQ3NDgzMTU3N2NiMTM1YTE1NTM3MjI0YzllMzJkNTI3YjNiMWZiYTZiZWM2ZmIxZDZjZDkyNTY2NzdmNmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2MmVmYTRhZTgyY2VmYjE1NzdiZTRkZTBjMjU4NTM5MDQyNzMxOTQ4NWZiNWY3ZWQwNTkxNDgzYTc3NzgwMjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUwOTZjZTM1ZjdmOWQ4NjhiNDQxMWE4YzcwYjkxYTU5MWYwNTk4MGUzZmY5ODAzOTJhODI4OGYwOWJjYTYyNWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNhZTFjNzA0OTRhOGUyMjE1MGVjZjIyOTYyNjRjZjlkNmY1NjA0YTA5NTY2NWVjZDY2MDdkOGVhMzJkNDEzODAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_78d8362652b9406c8204338560876863",
+      "statement": "注册表的 sampleContextUsage 按 claudeSessionId 找到未死的条目并请求上下文用量，失败返回 null。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/session-registry.ts#L534-L548",
+          "version": "repo-lines-v1:sha256:3c6093c55fcc4ec89c8aa09244fcbcf9416a064ddf8c23dbcf6372b7b1e6fa59:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNlZjA2MjkyMGIzYmU0MmQ4MTkyMGIxZWM0OGM0NzhjOWQwM2Y5YjJkY2Q5MGE0MzE3OTVjMTM1MTlhOTZjOTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMGNkYjk3MmE3YmZiN2VkMjQ2ZjlmZjY3MjM4NWU1NWY0OTY4ZmMxMTA0M2RjNWI2ODRkNTFkZmEzMWRiY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzMjVhNDY5MjY0OTA5YjY5NTFlNzVhNzY0MTRmNDQyMzVhZTdmMDRhNTBlOTRkNWI1N2RlNWM0YzA1NzAzMjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYzYjdmMjM5OTVjMThjMjliYzk0MTUyYTk5YWI4YWI5YjI1N2YzMWI2NDk5MWM3N2Y3ODI1ZThhMzkwMDIwZWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_db1db197deea448788e7ec9cc3140b68",
+      "statement": "enrichTaskNotification 把排队的 task-notification 条目规范化，并在 result 为空而 output_file 存在时读入文件内容补全。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/task-notification.ts#L46-L59",
+          "version": "repo-lines-v1:sha256:9967570cda8c5184ca59c4b37fa97f2b756941fdf3173c3c12dd5560c9921d94:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk2YWI4YmZiNzlmNzc2OTdmNGYxNzEyNzQzODFmNTcyY2U0NjdlMDg5YmUyYzFkNTcwN2ViMzNmNTQ3NTg1ZmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM0ZWQ1ZmQxYmEwZGUzY2QwMzlkNjVhMTViZDIxZDMzZTJhMjg2NzQ2YjdlY2Y0YjQ2YWY4Y2ZjZmFmNjVjMmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a225a142e3c54faa9c7bf4e0569c1b05",
+      "statement": "createQueryProcess 只在 spawn 失败（pid 未定义）时拒绝退出等待，abort 转发引发的 error 事件不会影响等待子进程真实退出。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/query-process.ts#L24-L32",
+          "version": "repo-lines-v1:sha256:74b03ffdc04d5c81b22e351c4792c66f2b62ccea3d2c8cd15cf4bc7862bbb8cd:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGZlZThjYTFiMTRlZDU4ZWQyM2NiNjZjNmU3NGRjMWQ3Zjc1N2MzZTVhYTU5YjM2ODIxYjNhODdiZTE0OWJkZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjRhNDY5MWJlZGVhZjdjN2MxZWMzYzY4Y2U0YWVlNzlhMmQ3NWI4ZTg4NjMwNjhjYmExNTRjYTJhMDcyN2ZkMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOWQxODBhNGRhOTZhN2ViZTZjZTVmZDdkMzU0ZWVhOTcyZmZkZjcxMGU1YTdkMDE1ZWUzNDQxNmJkYjI0MTNhYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDUwNzE0OGY1YWU5OGQ0M2QzOGM2ZTRmMTdlN2Q1NTY2ZmM2YTEyMTk0MDhjYTZmZTczMDE5NGYyNzk5MzAxMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_55fff1993e1f4476801d0f34a224be85",
+      "statement": "resolveClaudeCodeBinary 优先返回 asar.unpacked 下的 CLI 二进制，其次打包路径，都找不到时返回 undefined 让 SDK 自行解析。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/claude/sdk-binary.ts#L12-L34",
+          "version": "repo-lines-v1:sha256:e6213629bb0d9aafea62cb659b12cca5f6198b839feee95b7c37a0e57367b025:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYxMDFlMTRiODgxOTc4NDU4Y2I1ZWQ4MTcxM2ZhYmMwM2IzZGVmYWM4OTY3OWE4NWI3NmJmMTEyN2ZiZWZmNjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMyMWRkNjJhYzMwMGYxNWJiZTE1YWFmNWJmMjNjMjc1OWQxNzY1N2Y1YTZkOTE0ZmEyYzYyODU4ZmZjNGM5MjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}

@@ -1,0 +1,310 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:13392990012365418dd4c488bb79b043a2ee1476c839231072e5de07f5823277",
+  "claims": [
+    {
+      "id": "claim_cca1a62eb3614426a99ae63fab9fbe04",
+      "statement": "PromptMarkdownEditor 的扩展刻意精简，仅 Document、Paragraph、Text、HardBreak、UndoRedo 加四个自定义扩展；clipboardTextSerializer 把剪切片序列化成 markdown，使芯片以 @path 与 /command 形式进出剪贴板。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/editor.tsx#L105-L120",
+          "version": "repo-lines-v1:sha256:344ab0d6d179034a052f53f3f86c56030f538b9d632d793d9e74bdb973327d46:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc2NGY1YmJkYjgyMDIwOGU5MjZiYWViNGZkZmMwMzZjMjY5NmYzZDllMzY4MjkxMjBmMDg0MTVhYTc4OGM5MWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2MjY3OTM1ZmM2MzM0NjVkODQ4YjQwYTRlZDY5NjdlN2I3YTMyM2Y4MWNkNTNjMTEwYWUyMTAyOTY4N2FhMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk3YTZhM2QzZDczMGU1YTQ1MjBmYzM2Yzk0ZTdhOGIyNzQxNmU0YWVlY2I5Yjg5OTBjMzM1ZmNjNTRhZWQxNWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM4YTY3ZWI1MzQzMTA0ZjZjNTQ4MWRmM2UzNzc1ZjNmOTkzMjJjNGZhMTJkNTkyZjRlYzhjNDc3YmVjM2YwOTcifQ"
+        },
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/editor.tsx#L174-L178",
+          "version": "repo-lines-v1:sha256:6bbf8aa777e099db343d0ec3b335f522ad4fdf7ed72902e28c0d07692335c666:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2ZiOWMwNDQzNzY0Zjc4MDNlODBmMDk0MDJhNzEwZGE0NGZjNTFmN2M1MzFjNzM0Y2E2OGUzNGNjYWE1YzQ3MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWU2NzNhYmQ0NTdhOTdlZWExN2E2MDA2MmViMGZhZWE2YmRmMDk0ODY4Y2M2YjhmOGMwZWJkYTJmNjFlZDQyZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTVmNmE4MTU4Njg5NDdjYzcxNDZmNGVlYTE2Yjc5ZTk3N2VmZTRlOGQ1NjI4YmYyNDM5YjcxZWQ0ZGVjZDUzNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjc0ZTIzYzkwM2Q1ZDdiOWRjMzQwYTNlY2EyM2MwZWFhYWIzMTI1YzA0ODU4YzQ2NjZjMTM2MGNkNGFmZTIzOSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_2bc320515766443f90f0b5ba8628a18b",
+      "statement": "键盘处理中补全菜单开启时吞掉方向键、Enter、Escape 与 Tab；已发提示词召回占用裸方向键，但 IME 合成期（isComposing 或 keyCode 229）与带修饰键的方向键除外，Enter 提交同样放过 IME 确认回车。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/editor.tsx#L134-L173",
+          "version": "repo-lines-v1:sha256:a96a32ec38afd8cc00d1deef3c04c9b723ca8e350719cc452f7760e49929f9f0:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiYjgyY2ZhMWZlNzUxMTViYzA1OWViNTZmYmJiZmRjZDk4OWRkNWUyNDk1NzY4YWY2N2EyM2RiNWYzMmIxMDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFlNjczYWJkNDU3YTk3ZWVhMTdhNjAwNjJlYjBmYWVhNmJkZjA5NDg2OGNjNmI4ZjhjMGViZGEyZjYxZWQ0MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJlMzI2YTUzYjNmZTllYzE0YzZhOTc4NjE0OTE3NzEwMzg2OWNlNmFiYzg2YzM1OTk0OTA4YTMzNjkxZTE5MzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI5YzZmYWU2OTQ5OTQwYzcxZTJlZDRjMDY5YjBhMjI0YjIyMGFmZWU0ZmFiMTgzODgxYTFmNGM3NjY1YTViYjMifQ"
+        },
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/editor.tsx#L160-L171",
+          "version": "repo-lines-v1:sha256:7d4c5796c433f5024ead0065df542c4b8101dbd4942c895f3e888ce14a955487:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhYWFkMDMyOGJmMmZiYTc0NmMwYjk4MWY2NzJlNmYwOWZiMjUwYWM4MWU5YzFjZjk1MGQ3MTA3MDlkOTI5NjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg4MDA1ZDU3MTA2YTM2MmViMDAwZGFmM2RhNDY3NGM4MmI1MThmZjVhMmUyZjY3ZWU4ZTc1N2EzMzNjMmFmNjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMyMTNhOGU0YzRlMDUyNTIyNDMzZWY1YmQ5Yzc2ODVlYWY0NDBkNDE0MDdlMTY4ZTlhMmY3NjBkMzQ3M2ZjZTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ2OGUxZGNmNjViNmQzNTM1OWFlN2UxMmJiNjc3YmIyNjgwYTRkZGUzODViYjZjZDVhYjNlZTMxNDdiMGQzMWMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6de259d3709a4ac8b5682b73478858c6",
+      "statement": "useEditor 实例在首次渲染后才存在，事件处理器经 ref 读取最新回调；value 变化时用 queueMicrotask 比对序列化结果，不同才以 emitUpdate false 重设内容，避免把外部 hydration 回弹成用户编辑。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/editor.tsx#L268-L297",
+          "version": "repo-lines-v1:sha256:df6b2162765604ac1fb61e24a4cb178444386badcb925b55aaa4f43431d42013:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5NjZmYmZhODg5OThkYTc0NjU2YzUwMTk0OTU2YzI1ZjA4NDk0NTc2NjBjMDA5ZmU2M2QxZTlmYTlkYzkzMWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYzZDAzNzM1NmMwY2JhZGFjYThhNzk0ODQ4YmJjMjdlMzFlYmNiM2Y5ZTMxYjk2ZDdmYzM1YTE1NWJiMjQ4OTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjExMTI3YWVhYjYxYTlmNjc2NTI3YjZiM2E1ZDdjM2Q1OTA4YTAwMzVkZDIyMjExMzMwMzM4MWZhODljYTBkNGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI3NjY2Y2ZjMGQ1N2U3MDRiYzkxYjNhZTI0ODNlOGM4YWNlMjgyZGYzNjU4MWY4YTQzY2VhM2I3Y2I5Mzg1OTIifQ"
+        },
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/editor.tsx#L96-L103",
+          "version": "repo-lines-v1:sha256:83c7593217c8614add93fe9e7c030a213d27865d50680eb0b247034acb03e3ef:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZmEwN2FkMTBjZWU3ZDFmODBhMDEyYzQ5ZjRhYzU4ZDNhMWIzNjZiZDg4N2U2ZTVjOGNkNzc2ZDY5YzQxYTdhZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODA5NzgwNTM2ZTcxMjI0NDUzZjdjOTViZTQwMmI5Y2ZjNmEzMmY5YWQ1YzZlZWEzZjk4NWYwMzIxZmQzODIwZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzJlYTBlYmI0ZDU5YTMyNWZiNTBlOGUyMTJhZDBhZjg1MTMxMWQ1N2E1ZDRiYjM5OTVmY2U1YWU5YmE2MzAxNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzQzY2JlZmYzYTE0OGZjMGNiZmRhNmFkYjJjZGYzNTcxNWU2NThlYzczNjIzZjczMGNjZmFhNGFjMTFiNmVhOCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_60b972eb46cb415b932d110f643a3f89",
+      "statement": "insertTrigger 在光标处或文档末尾插入触发字符，当前一字符不是空白时补一个空格，因为 suggestion 匹配器只在触发字符跟在空白后或位于文本块开头时才触发。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/editor.tsx#L231-L255",
+          "version": "repo-lines-v1:sha256:adcb42112cd8fb7bd6392ed3c962a6bd778de894bde0cbbb01630ceef078c2ee:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVjMzUzM2NlZjVhNTZmNGMxMzQ2NzM1MTAxMzQ5YWJlN2JiNGZlYzUzMjY1ZGE3ZWY5N2U1MWIyYTIwZGJiNmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5NzhlMjUwM2I4Y2YzN2EwNmY3ZDZmMGEzYTZiNmZlMzU2OTFmYmNhYjUwYjg3NzVjYWI2ZmFiYzcxYzU5MmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIxMWNmYTJmYjI3ZDI0YjlmMTA2ZTNiODQxN2ZiYWE0NWI0ZjJkOTMwMzgzMDkwZDIxOGNlNTdmYjA2ZmJkMWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI0ZWQ3ODIwZTRkMDk3ZjFiZTI0YzZiMjEwZmE5YzZjNDIwM2I3MTA0NjU0NmJlYWNiYjJhOGU0NjhjMTQ4M2IifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e4977b2df0964452b59a83c961ffcff8",
+      "statement": "序列化时芯片两侧各拥有一个空格，边界缺失时按需补上，但下一个字符是标点时不补，使 /review, 这类紧贴标点的写法保持不变。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/content.ts#L158-L174",
+          "version": "repo-lines-v1:sha256:9cbe1b32fdd610be45089669fe58145accbdf1fd74904b7b9c75da3e98b34b4b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5MGFhYmRmZWVjM2UyMTZkNTYxMGYyYjY1M2ViMmFhMjFlNjQ2M2ZmOTVjNjlkM2VkMGI5Mjc2YzY3M2Y3ZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRiNzkxOTAxNjBjZDk0MmM0NTI1NjNmNzc3ZDY5MmFhYmY1YzAwNGVkNWI3YzcxYjM3N2Q2NTQ0MDAyMDg0OTcifQ"
+        },
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/content.ts#L176-L182",
+          "version": "repo-lines-v1:sha256:e682514b882ff58b6767cd07dc35ac1502a165f0a401e5231fa8c2268dea1100:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmFkZTk1MzI5NzFkYTEyZGU0MDk0MjdjNGI4MDVlMzEwYWU5YjNlOThhZDQxZmViY2ZmMTQ2MmM3MTA4N2E5OCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOGUyY2UzZmRjMzI1MDM2M2FiYWU3NDAwZmUxNTNlYzg1M2IyYjBhNWFlMWUwMTI5NzYxMmIwYjdjYmI0MzI3YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzIzZDNhMmVlOWVhYjRmZDBhNTY2NmE4YzAxNmNlYzZiMzNmMmZmNzNkOGMyNjk2MmFiMzBjZjQ4NjJiMTllMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_0c6d1bbf8df340f0bf34bd87e3fc6b1c",
+      "statement": "恢复的草稿把每个词首斜杠 token 直接变成命令芯片而不查命令列表，使 composer 不必等会话启动即可显示引用块；含空白、引号、反斜杠或 @ 的文件路径用 JSON 字符串转义以保持可逆。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/content.ts#L23-L37",
+          "version": "repo-lines-v1:sha256:10a6cbdca5a9a0010d04769a73ffc8b0c77cfcce2df5f2480b75ac0ffb68d8dd:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBkYzAwNzU2MWIxMWE0MWE4NWU1MzJmMzNhOWUzMjFmMGJiZmVhNjYyOGI0ODJmOWVlYmQ4OGIzOTgwODM2NGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU0MjMzYjJiYTFiYjc3ZDZhM2RiZDU1YjNiN2NiYzQzM2FhNjdjNjlkY2RhNjhhOTEyMGFkN2I2MzZmYjgwYzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBhMjgxMjhjMzU2M2JlNGNiODkwOThiMjYxMTZjZDY1NzUwMTQ1YjM2NDg0YmI3ZTJjOTI0OTQ0YTgxNzJjMTEifQ"
+        },
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/content.ts#L55-L85",
+          "version": "repo-lines-v1:sha256:b3e58673bd252c4f397d689d1bcf15916bbc9bf7fa2fd73a227be616fe0b64ef:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE1YWU2ODIzMDExYWRkYTU4Mzk2NDI1ZWM4Y2JhZjJhODBlNTIyZDdhZmUxYmE2OGY5NTI2YTA5ODMwNDI3MDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIxMmNkMzU3OTBjNWYwOGQ3NWY0YTc3MTZkMGVhMmUwYWQxM2JlODIwYjFlYjlmZmNlNmZiYzgyNDM3MmNlOTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdmYzBjNmNiZTkwMmY4ZGY2NmExZmZiYzJhOTE2NTk4YjQ2NjAxYTdhYTRlMTUyZDM3NTljZWVhMzFjNzFhYTMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8ad0d14a1c184e8e8c28d0c109dbd40f",
+      "statement": "行号提示（#125、#L7-11、:12:3）从路径拆出存入 lineHint 并跟随芯片渲染，补全搜索前也会剥掉它，避免行号缩小文件搜索结果。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/content.ts#L39-L53",
+          "version": "repo-lines-v1:sha256:bdd69b82a1b41fd2c6fc7a1786a825b9fda9db4a6dd78ccd2faabb4bdb44b505:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2MTBiZjljYzgwY2JhNGYyZmRjMzI3MDMwMDc2OTkyNzA2NmZjNDRlOTI3ZGE3ZDZiYzMzNDNmNTk0NjBhMGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY1ZDBkMWUzZDg3Y2E4NDdmMTc3ODgzNWQyOWI5OWMzZWY5OWY4YTA4ZWU4ZDFmYmE5ZmM2NmQ2OTAzMDg2NDYifQ"
+        },
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/use-completion.ts#L25-L30",
+          "version": "repo-lines-v1:sha256:42bb540e406b3b20d46ce62230955eacbc03f0279bda4d2fce2d2223a3126ea5:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjU4Yjg5N2Y5ZjRmZGZlZDEyNjg4OGQxMWJmYTdmYzlkNDBlYzY0Y2UyYmU5NGJhMGIyN2UwMDE0ZWJkYTU5ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjI4OGZiMzQyMjg4MmJjYTY0YzdlMjg5NDM3NTkzZjg1NWUyMmZjYjRjYjJhY2E4ZmExNGQzMTJjYTcyMWVkNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjBlYWM3YjJhNzQyMmRlZGQxMzE1OTJkZTdhZjk5NGJiYzM0YjA5M2E3NTQ3MjgyNjY5ODA5ODM5MTRhNzM1NyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_51d435a7536c4c11ba846a368fcdc8b5",
+      "statement": "粘贴文本中只有形似文件路径（有路径分隔符或以扩展名结尾）的 @ token 才变成芯片，@reviewer 这类普通提及原样保留。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/content.ts#L199-L208",
+          "version": "repo-lines-v1:sha256:48dbc3623f292973c92cbbf1272f55e3dd0003baa6b8efce47a023f190dab2c3:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYzYzAwYzc5YzNmNWM4ZGU3YjYyOTM4N2ExNGRmZDRhN2NjNGRmYTdhNmVhNGFlMDNlN2JkMGFjZTZlZTkwMjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQzNGFjMDQzYWJmMDYxM2I5MTM2ZTBiNmU5MzM3ZWE3ZjQwOGM4OThjYjFlNzgyZTljM2E5NTlmZTgxMzAyYzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFkMzI5MTEyNzc4MDlhMmY0YjliZTRmYjFiNjlmZjdhZGZkMzM2YzU2MWJjNmJkMzk3YTdhZjE1NTVlMzNmMDEifQ"
+        },
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/content.ts#L51-L53",
+          "version": "repo-lines-v1:sha256:41cbb9a3fae7fc1af6ae2b7922bde696beaf8167a7b34f9e2119e4aaec2bd3e3:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTk2ZGI1NmMzNTgwYzY3ODVmYWVjMzBhNzVmMWY0ZTc4MTYxMGE3NDlkMzIwYWY3ZWEwNzkzZTkzNTMwZDU2MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDZkNzQyMDUxZDQzZmE3ZGI5MjNkNDM0MWFmM2M4Mjg4YjhiNWFiMjY3MzdmMmFmY2JhY2EzZWU3NWQyZTJmYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjVkMGQxZTNkODdjYTg0N2YxNzc4ODM1ZDI5Yjk5YzNlZjk5ZjhhMDhlZThkMWZiYTlmYzY2ZDY5MDMwODY0NiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_862615aa6d0e4e68b55ac40e19c597ac",
+      "statement": "文件补全只在触发字符刚被键入插入或光标停在斜杠后且后面只有空白时才开启，移动光标进已有 @path 不弹菜单；插件与 React 之间经 WeakMap 上的 bridge 通信，suggestion 只产出快照。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/completion-extension.ts#L46-L77",
+          "version": "repo-lines-v1:sha256:c0c9cab2eeea724a09ca2f161287faed87f89e836f07d726635590a8c45fbe05:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxY2E0NTFkZTllMTQ1MGMyZThmNzRkMTkyYmZmOTY5Y2Y2ZGNkM2Y4NTEwZjVkNDg0NzA3OWVkZjg1MTY5YmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQyZWZjMjAyNjhlNzg5Y2M3Y2E0YWZlMzQ5Y2MwYWYyZGIyZGVlMmMyZTE3YWIwNTAxNzU0OTQzZmNkNWM4MjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVkMGQzNzYyNGY2MjI0NTlmNDg2OTA0YWQ4YzNjMzhlMDE0Yzg1MDYwNzgwYjNkY2E4MWUxOGVmNWU3ZDA1YzAifQ"
+        },
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/completion-extension.ts#L96-L98",
+          "version": "repo-lines-v1:sha256:8f08933372715b809d459190c4d72738febacb86f0a3fddf86c0b148c49c75a9:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTc5YzVhYjAzMjVkYWVkNmE1YTYwNmQxNTU0OTZlOTkxMzMyYWMxZmU5MmVlZWI2YTU0MTcwZjE2YmFiMGJkNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmI1ODBlOTY0ZjgzYTQ3M2Y0M2Q0NDM4NDYyOTQ5ZDY4YjU2MDBmZGE3ODdmMTYzNzQ1ZDAwZGU4OWNiZjM2YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGExMmQyNTU4ZmU0ZDhmZTU0ZGJmMTkwZDA1OGUyNDFhMjBjYzFmNTI3Nzk3ODdlZTUzOTQzZDFjZmNlNWI0MyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_f5ed3ce34b8e481799fd44cc11b57787",
+      "statement": "文件补全只在查询词匹配时才回传结果，避免异步回包落到已变化的查询；查询为空时列根条目，否则搜索且上限 40，能力不支持时按 reason 显示不同文案。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/use-completion.ts#L222-L233",
+          "version": "repo-lines-v1:sha256:be48b22104825ef30fe8e92ee7b833621cad44a7ff6e5f3ebbe2ea421f1c9475:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ0NjU0MjAzODVkYTAzZGZhYWEzNzUwZTliZjUzMDhhOTkyYjNlNWM0NDQ4ZjM1ZGZhZTg1NWExMTkwN2M3NjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZlYzI0NWQyNTgwMWVlZTlkNTZiZTE1ODE4ZmQ3YzNmYTQwYmViYzYzYzYxMGQyNTMxYzgxNGNjZWYyNTk5MTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFjZWYxNmI4M2VhNDUyYjI2NTUxYjliMzE4NjNhODI2ZWJjYTY0MmU1NWIxMTUxNDUxNDU4NjNiOWZkMjI3MmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk4NWJhZTQyNGFjMjNjMWYwMjFmYWYzMTc0ODA4NzRjZWUzMmNlMTg3YTQ2MjNiY2I1OThiNmVlMzZmODQ5NzIifQ"
+        },
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/use-completion.ts#L285-L329",
+          "version": "repo-lines-v1:sha256:7c83dd1fae73469b7c3d90ce473dbb20e9e178a4d0e29869e9e877035746a86f:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5NjZmYmZhODg5OThkYTc0NjU2YzUwMTk0OTU2YzI1ZjA4NDk0NTc2NjBjMDA5ZmU2M2QxZTlmYTlkYzkzMWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2M2QwZDdjZTVkNGI2ZmYzNDBmNjVhMjhiYTkwNzFjYjFlMmYwMjcwZDkyODA1YTlkYjY2OTlhZDJjNTYyMjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk2NGEwMTQ3ZTM1N2JmYzg5OGQ3ZTg4YThlNjY0ZDUzYTgxMmI5NGY3YTczN2YxZGI0MGMzMTk1MzIwMGY5MGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk0N2I1YzMxYmZkNGZjYjZkNzU1YTU4ZjcxZTM4MWFhOWI2MmYwMDQ1M2YzY2ZmZjc4NGI0MDliY2Y4ZWMwODUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3e2f112a2fbc4524adf4b74f2ad0b057",
+      "statement": "打开文件补全时调用 enterWarmup、关闭时 exitWarmup 以按需构建 fff 原生索引；菜单位置按锚点与可用空间在上下方向翻转，结果数或大纲行数变化时重新测量。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/use-completion.ts#L253-L283",
+          "version": "repo-lines-v1:sha256:358c394cff92b207bd0309cb5fda9feb1daca1ceb0505ea7a09f95a574e8f8c2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5NjZmYmZhODg5OThkYTc0NjU2YzUwMTk0OTU2YzI1ZjA4NDk0NTc2NjBjMDA5ZmU2M2QxZTlmYTlkYzkzMWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2NWQwOTgyYzU2MDhmYWY1MTMxMmNkNDQ4ODA4YzlkNTkwMTZhMzgwZTFlNGVjMTk1NWJjYWYxMmZkNjBmZGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA5ZGVmZjY3YWU5MmQ4NTFjM2FhZjNkMTRhZjIxMWFhODIzYmFiNzhjZjQ5MTNhMmI0ZDYxNjJjZjA3MWU3YmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYyODllODc1MTAyNzFmMmQ3M2E0NmE4NjdhY2MwNzY3M2FkMmRiM2NmNWI2NTIwMTU3ZmY3NGNiMmQ3NTY0YTgifQ"
+        },
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/use-completion.ts#L370-L390",
+          "version": "repo-lines-v1:sha256:e95fa020805e68ad450e2b2a23145b5e06d6d16124a1abba149454ad57c76492:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ0NjU0MjAzODVkYTAzZGZhYWEzNzUwZTliZjUzMDhhOTkyYjNlNWM0NDQ4ZjM1ZGZhZTg1NWExMTkwN2M3NjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkwNmI0OTJmYjFjNjE4NjBmMmU4Y2NjMTEwMzljOGY4MmYxOTM3NjBiODcyMGM2OWVhYjA0MWEzYmM2YTRjMDYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImViM2FlODMyMzQwYjI1MGRhZjljMWU4NDY0OGJiZDcwOWE0N2M3MGU2YzhlNzc1Y2E2YTdjMDE5ZTIwZTc1YjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMyODdkZGRmZjI4MzkxMTUxYzEyYTZhNmRkNzc2ZmE2ZmJhNDdkZjExOWIzNWEyOWJhZDkyMjA4MWNlNTdhZDAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a670860c3646432f96c8d9a106925c61",
+      "statement": "FileCompletionMenu 手写滚动把高亮行滚进视口，因为 scrollIntoView 在 Base UI 的 viewport 上不可靠；右侧大纲与滚动后的行对齐，超出窗口底部时抬升整个面板而非压缩。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/file-menu.tsx#L45-L61",
+          "version": "repo-lines-v1:sha256:0f47a0a9cc98809415869856b72a25b24d9328ad8e226a590672c425d197bfaa:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY3YzdmMjNkZGQ3Y2QwNDg1YTYzNGFjMWViNTRhNTk5MzA5NzM1MzViYzNlZDIzZmU4NWRjNmM3MDNlZWJkMGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFmZDk3NGM0MzRkMzFjNDMwZDZkYjEwOWFiZGM2OGEzOTNkNGRkY2NmMTZlOGFhNjE0ZWNhZTkwZGFiMjcwYjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgwODcwNGRhOWQyYzBiNWM5ZDJmZTEzNzIxMDU4NDliZGE2ODkxYTYzNzQxZDY3ZmI3NjRiZDVjZjU0ODlkMGQifQ"
+        },
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/file-menu.tsx#L63-L90",
+          "version": "repo-lines-v1:sha256:09bb2e6590b49916f4a2a5872a8688443ad3c99df6bfa35e130e3696a069f74b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwMTJmYThhNzY0Y2U0ZjRjYjFlNWEyM2Y4MzM2NWI4MWEwYjNjMGQyYmJmYTIxNDhmZGQ2M2E0OWQ3ZmRmZTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNlNDljNDY3NmNkMjgwM2VkOGE5ZWNjZDkwMjM5NDg1Y2JmZTRhZDAwNjQwMjAzNDE3YjRkYTQzNDgyOGFmZjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1MmUzMzBmOTUzODlmMTBiYTU1YmE1YWM1NjE5Njk0YzMyMTgyOTFhZWY0OGU4YTFkMTc1ZDM0YjhiOTFhMTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlhY2IyNDZlZjk2NDg4NTIwZjhkMDhhMWZhNzJmNjcwNTYwZjAzZjEwNDRhZGUwODdlZDcwN2NhZWUzMmU2OGIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_23d5d67ee9e94ea99ccd5c4c6ec8bdf0",
+      "statement": "斜杠命令芯片只带命令名，描述从节点属性取不到时再从 SlashCommandsContext 的命令列表查找，使芯片能在会话启动前渲染并在命令到达后补全描述；prepareSlashCommands 过滤 HIDDEN_COMMANDS 与重名项。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/slash-command.tsx#L237-L246",
+          "version": "repo-lines-v1:sha256:6a46710a54df56193ff0f4575e987174ab016388aeff37e4f170898665a9b39f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjllMGM4ODM0NGE0YTVjOTYyOTZlZDMyNWFmYTkwMzE1OGVkNmZiNTBkYjE5OWVhYTM0Y2E0ZDNiNDkxMjRjZTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQyNjhkMmIwOTE2ZGE1Y2ZiYmY0YWQ4MGUwYzkyNTkyNWFiODNmZDQ0ZDYwNjQ2MmVkZTYyODBlNDJkNjZiMzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA4YzNkM2M4NDYxMGU2MDQ1NTNjODYzMWE4Y2E5MzA5ODU3YWMxMDQ4NzM3ZDE3YjY1ZDhiNmVkZjFjYjNjN2QifQ"
+        },
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/slash-command.tsx#L63-L77",
+          "version": "repo-lines-v1:sha256:a02b4aa3148aae882dac8a80e6b51e577fb5725f9189091869ef25eeca267131:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc4Nzc3ZmQyYTM0YWQ5NTZjNmNmZDU0Y2NjOGRiYTA4NjUxYjMxZTYxMjVhZWQ2ZDk5ODZhY2I4YjgzODk0ZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFlMTQwYmQ0YmYxYjc4Yzk1MzJmNWQ2NTFlOWJiZWVjMWFlN2QxYTA5YTVkZWE2M2IwYjA2NDVjYWUzNWI3OGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY3MmI0NzkzZjJiNGEwODlhMzdmMGJlYjFmZGM1YTNkMThjMzQzNGRhZmY2ZjZiNTMyMTAyNjBmODAyZmI3ZjQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8e95144391e04830999abc19cd654507",
+      "statement": "resolveDirectSlashCommand 识别整条输入就是一个斜杠命令的情况，仅 clear、compact、config、context、rename 五个命令走特殊提交而非作为普通提示词发送。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/slash-command.tsx#L183-L193",
+          "version": "repo-lines-v1:sha256:b899c5387379d4df2e99d780fe2440fe05ddcaee0a4ffbc47cf438a72c7cf586:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIyZDEwNWY4ZGQ4OGM0NTc0NGU5ZDdlOTJjYWM1MjM2YzgzZjkwMjIxNTY5ZWNhNTIxN2Q0MjllMTQ5ZmNmZWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBhOGUzMzgzNWM5YTU5MGI2OTg4NWFhYmM3MmZkMmU1NWZiYjFmZWZlYWNhOTM2MzZlMDU0NTU3YzMzNTM0NmYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_81f1054d9fc34109816fb2227cb3978e",
+      "statement": "浏览器从不在 inline 芯片上画原生选区，MentionSelection 用 ProseMirror 装饰给选区覆盖的芯片加 class 并由 CSS 重绘；PromptAtomNavigation 让方向键在光标贴着芯片时跳过整个芯片。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/atom-navigation.ts#L4-L27",
+          "version": "repo-lines-v1:sha256:334617a4472b8ad0287ad7ee6d3e01351d58ac3d2541d69649e2928c33fc1554:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRmNzhlZmQ5YjI4ZjNiNzlkNzRjM2QxMGYyODk0ZjVlMzY5NGE5Y2Y2Mzg4ZjI2YzcyOTlkMWIwMmY0NWM5ZTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1ODBiNzY1MThkYWU5NzlmYWViZDAyMzY3YTI5MjkyYTUwZDk3NjA5MjI1MWEzOGE2Y2UzMDg4MGJhNDI4MjUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFjZmZmZWU4NWM5NmI0YTllMWY4NmMzNjFiY2IzMzI4NGYwMWFkMTM4NzBhZjVlMGU2MmZhNmI5YmYyMzBmZTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/mention-selection.ts#L10-L47",
+          "version": "repo-lines-v1:sha256:50d0c9f9582f3547848ee100fec69f8e265767924b93d37e6d422a52d1acb14f:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkZDI0NDU4MmI2ZmIwM2QyM2I4NDE1YWJlY2QzNDZiMGM5ZjQ2NmI2Zjc1MmIwNjgxODljZTdlOWEyZGMzNTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgxMmIyZWY4MTUyZDNkMjhlM2IxOTJmOTExYThiZDc4NjFjY2FmMTg5MWZiYWI5NDlmM2M3MjBmZmE3NDIyMjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ2NjQ4ZTYxMDEyNGY5YjM2ZDA3MjNmNDg3NTYwZDM3MGY4Zjc4MDU3MzU1MGI2NmU2ZmU1MTEwYWI5YWU5NTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e51b61209a24451fba530459da740d94",
+      "statement": "粘贴的文件先用 FileReader 转 base64 并去掉 data URL 前缀，再与挑选的文件走同一条 attachmentRead 路径；appendLoadedAttachments 按主进程写入的 content.source.path 去重，避免重复添加同一文件。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/services/attachments.ts#L22-L51",
+          "version": "repo-lines-v1:sha256:5904b7d9785476a6580248907b735aba67a037ee1664f18288cf89b1c8cedf14:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhNzQxMDhjZDdlYzJhYjA2ZTY2ZWVmZTlhZWRkMTJkZDkwZDVkZTBjN2UyN2NkNzI1ODY4ODRhODUyMmEyMzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNlOWQwZGE0MWQwYTNiNGU0M2RkZjhmYjgwZmI5NzJmYjZkMTk3OTdjN2JkNWY4NTE2NWZjMjViOGFjMGYxMDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcxMmQ3ZmQzNmRkNDhlZGUyMTY5ZjU0NDQ0ZWZlMmI0NmNhYmFkNWU4OTcxNWZhZDExNWU5YThmNmY5MGFmNGMifQ"
+        },
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/services/attachments.ts#L54-L64",
+          "version": "repo-lines-v1:sha256:dee58a4965ec7ae07e8d2473dd976817eb3289263d7d6e22cd3e636e7aad7a4b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM5MTQ5OTg1MTU3ODQ4YjY3NGUzZmI3ZTc3NzQxOTAxYjNiZjM3NjVmYWIyZWFiOTkzMTQxZDlkMzQ0YmNlMjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU1YTU1MjliZDY0NmJmOTBjZmI2ZmY4OWRmODY4ODk2YmEyNWZkNjkzMGY3MmNlNjNkZjA0OWNiN2RkN2VhNTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMxOThiZGQyOTY1YzM1Y2VjYTBjYzNlNWEyY2M2YzVjM2U4NDVmZjNmYzVmNjY3ZWI2MmY3ZGUwMGFmZDNjMWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f13d1393f23a4f61ac9ef3f825b918bd",
+      "statement": "attachmentFromPart 把历史消息的 content part 还原成 composer 附件，只接受 PNG/JPEG/GIF/WebP 图片与 PDF 或纯文本文档；选择与粘贴的附件失败时分别弹出不同 toast。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/index.tsx#L238-L264",
+          "version": "repo-lines-v1:sha256:fb59b1ae62264cb4db59ad90d2789821563589b363d5d12af69994135137b086:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwNjMzNmNhYjgwZDk5ZDZjNGJkMGRmNDE2ZGVkMDg3NTEzMmIzYjEyMDVlODQyOWNkNjVmMzcyZTY4NGQ1YmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjljNzlmNjZkZTFhMGY2NmIwZWU2MzVhNDc5OTI2MTJhMzZkMjA2YWEyMzcxODY0M2E4ZTFjMDQxYzM5YTNkZTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJhNTcxMTQxNjdlYjM4NDIwMWY5ZmNmNzRlOWVhNWY0YjI5NGJlMzI1M2VjNGJhOTA2OWM1OTMxNDk4NGVmYmYifQ"
+        },
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/services/attachments.ts#L66-L109",
+          "version": "repo-lines-v1:sha256:2eff7b49333c926e2bee23bf62ba4d0c8707986719b8d6699483ed74f4631d8b:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ3NDU0NzMzZjllMjQwZTA4YzRhODU1MzkzZTVhMjI0Nzc2NjZhOWNiY2QwNTk1N2FkNTVlMjAxNmU2NzliNzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE5ZGQ5MWZhNjJjOWEwZDg1ZjRiMThiMTNjMWRjMTZmNTY5ZTUxN2YyOGM4MDQ1NmZhMzAyZGQ3NTYzYzUyNjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e071b12f63a6484f86aa79bb975450dc",
+      "statement": "buildContextRows 丢掉 free space、autocompact buffer 与零 token 项，按 CATEGORY_STYLES 顺序匹配，System prompt 与 MCP 必须先于通用 tool 匹配器，同类原始分类合并为一行且 token 求和。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/context-usage-rows.ts#L132-L168",
+          "version": "repo-lines-v1:sha256:463a7859ca40ef9ed08a3217da67f1f0b98620092524ab0612d04d6e94aa91dc:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdiZmUzOTM0ZjQwOTgxYTFhYzBlY2NmOWQ4OWRkMDY4YmVkMmQzZGQwOGYyMDQwYTFmYzFiYzQwNGE5NzJmYWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVlZThlMmYwZjA5ZDViNjVhMmZhMGIwZjA1ZDQ4YTkzN2NiZTgyMTZlZGFkYTdmMDJjNDhjYTUzZmYzY2Y3ZGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/context-usage-rows.ts#L39-L97",
+          "version": "repo-lines-v1:sha256:6ef1df05d56977fcb26d672181fd0f0d4b7104d709e82760d7061ab1818bf09f:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc5ODg4MTIwOTEzZmFlN2Y5ZmQyMmE1ZjNiZGFlNDEyMmI4ZjVmMTRiZWFkOTFjYmNhMzk3OTU5ODE1MWI1N2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5NDE2ZTA5Zjc4YmEzMTZjMDMyNTY4MjEzYjg1NWVlNzU2ZTQxNTY1ZDkxOGYwOTUxOWM4MWZkNjIwZjQwNjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMyOTE1ZWE2YzA1ZmQ1MTAyZWQzMGQ2YTVlODRmMzg4MzllYTE0NDlhNGMwMzc0MzdhYzNkYzlhNTQxNTkxYWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc0OTgxOTI1MjVjYjdlNWI4MmQxZmQyNzBiM2JiZmM4NjNjMTUzZjYzNzVmMzc1YTI4OWE2NDc0YjVkOTQzYzgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ac10a15b2e464bcda58c3a02b27c3980",
+      "statement": "formatTokenCount 对小于 1K 的 token 显示原值、否则显示一位小数的 K；ContextUsagePopover 悬停 150ms 打开并在打开时触发按需采样，底部展示平均缓存命中率，无数据时显示破折号。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/context-usage-popover.tsx#L52-L101",
+          "version": "repo-lines-v1:sha256:1b009bf92d40bd67a130fee05ccd87c6f75c57b7b4fbea06b824a2118b419c20:eyJzZWxlY3RlZExpbmVDb3VudCI6NTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxMDBjZTIzYzg0MzFlMDMxMTQyNDQ3YjZjYTQwMjZlOTY5MWUxZDQxNmY5ZGRjNWQwOTRlMjRjNGQ5YWQxNDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBlMDA2Mzk5NzZmYTc2MzFhNWRiZDI3ZTNlNGNjMjI3YmI0YzM3MWM3NTVlNjVlNzlkNDlkZDMwMGVkOGY0M2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRjNzk3M2VmMzYyZWQ2YzA5NjM0NGZlOWJjODQyY2M5MWJjYWRkZmExN2I0YzQ5M2U1MjY1YzMxNjA3M2UyM2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjljYmIxNzE4ZTBlZWEwN2E1ZjE1NjBlNWNmZWFjMDdhMmNjYmQ3ODRlYTczMmNmNGEyNTMxOGU2NThmZTJkZDYifQ"
+        },
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/context-usage-rows.ts#L118-L122",
+          "version": "repo-lines-v1:sha256:3515e48ef351e9d440616336bb80db7093ca23056d4a8ae2d491348c0bb9219c:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGJmMmE1OGYyNjRmMmYwY2M0YmIyNTgyYWM3N2JjODI4MDQzMTE1MmZlNWFmZTRlOTJmMDk4NTE1MGViN2NlNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDZhMzljOGIwMWMyZDVmYTkxNTIzNjNiZDJmZmIxN2U4OWQzZGQ5YTdhMDE1Mzk3NmY4Zjg3OGIyZjczZTc0YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjAwMTY2NGYwMWQ1YmUwODQ3MDExMWUxZDAwMTBkYTJiMjk1ZGM0NTM2MDVhNDk4MDZmZWIxOWQ0ZGJlNDVkZCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_3e7810ad915e46eb98b3499033f3bde5",
+      "statement": "handleSubmit 在流式中让 /context 立即打开上下文面板、其余把草稿排队，空闲时识别直接斜杠命令并清空输入，否则正常提交；恢复按钮只在 composer 为空时替代发送按钮。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/index.tsx#L266-L294",
+          "version": "repo-lines-v1:sha256:3bc807183a5cb258557e8a4aa1dadf81fdc8c78ceb7c8048fcd7ffb5555dc77c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5ZWE3NWM1ZTU3MmIzM2JhNjcxNTc5YzJjODRiZWJkN2E4ZGVlYzAzYmUzNTVkY2QwNWQxMmZhMzk1MDA0MTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY3NWVhOTMzOTMwZDA1YTM1OGYzODk5M2ZlNmFmNmE2ZjJhZDRhM2Q1MDgyMWJiNWM5ODQxZGZmZmE4Mzk4NTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZjM2IwZmY4MjkyYzUzNjJhMDNmY2I5NTU5MmFhMTM5YjQ5YTM5MWEwODg2MjUyZTY3YmVlNWM0YTk3MjMzMjUifQ"
+        },
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/index.tsx#L312-L316",
+          "version": "repo-lines-v1:sha256:ce324e1be3f6f59fb460150aed0d4353d6fda9a96c16b6f0af8c972a42d082c9:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTk2ZjMwYjQzZTg2Yzc1YTA5NTA4MDNkMzJkOTA2MTQ4M2YwYWExMWIxMDMyODg1MDlkM2RlYjdkZmMyYzhjOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjg5N2Q4OThhYjEyMTkxODBjMzg1YzA2MmM0M2ZhMGExMWE2MmMxYjgzYzFhYjI1NzBkYjAyMzA2MTFlMTI0OCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMGRjZjNlMDRhOTFiNTBiMTg0OTNiNGQ0MTA4ZTkzMmJiYWFhMTBjNGE3YzI1ZTk0NWU2Mzc5NjUxNTk0MDEzYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzY0NzNkYjE5OWE5ZmNmYTEzZDc0MzdlZjliM2E4NGNhNjY2YzU5MGY5MTM0ZjRiNDE2MDRmZWE5ZmJjNmU4NiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d03705ef0f3045f19809fd6a379b4400",
+      "statement": "usePromptHistory 实现终端式历史召回，从空 composer 开始、翻过最新一条时恢复进入前保存的草稿，任何非导航造成的输入变化结束导航；AddMenu 的触发类菜单项关闭后把焦点还给编辑器，仅 Escape 关闭时保留触发器焦点。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/add-menu.tsx#L82-L103",
+          "version": "repo-lines-v1:sha256:02f587d76dc1427f665550b3cd46cc0c3f6641e1b7ed66bc792252fe70ea700b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ5NzA1ODMwMjFhZDM2NWI0MWIwNTg2MTcyYzE3MDRjNTJlNWIxNmEwOTBjNzQ5ZDhiYTRkZTg4NTUwMzFjNzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY5MDZjODEyZWRhMDE3ZWUwMzcwNmNmZjQ0N2NmMjg2YmYzMTlkOGMzYTE4ZTBlNzhlNzI4MmFjNjY3Mzk4MTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRjMzg0MjY4YjY2YTM0MmZiYzZjMzA0ZjM2NjE1Mjk3NGQ3ZTFlMTdiZDNhYmQ1ZTA0YjM3YWY1NTc0ZDFkMmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI0MGFiODI4YjY4MzRjZGZjMjhlZTIxYTUzMTNiMWEwYjdhZjkwODU0ZTE0ODNiOGMzOWM2MzZlZTgxNzA2NTAifQ"
+        },
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/use-prompt-history.ts#L12-L69",
+          "version": "repo-lines-v1:sha256:db4afce8915daa2675ee16afdee4b30f62bedc5deae57ebf6616cb547522b733:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2MjY3OTM1ZmM2MzM0NjVkODQ4YjQwYTRlZDY5NjdlN2I3YTMyM2Y4MWNkNTNjMTEwYWUyMTAyOTY4N2FhMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE4MjQyYzA1YTVmYTNmZTM5YWI3NDMwYzIxZTdjYzIyNGMzOGE5MzBhOWE0NmM2MGNkMGZjNDZjY2FmOTJkMWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5f475303fee44e89a53db1d79dfb5f20",
+      "statement": "模型菜单每次打开都刷新一次 provider 配额，共享 store 合并在途请求并保留旧结果直到新结果到达；三个 picker 命令经 useCommandHandler 绑定到模型、权限与文件菜单。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/index.tsx#L317-L330",
+          "version": "repo-lines-v1:sha256:bb2384b0a19a81bff2fc4ecf33183ee762db308a7ea0de27a53513301f1a5029:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1MmRiMDNmZjIwODBkNWU2ZjUxMzgwYmUzZDQyODczMmQ5YzJhNGM4NGNkYjM2M2UwZjllNWQxNjcyYzJmYjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY5MDZjODEyZWRhMDE3ZWUwMzcwNmNmZjQ0N2NmMjg2YmYzMTlkOGMzYTE4ZTBlNzhlNzI4MmFjNjY3Mzk4MTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI5YjdkOTQyODc3YmRkYzFhMGZjNTk1MWZkYmU4NDg2YmI0MzZkOWRhZGE2NDE4NDkxY2QyYWM2OTBlMGI5YmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY0OGVlY2I4NTE1Zjg0MDk4YTg5MzgyNWIwODZkZDgyMWZmZjRlMGZhOTAxNTU1YzE5MGY2NDg3NGY0YmUxMjMifQ"
+        },
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/prompt/index.tsx#L77-L79",
+          "version": "repo-lines-v1:sha256:d225bb3b5df315722ae4bfed5bbd280ec91da95cff14cc0cdbd949bce332572e:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjRmNzYzYjNmODlhOTI4Nzk1YjkzODA3NmFjZWM0ZDkwMjk3ZmRiMjhiM2FlMWUzMWMzYjVkN2EwZjY0YTYwMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGYyNTVhMzI5ZGFhNDUzNTI4YzJkNmFiYTk3NzcxODQwODk1MzUxYzhjNDdiNGI5NmQwYmI4NDExNmI4MDZlOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjA4ODZhMjFkM2FhNDYzN2Y2MWNjMWJlOTg2Y2FmNGZkYzA4N2QxZjM0ZDdlZmQxMzBjYTk0YjIyNzYwZDM3MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjNjNmJmYjdiMGZjNGZjNDBmYjM2ODQ5MmY1Yzk3YzRlYTZiM2UyMWU4YzZhMGYwNTE2ZDliNzBhMzhkYmYyZCJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}

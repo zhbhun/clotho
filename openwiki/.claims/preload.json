@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:3d41a43a91c886549a60402ae1e7f21fd49853dbbd3b7ed7ae293ae855fad52a",
+  "claims": [
+    {
+      "id": "claim_c7199d9f9c0c4f9b9ee30b8409d9b9c2",
+      "statement": "clotho:request: 与 clotho:message: 两个通道前缀在 preload、bootstrap 与 app-windows 三处各自重复定义，而非放在共享模块中。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/app-windows.ts#L39-L39",
+          "version": "repo-lines-v1:sha256:55d6f476ec94a40a5ae743ac4b71246178553c489f4ac1516119fd2335b5ac94:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTVkNmY0NzZlYzk0YTQwYTVhZTc0M2FjNGI3MTI0NjE3ODU1M2M0ODlmNGFjMTUxNjExOWZkMjMzNWI1YWM5NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTVkNmY0NzZlYzk0YTQwYTVhZTc0M2FjNGI3MTI0NjE3ODU1M2M0ODlmNGFjMTUxNjExOWZkMjMzNWI1YWM5NCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjMxMjg0ODEzODJlODlmZDQ0MjgyYTBmMWU5YjZhYWYxNGI2YzI5YjE1NzY1YzMxM2ExNjU5MTI5YzJmMmI0ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDQwZjFhYzliN2VjMTg0YzczZDIwODM2NDU1NDc2MWYwZDk0NjRiZThhNjA0YzNlZTIzZWU4OTQ5ZmExM2FiMCJ9"
+        },
+        {
+          "resource": "repo://src/main/bootstrap.ts#L44-L45",
+          "version": "repo-lines-v1:sha256:9c3094e8864547393c7ab73f380e8407dc8b175d2cbc9dbdd8da6bc6f36f45e2:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzI4N2JjZGI2Mzg4NmUzZDg1NmVkMzI5MmEzZTI0NzY4NjM0YjYxZTBiNjg0MGIyNjRhMWVjZTkyM2EyNDgzZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTVkNmY0NzZlYzk0YTQwYTVhZTc0M2FjNGI3MTI0NjE3ODU1M2M0ODlmNGFjMTUxNjExOWZkMjMzNWI1YWM5NCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDUxZjc4ZjMxNDNmMmI5YWQxZGYzZjc5OTU4NTgxMDAzYmNkYTI2MTllMmFiM2YwZDY3OTk3NzkwODc2Yzk5OSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWU3NTMwMjRiZGE4NTYxNjA4NGQ0ZjYyMTdhYmY2MDA3OTQ0OGZkYmRjNzk3NzNkOGYxY2FiMzM2YjFkZjZlYiJ9"
+        },
+        {
+          "resource": "repo://src/preload/index.ts#L8-L9",
+          "version": "repo-lines-v1:sha256:9c3094e8864547393c7ab73f380e8407dc8b175d2cbc9dbdd8da6bc6f36f45e2:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzI4N2JjZGI2Mzg4NmUzZDg1NmVkMzI5MmEzZTI0NzY4NjM0YjYxZTBiNjg0MGIyNjRhMWVjZTkyM2EyNDgzZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTVkNmY0NzZlYzk0YTQwYTVhZTc0M2FjNGI3MTI0NjE3ODU1M2M0ODlmNGFjMTUxNjExOWZkMjMzNWI1YWM5NCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNmMwNWVjNmVlZTlkOGM4ZjZhNDU3Mzc5NzAwNjYwMmVmMTk4YmQ1YTgxY2YwYTMyMGFkNGY3MGQyNTQxOTY4NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjVlNjE0NmY4MTBmZGFiYzYzZTYxZDcxYmYxZTdkY2M4YzM0NzQyMjVmNWRlNWQ0MTdjZDBkNWQ3ZDI0ZjBmYyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_8f3ce32cfaff402b988bdcadd54fbc3d",
+      "statement": "preload 暴露的 window.clotho 只有 invoke、send 与 onPushMessage 三个无类型方法，onPushMessage 返回退订函数而非要求调用方保管 listener 引用。",
+      "evidence": [
+        {
+          "resource": "repo://src/preload/index.ts#L27-L41",
+          "version": "repo-lines-v1:sha256:62fea7ba463a07b855b862378d884427e69be5a8e836fe93860a4098eb407cd2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4ODJhMTJlOWI5MWRkNzY0ZmYzMWNjNmY1NTNkZjFiZWI3YWRkYWI5MzdiMTFmNDNlMDFiMzllOTZkMzQwYjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1ODBiNzY1MThkYWU5NzlmYWViZDAyMzY3YTI5MjkyYTUwZDk3NjA5MjI1MWEzOGE2Y2UzMDg4MGJhNDI4MjUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a32807634e2e49b5aaf861f23e36348f",
+      "statement": "invoke 走 ipcRenderer.invoke 拼上请求前缀因而可返回结果，send 与 onPushMessage 走 ipcRenderer.send/on 拼上消息前缀，都是单向通道。",
+      "evidence": [
+        {
+          "resource": "repo://src/preload/index.ts#L29-L38",
+          "version": "repo-lines-v1:sha256:448640fa5bc5c8409fba3bc045f5e61acbad9893adbf9687fb9b4e6bbc94b586:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRhZjhhMDQ0NzI3N2NmZDc5M2NjZTAzYmIwOGM0MGJjYzY4NTNmZDdhOTA0MTcyNGJlYmY3OWMyNzQzMGFkMDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkZThkYzJhOGQ2ZDU5ZjY1YTc0Mjg2NWRjZWE5YWFlNTliMmMyMjNhYjZhZjJkNzdmZWNiNTJhYmY3YTY3ZGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRiMDJhZmZhNjZkNjAzM2ZmMDZlMzE3NjNlZDYxYjI3YTY5MmIzMWU5MmFmMzgyNjE4NDMyNzUyOGMwNTVmMWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc1MGRjMTA2OTQwZTNjMTBlOTI1YmMxMzJkYzg5OTYwMGM5MTE4NTQzNjgyMjIxYTE0YWNlZDA3YTAzOGE1ZTAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0ee4fda86b9542d49c88e3bab46618ea",
+      "statement": "bootstrap 把 requestHandlers 对象的每个方法注册为 ipcMain.handle，另有一条 ipcMain.on 专收 appLogBatch 渲染层日志批次。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L511-L518",
+          "version": "repo-lines-v1:sha256:d10bc12541153d907e0b396dc77df643e5b48d8538515a294688659b08e6fdb4:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTcxZmQwNDA5MDcyZDliMDA0MDZjY2RkYTY1ODZmZDNlYmFlNTdjYTJkODk5MDkyMzY1ZDFjNGVlZThiMmIxZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjQ3NWU5NGE5MDRhYzQ5YjMxNTRkNDY3MmE2NmU4NjI5Yjg2ZGFjNzRlM2UyOTM3YmU2OTI3YWUzZGExMWM1MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDlmNzVjYmY4NmNkYmIwZWMwMGVhYjJhZjEzOGY2NGEzNDU2NjhlMDFiNmU5NGJmYTRjODI0ZjBhZWZmMmQzNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjAxOWNkMGJmOWUyZTIwYTZmMjVkNTUxYWM5MTJiYzU4ZTFhMjA3Yjc4MjU0ODI1Mzc3OTJhODFhZjMxZGFjZiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_fe1aaf5d85814fa8b7cc48168aed57a3",
+      "statement": "preload 在执行 exposeInMainWorld 之前先从 process.argv 读取 --clotho-appearance 参数并执行启动主题脚本，该参数由主进程创建窗口时经 additionalArguments 传入。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/window-options.ts#L47-L52",
+          "version": "repo-lines-v1:sha256:426020ba53b6d14e5de1486668df9e72fd83bcc230bd13512c3681bc77983268:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmI1MmViNjFhYmQyZTk1Y2E2NGY5YjY2NDRkYWE5Y2NlMWU4OWUzODU1NjU5MTk0YzE5Y2JhNjM5NGQ2ZTQ5ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWYwY2RiOTcyYTdiZmI3ZWQyNDZmOWZmNjcyMzg1ZTU1ZjQ5NjhmYzExMDQzZGM1YjY4NGQ1MWRmYTMxZGJjYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2VmMjRlYjVkNWE1NWY4NmRmZGVkNWQwYmY5NTI5YWFlNWRhZTMyNjNhNzZlOGJhNjFkYmEwNDEzN2YwMDc0ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZWRiYjhmNzQ5MzdiMGE4ZTc5ZTcyMzI5MGMwNjI2OTlkNjM5ZmRlNDgwMzMzNDIyZjNlNmE2MDhhZGY2NTQ0YyJ9"
+        },
+        {
+          "resource": "repo://src/preload/index.ts#L11-L26",
+          "version": "repo-lines-v1:sha256:5674aa4310ef8e599cc321c390dd398ef36fceacbf5520bc1f5534ef5396afec:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNmM2I3MDQzMWU5MDhmZDk1OTk5YjZlNmE4Yjc3ZmVkM2ZkZmNlY2UwNmY3NTgwMTA4YWE3MjhmZmVmZDFkZjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQyOTkxMjRlOWZlNWNkOGExNTA3Y2U1MzlhMmNjNThhNDk1NTc1N2U3MmYwZTllZmNkODRlYjQxOWY5ZjBkZDMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a7665482195a4099b4ed2cfce06c747d",
+      "statement": "外观参数用 base64url 编码以穿过 Chromium 命令行解析，解码后交给 createStartupThemePreload 生成把 theme 为 system 解析成 dark/light 并给根元素打 class 的脚本。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/startup-theme.ts#L22-L51",
+          "version": "repo-lines-v1:sha256:2ad1b1057b81ccccec930a38eaf8f43fb9f44fa3f684ed5c2480db46b830a2ee:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJjMzE5NGY4OWU3ZjhiYTM4YjhjNzgxMzA4NTRiNjQ4MzAwYjJkZDA3NGY5NGQ3NzY1ZGM0Njk1YTUwNWMzYjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY2YzNjNTJkN2JkNzEyNjdkMDJhMzMzZjA2Y2RkODNmNTgxMWFmNjc3ODIwZjRkOWMzOTU5NGJhODcyMWYwNDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://src/main/window-options.ts#L69-L79",
+          "version": "repo-lines-v1:sha256:b421e77c37c54c4c1ed8241f642cc8556a1afb7205cd788c4ba2cfb609646bee:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0MWNjODJiYjQxMTMxOGU3ZDc5OWQ4ZmVkMjg3YzNkMGU0NmQ0NWM3ZjQ4Njg3MmE5ZGI1NzJjYTZkZjhhZjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA0ZWU0OGMwZjNlMzI4OTMwZDk1ZjI0OGZhMTUzOTEwMzc3ZjNiZWVhYzM0YmZmNWM1ZjY1NzQ3YTE3NzRkMWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNjYjI2Y2IwM2RmMDU0OTYyZjU3YTdjNzU5MDNlZjgxMTk2YWQ1ZDhkYzBmODk4MGMzZTMyODU1ZTdmYmJlMjcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8d308c8d621f467fba1e8c44958118b1",
+      "statement": "启动主题脚本只对非 clotho preset 写内联颜色变量，clotho preset 的颜色由样式表从锚点推导以免冻结升级前的旧调色板；窗口以 show false 创建、ready-to-show 后才显示，因此主题必须在首帧前应用。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/startup-theme.ts#L33-L41",
+          "version": "repo-lines-v1:sha256:5e2652218b318f725638d10dabe3da7c7234497d04f496d69dc8dc52faf332f5:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYmM5MjBlMjZlZDY0ODNjNzE2MGM5YTUzNzAxODUzY2RmMWQ1NDAxOWEzMTg0MmE5ZmRhYjA1OTE5YjYxYWMwMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjUyYTkzZmMyMDcyNjNjOGQ3NWMwYzhiZjkzMTBkMTNmMzI4OTJmOWM5YzIxNTE2ZDJmODM3MTJjNTJhMDM0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjJjMWE3ODc2MDYwOWFkNmMxMGUyNTU1YzJjN2FiZWQ3MmZjNTdhY2EyYmIzN2IwM2ZhZDRkMjhiMzFhNjJjNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODVkYTMxNjg0ODEwYTQwMzU5YWZhNzdlZWY1NDM1MzRhMjg3ZjAwYWExYWRlMDQwNmJmMmJkZTY4NTFmM2FiOCJ9"
+        },
+        {
+          "resource": "repo://src/main/window-options.ts#L81-L86",
+          "version": "repo-lines-v1:sha256:7f10b30fe92d9d707aa8487e3df6aea8b3bd2d8c223db54f157da54718ee95b2:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTY1NTI1MTcyYzNhYTc3MjRkODZhZDc0MGFiN2MxY2VjMWJiNzdlMTQ5ZDkyNTU2M2VjMmI0MDI2ZTQzYjE0MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmI1ODBlOTY0ZjgzYTQ3M2Y0M2Q0NDM4NDYyOTQ5ZDY4YjU2MDBmZGE3ODdmMTYzNzQ1ZDAwZGU4OWNiZjM2YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzU0MTRlYTUwY2E0ODMxMTNjMjEyZDc2NzhiMDFhNmQ3MTg0ZjU1YzE0ODJlMGVjMmJkYjA3MzI2ZWRhMDU0ZCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_b700a5fff6c140d7b31ea87ac6e7d138",
+      "statement": "preload 从 src/main 引入 createStartupThemePreload 与 decodeStartupAppearanceArgument，使主题生成与参数编解码只有一份实现且被测试直接覆盖。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/startup-theme.ts#L1-L3",
+          "version": "repo-lines-v1:sha256:8b296f070e3a476acb88c943daee7440d3ef810a2378c24cccab2155055089b9:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWMwZWQ5OWRkNDQ5N2UxMGRhMGEyNmYwMGQ0YzJhZGRlZmFkOTc1YjM5NmI0YTFkMDBjMTIyMzAwODkxNWZkMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDBiYjNhYzFlYjkyNDExOWViYTMzOTk4ZjUzZjQwY2MwMmJiZGQ3ZmZhYjhmZWExZmUwODFjYWM5M2ExMjVkMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNmUzNzlhYzhmOTQxMTUxMmNlYTEzY2E0ZGM2YmMxNmYzNmI3MTIyZjBjMzJhYjEzZTk0Yjk0NmI5ZGZjNjJjYyJ9"
+        },
+        {
+          "resource": "repo://src/preload/index.ts#L1-L6",
+          "version": "repo-lines-v1:sha256:b66292e3362957f9ed9c8b27901c76901060502c467e14368c039277d7c8c9dc:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDcxM2Y2OTRhMWJlNTA0MThjYmNhYmQ0MjQyNzdmMzgzOTM5MjU4MGFkNWY3Y2NhOTRlYTdkZGU2NzViZjE5OCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTgxZTViYjJiNjJjNTBmNDBhMDNiNjFkMGIzM2Y2NWZlZDY2N2M4Nzg3MmQyMDEwZjcwMDlmMzg5ZTgxOWI3OCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2U1NjNiZjE5OWM4ODYyNGFlM2VkM2NmZTBiODljZmQ1ZjI2MjQ5MjZhOGMwZjQ4OTM4YTAzYmM0NWI0NjExZCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_9201e6a521a54d46b6aa2a941d99887a",
+      "statement": "preload 的 invoke 对应主进程 wrapRequestHandlers 包装的 ipcMain.handle，send 的 appLogBatch 对应 recordWebviewLogBatch，其余推送由主进程 webContents.send 主动发出。",
+      "evidence": [
+        {
+          "resource": "repo://src/main/bootstrap.ts#L298-L509",
+          "version": "repo-lines-v1:sha256:e81d07be242b2fdb6c1238925a33e484fb4bfcf95c443d68b77e88d2e1c9aa19:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEyLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIxM2NmYWI2OWY5OTYxZTgzNjQ4N2YzODQ1MjI4ZDY2M2ZiNjQ4OGNmM2E5NWMwNDExYjRlZjA1YTdkMTdiNTI1IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIzMGMxZjE4OGYxNDJlZDdhODI0NjgwYjIwNzE3MmM1NTE5YmM2MTRhNDhmZGE3Y2YxNjdlZGI4ZGRmNzk5NTZjIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIwZTc5OTBlZDU3YTI3ZDNiMzI2ZGZlZDc0YjdmMDYzYzc4MGM5OTMxYmZlOTM2NjZmZmFkOGZiNGY0NDBkOGU0IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIwZjQxMjBmZDA5YWJhMzVjMTFhM2EwNjQxZWRkZGIzMmZkNjI2MjdiOTQ3MTkzYjIxMjMwODZlODBkZTM0MzI2In0"
+        },
+        {
+          "resource": "repo://src/preload/index.ts#L27-L33",
+          "version": "repo-lines-v1:sha256:d4d9e49f0eba816a744bd8a25536d32de4dcc12eccb1e89ce0077ef2982440dc:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTg4MmExMmU5YjkxZGQ3NjRmZjMxY2M2ZjU1M2RmMWJlYjdhZGRhYjkzN2IxMWY0M2UwMWIzOWU5NmQzNDBiNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ1Y2QyZmI0ZjNkZjg4NDUxNTI1NWIzOTUyM2YyZjhiNTQ3MmJlZWE5ZjU2NmZmY2EyMDRkYjgwMjU2MTA0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmI1ODBlOTY0ZjgzYTQ3M2Y0M2Q0NDM4NDYyOTQ5ZDY4YjU2MDBmZGE3ODdmMTYzNzQ1ZDAwZGU4OWNiZjM2YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODM5ZjMwZDJmY2VhY2RlYjZmMDY5NGI0NjkyY2I2OTk2YmExNDcxYjAzNmI0OTZjNDQ4MTAwMjYxOWFhYzRiYiJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}

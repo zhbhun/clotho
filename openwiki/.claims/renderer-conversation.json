@@ -1,0 +1,520 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:f5c928fa434ff233b358e20b8ffa4b774d8350e0da72cd615e3d7b516058be60",
+  "claims": [
+    {
+      "id": "claim_6099630ab0eb4a7c9bf2247d7c63ee94",
+      "statement": "`ClaudeMessage` 是渲染层唯一的消息形状，带 id、uuid、parentUuid、role、content、blocks 以及 isMeta、isInterruption、queryError、apiRetry、compaction、taskNotification、parentToolUseId、attachments 等语义标记；`isUserPromptMessage` 以 user 角色、非 meta、非侧链、无 parentToolUseId 判定用户提示词。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/services/message.ts#L64-L108",
+          "version": "repo-lines-v1:sha256:6eaf1900a7347cbeab48970b1e59916fbe325d308a049d6ab39a6f9fca3823a6:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjViMWFmMGQ3ZmRmMjI4NzUwNjc5ZjQwMTFjMmYxNDQ1MGU0NDEwZWM2MDkzYzBiODA2NzBlZTU4MDBkYjIyZDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVlZGFjOTk1NWM0NmQwYzkyZDQ4M2ExZjE5NjFlNTRjNzk5YTQ3MjQ0MDZkNjUxZjIyYzM2MDEyNjEyMGE5ZjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUxMmZhMWU5ODllZjQ4ZGRkZDY3YjMzN2YxMTU2MjYxY2E2ZjZhNjlhNDZhOTM5ZmM0NGQ3MjkzYmYwODdmZjkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_606f51743c514914b2e3bbea4e445040",
+      "statement": "`parseClaudeLine` 在 JSON.parse 失败时不丢弃数据，而是包成一条 rawType 为 'stderr' 的 system 消息，使 CLI 混写进 stdout 的非 JSON 输出仍可显示。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/services/message.ts#L110-L122",
+          "version": "repo-lines-v1:sha256:b7a9f82ceb9c3ce9e1ed5fb7be45c6faf0711152b7419efd357256eb2a59d977:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNkZWYwZGRhNWI1NmRmMGIzOWFmM2FjODEyMjY3ZmZjNTE0OTg2MWQzMjdlYjI4ZGJkZjM2NmU5MTQ5NjNmZTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM0MGM1ZDNkYzNhNzczMDc5M2M4OTI3OTQ4YjU1OTY2NDIwN2Y3OWJhODc3NzNjMjE1MDA0NDMxOTYyZmQ0ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ1MTc2ZjgwZmI0YjAyZTlhNzFmZjZiNDdiNmZiMTQ5NmY0Njk2ZGRiNzNjMGRjNTEzZDkwNTQ2ZmYzNjc4NDYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e27202e496ef47359266970032ef64d6",
+      "statement": "`parseApiRetry` 同时识别 CLI 线上的 system/api_retry（蛇形 retry_delay_ms）与转录中的 system/api_error 加 source 'request_retry'（驼峰 retryDelayMs）两种形状；`parseCompaction` 认 compact_boundary 与 status 两种触发；`parseAssistantModel` 取模型名但排除 `<synthetic>` 空帧。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/services/message.ts#L128-L215",
+          "version": "repo-lines-v1:sha256:e7c5d705abf5a96b19c284344a4563bd98642ee6759a801e833f9459969f34c8:eyJzZWxlY3RlZExpbmVDb3VudCI6ODgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVhZDNmMGNkYTA5YjFhZjlmNWZmYmRhMzEwOWMxNjllZjJlM2FjYTFlYjkzZjUzOWU0NDdiYTJkZTE5OWQzNDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM0NjYyNTIyMWNmOWNhY2NmMWI4YTRjMDlhNzMwMmZkNmE2MTIzYzg4ZGIzZWM1YjU1ODNlYzUzNzVjMWZmNTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYwM2FhNTNkZmUyNjQ3YzQzNDY3ZDE0N2UwZDYyNjA3Mzc4NzI5NTBhNWZiMGE4MmQ4M2MxNzU1NDg1NDlmOTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_648b1a4100b242a393160c53b755606c",
+      "statement": "`shouldSkipEntry` 集中列出不渲染的条目：无响应的 synthetic 帧、compact 摘要、本地命令输出回显、模型切换回执、agent 消息、输出上限提示、图片注释，以及 attachment / file-history-snapshot / last-prompt / queue-operation / ai-title 结构类型；其余由 `parseEntry` 决定 role 与 blocks。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/services/message.ts#L402-L433",
+          "version": "repo-lines-v1:sha256:a1e95c9e52ac02f81390b73e1af226360c852a40f6a512daee63a60c71fe0420:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1ZGFjZjg0NjlhODlkZmZjNzUwMTAwMzYxZTRjMTIwODRhMTZhMzI1MjQ3OWI4ZWEzZjljZjRiOGI3ZGE5NzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlMmNiODRkMDRmMDQwYzMzNjkyNjM4ZjY5OTVkMjM5ZjFkMjM3ODRjNmRlNDdjZDhjZGU2NzVlMzljNGI3ZGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM0MGM1ZDNkYzNhNzczMDc5M2M4OTI3OTQ4YjU1OTY2NDIwN2Y3OWJhODc3NzNjMjE1MDA0NDMxOTYyZmQ0ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIzY2IwN2Q5MzlmMWFjMDRlNTU2Njg2ZTA5OTQyYTZjMThlYTBiNTY2YjdiYTNmYmYxZjMyYjhjM2YzYWY5ZDAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_32684503cb5d4ff8b262bed3bc8cda2c",
+      "statement": "`StreamAssembler` 为每条流维护一个占位消息，键是 `parent:<toolUseId ?? 'root'>`：CLI 给每个 stream_event 盖自己的 uuid，故 uuid 不能作占位符的键，parentToolUseId 才是流的身份。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/services/message-stream.ts#L44-L53",
+          "version": "repo-lines-v1:sha256:cfbfc292bc8ba3932b5f0fc77f439d687a51be281498e4f43c9a7d27c056fe59:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVkMTllNjgxNDQ0NjRhZTFiMDg3MTg5ZGRiZjYzYzZmNjMxNDE4MGE1NDhmZDA3ODRkZmI0NDNhZTZmYmY5ZjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgzNGRlNjAxM2FmNTI5NGU5Mjg4YjQ5N2FmMmI0YTBmZjBlOTU0ZTg3YmVhYTg2NTBkZWE3YWZmNjQwNTVlNDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU3YTliOTExNWU4MmFmMTdiYjRlMzUzNzdhNWZmMmY4N2Q1NjM2NGNlNmUyYTExODVmNzY3M2M0YjQyYjUzNTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_cb4034aaf3834f4d8403ea516048f9fa",
+      "statement": "`finalizeStreamedBlocks` 只退役前缀匹配的块：逐块比对类型全中才切走并累加 offset；`mutateBlock` 用 `event.index - offset` 把 CLI 的全局下标换算成占位消息内的局部下标，解决占位块与已提交块的下标错位。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/services/message-stream.ts#L228-L266",
+          "version": "repo-lines-v1:sha256:052506a4afe7f906787a71e13ddba78fe743b06dec40a2ac83b86236d706635a:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRmMmEyZjk5NmYwOGU2ODBiZDI5MjEzNWE2ZmE0OTc4YmRhMjZlNjAyZDg0ZjMzY2IxZDU5NDc3NWQ0MzA0YjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJiMTg3ZjdhN2Q5MDA0NmZhMzgwMjBkMmU5MTJjMjc0YTZlN2JjNDBlYmY2YmNhNTQ3YjQ3ZjFjNjBhMmNhZTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk3ZDg2MzJlNTRlOTI5OGFiYjk1ODcyN2UyZDUxNDA4YWJhZjEzNjYwMzUzNzkxMDE0MGFiZjY1YjMwYWI2MTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM2NzFlOWQ3NjBmYTA5ZmI4YWYwNTcwMDJjMjRlYWNmOGYyYzkyYWMzZTYxNDdjODAxNzAwYzAxZTA3NjE0MTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3f0c35cfbd214fbf8cb095005fcdf677",
+      "statement": "`message_stop` 时占位消息已空就删除它，否则留下未提交的尾巴——被中断的轮次靠它显示到下一个消息重启流为止。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/services/message-stream.ts#L215-L226",
+          "version": "repo-lines-v1:sha256:dfcc1a10da42e034e211a4b1f71abc9b980e2c091615e29bc95022cfbecbdc5b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY2MWMxYzZiOGU2YjhlOTNmMzIxMWFhNzkxNzAzMGRhOGZlM2Y3MWJlM2EwYjM0M2RlY2EyOWQ4YTdiOWMxZDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZhMjU3NDZmMzljNzU0ODIxZTQ2YzFmOGJiNmFjNzFmNmJiMjEyMDMyZWU0OGUxMjMxZDUwMjI1MWRhZjljYmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA1NDhjZjZhY2I4NmViZGM3MWY1ZTQ1YmRiNWQwOTNjNjVjYjA4Nzc0ZjM3MDFhNzg1MDI3ZWRmZDc4ZDgwYmMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e7b756222d314d1494c13b8dc40da09e",
+      "statement": "`deadTurnIndexes` 找出死轮次：根提示词之后没有任何真实 assistant 回复、且以中断标记结尾的那一段；这些残骸要等下一次 rebuild 才从 JSONL 清除，加载时先隐藏。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/services/history-service.ts#L47-L70",
+          "version": "repo-lines-v1:sha256:289e828fd075cb2e22ce636a483ed5bdf2995c824c9f5ab659bf894dbc1e5aa0:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMwYTA0YTMxNjczNmFiODQ5OWY4MDUyODQzNTk5MjQ3ODRlOTI0MTZkZTViYWMxMzM4Y2FmZDdjNThiYzFhNDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1MGUyZTdiOTNlOTEyNmUxOGJjZWYzMGU5NTNjZWQyNGY4ZjJhODA5OTc3MGY5YjQ5YjFlMTljYzEwMGNiNzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU4MGFkZjA1MDBjM2MwODU4MWM1Y2JmMDllZWYwNzg0MWVjM2IzYTg1OWJjMzJmZjU1OTUzODg4ZTU3ZDZjMDQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f05cb49489d5473ea3f18da044323c74",
+      "statement": "`HistoryService` 记录最后一条主链 assistant 条目的 uuid 作为 lastAnchorAssistantUuid，用它判断持久化的上下文用量快照是否仍描述当前会话。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/services/history-service.ts#L146-L155",
+          "version": "repo-lines-v1:sha256:5a5c877f82db5f565b856a3ddd91e3666f45270297034a16f23b40588bd70c4c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNlZGRmODBiNmY5NmQ4Y2I0YWEzOTRkOGRkYWZkNGRlMjA5Njg5M2NmZGEzYzFkMTUzNjEwMjM0Yzc2ZjgzNGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhiZjM5YTg3MjM2NzBlYjBhMWFmYmExMzZhMTkwYTM3MjczNzZjMmJmZDAxMWYwZmVhMjEzNTc1NWI0ZjhkNjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNmMDEyYWRlMGMwMWQyMjE0ZDE3MDA0OWE4OTcxYTM4Y2Q1NTg2ZjI0N2U3ZjQ1MWY3NDJhZTg5NjcxZDZkZTMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d4558a3427284fecaf7e51022647618f",
+      "statement": "`ingestLine` 按序处理：system/init 落地 claudeSessionId、commands_changed 更新命令列表、recalled tail 期间吞帧、isMeta user 行跳过、待发送期间根 user 行推迟确认为 rootUserHistory、本地命令输出与 API 重试补接收时间戳，最后交给 StreamAssembler，其返回 false 才回落 parseClaudeLine。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/services/history-service.ts#L419-L464",
+          "version": "repo-lines-v1:sha256:9e3e6a885d79e8caeca2214376355c6dfa966f8a49910847adc8213017e922f0:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI2ZTFlNjZjMmU4M2QzNmRiZjg1NmEyZGQ3Nzc0MjhjNzJkZjQ3YzEzODVhMmJlZjI2ZTQyZjI3ODRhZDRlMWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEyYmNkMzA5OTgyZTJlNGM4ZGFhYjgzM2RhZTgwOTZjYTNhYzNhYTA3YzhkYmYwOTRjYmFmMzFmYTI5MDQ2ODYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3ZmZlNjlhMzVlMzc3ODMwZmI5NGFkNTg0YjM2MDQzZDRiOTVkZDIyMWE0MDU2YjJhMzllMzdiZGJiN2I1NDkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_71313fa378e94e4caf2251a49920b30d",
+      "statement": "流式通知按帧合帧：`schedulePublish` 用 requestAnimationFrame 把每个 delta 压成每帧一次 replaceMessages，避免逐 delta 通知在滚动/测量回写之间插入同步更新而耗尽 React 嵌套更新上限（Minified React error #185）；轮次结束时 `flushPendingPublish` 立即发出，不让终态晚一帧。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/services/history-service.ts#L157-L201",
+          "version": "repo-lines-v1:sha256:14961c69704c775a5969b26f227d2bfc8d7dc1feec5e37c06089d3e128490fdc:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRmMmEyZjk5NmYwOGU2ODBiZDI5MjEzNWE2ZmE0OTc4YmRhMjZlNjAyZDg0ZjMzY2IxZDU5NDc3NWQ0MzA0YjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk3ZDg2MzJlNTRlOTI5OGFiYjk1ODcyN2UyZDUxNDA4YWJhZjEzNjYwMzUzNzkxMDE0MGFiZjY1YjMwYWI2MTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRlOTlhN2QyNzgwZWU0Mjc3NTY4YWNkOGI3OTViZTNhODYxNmQyOTQyNWZlMzFiZDQzZTJhMjZmNmY4NGI5NjQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_04abf67785bf479f9f43917f732ae652",
+      "statement": "`applyRecalledInput` 处理发了又取消的提示词：确认该 user 消息之后没有别的根提示词也没有回复后截断到它之前、把原文还原进 composer，并 markRecalledTail 让后续 follower 重放到这条尾巴时继续吞帧。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/services/history-service.ts#L309-L355",
+          "version": "repo-lines-v1:sha256:9856a69ef089830d1d995affd94f861f5e0fb208d6c8aa2fca49f453a233dae7:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRmMmEyZjk5NmYwOGU2ODBiZDI5MjEzNWE2ZmE0OTc4YmRhMjZlNjAyZDg0ZjMzY2IxZDU5NDc3NWQ0MzA0YjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY1YTkwMjQyNTU4MzJlNzZkOWQ2OWEwNDk1NWVkYTNiODA4ODZhNDEzYjc2YmI4NWI3YWZiZTE0YmNhY2U2MTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgyOTUwOWVlZDVmODUwOThiZTg4ZDhhNzYzY2RlZWJhZDQ5N2RiZWFkMzhkYzJjZGIzZGQ3NzI3MjM2M2E1MjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_94ec196e5cd040288346b0002b3712ae",
+      "statement": "`TurnStreamService.elapsedOrigin` 决定计时起点：已确认的历史时间戳优先，退回乐观提示词的时间戳，因为 CLI 从不回显推给它的 user 行；`startElapsedTicker` 以 200ms 更新 elapsed。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/services/turn-stream.ts#L131-L160",
+          "version": "repo-lines-v1:sha256:6fa39fd6c80526dd08edd6cdd26a027effb22005d457fbc945e127b5551ddf54:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYzYzUwNTUwMTJjMTY5OWI1ZDJjZTQyZWVjNDc1MmI3NWNkOGU1OTRlNTQyMWZjMjM1YjVhMmIzZTlhNzg3YjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVhOTI5M2ZkODA1NGI2ZTQ3MjQ4MzczZjM5ZjRkZDc3ODAwMTA1ZWI3NTgzNDg2ODcyNTQyODVjZDEyODJiNzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjczMzYyYzU1NWE2ZWY0MGY5MWVjYzRiNTIxZjkwYTU4MzM2MWI4ZGUwZTQ2NTVlNGRiZjE4NTg1M2E1OGE1ZDQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_03db73cc19ff4d8fa986ae3ff36b3f3c",
+      "statement": "`carriesRealTurnContent` 判断一帧是否算真实输出（assistant 帧需有块且非 synthetic、result 需 success 且有内容、stream_event 需有实际 delta），用于在上一个轮次被中断的新发送里抑制历史重放。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/services/turn-stream.ts#L49-L77",
+          "version": "repo-lines-v1:sha256:35d86ef15c2db7a4f45ad6210444de5cf80652798506171f9509cb3fefebbd73:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM3YTRlMTg3MmFmZmI1Y2ZmMjA1MmMyY2Q4Yzg2YmU0NjZhZjk1OGE2YWY3ODRkYWZmNjk5ZDkxY2E0OThiY2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNlMmRkNGJjZmQ2OGFlM2JlYTM3MzE2YmQ2NDcyMzk1ZGJkNTNiMDI5ODNjMTMzNGUwYWI5NjFiM2EyM2NiOGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEzMjMwMjM5NzNlYTU4YzBlM2Y4NTQyNjJlZjU2MDUwZTRiOTRmN2YwZjFiNjdiN2NlNTM0ODRhMjMzMDBhMTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ba6ac15c832e429ba8ccc63af5bb282f",
+      "statement": "`armRetryStall` 给 API 重试链上 120 秒再加该次 retry_delay_ms 的死线：机器睡眠或连接冻结时不会有更多帧，超时就地结算轮次而不是永远显示 Retrying；有待处理的 ask 请求时不算死链。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/services/turn-stream.ts#L237-L251",
+          "version": "repo-lines-v1:sha256:315ce6896a3e993e7d4691bafa1cd06440e05befd6d1bf36f416aa9c194df727:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYxNGQ5ZDBlN2JlNjQ3MGNlNzBiMDdiYjczYTFhYjBkYWEyZTBmNmJhNDVmNzdiOTBkYzdmMzE1NWY1MjAzNzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwNzM3MzcxNTNjYjFmZGYzYTUwODQzYTdjMTNlZmU1ZDYyMGVmYzViZTViNGExNDRlY2U1NzlmYjZmMjViNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk1NmViYmQ3OTJlZmIyNzY1MWNkOTgzZjY5ZTdiMjg3YzAxOWU1ODRhNDk0ZmI5OWVlYTU3MDMxYWZlNTEzYjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNiNzFkY2VlOThkMmMxNzVmNDc0YmIyNzg1ZjBmZjEwYTI2N2MzZWY0MzBlMTZmMGVhMmFhZDlhNTg2Y2VlMmQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b1597c43c4b543f1a166f50aa510ca06",
+      "statement": "`computeTurns` 把线性消息流折成 ConversationTurn：新的根提示词开新轮次，轮次内按 parentToolUseId 归组子代理输出，工具结果单独成 user 消息的转成工作块，中断标记把轮次标为 isInterrupted 并记结束时间戳，queryError 变成 turn.failure 挂错误卡。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/turns.ts#L123-L296",
+          "version": "repo-lines-v1:sha256:5ee1948d7fa2139dd358a63715f40b76fe201c6fc88ce4b104a6dc7c156d31f5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTc0LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJiNzlkZGVjMDM1ZDljNzhhNjBlMDNlM2VkYWNmNmU5YWVlZjk5MTAwMGQyNWJmMDAwMDY2NDdkYTI1YmM2MGEzIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI2NDZmNWQ2MTNkOGZkYWVjMzhhM2U3ODBmZDVhYjhkOGJjZjcwNDE2YWExZTU2ZDliZDI4ZWZhMjVhYjZlYTkzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI1NjZhYzg0N2I3YWYwMWVjYzY1YjUyNWI5MGIyMjg0MDBkZjI0MmEwOWFhMjM1YTc2MTg2NTk1MmJmZDI0NDE0IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlZmZkNWZiZmU2MWVlZTZhNzIyOTMzMzdiYTE0NzZlM2NmNDMwMjIyNDhkNGY1MzIyMDlmYTdlZTA2M2M3MDYxIn0"
+        }
+      ]
+    },
+    {
+      "id": "claim_5c18a45f1b8547eb85c7d133e16ea5bc",
+      "statement": "`isCancelledTurnArtifact` 沿 parentUuid 上溯、遇中断标记或用户提示词即停，用于认出取消轮次留下的孤儿帧；`foldCompactionItem` 与 `foldModelSwitch` 把压缩与模型切换分隔条折进轮次而非占独立消息位。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/turns.ts#L48-L76",
+          "version": "repo-lines-v1:sha256:c6b7ab6b3c308800bceaea9ecc459fb3ecf83626325cacb917a3db916c13c014:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU4ZjNiM2QyZjMxNzQyZjU1ODBiMzI1MmU4NGUwMTFkMTBkMjViMzE0NzU5ZDIyODZmOWQxNDJiMGRiMDhiMDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3MmE0MjkzODJiMmUxNDcxOGUwZTM3YjA1NzBhOGExNzAyOTkxZmNkODQ5OGNkODQwNjBhOGJmNGYwNTAxN2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjViODgyZDFhMzc3NDM4MDExNGUxNjQxYWRmNjQyYmE2NmNkNDI5YmJkOTdkNGNhOWE4MGEyNmNkNDhiYzJkZjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI5MDJlYTM4ZDg1MmExMjE0MmNmMzlkNjgwZjA5NTg3NTllMThmYmY1Y2EzNDYzOTgwNTI5OTc2MGI4YTdmYTcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9534ef1a8f0448398788d79c6b22f3f6",
+      "statement": "`computeLastSentTurnId` 找出最后一次真正发出去的轮次，决定默认展开哪一个轮次；`computeSubagentTimeline` 是子代理视图的简化版，只建时间线不建轮次。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/turns.ts#L296-L304",
+          "version": "repo-lines-v1:sha256:179a4096a8d634f3e310aa6ec507d7880fb10c7abf097c2c818a91ba4b8f7632:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjQ2ZjVkNjEzZDhmZGFlYzM4YTNlNzgwZmQ1YWI4ZDhiY2Y3MDQxNmFhMWU1NmQ5YmQyOGVmYTI1YWI2ZWE5MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjg0ZmVjZjQwNzk4N2Y3OTM2OWRiNzA4ZGMyYmMzYmEwMTgwMzFiNTQyMGVkNGUxZjc0MmQyNjg5NDJiZGNiNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_9a22e1f34208430dae671c1f7a0fa30e",
+      "statement": "`appendTimelineItems` 把消息翻成时间线条目：连续的 text 片段合并成一条以形成打字效果，thinking 单独一条，tool_use 的 id 锚在 toolUseId 上而非数组下标，使 delta 期间 id 稳定。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/timeline-items.ts#L65-L117",
+          "version": "repo-lines-v1:sha256:e9afea2603404af41daeeb02c1ae7003d5246e12c2509fb5e57f53f2e417f605:eyJzZWxlY3RlZExpbmVDb3VudCI6NTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYyMGZlZjFjNGM3NTQ3YjNhYjRkMTQ4ZGIwOTdjOGJhYWVmNzFhMThiZGJjNmYyZTI2OGY1MjcwMDVkOWU3NjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAyNjRjMzk5YmQ4OTEyZjQ4N2RmYTI3MjJkOTFiNmE3OGM4ZDNlN2E1NTY5MWM2NjVjNjM2NDZjZDljOGE2YzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ5MzE5ZWEwZjlhYzE5MWExOGQ1MTgxMmI3ZDNkZDZlOTJhMjE3NzRhOTczYWVmZGUyNWYwOGYxNDUxZTlhY2QifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_da6bccb02593478e89a50cdd0c2bc14a",
+      "statement": "`pairToolResult` 反向扫描配对 tool_result（结果可能晚于调用很多条才到），命中后用 `tool-result-<id>` 锚定；`isAgentToolName` 认 Agent / AgentTool / Task 三个名字，`applyAgentTaskNotification` 让子代理的 task 通知更新已渲染的工具项。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/timeline-items.ts#L22-L63",
+          "version": "repo-lines-v1:sha256:b7ef8989b9e5387090e924df0ac7af4e45c117e263858757efc3c73d4d4505f8:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1NmI3ZTE0ZTlmOGM0ZmE1NzVhMTQ3MTM5YzgxYjMzNWNkZDE3NjRiMGQzYzNhMWJiNDE3YzU0MTJjNzViMzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRjZjk1ZjJhMmZmNDU0NDJlMTM1ZDA0ZjY2ZmIyNTRiYTcwMTBlZTMyYmU4YjNhY2EwMDI3M2UxNzdkMDlmMjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFhOTViOWJkYWZmNzViZDZmNDAyMDBhYmM4OTNmYTQ4MTg3ODkxZTc2OGY0N2ExMDhjMzg5ZDVkZGE0M2ZlYjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f93d7dcec80846faa27e3944980d0685",
+      "statement": "`normalizeTimelineItems` 把连续的 Read 合并成 coalescedReads，一次读十个文件在界面上只占一项。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/timeline-items.ts#L185-L213",
+          "version": "repo-lines-v1:sha256:acab708a3072dccb4df4c64b69eb8cb8b825918e7f73581c1b2a719f53c2db8e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRiZWNiYzViOWI5NjE0YjEwYWUwZmU2NzkyMGY1ZTc1NGFhYjM3MzMxNWZlMjhmNTlmYTZmZmNjMGJkN2FmN2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJkNWMzNGU1ZDg0ZmUzNGZlNDY2ZjE4YjJmYTE1M2I2MjZlZDc3YzJhOGIyMThjOGI5ODg3YTBhMmE0NmJkZjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ffcd08d983a34dc7963b4aede51981d6",
+      "statement": "`normalizeTaskItems` 把 TaskCreate 折成可折叠任务卡：创建时卡片快照任务为 pending，TaskUpdate 与 TaskStop 保留自己的工具行只推进合并状态，一张卡内所有任务到终态（completed / cancelled）后下一个 create 开新卡。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/task-items.ts#L139-L215",
+          "version": "repo-lines-v1:sha256:869af72f282bf1721efa8a0e3a0c02bf217a0d34e599337345e9c42b2decc9ac:eyJzZWxlY3RlZExpbmVDb3VudCI6NzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1NzBmZWZmYWU4NDQ4ZjAxYTY5YTRmN2ZlZWQyMjRiMDIxMmJmY2RhZjA1M2JkMGM3MjZiMTgxNjdiZGM2YmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNkNWU2ZDJkNDU2OTNhM2ExODNhNTM1MzJkZWIxNWZmMTYyY2NkYmQ3YTg4NDM5YWUwMGE0MDBhMGNiZTQyZDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5a22a6bdb8a54181af069af5ec254d58",
+      "statement": "`latestTaskItems` 从事件本身重放出最新任务状态供任务进度面板使用，因为每轮次的归一化从空索引开始，附在更新行上的快照只覆盖同轮次创建的任务。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/task-items.ts#L89-L120",
+          "version": "repo-lines-v1:sha256:db30caa5aa45c047ebc934884d233c6b745a87ddfb024778d686a5d0dd46729f:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNiNTZkMmExOGEyOThlOGI3OTA3NWVkOTc1ZDJlNzRjZjMxNjNiZDIwMzQ5YTlhMjViZWU4ZmM2YWI1ZGVmY2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiMTZhMjVkOTc2OTMyNjY1M2E2OWE2OTNmMjVjMTdkNTAyZTg1ZWQyMmMyNGJlY2IxYjFmNTcxMjc5NzZmOTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVjY2NmYzU5NmVhNjY3NzU4OTRiMjg4YTRmODg1ZDBkZWY4M2JkMGQzY2Y5MDM1MDY4MTYxOTBjYmZjNDYwNTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c12810ce0be44ab9900e2f25ef404750",
+      "statement": "`reconcileBackgroundTasks` 跨轮次对账后台任务：Bash / PowerShell / Monitor 启动的后台命令，其 TaskOutput、TaskStop 与 task 通知可能在父轮次结束后才到达，这里按 taskId 找到原始工具项并更新 backgroundTask 的状态、输出与 exitCode，命令类工具完成且无明确 exitCode 时补 0。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/background-tasks.ts#L139-L207",
+          "version": "repo-lines-v1:sha256:fefe6a571732622284ca8d1a56006640bea7e12d747e4254da2438eb780c2b43:eyJzZWxlY3RlZExpbmVDb3VudCI6NjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg5ODM5NzhmZWI1NGM4MGU2YjE5NzlmYjU1ZDRhZThkNDc1ZGYzYjE5MTNkOTkxMWIzODg4NTc5MWQ3ZmNkMDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjczZDdjYWY1MWQ1ZGQ1Y2M1NzVjYTMzNjUyNjMxYWU5ZTNkYjE4NmRkOGNmYzgyZmFlNjhjN2RkOGQ5YzcyYTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_df4cc1a83cd24cf8ac86fa201d33b0f2",
+      "statement": "`isTimelineToolRunning` 是工具运行状态的唯一判定：有 backgroundTask 看其自身 status；toolUseResult.status 属 async_launched / remote_launched / running / in_progress 算活跃，但轮次已终态时需再经 hasConfirmedBackgroundLaunch 确认；否则轮次终态即不跑，直播中且有 use 无 result、非合并读、无待处理权限请求才算在跑。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/tool-state.ts#L49-L72",
+          "version": "repo-lines-v1:sha256:826a3ed6aca8a6203a917762c45ad9796582543a220dcd7bf934b96873769ba7:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZiZmRmMjk3M2E0NjY2OTU5MDkxNmEwYTViZDZjM2Y5MzAwZmVjYzRhNzZjNDVhZWEyMzIwMWYwMzk3ZWQ0OTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZhMWJiMGMxZmE0NTAzNDllNjE2MTg2OTBiZmZlMTUwMjkwZWJhNWFjN2YxYzhkODNmN2ZiMjI1NDlkMjI0NTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b49d9282c5304abf8508e13bdebfc0e1",
+      "statement": "`useToolDisplayHold` 为每个工具首次渲染记下时间，500ms（TOOL_DISPLAY_HOLD_MS）内它继续占着运行尾部；更新的工具直接接管，故一连串快工具之间不会插入 Thinking 占位，窗口内按最早过期时间设定时器重新武装。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/use-tool-display-hold.ts#L40-L85",
+          "version": "repo-lines-v1:sha256:6b7cb1dc9487e36315219fe44c088da50d43d7eedf5ac75c0de8fd49f0640908:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZmYjdkNzhkZGM0M2U5YTAwYmMzNzUwZTIxYjAzOTVmYTA4NzRiZDUwYzVjZTJjM2M3Nzc4NjIzZDRjZmY3ODgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a6f69c6c1f514ca6936bc507a05a11cb",
+      "statement": "`useStreamTextStall` 在尾部文本项 2000ms（STREAM_STALL_THRESHOLD_MS）无变化时判定为停滞：即使它仍是 stream- 占位 id，也允许 Thinking 占位出现，表示模型已离开这段文字去做别的事。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/use-stream-stall.ts#L1-L40",
+          "version": "repo-lines-v1:sha256:5951861d604a16d66a63bcf06a6753a55c60a9947884f75dc19e0bc110c43393:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY3YzA3MDRlZjFiZDljMjM3MmJmNDk2NDkzMzM1NWE3ZTMxNGRiZGQ4YTdkM2EzOWY2ZDFlNjRiMTE3OGI1MGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a1325b2bb0174893907d5c744d0b45d3",
+      "statement": "`groupWorkRuns` 把连续非文本条目组成可折叠工作运行：文本、api-retry 卡与压缩分隔条永远独立，isGroupable 为假的条目也独立并打断两侧运行，使带待处理权限请求的工具不入组、其按钮保持可直接点到。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/work-runs.ts#L74-L117",
+          "version": "repo-lines-v1:sha256:3b382a1d4a6a5994a340249d4db87ceb5418e8d6dc735487f24b935777ceb40c:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRkZjE1YjM5MDA2NTlkZmQ5MGJjODIzMDI2MzUyZWIxNzEzYWFlNzY1N2IxOGU0ZTIzMzM4OGIzMDQ2MjMxZmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMwMmM2NGEyZTYyYTg2YTFiMGIzYmE2YmI5YTQwMDEyZDYwZmQ5Y2E2ZDcxMTgyZmY0MThjNWI2MWRiYTRkZjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhjZWNkZDhiZmMwNWRhYzhlNjM3MzhmYjVmZjZiZGVlNmIxOTI2ODk4MjIxOTEyZTIwMjRiZTgxNDE4MDY2ZDgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8d64c917745041098271eab345cf9799",
+      "statement": "运行 id 锚在第一个工具的 toolUseId 上而非第一项的 id：thinking 项在流占位消息退役时会重新生成 id，用项 id 会把已展开的运行孤立，因为 expandedRuns 按 runId 存储。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/work-runs.ts#L85-L95",
+          "version": "repo-lines-v1:sha256:1495eddc472f4c2715a2c06f3280f1a147492b9df4c1dabc21e4fc4351b9f2ce:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAzNzUyOGYyZDFmMzA5MzZmZWRmNmMxZGEwYTM5MDMwMzI2OGJmM2FjNTZkZGE4YTVlMzczYmZmYTFlYWUyNDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM4NGM4YTE0NWZkYWZjMjE3YmFiYjFhYjg3MGUyOGYwY2EwYzcyODYyNTU5OTY4OGQyMjRlMjU4N2M3ZDA4ZmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlmYWI0MWZmYTcwMTFlMDYyY2QxODI5MjUxOTlhNGFmNzhmOWQ4M2FjMmEyNTFhNjI0Mzg2NDZkMWQ3YzExMmEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_17e694bd4957427f977a183b64ea59ac",
+      "statement": "`summarizeWorkRun` 用保序 Map 产出折叠摘要分段（各类别按首次出现排序）；`workRunHeader` 决定折叠头：流式中最后一项在跑或处于显示保持窗口时显示该工具，流式中无在跑工具时显示 Thinking 占位，否则显示分类摘要。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/work-runs.ts#L119-L198",
+          "version": "repo-lines-v1:sha256:eec04dbdc27a0cce8c9fb433a33f4044a8ebc3480dfc5fece5f9ac51b3f247c5:eyJzZWxlY3RlZExpbmVDb3VudCI6ODAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5ZDYyNDRlMTA1OThkOGZkZDNmNjJhYWU4NTJmMWE4MDU3ODY4MGFhNDMxZmJmODkzMjBkYzFhYzI1NzdkMGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUxMWJhYzNiMDcxMmE0NmUwOGU2MmJiYThkMjA5NGEyNzkzYzhkYjAxZTU0OGY4NzQ4MzlhZGMzYzA2YTc4OGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b722ed9a85e94c888a688666d54ee09e",
+      "statement": "`buildConversationRows` 逐轮次产出行：终态优先由 turn.failure 给出 failed、中断给出 interrupted，否则流式中为 processing、结束为 completed；持久化的 assistant 错误帧比进程退出的 stderr 更有信息量，故失败文案取前者；展开默认值为 expandedTurns[turnId] 或最后一次发送的轮次。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/conversation-rows.ts#L188-L210",
+          "version": "repo-lines-v1:sha256:4a2839ad2335fc84cb1edfbc95482a19529c557e2a25869a0495fa4597d17eef:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2ZmNmMGU3Y2Y0NDdhNWY3YWQ2Yjc5YzFkNmQzMjQyZmI0NWFmNDQwYmM2MDY1N2E2MjRjYzNiMjA5Yjg1OGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE3YjU0Y2YxZWI4ZTZiOTY3NjkwNDhmODRjM2ViZTQzNjMzMDc5MGEzYWJkOGM4MmYyMTgyNTEyNjU5YjdiMWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIxNWQ2YzM0YTcxNDViOWM2ZDRkMjIwYTJmYTgxNjUwNjgzYTI0OWNiYmQ5NDgwM2VhNWIzZjI3YTMxYjI2NDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkyMzBiNTE2YzNiMzMxNTQ1YTYzOTk4MzQ5MGI2OWIzZDE0OTYwNTljOTkzMTkyM2U3MjkyOTQxYjM4NDYzOWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ddd7f948feea4a4c8e6c6bd578078d79",
+      "statement": "未展开轮次的折叠窗口只显示最后一段文本之后的部分，firstCompactionIndex 是一道护栏使压缩分隔条永不被折出视野；尾部是否补 Thinking 由 isSettledTool、isIdleTextTail 与折叠摘要共同决定，thinkingReplacesTailTool 让 Thinking 接管已结束工具自己的行而非再叠一行。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/conversation-rows.ts#L260-L318",
+          "version": "repo-lines-v1:sha256:6b8cbf4e6766a560ecc1e328e074ce5b2a0011471ad1ecd50416aa6556c6a37c:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1YzNlNjU1NWE0ZTE5Mzc4MzQ0N2I2NzExYmZjODQ3NzJhNjEzN2UxYzZjY2Q3N2Q5Mzk0NWEyNTAzYzk2MTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMwZTU1YmQwODY2YzJmMzViMjcxMTk1NjJmZmI4ZDlhNjUzNmQwODM5ODBiOTBlZjg1NjgxZTM3MTk5MzFmMzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3YzJkMWY4MzMwYjE4NzAzYjljZmYzNThkZDc0MjAwZDRkMWY0NDQ3NWVmN2Q2NThlZGVjYzFhYmQ4MmMyMGQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a0bdfef77e074639afaaa2728f97d461",
+      "statement": "api-retry 卡只在重试仍挂起、或轮次以失败/中断收场（卡片解释该结局）时保留；ask 类待处理请求在进入分组前即被过滤，改由 ConversationDock 直接呈现。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/conversation-rows.ts#L360-L377",
+          "version": "repo-lines-v1:sha256:6783b7c4116586eab66974d25c8133456dc5884496f270cd7f7b730b5ed848b7:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk1NGFlY2E5M2M4ZmVkYmNhYzQ0MDUyNzMxOWYwMTVlODk5ZjQ5MzA1MjhjMTEwMWE5Yzc1MzI1ZmQwMTNiNWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg4MDA1ZDU3MTA2YTM2MmViMDAwZGFmM2RhNDY3NGM4MmI1MThmZjVhMmUyZjY3ZWU4ZTc1N2EzMzNjMmFmNjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY4MTA3YzFiMzk0OTVjOGI1MTU3ZjE2ODhjYjIzZmEwNzgxYWM4YTQ2ZWFlMmEwZWQ5ZTMyMjZjM2NkOWY5MDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhhZjhhMTU2MThjYjRiNzg2NmUyOThlZmE2MTg0ODVlNWViOTFiZTcwYWE5NTc2ODhhMzRkZDkzZGZhODlhOGUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e0c00f623b8841c7ba09f9d4bbbd892c",
+      "statement": "file-changes 行只在轮次结束后生成（流式中返回空数组），故卡片反映轮次最终变更集合；actions 行（复制 / 分支）只在非流式时出现并以 hasTopGap 控制上间距。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/conversation-rows.ts#L467-L499",
+          "version": "repo-lines-v1:sha256:8ca617077d94167314fe45c3df02378988528fec5ff811e1f7bd8012ea3001e1:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNjMzI2MjI1ZWZiZDZkNzg5YzY2YzYxZWExOTM4NmMzYmVlMzU4YjE2Yjg0OTk0NjY1Y2ZhNzZhOWI0ZTQ5NWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAxMzQxZDBjNTg4MmU5MWE2NmM2MGNiODYwMjBiMjQ3ZjBhZmMzMzZjZGY3NmMwYWUxOGJjZDIwYWM4ZmUxZDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjljZTQ3ZjM2NWY3OGYyYjJlYTZhNGRjZTk5ODk0NjU4M2Y2YTQ3MjJmZmVjNzhjMDRiZDUyNTJiY2Q0NmM1NTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f4f48854002348d79c6263fb8b644e29",
+      "statement": "`summarizeTurnFileChanges` 汇总轮次内 Edit/Write 调用触及的文件（含子代理子项），同文件的多次调用合并为一条并累加增删行；structuredPatch 缺失时新文件按内容行数计增，无补丁的编辑按 newString/oldString 的行数变化计增删。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/file-changes.ts#L17-L84",
+          "version": "repo-lines-v1:sha256:e4e12e6817e94be59f7e7a4d7478affca28fb2ab708421a8339f708bba3efd59:eyJzZWxlY3RlZExpbmVDb3VudCI6NjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4YmY1MDIzMWNjYWZlZmQ0ZmNkZTY4Yzg3NmQwMjhhYTM4OTk1M2ZmN2VmODYwOGYxYWRhMmNiODZmNWVjOGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM2Y2U4NGI2Y2U4MWI0YTZlZTU5ZjllMjY2NTE1ZTE5NGMzMjZkOWFjZDZlODUxZjA3ODU1MDRkYWFiOTNmNzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2c26c50866994e9d9f18f93a01afcd7c",
+      "statement": "虚拟列表配置为 overscan 6、directDomUpdates true、useFlushSync false，并显式关掉 React Compiler 对该 hook 的处理，因为虚拟器持有可变的滚动状态。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/virtual-conversation.tsx#L78-L97",
+          "version": "repo-lines-v1:sha256:248ad91ae6b523012c435666529253e5d483bdd6b4768d1e899b850e24c35e15:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjliNGUxY2U3MDcwMDg4OThjOWVmZTJiOTE5MWIxMDJkYWI3NDdjOWNiNmEyZjAwZmEwNGM5MTQ3NTJiZDNmNmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNmMTBjZTU5NjQ4NjgxZWU1NjFkOTgzZGU4MTQxOTIzNWUyZDIzZmE1ZDE0ZjU5ODFhYzFhNmUyMTY5MmIwYmEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY5MjQ2MTY1OWExYmExZDhmYzNmZDRjMDNlNzE1MTQ4OTAxNzc0MzJhZTIzNmQxMDRhMGYwMzBmNWFmMTYzMjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIyNTg0OTY3Mjg4YjI4ODA5YjYyZDkyNjBhN2FiMTZiNGEwM2Y4ZWQyM2UxMDM5ZTA1NTVlMjgyZWY1ODNkMTQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_21168563036a4cba96b884ae15d1ac74",
+      "statement": "`retainedKeys` 在 viewKey 变化时清空，交互（focus / keydown / pointerdown 的 capture 阶段）把行加入保留集；自定义 rangeExtractor 把保留行并进默认范围，使折叠/展开时正在操作的运行不被回收。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/virtual-conversation.tsx#L126-L137",
+          "version": "repo-lines-v1:sha256:f22340313b4173dc7aa92ea21c43b69c080f3a456d755eb7d2cba5f6b446f6af:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5NjZmYmZhODg5OThkYTc0NjU2YzUwMTk0OTU2YzI1ZjA4NDk0NTc2NjBjMDA5ZmU2M2QxZTlmYTlkYzkzMWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0ODllYTg2MGZhYjg1YWYzODNmNDE4MzQzMjQ0ZjE3ODMwZTI2ZjBmOTY1NzVlNzEwYjdjMTliNjgzN2QwNDYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg2ODMzYjViM2IxYjA2OGM1ODg3YWVkOGFiNWUzZmFhMWMwYTAwNjEzNWYyY2EwYzUwYjVmODcwMTQ1ZGRlZjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg4NmU3NTA0YTNlNjRiODRjM2ZhMWE0MjhiZjY1MWNmOWYyNjI1ODQ5MjA0NWE0MzA1ODI5NzNkYTk4OGVlNzIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_613a95b0b092426da365ea49650e9d47",
+      "statement": "`captureScrollAnchor` 记录当前偏移落在哪一行的行内多少像素，restoreScrollAnchor 反算回绝对偏移，比裸 scrollTop 更稳；`scrollToTurn` 供会话目录与 quick-open 使用。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/virtual-conversation.tsx#L99-L124",
+          "version": "repo-lines-v1:sha256:44a8102cc5b1a17b395b84724e8b1f218e5287d0ebddb31298fe971167fb0e0b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVjMTIxOTYzZmVjNWMyNjJjODdmNzBmYTg5MmExNDI0ODZjNDAxYzdlMTA5OWZiZDc1YzZjMjZjZTQwMDAzOTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2MjY3OTM1ZmM2MzM0NjVkODQ4YjQwYTRlZDY5NjdlN2I3YTMyM2Y4MWNkNTNjMTEwYWUyMTAyOTY4N2FhMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFkMjUzOWQ5YTA1YTI0ZDc5YmUwM2I0YTMyYTc4NTgwOTI1NDUwOTRiMjZlYzQ1OGUxNjIxOWIxZDE5NDM3ZTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY0MTUxY2E2ZmUxYTA2MmNhMmQ3NWNhZmFiNmE3ZDNhYzZmOWJmZDEwZGNhMzA5YjFiNGI0OGI4YWRmNTA2MWEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3789992b5ab54c0c968cc109f0c8b597",
+      "statement": "视口 clientHeight 不大于 0（尚未布局）时列表退化为非虚拟全量渲染，否则所有行会因量不到高度而挤在 top-0；行位置用声明式 translate3d(0, start - scrollMargin, 0)，因为直接 DOM 写入会跳过刚挂载元素、在尺寸不变的重测时保持沉默。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/virtual-conversation.tsx#L161-L205",
+          "version": "repo-lines-v1:sha256:40f2002adf5bb226de31ea00d30f16774987832b5795812fca1ddeb637914646:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY0NzVjNGNkNTQyOTMyOTMxMDA3NzVlOGM5YTcxZWQxODA1NTQwMTE1YjYxZWYxNTQ0ZGJlNzE0YTEwZTBkZDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2MjY3OTM1ZmM2MzM0NjVkODQ4YjQwYTRlZDY5NjdlN2I3YTMyM2Y4MWNkNTNjMTEwYWUyMTAyOTY4N2FhMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBmNDE3ZTM5ZDBmZjVhM2JlZjViNWZiMGUxZjcxOTNlYmMyMGExMjU5NDViYmRlZGQ4ZGZlYzc2OGU3NzNjOTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU4YWEzNDhhOWU2NjczNjEyYjA4Njc0OGU1Y2E3YzE0Njg1NDE2YmE2ZjYzYzI5ODRmMWVkZmU3YjUzODhhMjIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_92d2aa250021477f8e660a22b8a699d3",
+      "statement": "`isAtBottom` 阈值为 4px，离开顶部边缘 2px 即计为 isContentScrolled；滚到底 200ms（RESUME_AUTO_SCROLL_IDLE_MS）后恢复自动跟随，避免与正在进行的手势或动量打架。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/use-conversation-auto-scroll.ts#L52-L69",
+          "version": "repo-lines-v1:sha256:8f0e120fd8173606892e6f0e90442606b10c1e479e86c6475842048828271b10:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVkZGZkNjAwZTE5YTU5YjIwOGJhMGQ4N2RjM2UyNTc3Y2U2NjUzZTlkYWY4N2M1MTQ0NzA0MTE5Yzc5M2JkNmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQzMTI1NmMyZjFlMjY3ZDk2Nzg3OTRkOTZkNWRkNDhhODMxZTMyMDI1NDNmM2UyZGZlOTNlOWY1NjQxNmI4MDQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE1NzQ3OGUzMDI3NWQwNWNkYjk4MWU1Y2U2YjRkMDg0YTk0YjI5OGRiZTJkMTZiNGEwZTA5NWQzMDc4OTIwMjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJlMTQ2YjAzYTQxZmIxNjVhNzU2Y2VmMGQwNzgyYjI0ZWU1M2QxZWYzMzA2Y2U3NDk5MDA2NjQ2MDI4ZDhmYjUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8a8c058ad69b43d5832b496e04cec16a",
+      "statement": "内容增长用 ResizeObserver 观察视口第一个子元素，在布局后、绘制前那一帧修正 scrollTop，晚一帧即是可见跳动；wheel / touchmove 立即取消待恢复，程序化滚动不会。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/use-conversation-auto-scroll.ts#L170-L200",
+          "version": "repo-lines-v1:sha256:e9abaff50f78d17e86c32d0ecfeec30940c0a51d88aa12aa1024ec7e60ad65d0:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxZjg4MjNjMmY0NTAxYTYyNDUwOWJkNTc0ZDc4MTlhMzRjOGIyYmRmNTU1ZTVmMjIxOTk1MTlkYjU2MmQ0YjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2MjY3OTM1ZmM2MzM0NjVkODQ4YjQwYTRlZDY5NjdlN2I3YTMyM2Y4MWNkNTNjMTEwYWUyMTAyOTY4N2FhMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFmYzcyZjI1MWUyYTNkMmVjZmY2M2JmMDlhOTJjZDRjNGZlMzE2ZWQ4OTQ5NmMwYzc0ZmQ0MjIyY2M4YTkwZDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI4ZTdhNTBhYThmMDdiY2IzMjk1YzlmMTNiZjdjZmEyMTdiODhmODg3Y2JmMjQ1ZTRhMGEwOTBlMTllOGQ1NWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d5e82a970cce4ec0aa4521964de891d0",
+      "statement": "每个会话的滚动状态（anchors / autoScroll / positions）存在模块级 Map，上限 24 个会话，因为会话视图每次切 tab 都重载（Provider 按 sessionId 建 key），状态必须比 hook 实例活得久。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/use-conversation-auto-scroll.ts#L33-L50",
+          "version": "repo-lines-v1:sha256:d2a29fea72fa05b6d5f4a31f9b65ae58e8b3cf7a7a89687267be72ef25499cb3:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3MmM2YWVkM2FlNGJiMDdlZjFkMTcyOGZjMjE3MTUyOTIzZjM0NjEwOWQ0ZjkyYzM1YjI3M2U1NTBmY2Q0Y2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE5ZGEzNDZjZTVmYTVhZDEyMzUyYWVhMTY2ZmE3YThmMTNkYjBjYTgyYzY0ZGQ5NDcyNDlmYjMyNTgwYjBlNzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZhNGNkYTI3ZjUyZTRkNzMzZTQ5MTE1YzNlNGIzNmMzOWU3MzUzYjMzOGY5MTlmMTdlMWQ1OTM5YTA0MmI3NmYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b506ca3fe82a48129729666b269be903",
+      "statement": "重开会话时优先恢复锚点、失败才用裸偏移，最多重试 10 次（RESTORE_MAX_ATTEMPTS）：内容还在布局时就放弃，而不是过很久再把滚动拽过去；视图本身设 overflowAnchor: none，因为原生锚定会和钩子自己钉位置的行为打架。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/use-conversation-auto-scroll.ts#L222-L263",
+          "version": "repo-lines-v1:sha256:c9ff4ddc4b8f65ec27b5451d0018e5a314e6d2b0431cf993575841f62845bb37:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiNzBhN2FjYjQ4YzJmMzFmY2YyZjdlMWI5NGI1ZDhkNGQ1M2EyZmU0MzkzYzVlZDViYzgzMTVmYTA2MjEyYmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxMmZjNGQ0NjdlNzJmZmJlMDNjZmRjMDI3OTNiOGU2OGJmMTVjMDhlZWEzMzRiNmIwYzM1MTQ2ODFhZTFlODQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZkNDU4MWNjOWVlNjFjMmUwNTA0MjUyYWMwYTNkZjU4ZTU5ODFiMjJhOGE5ZjlkZDUwNzNmMTAzNWU0MTc5YjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzNzE5ZGVjODNkOWRiZGVjMzg0Yjc4MjgxNDk3MDIwOWYzYzkzYzBjZGQ4OGIwYWQ3NjQzNGIyMmI1MzQwZTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f7a72c1ae36544b6af0016c8e6d665e7",
+      "statement": "`buildConversationTocItems` 为每个轮次取用户提示词与该轮次最后一条非空文本，`previewText` 先剥掉 ide_opened_file / ide_selection 上下文块再压缩空白，避免 IDE 注入内容出现在目录预览里。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/conversation-toc.tsx#L55-L67",
+          "version": "repo-lines-v1:sha256:fe8434f3fd9e2f84993a6776243981390b7802ae8a757d1feab1e36f540e40bf:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA0MTkyN2Q5MzQ3NDdiYWUwMWQ4OTkyNmUzYTVkNGMzNjE5NDRkMTQ5MzMxMWNiODMyMDliZjAwYmM4MmQ3NWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJjNGUzZWZkZDE4YjIxZmU5YWJiODY4M2M5ODMwZWM4YWNjYmFjZTAyMzM3ZTZmM2EwNzk5NzllYzRiY2VjNzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE1ODJiNGNiMTVjZWI1MWQ3MTJlNWE5MGMyNjNmMTM2ZTg0OWEyNWI3MjIyZGU0MjQyOGEwZjljOGZkNzYxMjMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_55a17770fd61476383db7ebc1cb910f5",
+      "statement": "目录标记静止宽 8px，在 48px 影响半径内按 (1 - cos(x·π))/2 缓动增至 30px，最近的标记同时成为 hover 项；指针移动经 requestAnimationFrame 批量写宽度。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/conversation-toc.tsx#L22-L40",
+          "version": "repo-lines-v1:sha256:8b5fc91667b7fb60f2d85e65abb0a143b2734e5848f4cdb08c5299b8a6d0d240:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBmZTRjNTI0N2I5MWRhYjQ4MDJlYjQzZTc0NWY0ZDkyNDY4NDMzODU4OWU1ODVlNzc2MTVmNjU5ZGE5NjE1MTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI1NTA3MDc2MTIxNjJiMDRhYzUxN2Y4ZjNjNzM5MjMyYzkxMTQxM2UzYzkxNDY1MDA3YTIzNmVkMTA3OGRhYzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFiOGY1OTdiYjAxYzBjODMyNTJlNTE0MTdhMTIzNTY4ZWY0M2YzZmI3OTM0ZWQxNWViZGEwNTg4Mjk2MDJmN2YifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3dd0a947a2594ad5a7d8eedb5fd880cc",
+      "statement": "当前轮次有两来源：外部传入的 visibleTurnIds（虚拟列表算出）优先，没有时才用自带 IntersectionObserver（root 为滚动视口、按 data-conversation-turn-id 匹配）；活动标记不在可视区时 alignActiveMarker 把标记条滚到它附近，指针离开时所有标记复位。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/conversation-toc.tsx#L105-L163",
+          "version": "repo-lines-v1:sha256:021ef42d9d99bab309a09accd07fa33d02f168a1068884d09991bb7c15428da9:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ0NjU0MjAzODVkYTAzZGZhYWEzNzUwZTliZjUzMDhhOTkyYjNlNWM0NDQ4ZjM1ZGZhZTg1NWExMTkwN2M3NjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk2ZTRkMGYzODAwNzRkMjgyZTY1ZDJiZGU0ZWRiNmZiNTc3NTBkY2MyMGUwOWU5ZGFlY2ZhZjgwZmQ5NzViZTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM1NGEyYThhMjRmMDRlMDExMzZkMWEzZWUwMjIyNGJkNDdlZWFhMWEzNGMyMzE0MzczMDdmOTA0NjIxNGJmY2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIxNjkwYmI3YzE4NmQ3YjA3MDA2ZDUwOTViODgzMDIyMzMxODMwMGI0M2VjOTY3NDkwOWFiNzlkODIzYWEwN2YifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a4ce6cbc0e034cf28ceb48ff684b879c",
+      "statement": "`HistoricalMessageEditor` 内嵌完整 PromptComposer（appearance message-edit、自动聚焦、斜杠菜单在下方），使编辑历史消息复用写新消息的芯片、补全与附件能力；草稿按 messageId 加 messageUuid 匹配，恢复编辑时接着写。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/historical-message-editor.tsx#L42-L130",
+          "version": "repo-lines-v1:sha256:f862edd98214f2eb2bfaaad8559ede37356bd7affdd77cbc968e8fc1cc813c09:eyJzZWxlY3RlZExpbmVDb3VudCI6ODksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUwMWNmOGY5NDUwZmFjZGNhZTU0YjY1NDhiNjc0MDcwYzFiN2E1OTRlOTViNWMxNTZlNmE5MjIzOWNkNDU1MDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyNWE5OGNhMmUwZmQwYmJiNGUzYWYxMzM5MTlmNDU0NDBkNmFiMTdiYmRkYWFjNjExM2MwODgwMTNlMjk5OTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhkYWI2Yjc1ZDVkNzg3MmVjYzhkMzI0ZDNkNzM4NzQ3YWNjOTU2ZDEzMTZkMTJiMzQyNGU0MjhlMjYyMjAyZjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBhZThjOTQwZDIyZGUzZjZkMmFhZmRlZWE4YWY0NjlhZDM4NTBjZWNhYThiMTdkZmI5ZTExNzZkZTlmNDMzMzkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2f23c443cdc74b979329148fec8d65b4",
+      "statement": "`MessageEditService.prepare` 取 getSessionEditAnchor 定位转录位置，再用 rewindSessionFiles 做 dryRun 预演；预演报无文件检查点时不阻塞（复制的消息或开启检查点前的消息无记录文件状态，只能基于当前文件改），预演显示确有文件变更时返回 confirm 弹出确认框，否则直接发送。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/services/message-edit-service.ts#L80-L155",
+          "version": "repo-lines-v1:sha256:c397cf07fca2ad1d42849420984b7cee61fbc666da8accc89416327759a73769:eyJzZWxlY3RlZExpbmVDb3VudCI6NzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM5NzE3ZmM5NTVlOTE3MmU4MmY5MjE1MmJjNDJlYjYwNzBlNmM0MThjOTEzZWJlYjYxMjc2MTNkNjY0ZmEwMGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhiZjM5YTg3MjM2NzBlYjBhMWFmYmExMzZhMTkwYTM3MjczNzZjMmJmZDAxMWYwZmVhMjEzNTc1NWI0ZjhkNjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg4MGM4NThiZDFlMjZmNDUxYmNhOGMzOTFhNGZiMTk5ZmYyYWYzODVjY2NhMDU2NjkzZjU2NDkyODI3ZjY0ODMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_65927346be6549f19cd5102106a6a990",
+      "statement": "`submit` 在回滚前先 prepareAttachments 读入选中文件字节（回滚可能替换或删除它们），写 messageEditDraft 供流式开始后重试，执行真实回wind，再以 replaceFromMessageId 加 editTarget 调 runPrompt；begin 与 isCurrent 用 activeEdit、isMessageEditPending 与 uuid 比对挡住并发与过期编辑。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/services/message-edit-service.ts#L157-L255",
+          "version": "repo-lines-v1:sha256:b0efb84462d98a7c7abeae86693715337762a327e9641ed4ed2013bff1d4bc94:eyJzZWxlY3RlZExpbmVDb3VudCI6OTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwNTg0M2VhNGM2NTYxMDYyYTFlMzQ3N2QyMjg5NWJjNTljOWJlOTBkODMxYThkZWFiODI1NWU4YjJiYzBiZGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZTU3ODhkNWQ5ZDczZDI0YTgxZGJjMGE1YTc0YmZhODJjOWMzYjNhZjk5ZTUyYWY3OTZlOTBiNDY4YThhM2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk3ZDg2MzJlNTRlOTI5OGFiYjk1ODcyN2UyZDUxNDA4YWJhZjEzNjYwMzUzNzkxMDE0MGFiZjY1YjMwYWI2MTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFhYzU4ODkyODllNzE2ZGYyNzI0MDYwZGYyZTQ0YjY1ZGExNzVmNGY5ZTU3ZDI0Yzk1NDlkMjUzYjVlZmMzZDYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0568faee0c7041e1adac32ba45bb1b80",
+      "statement": "`UserCard` 用 ResizeObserver 测量内容是否超过 450px 折叠高度，超出时显示渐隐遮罩与展开按钮；内嵌的 ide_opened_file / ide_selection 上下文被提取成附件芯片，命令消息以 /命令名 加参数形式渲染。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/conversation/timeline.tsx#L64-L81",
+          "version": "repo-lines-v1:sha256:88025a7f740168db71748b34a812c7068924168babfef95051bf3c96a4c2e62a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ0NjU0MjAzODVkYTAzZGZhYWEzNzUwZTliZjUzMDhhOTkyYjNlNWM0NDQ4ZjM1ZGZhZTg1NWExMTkwN2M3NjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkwY2MwODEyZDA0MWFjZGI4M2FiODRjZWI0YzgyOWQzMGE1YTVhZTQ5MTg4Njk4MTVmNzA1ZWYzODFmMGUxZDUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM1OTE0Mzc1MmQyMDU2NGIwN2FkMmI5NTQyNThlMmRmYWFhOWIwNzdlNGY1NDZkYmM4OGQxYjQ3NGFhNTU4MjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUwY2E0ODdiOTEyZjU5YjhjZmMwMDZiZjZhYjU0YWFmZTg2NjVmYTI2MWIzMGVlMDkyMGMxYTg2N2RmNGY5MzgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2dc5b48727b64ef49da5c6d8800922ee",
+      "statement": "子代理视图复用同一虚拟列表、WorkRunRow、TimelineEntry 与 useToolDisplayHold；初始 user 消息（isNaturalSubagentUserMessage）从时间线摘出单独作卡片，子代理 status（running / failed / stopped）映射为 turnTerminalStatus 使工具行显示与主视图一致。",
+      "evidence": [
+        {
+          "resource": "repo://src/renderer/pages/workbench/session/subagent-conversation.tsx#L69-L131",
+          "version": "repo-lines-v1:sha256:4ab477a8277deb8bf9700d6ca34fc2e92e26fc3e86c559dc5ac92ec7c9f9decf:eyJzZWxlY3RlZExpbmVDb3VudCI6NjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlmYzRhNmVjNmY2OTBhYTc0YTQyODNlMjMyMWUzNDgzY2VjZmM5NGEyNzMyMjI3ZjM5MjNkNjcxYmU1MTgzOTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjliNjJmNjBkODU5MGE1NzljZjQ2ZjhkNjczNzhjNGM1NzJiOTYyY2VjY2RiOTBjN2E1ZjdiNDJiOTYwNzgyYTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ3Nzk5YWRiZmMzZjJjYWQ1Yjc4ODMxMTE3MmE1ODgyZjhiMDcyZWEwNmRkZjAyNmYxZDc4Yzg0MmZkYjYzYTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZjZjMwNDVjOWUxM2ZjYTA3Mzk4NDA1ZDUxNjNjZTNlMWQ0ZTg0ZDUwMjE1MGJmNmU4OGI2ODQ5MjAzMWFhNGMifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.7.2",
+    "at": "2026-10-22T15:07:00.145Z"
+  }
+}
