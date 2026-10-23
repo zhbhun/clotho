@@ -162,18 +162,13 @@ describe('ConversationHeader', () => {
     expect(screen.queryByRole('button', { name: appI18n.t('workbench.project.exit') })).toBeNull()
   })
 
-  it('pops the shown project out to a new window from the header corner button', async () => {
+  it('offers no pop-out button in the header even in project mode', async () => {
     await appI18n.changeLanguage('zh-CN')
-    const { onOpenProjectInNewWindow } = renderHeader({
-      projectMode: 'project',
-      selectedProject: project,
-    })
+    renderHeader({ projectMode: 'project', selectedProject: project })
 
-    fireEvent.click(
-      screen.getByRole('button', { name: appI18n.t('workbench.project.openInNewWindow') }),
-    )
-
-    expect(onOpenProjectInNewWindow).toHaveBeenCalledTimes(1)
+    expect(
+      screen.queryByRole('button', { name: appI18n.t('workbench.project.openInNewWindow') }),
+    ).toBeNull()
   })
 
   it('offers neither exit nor pop-out inside a project window', async () => {
@@ -182,9 +177,6 @@ describe('ConversationHeader', () => {
     renderHeader({ projectMode: 'project', selectedProject: project })
 
     expect(screen.queryByRole('button', { name: appI18n.t('workbench.project.exit') })).toBeNull()
-    expect(
-      screen.queryByRole('button', { name: appI18n.t('workbench.project.openInNewWindow') }),
-    ).toBeNull()
   })
 
   it('reserves the macOS traffic-light inset when the narrow-window sheet replaces the sidebar', () => {
