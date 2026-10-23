@@ -250,6 +250,7 @@ function WorkbenchContent() {
             focusNavigationRevision={workbench.focusNavigationRevision}
             focusedSessionId={workbench.focusedSessionId}
             onTabChange={workbench.setActiveTab}
+            showTabSwitcher={workbench.showTabSwitcher}
             selectedSession={workbench.selectedSession}
             sessionTimeline={workbench.activeTimeline}
             onDeleteSession={handleDeleteSession}

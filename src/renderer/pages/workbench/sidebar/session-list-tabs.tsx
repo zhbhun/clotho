@@ -18,12 +18,13 @@ const TABS: {
 ]
 
 /*
- * Fixed bar between the new-chat button and the session list: the current/history
- * switch on the left, locate and back-to-top on the right. It never scrolls with
- * the list — the group labels inside the list are plain rows since this replaced
- * the sticky overlay. A plain segmented button rather than the Tabs component: it
- * swaps list views, so keeping it out of the page's tab semantics matters more
- * than the widget role.
+ * Fixed bar between the new-chat button and the session list (free windows only):
+ * the current/history switch on the left, locate and back-to-top on the right. It
+ * never scrolls with the list — the group labels inside the list are plain rows
+ * since this replaced the sticky overlay. A project window renders no bar at all:
+ * its list restores the pre-tab sticky headers with the actions floating on them.
+ * A plain segmented button rather than the Tabs component: it swaps list views, so
+ * keeping it out of the page's tab semantics matters more than the widget role.
  */
 export function SessionListTabs({
   activeTab,
@@ -32,6 +33,7 @@ export function SessionListTabs({
   onScrollToTop,
   onTabChange,
   onTabIntoSessions,
+  showTabSwitcher = true,
 }: {
   activeTab: SessionSidebarTab
   canLocateCurrent: boolean
@@ -39,8 +41,13 @@ export function SessionListTabs({
   onScrollToTop: () => void
   onTabChange: (tab: SessionSidebarTab) => void
   onTabIntoSessions: (event: KeyboardEvent<HTMLButtonElement>) => void
+  /** False in a project window: the whole bar is skipped, its list floats the actions instead. */
+  showTabSwitcher?: boolean
 }) {
   const { t } = useTranslation()
+
+  // A project window renders no bar at all: its list floats the actions instead.
+  if (!showTabSwitcher) return null
 
   return (
     <div className="flex h-8 items-center gap-0.5 px-2" data-session-list-tabs>

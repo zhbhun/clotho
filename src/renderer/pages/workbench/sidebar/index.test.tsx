@@ -83,6 +83,7 @@ function renderSidebar({
   selectedSession = null,
   sessions = [session],
   withHoverPreviewProbe = false,
+  showTabSwitcher = true,
 }: {
   activeTab?: 'current' | 'history'
   defaultOpen?: boolean
@@ -90,6 +91,7 @@ function renderSidebar({
   selectedSession?: WorkbenchSession | null
   sessions?: WorkbenchSession[]
   withHoverPreviewProbe?: boolean
+  showTabSwitcher?: boolean
 } = {}) {
   const runtime = createShortcutRuntime({
     catalog: commandCatalog,
@@ -144,6 +146,7 @@ function renderSidebar({
             onSelectSession={onSelectSession}
             onStartNewSession={onStartNewSession}
             onTogglePinSession={onTogglePinSession}
+            showTabSwitcher={showTabSwitcher}
           />
         </SidebarProvider>
       </TooltipProvider>
@@ -582,5 +585,39 @@ describe('SessionSidebar', () => {
     expect(screen.queryByRole('menuitem', { name: 'Close All' })).not.toBeInTheDocument()
     // The shared menu still opens with its session actions.
     expect(screen.getByRole('menuitem', { name: 'Pin' })).toBeInTheDocument()
+  })
+
+  it('renders a project window sidebar as plain history without the tab switcher', async () => {
+    await appI18n.changeLanguage('en')
+    const user = userEvent.setup()
+    renderSidebar({ showTabSwitcher: false, selectedSession: session })
+
+    expect(document.querySelector('[data-session-tab]')).toBeNull()
+    // No bar row at all: the actions float inside the scrolling list instead.
+    expect(document.querySelector('[data-session-list-tabs]')).toBeNull()
+    const locateButton = document.querySelector<HTMLButtonElement>(
+      '[data-sidebar="locate-current-session"]',
+    )
+    expect(locateButton).not.toBeNull()
+    expect(
+      document.querySelector<HTMLButtonElement>('[data-sidebar="scroll-to-top"]'),
+    ).not.toBeNull()
+    // The actions render inside the scroll viewport, pinned over the list.
+    expect(locateButton?.closest('[data-session-list-actions]')).not.toBeNull()
+    expect(document.querySelector('[data-sticky-group]')).not.toBeNull()
+
+    // Rows carry no close actions even though a session is selected.
+    const item = document.querySelector<HTMLElement>(`[data-session-item="${session.id}"]`)
+    if (!item) throw new Error('session item not found')
+    fireEvent.contextMenu(item)
+    expect(screen.queryByRole('menuitem', { name: 'Close' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('menuitem', { name: 'Close All' })).not.toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'Pin' })).toBeInTheDocument()
+
+    // The locate action still reaches the selected session from the history list.
+    if (!locateButton) throw new Error('locate action not found')
+    expect(locateButton).toBeEnabled()
+    await user.click(locateButton)
+    expect(await screen.findByText(session.title)).toBeInTheDocument()
   })
 })

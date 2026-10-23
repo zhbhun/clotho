@@ -75,9 +75,17 @@
   --transient-scrollbar-thumb: color-mix(in oklab, var(--sidebar-foreground) 27%, transparent);
 }
 
-/* Absolutely-positioned virtual rows must not cover the transient scrollbar. */
+/* Absolutely-positioned virtual rows must not cover the transient scrollbar,
+   and neither must the project window's pinned group headers. */
 .sidebar-session-scroll [data-slot='scroll-area-scrollbar'] {
   z-index: 20;
+}
+
+/* The pinned group headers and the floating list actions only render in the
+   project window's list (no fixed bar above it). The actions float above the
+   headers (10) but under the transient scrollbar (20). */
+.sidebar-session-scroll [data-session-list-actions] {
+  z-index: 15;
 }
 
 /* Rows slide under a stationary pointer while the list scrolls, so :hover would

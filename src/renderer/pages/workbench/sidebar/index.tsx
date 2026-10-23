@@ -42,6 +42,7 @@ export function SessionSidebar({
   onStartNewSession,
   onTogglePinSession,
   onToggleArchiveSession,
+  showTabSwitcher = true,
 }: {
   activeTab: 'current' | 'history'
   focusNavigationRevision?: number
@@ -58,6 +59,8 @@ export function SessionSidebar({
   onStartNewSession: () => void
   onTogglePinSession: (session: WorkbenchSession) => void
   onToggleArchiveSession?: (session: WorkbenchSession) => void
+  /** False in a project window: no tab bar; the list pins headers and floats the actions. */
+  showTabSwitcher?: boolean
 }) {
   const { t } = useTranslation()
   const { hoverPreview, setHoverPreview } = useSidebar()
@@ -68,12 +71,14 @@ export function SessionSidebar({
   const [isArchivedCollapsed, setIsArchivedCollapsed] = useState(true)
   const sessionCount = sessionTimeline.reduce((total, group) => total + group.sessions.length, 0)
   const selectedSessionId = selectedSession?.id ?? null
+  const hasTabBar = showTabSwitcher
   // Closing a session means closing its open tab, so the actions belong to the
-  // "current" list only; history entries are not open tabs. The close scope is
-  // the displayed list itself, in display order.
+  // "current" list only, and only where the current view exists: history entries
+  // are not open tabs, and a project window's history list has no tabs at all.
+  // The close scope is the displayed list itself, in display order.
   const close = useMemo(
     () =>
-      activeTab === 'current'
+      showTabSwitcher && activeTab === 'current'
         ? {
             sessions: sessionTimeline.flatMap((group) =>
               group.sessions.map(({ session }) => session),
@@ -81,7 +86,7 @@ export function SessionSidebar({
             onCloseSession,
           }
         : undefined,
-    [activeTab, onCloseSession, sessionTimeline],
+    [onCloseSession, sessionTimeline, showTabSwitcher, activeTab],
   )
   const isSessionInList = (sessionId: string | null) =>
     sessionId !== null &&
@@ -145,14 +150,16 @@ export function SessionSidebar({
           </SidebarMenuItem>
         </SidebarMenu>
 
-        <SessionListTabs
-          activeTab={activeTab}
-          canLocateCurrent={isSessionInList(selectedSessionId)}
-          onLocateCurrent={locateCurrentSession}
-          onScrollToTop={scrollToTop}
-          onTabChange={onTabChange}
-          onTabIntoSessions={handleTabIntoSessions}
-        />
+        {hasTabBar ? (
+          <SessionListTabs
+            activeTab={activeTab}
+            canLocateCurrent={isSessionInList(selectedSessionId)}
+            onLocateCurrent={locateCurrentSession}
+            onScrollToTop={scrollToTop}
+            onTabChange={onTabChange}
+            onTabIntoSessions={handleTabIntoSessions}
+          />
+        ) : null}
       </SidebarHeader>
 
       <TransientScrollArea
@@ -175,6 +182,7 @@ export function SessionSidebar({
               selectedSessionId={selectedSessionId}
               sessionTimeline={sessionTimeline}
               viewport={viewport}
+              pinsHeaders={!hasTabBar}
               onDeleteSession={onDeleteSession}
               onRenameSession={onRenameSession}
               onSelectSession={onSelectSession}

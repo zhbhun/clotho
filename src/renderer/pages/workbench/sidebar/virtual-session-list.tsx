@@ -1,6 +1,14 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { ChevronRight } from 'lucide-react'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import {
+  type KeyboardEvent,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 
 import { SidebarGroup, SidebarGroupLabel, SidebarMenu } from '@/shadcn/sidebar'
 import { cn } from '@/shadcn/utils'
@@ -9,6 +17,7 @@ import type { SessionMenuClose } from '../components/session-context-menu'
 import type { WorkbenchSession } from '../stores/workbench-store'
 import { ARCHIVED_GROUP_ID, type SessionTimelineGroup } from '../utils/session-list'
 import { SessionItem } from './session-item'
+import { SessionListActions } from './session-list-actions'
 import {
   GROUP_GAP,
   GROUP_HEIGHT,
@@ -69,37 +78,66 @@ function ArchivedGroupHeader({
 }
 
 /*
- * Group labels are plain virtualized rows: they scroll away with their group (no
- * sticky pinning — the fixed tabs bar above the list owns the top edge). Positioned
- * with `transform`, like the session rows.
+ * Group labels: plain virtualized rows that scroll away with their group in free
+ * windows (the fixed tabs bar above the list owns the top edge); the project
+ * window's list has no bar, so its variant pins each header within its group span
+ * instead. The pinned variant follows the old layout's rules: positioned with
+ * `top`, not `translateY` (WebKit computes sticky offsets ignoring ancestor
+ * transforms, which would pin every header at the viewport top), and rendered
+ * outside the virtual window (one small node per date group) so a pinned header
+ * never disappears mid-scroll — that is why the two variants map from different
+ * row sources in the list body.
  */
-function renderGroupRow(
-  row: VirtualGroupRow,
-  virtualRow: { size: number; start: number },
-  onToggleArchivedGroup?: () => void,
-) {
+function GroupHeader({
+  row,
+  onToggleArchivedGroup,
+}: {
+  row: VirtualGroupRow
+  onToggleArchivedGroup?: () => void
+}) {
+  return (
+    <SidebarGroup className="bg-sidebar px-2 py-0">
+      {row.isArchivedGroup && onToggleArchivedGroup ? (
+        <ArchivedGroupHeader
+          count={row.count}
+          isCollapsed={row.isCollapsed}
+          label={row.label}
+          onToggle={onToggleArchivedGroup}
+        />
+      ) : (
+        <GroupLabel label={row.label} />
+      )}
+    </SidebarGroup>
+  )
+}
+
+/** Free-window variant: one virtualized row, scrolls away with its group. */
+function ScrollingGroupRow({ row, size }: { row: VirtualGroupRow; size: number }) {
   return (
     <div
       className="absolute left-0 top-0 w-full"
-      key={row.key}
-      style={{
-        height: virtualRow.size,
-        transform: `translateY(${virtualRow.start}px)`,
-      }}
+      style={{ height: size, transform: `translateY(${row.start}px)` }}
     >
       {row.hasTopGap ? <div style={{ height: GROUP_GAP }} /> : null}
-      <SidebarGroup className="px-2 py-0">
-        {row.isArchivedGroup && onToggleArchivedGroup ? (
-          <ArchivedGroupHeader
-            count={row.count}
-            isCollapsed={row.isCollapsed}
-            label={row.label}
-            onToggle={onToggleArchivedGroup}
-          />
-        ) : (
-          <GroupLabel label={row.label} />
-        )}
-      </SidebarGroup>
+      <GroupHeader row={row} />
+    </div>
+  )
+}
+
+/** Project-window variant: spans its group and pins to the viewport top within it. */
+function StickyGroupRow({
+  row,
+  onToggleArchivedGroup,
+}: {
+  row: VirtualGroupRow
+  onToggleArchivedGroup?: () => void
+}) {
+  return (
+    <div className="absolute left-0 w-full" style={{ height: row.end - row.start, top: row.start }}>
+      {row.hasTopGap ? <div style={{ height: GROUP_GAP }} /> : null}
+      <div className="sticky top-0 z-10" data-sticky-group>
+        <GroupHeader row={row} onToggleArchivedGroup={onToggleArchivedGroup} />
+      </div>
     </div>
   )
 }
@@ -114,6 +152,7 @@ export function VirtualSessionList({
   selectedSessionId,
   sessionTimeline,
   viewport,
+  pinsHeaders = false,
   onDeleteSession,
   onRenameSession,
   onSelectSession,
@@ -130,6 +169,8 @@ export function VirtualSessionList({
   selectedSessionId: string | null
   sessionTimeline: SessionTimelineGroup[]
   viewport: HTMLDivElement | null
+  /** Project-window variant: pinned group headers with the list actions floating on them. */
+  pinsHeaders?: boolean
   onDeleteSession: (session: WorkbenchSession) => void
   onRenameSession: (session: WorkbenchSession) => void
   onSelectSession: (session: WorkbenchSession) => void
@@ -137,15 +178,16 @@ export function VirtualSessionList({
   onTogglePinSession: (session: WorkbenchSession) => void
   onToggleArchiveSession?: (session: WorkbenchSession) => void
 }) {
-  // Arrow-key navigation (parent revision) and Tabbing into the list from the tabs bar
-  // (local revision) share one scroll-and-focus effect.
-  const listFocusRevision = focusNavigationRevision + enterListRevision
+  // Arrow-key navigation (parent revision) and Tabbing into the list from the
+  // floating actions (local revision, project windows) share one scroll-and-focus effect.
+  const [enterListLocalRevision, setEnterListLocalRevision] = useState(0)
+  const listFocusRevision = focusNavigationRevision + enterListRevision + enterListLocalRevision
   const lastFocusNavigationRevisionRef = useRef(listFocusRevision)
   const collapsedGroupIds = useMemo(
     () => (isArchivedCollapsed ? new Set([ARCHIVED_GROUP_ID]) : undefined),
     [isArchivedCollapsed],
   )
-  const { rows, sessionIndexes } = useMemo(
+  const { groupRows, rows, sessionIndexes } = useMemo(
     () => createVirtualRows(sessionTimeline, { collapsedGroupIds }),
     [collapsedGroupIds, sessionTimeline],
   )
@@ -207,7 +249,8 @@ export function VirtualSessionList({
     }
   }, [viewport])
 
-  // Locate lives in the fixed tabs bar; its click reaches the virtualizer as a revision.
+  // Locate lives in the fixed tabs bar (free windows) or the floating actions
+  // (project windows); its click reaches the virtualizer as a revision.
   const lastLocateRequestRevisionRef = useRef(locateRequestRevision)
   useLayoutEffect(() => {
     if (lastLocateRequestRevisionRef.current === locateRequestRevision) return
@@ -215,6 +258,18 @@ export function VirtualSessionList({
     if (selectedRowIndex === undefined) return
     virtualizer.scrollToIndex(selectedRowIndex, { align: 'center', behavior: 'smooth' })
   }, [locateRequestRevision, selectedRowIndex, virtualizer])
+
+  // Tabbing into the list from the floating actions (project windows only).
+  const handleTabIntoSessions = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key !== 'Tab' || event.shiftKey || focusedIndex === undefined) return
+    event.preventDefault()
+    setEnterListLocalRevision((revision) => revision + 1)
+  }
+  const scrollToTop = () => viewport?.scrollTo({ top: 0, behavior: 'smooth' })
+  const locateSelectedSession = () => {
+    if (selectedRowIndex === undefined) return
+    virtualizer.scrollToIndex(selectedRowIndex, { align: 'center', behavior: 'smooth' })
+  }
 
   useLayoutEffect(() => {
     if (!viewport) return
@@ -231,10 +286,36 @@ export function VirtualSessionList({
       data-session-list-scrolling={scrollHover.isScrolling ? 'true' : undefined}
       style={{ height: virtualizer.getTotalSize() }}
     >
+      {/* The project window's list has no fixed bar; its locate and back-to-top
+          actions float on the pinned header row instead, inside the scroll flow. */}
+      {pinsHeaders ? (
+        <SessionListActions
+          canLocateCurrent={selectedRowIndex !== undefined}
+          onLocateCurrent={locateSelectedSession}
+          onScrollToTop={scrollToTop}
+          onTabIntoSessions={handleTabIntoSessions}
+        />
+      ) : null}
+      {/* The pinned variant renders all headers outside the virtual window; the
+          scrolling variant renders them as ordinary virtualized rows, so they
+          unmount as their groups scroll out of the virtual window. */}
+      {pinsHeaders
+        ? groupRows.map((groupRow) => (
+            <StickyGroupRow
+              key={groupRow.key}
+              row={groupRow}
+              onToggleArchivedGroup={onToggleArchivedCollapsed}
+            />
+          ))
+        : null}
       {virtualizer.getVirtualItems().map((virtualRow) => {
         const row = rows[virtualRow.index]
         if (!row) return null
-        if (row.type === 'group') return renderGroupRow(row, virtualRow, onToggleArchivedCollapsed)
+        if (row.type === 'group') {
+          return pinsHeaders ? null : (
+            <ScrollingGroupRow key={row.key} row={row} size={virtualRow.size} />
+          )
+        }
 
         return (
           <div

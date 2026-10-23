@@ -147,7 +147,14 @@ export function useProjects(
       t,
     ],
   )
-  const activeTimeline = activeTab === 'current' ? workTimeline : sessionTimeline
+  // A project window is bound to one project, so the sidebar always shows the
+  // full history; the current/history split only spans projects in a free window.
+  const activeTimeline =
+    windowKind === 'project'
+      ? sessionTimeline
+      : activeTab === 'current'
+        ? workTimeline
+        : sessionTimeline
   const sessionList = useMemo(
     () => activeTimeline.flatMap((group) => group.sessions),
     [activeTimeline],
@@ -490,6 +497,7 @@ export function useProjects(
     activeTab,
     setActiveTab,
     activeTimeline,
+    showTabSwitcher: windowKind === 'free',
     archiveSessions,
     bindClaudeSession,
     closeSession,
