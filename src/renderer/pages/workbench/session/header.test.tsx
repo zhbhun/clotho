@@ -188,13 +188,15 @@ describe('ConversationHeader', () => {
     expect(document.querySelector('[data-sidebar="trigger"]')).not.toBeNull()
   })
 
-  it('drops the project and history controls while a tab-less new-chat draft is active', async () => {
+  it('keeps the project and history controls while a tab-less new-chat draft is active', async () => {
     await appI18n.changeLanguage('zh-CN')
     renderHeader({ activeSessionId: 'draft-1' })
 
-    expect(document.querySelector('[data-window-project-title]')).toBeNull()
-    expect(screen.queryByRole('button', { name: appI18n.t('workbench.history.title') })).toBeNull()
-    expect(document.querySelector('.session-tab-actions')).toBeNull()
+    expect(document.querySelector('[data-window-project-title]')).not.toBeNull()
+    expect(
+      screen.getByRole('button', { name: appI18n.t('workbench.history.title') }),
+    ).toBeInTheDocument()
+    expect(document.querySelector('.session-tab-actions')).not.toBeNull()
   })
 
   it('opens the sidebar hover preview after the pointer rests on the collapsed trigger', () => {

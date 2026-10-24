@@ -12,7 +12,6 @@ import { SessionHistoryMenuContent } from './session-history-menu'
 /** History button; clicking opens the dropdown history menu, while the picker
     shortcut opens the quick switcher's session mode instead. */
 export function SessionHistoryButton({
-  appearance = 'default',
   activeSessionId,
   error = null,
   isLoading = false,
@@ -25,7 +24,6 @@ export function SessionHistoryButton({
   onSelectSession,
   onTogglePinSession,
 }: {
-  appearance?: 'default' | 'empty-surface'
   activeSessionId: string | null
   error?: string | null
   isLoading?: boolean
@@ -62,14 +60,7 @@ export function SessionHistoryButton({
         side="bottom"
       >
         <MenuTrigger
-          render={
-            <Button
-              aria-label={t('workbench.history.title')}
-              className={appearance === 'empty-surface' ? 'ml-auto rounded-xl' : undefined}
-              size="icon"
-              variant={appearance === 'empty-surface' ? 'surface' : 'mute'}
-            />
-          }
+          render={<Button aria-label={t('workbench.history.title')} size="icon" variant="mute" />}
         >
           <Clock data-icon="inline-start" strokeWidth={1.5} />
         </MenuTrigger>

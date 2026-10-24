@@ -3,72 +3,19 @@ import { useTranslation } from 'react-i18next'
 import { cn } from '@/shadcn/utils'
 
 import { APP_CONTENT_CONTAINER_CLASS } from '../../../components/app-layout'
-import type { SessionActivity, WorkbenchProject, WorkbenchSession } from '../stores/workbench-store'
-import { BranchSwitcherButton } from './branch-switcher-button'
 import { ClothoMark } from './clotho-mark'
-import { ProjectSwitcherButton } from './project-switcher-button'
 import { PromptComposer, type PromptComposerBaseProps } from './prompt'
-import { SessionHistoryButton } from './session-history'
 
 export type SessionEmptyStateProps = {
-  activeSessionId: string | null
   composerProps: PromptComposerBaseProps
-  hasTabSessions: boolean
-  historyError: string | null
-  historyIsLoading: boolean
-  historySessions: WorkbenchSession[]
-  pinnedSessionIds: ReadonlySet<string>
-  projectMode: 'project' | 'home'
-  projectName: string
-  projects: WorkbenchProject[]
-  selectedProject?: WorkbenchProject
-  sessionActivity: Record<string, SessionActivity>
-  onAddProject: () => void
-  onDeleteSession: (session: WorkbenchSession) => void
-  onOpenProjectInNewWindow?: (projectId: string) => void
-  onRenameSession: (session: WorkbenchSession) => void
-  onSelectProject: (projectId: string | null) => void
-  onSelectSession: (session: WorkbenchSession) => void
-  onRetryHistory: () => void
-  onTogglePinSession: (session: WorkbenchSession) => void
 }
 
 /** Surface shown when there is no conversation yet: brand mark centered above the bottom-docked composer. */
-export function SessionEmptyState({
-  activeSessionId,
-  composerProps,
-  hasTabSessions,
-  historyError,
-  historyIsLoading,
-  historySessions,
-  pinnedSessionIds,
-  projectMode,
-  projectName,
-  projects,
-  selectedProject,
-  sessionActivity,
-  onAddProject,
-  onDeleteSession,
-  onOpenProjectInNewWindow,
-  onRenameSession,
-  onSelectProject,
-  onSelectSession,
-  onRetryHistory,
-  onTogglePinSession,
-}: SessionEmptyStateProps) {
+export function SessionEmptyState({ composerProps }: SessionEmptyStateProps) {
   const { t } = useTranslation()
-  // Without tabs the selected session is the blank new-chat draft, so the
-  // project and history controls move from the header onto a strip attached
-  // to the composer.
-  const showProjectStrip = !hasTabSessions
 
   return (
-    <div
-      className={cn(
-        'flex min-h-0 flex-col',
-        hasTabSessions ? 'pointer-events-none absolute inset-x-0 top-10 bottom-0' : 'flex-1',
-      )}
-    >
+    <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto px-6">
         <div
           className={cn(
@@ -82,56 +29,9 @@ export function SessionEmptyState({
           </h1>
         </div>
       </div>
-      <div className={cn('shrink-0 px-6 pb-4', hasTabSessions && 'pointer-events-auto')}>
+      <div className="shrink-0 px-6 pb-4">
         <div className={cn(APP_CONTENT_CONTAINER_CLASS, 'flex flex-col gap-3')}>
-          {showProjectStrip ? (
-            /* The strip and composer stack without the surrounding gap so the
-               composer overlaps the strip's bottom padding, leaving 8px of
-               visible surface above and below the button row. */
-            <div className="flex flex-col">
-              <div className="mx-2 flex min-h-14 items-center rounded-t-3xl bg-project-switcher-surface px-2 pt-2 pb-6">
-                <ProjectSwitcherButton
-                  appearance="empty-surface"
-                  projectMode={projectMode}
-                  projectName={projectName}
-                  projects={projects}
-                  selectedProject={selectedProject}
-                  onAddProject={onAddProject}
-                  onOpenProjectInNewWindow={onOpenProjectInNewWindow}
-                  onSelectProject={onSelectProject}
-                />
-                <BranchSwitcherButton
-                  project={selectedProject}
-                  projectMode={projectMode}
-                  projectName={projectName}
-                />
-                <SessionHistoryButton
-                  appearance="empty-surface"
-                  activeSessionId={activeSessionId}
-                  error={historyError}
-                  isLoading={historyIsLoading}
-                  pinnedSessionIds={pinnedSessionIds}
-                  sessionActivity={sessionActivity}
-                  sessions={historySessions}
-                  onRetry={onRetryHistory}
-                  onDeleteSession={onDeleteSession}
-                  onRenameSession={onRenameSession}
-                  onSelectSession={onSelectSession}
-                  onTogglePinSession={onTogglePinSession}
-                />
-              </div>
-              <div className="relative z-10 -mt-4">
-                <PromptComposer
-                  {...composerProps}
-                  className="rounded-3xl"
-                  shadowDirection="downward"
-                  slashMenuPlacement="below"
-                />
-              </div>
-            </div>
-          ) : (
-            <PromptComposer {...composerProps} slashMenuPlacement="above" />
-          )}
+          <PromptComposer {...composerProps} slashMenuPlacement="above" />
         </div>
       </div>
     </div>

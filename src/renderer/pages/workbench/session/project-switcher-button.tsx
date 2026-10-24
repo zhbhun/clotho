@@ -7,14 +7,12 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip'
 import { cn } from '@/shadcn/utils'
 
 import { Menu, MenuTrigger } from '../../../components/menu'
-import { DEFAULT_PROJECT_ICON, ProjectIcon } from '../../../components/project-icon'
+import { ProjectIcon } from '../../../components/project-icon'
 import { ShortcutTooltip } from '../components/shortcut-tooltip'
 import { type WorkbenchProject, useWorkbenchStore } from '../stores/workbench-store'
-import { ProjectTooltip } from './project-switcher'
 import { ProjectSwitcherMenuContent } from './project-switcher-menu'
 
 export type ProjectSwitcherButtonProps = {
-  appearance?: 'header' | 'empty-surface'
   className?: string
   projectMode: 'project' | 'home'
   projectName: string
@@ -28,7 +26,6 @@ export type ProjectSwitcherButtonProps = {
 /** Project button; clicking opens the dropdown project menu, while the
     picker shortcut opens the quick switcher's project mode instead. */
 export function ProjectSwitcherButton({
-  appearance = 'header',
   className,
   projectMode,
   projectName,
@@ -41,7 +38,6 @@ export function ProjectSwitcherButton({
   const { t } = useTranslation()
   const windowKind = useWorkbenchStore((state) => state.windowKind)
   const [isExitHovered, setExitHovered] = useState(false)
-  const isHeader = appearance === 'header'
   // Exiting a side project lands back on the home-base project (the built-in
   // homedir project), so while it is the active project the exit affordance
   // would only offer to leave the very place the X exists to return to. A
@@ -57,30 +53,21 @@ export function ProjectSwitcherButton({
       render={
         <Button
           className={cn(
-            'min-w-0',
-            isHeader
-              ? 'max-w-[50vw]'
-              : cn(
-                  'max-w-full justify-start rounded-xl gap-0.5',
-                  canExitProject ? '!pl-0.5' : '!pl-1',
-                  '!pr-2',
-                ),
-            isHeader &&
-              canExitProject &&
+            'min-w-0 max-w-[50vw]',
+            canExitProject &&
               isExitHovered &&
               'bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_5%)] text-foreground',
           )}
-          data-active={!isHeader && isExitHovered ? true : undefined}
           data-window-project-title
           type="button"
-          variant={isHeader ? 'secondary' : 'surface'}
+          variant="secondary"
         />
       }
     >
       {selectedProject ? (
         <ProjectIcon
           className={cn(
-            isHeader ? 'size-3.5' : 'h-3.5 w-6',
+            'size-3.5',
             canExitProject &&
               'transition-opacity group-hover/project-switcher:opacity-0 group-focus-within/project-switcher:opacity-0',
           )}
@@ -88,20 +75,14 @@ export function ProjectSwitcherButton({
           plain
           size="small"
         />
-      ) : isHeader ? (
-        <FolderKanban className="size-3.5" />
       ) : (
-        <ProjectIcon className="h-3.5 w-6" icon={DEFAULT_PROJECT_ICON} plain size="small" />
+        <FolderKanban className="size-3.5" />
       )}
-      {selectedProject || !isHeader ? (
-        <span className="min-w-0 truncate">
-          {selectedProject ? projectName : t('workbench.project.select')}
-        </span>
-      ) : null}
+      {selectedProject ? <span className="min-w-0 truncate">{projectName}</span> : null}
     </MenuTrigger>
   )
 
-  const trigger = isHeader ? (
+  const trigger = (
     <ShortcutTooltip
       commandId="workbench.picker.project.open"
       label={t('workbench.project.switch')}
@@ -109,12 +90,6 @@ export function ProjectSwitcherButton({
     >
       {triggerButton}
     </ShortcutTooltip>
-  ) : selectedProject?.path ? (
-    <ProjectTooltip align="start" content={selectedProject.path} side="bottom">
-      {triggerButton}
-    </ProjectTooltip>
-  ) : (
-    triggerButton
   )
 
   return (
@@ -140,15 +115,10 @@ export function ProjectSwitcherButton({
               render={
                 <Button
                   aria-label={t('workbench.project.exit')}
-                  className={cn(
-                    'pointer-events-none absolute inset-y-0 my-auto opacity-0 transition-opacity group-hover/project-switcher:pointer-events-auto group-hover/project-switcher:opacity-100 group-focus-within/project-switcher:pointer-events-auto group-focus-within/project-switcher:opacity-100',
-                    isHeader
-                      ? 'left-1 bg-transparent hover:bg-transparent dark:hover:bg-transparent'
-                      : 'left-[3px] rounded-xl',
-                  )}
+                  className="pointer-events-none absolute inset-y-0 left-1 my-auto bg-transparent opacity-0 transition-opacity hover:bg-transparent group-hover/project-switcher:pointer-events-auto group-hover/project-switcher:opacity-100 group-focus-within/project-switcher:pointer-events-auto group-focus-within/project-switcher:opacity-100 dark:hover:bg-transparent"
                   size="icon-sm"
                   type="button"
-                  variant={isHeader ? 'ghost' : 'surface-strong'}
+                  variant="ghost"
                   onClick={(event) => {
                     event.preventDefault()
                     event.stopPropagation()

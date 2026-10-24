@@ -262,29 +262,16 @@ function ModelOnboardingGate({
 function SessionAreaContent({
   forkSession,
   isMockProject,
-  isProjectSessionLoading,
-  pinnedSessionIds,
   projectMode,
-  projectSessionError,
   projects,
   sessionId,
   selectedProject,
   selectedSession,
   selectPromptFiles,
-  sessionActivity,
-  tabSessions,
-  workspaceSessions,
   turnScrollRequest,
-  onAddProject,
   onContentScrolledChange,
-  onDeleteSession,
-  onOpenProjectInNewWindow,
   onOpenSettings,
   onRenameSession,
-  onSelectSession,
-  onRetryProjectSessions,
-  onTogglePinSession,
-  setSelectedProjectId,
 }: SessionAreaProps & {
   sessionId: string
   turnScrollRequest: TurnScrollRequest | null
@@ -808,28 +795,7 @@ function SessionAreaContent({
           />
         </>
       ) : (
-        <SessionEmptyState
-          activeSessionId={selectedSession?.id ?? null}
-          composerProps={promptComposerProps}
-          hasTabSessions={tabSessions.length > 0}
-          historyError={projectSessionError}
-          historyIsLoading={isProjectSessionLoading}
-          historySessions={workspaceSessions}
-          pinnedSessionIds={pinnedSessionIds}
-          projectMode={projectMode}
-          projectName={selectedProject ? projectDisplayName(selectedProject) : ''}
-          projects={projects}
-          selectedProject={selectedProject}
-          sessionActivity={sessionActivity}
-          onAddProject={onAddProject}
-          onDeleteSession={onDeleteSession}
-          onOpenProjectInNewWindow={onOpenProjectInNewWindow}
-          onRenameSession={onRenameSession}
-          onSelectProject={setSelectedProjectId}
-          onSelectSession={onSelectSession}
-          onRetryHistory={onRetryProjectSessions}
-          onTogglePinSession={onTogglePinSession}
-        />
+        <SessionEmptyState composerProps={promptComposerProps} />
       )}
     </>
   )

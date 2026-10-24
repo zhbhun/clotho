@@ -60,10 +60,6 @@ export function ConversationHeader({
   // The sidebar owns the top-left corner while it covers it; below the
   // breakpoint the drawer stays closed until toggled, freeing the inset.
   const showSidebarTrigger = isMobile ? !openMobile : state === 'collapsed'
-  // Without tabs the selected session is the blank new-chat draft, whose
-  // surface carries the project and history controls above the composer
-  // instead; the header keeps them when nothing is selected at all.
-  const showHeaderActions = sessions.length > 0 || activeSessionId === null
 
   return (
     <header
@@ -82,19 +78,17 @@ export function ConversationHeader({
           size="icon"
         />
       ) : null}
-      {showHeaderActions ? (
-        <div className="app-region-no-drag flex h-8 min-w-0 items-center self-center">
-          <ProjectSwitcherButton
-            projectMode={projectMode}
-            projectName={projectName}
-            projects={projects}
-            selectedProject={selectedProject}
-            onAddProject={onAddProject}
-            onOpenProjectInNewWindow={onOpenProjectInNewWindow}
-            onSelectProject={onSelectProject}
-          />
-        </div>
-      ) : null}
+      <div className="app-region-no-drag flex h-8 min-w-0 items-center self-center">
+        <ProjectSwitcherButton
+          projectMode={projectMode}
+          projectName={projectName}
+          projects={projects}
+          selectedProject={selectedProject}
+          onAddProject={onAddProject}
+          onOpenProjectInNewWindow={onOpenProjectInNewWindow}
+          onSelectProject={onSelectProject}
+        />
+      </div>
       <SessionTabs
         activeSessionId={activeSessionId}
         pinnedSessionIds={pinnedSessionIds}
@@ -106,29 +100,27 @@ export function ConversationHeader({
         onSelectSession={onSelectSession}
         onTogglePinSession={onTogglePinSession}
       />
-      {showHeaderActions ? (
-        <div className="session-tab-actions app-region-no-drag relative flex shrink-0 items-center px-1 text-foreground-subtlest">
-          <BranchSwitcherButton
-            appearance="header"
-            project={selectedProject}
-            projectMode={projectMode}
-            projectName={projectName}
-          />
-          <SessionHistoryButton
-            activeSessionId={activeSessionId}
-            error={historyError}
-            isLoading={historyIsLoading}
-            pinnedSessionIds={pinnedSessionIds}
-            sessionActivity={sessionActivity}
-            sessions={historySessions}
-            onRetry={onRetryHistory}
-            onDeleteSession={onDeleteSession}
-            onRenameSession={onRenameSession}
-            onSelectSession={onSelectSession}
-            onTogglePinSession={onTogglePinSession}
-          />
-        </div>
-      ) : null}
+      <div className="session-tab-actions app-region-no-drag relative flex shrink-0 items-center px-1 text-foreground-subtlest">
+        <BranchSwitcherButton
+          appearance="header"
+          project={selectedProject}
+          projectMode={projectMode}
+          projectName={projectName}
+        />
+        <SessionHistoryButton
+          activeSessionId={activeSessionId}
+          error={historyError}
+          isLoading={historyIsLoading}
+          pinnedSessionIds={pinnedSessionIds}
+          sessionActivity={sessionActivity}
+          sessions={historySessions}
+          onRetry={onRetryHistory}
+          onDeleteSession={onDeleteSession}
+          onRenameSession={onRenameSession}
+          onSelectSession={onSelectSession}
+          onTogglePinSession={onTogglePinSession}
+        />
+      </div>
     </header>
   )
 }
