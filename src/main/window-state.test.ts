@@ -421,4 +421,18 @@ describe('window state container', () => {
     const removed = withoutWindowEntry(rebound, 'f')
     expect(removed).toEqual({ lastActiveWindow: undefined, openedWindows: [] })
   })
+
+  test('closing a free window drops its entry and keeps the others', () => {
+    const base = windowsState('b', [
+      freeEntry('a', { x: 10, y: 10, width: 800, height: 600 }),
+      freeEntry('b', { x: 20, y: 20, width: 800, height: 600 }),
+    ])
+    const removed = withoutWindowEntry(base, 'b')
+    expect(removed.openedWindows.map((entry) => entry.id)).toEqual(['a'])
+    expect(removed.lastActiveWindow).toBeUndefined()
+
+    const kept = withoutWindowEntry(base, 'a')
+    expect(kept.openedWindows.map((entry) => entry.id)).toEqual(['b'])
+    expect(kept.lastActiveWindow).toBe('b')
+  })
 })

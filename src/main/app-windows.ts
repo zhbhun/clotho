@@ -233,13 +233,13 @@ export function createAppWindows(options: AppWindowsOptions) {
       })()
     })
     window.on('closed', () => {
-      const closed = registry.unregister(entry.id)
+      registry.unregister(entry.id)
       browserWindows.delete(entry.id)
       trackers.delete(entry.id)
       closingWindows.delete(entry.id)
-      // Project windows are restored on the next launch only when the app
-      // quit with them open; one closed by hand is gone for good.
-      if (closed?.kind === 'project' && !isQuitting) {
+      // A window closed by hand is gone for good; windows open at quit keep
+      // their entries so the next launch restores them.
+      if (!isQuitting) {
         void transformWindows((windows) => withoutWindowEntry(windows, entry.id))
       }
       options.onWindowClosed?.(entry.id)
