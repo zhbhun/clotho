@@ -1,3 +1,5 @@
+import { nativeTheme } from 'electron'
+
 import type { AppAppearancePreferences } from '@/shared/rpc'
 
 import type { WindowFrame } from './window-state'
@@ -17,13 +19,21 @@ type MainWindowMaximizeTarget = {
 /**
  * Builds the Electron BrowserWindow options:
  * hidden until the themed document is ready, macOS hidden-inset title bar with
- * the traffic lights nudged into the padded corner, restored frame position.
+ * the traffic lights nudged into the padded corner, restored frame position,
+ * and a themed native background so teardown never composites Electron's
+ * default white.
  */
 export function createMainWindowOptions(
   preload: string,
   frame: WindowFrame,
   appearance: AppAppearancePreferences,
 ) {
+  const resolvedTheme =
+    appearance.theme === 'system'
+      ? nativeTheme.shouldUseDarkColors
+        ? 'dark'
+        : 'light'
+      : appearance.theme
   const options: {
     title: string
     show: boolean
@@ -31,6 +41,7 @@ export function createMainWindowOptions(
     y?: number
     width: number
     height: number
+    backgroundColor?: string
     titleBarStyle?: 'hiddenInset'
     trafficLightPosition?: { x: number; y: number }
     webPreferences: {
@@ -43,6 +54,7 @@ export function createMainWindowOptions(
     show: false,
     width: frame.width,
     height: frame.height,
+    backgroundColor: appearance.themePalettes[resolvedTheme].background,
     webPreferences: {
       preload,
       // The preload applies the persisted startup theme before first paint,

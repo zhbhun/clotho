@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { DEFAULT_APP_PREFERENCES } from './claude/settings'
 import {
@@ -10,7 +10,19 @@ import {
   toggleMainWindowMaximize,
 } from './window-options'
 
+// The options builder reads the live OS appearance for `theme: 'system'`;
+// electron cannot load under node, so stub the one signal it uses.
+const { nativeThemeMock } = vi.hoisted(() => ({
+  nativeThemeMock: { shouldUseDarkColors: true },
+}))
+vi.mock('electron', () => ({ nativeTheme: nativeThemeMock }))
+
 const FRAME = { x: 160, y: 100, width: 1280, height: 800 }
+
+const appearanceWithTheme = (theme: 'dark' | 'light' | 'system') => ({
+  ...DEFAULT_APP_PREFERENCES.appearance,
+  theme,
+})
 
 describe('main window startup visibility', () => {
   it('keeps the window hidden until the themed document is ready', () => {
@@ -61,6 +73,34 @@ describe('main window startup visibility', () => {
     handleReady?.()
 
     expect(actions).toEqual(['maximize', 'show'])
+  })
+})
+
+describe('main window background color', () => {
+  it('uses the dark palette background for the dark theme', () => {
+    const options = createMainWindowOptions('preload', FRAME, appearanceWithTheme('dark'))
+
+    expect(options.backgroundColor).toBe(
+      DEFAULT_APP_PREFERENCES.appearance.themePalettes.dark.background,
+    )
+  })
+
+  it('uses the light palette background for the light theme', () => {
+    nativeThemeMock.shouldUseDarkColors = true
+    const options = createMainWindowOptions('preload', FRAME, appearanceWithTheme('light'))
+
+    expect(options.backgroundColor).toBe(
+      DEFAULT_APP_PREFERENCES.appearance.themePalettes.light.background,
+    )
+  })
+
+  it('resolves the system theme through the native appearance', () => {
+    nativeThemeMock.shouldUseDarkColors = false
+    const options = createMainWindowOptions('preload', FRAME, appearanceWithTheme('system'))
+
+    expect(options.backgroundColor).toBe(
+      DEFAULT_APP_PREFERENCES.appearance.themePalettes.light.background,
+    )
   })
 })
 
