@@ -1,3 +1,4 @@
+import { nativeImage } from 'electron'
 import type { MenuItemConstructorOptions } from 'electron'
 
 import type { AppLanguage } from '@/shared/rpc'
@@ -5,6 +6,7 @@ import type { CommandId, ShortcutBinding, ShortcutModifier } from '@/shared/shor
 
 import type { ApplicationMenuLabels } from './menu-labels'
 import { menuLabels } from './menu-labels'
+import sessionIconUrl from './session-menu-icon.png'
 
 export type ApplicationMenuActions = {
   /** Forward a shortcut command to the focused renderer for dispatch. */
@@ -77,6 +79,33 @@ export function bindingToAccelerator(binding: ShortcutBinding): string {
   const normalizedKey = binding.key.toLocaleLowerCase('en-US')
   const key = ACCELERATOR_KEYS[normalizedKey] ?? binding.key.toLocaleUpperCase('en-US')
   return modifiers ? `${modifiers}+${key}` : key
+}
+
+let cachedSessionIcon: Electron.NativeImage | undefined
+
+/**
+ * The session-tab glyph (Lucide `message-circle-code`) as a template image, so
+ * macOS tints it with the menu text color in both appearances. The embedded
+ * png is the 2x (32px) rendering; declaring it at density 2 draws a 16pt icon.
+ */
+function sessionMenuIcon() {
+  if (!cachedSessionIcon) {
+    // Vite inlines the small png as a data URL at build time.
+    const decoded = nativeImage.createFromDataURL(sessionIconUrl)
+    const bitmap = decoded.toBitmap()
+    const icon = nativeImage.createEmpty()
+    // width/height are the buffer's pixel dimensions; at scaleFactor 2 the
+    // 32px bitmap presents as a 16pt menu glyph.
+    icon.addRepresentation({
+      scaleFactor: 2,
+      width: decoded.getSize().width,
+      height: decoded.getSize().height,
+      buffer: bitmap,
+    })
+    icon.setTemplateImage(true)
+    cachedSessionIcon = icon
+  }
+  return cachedSessionIcon
 }
 
 function commandMenuItem(
@@ -159,6 +188,7 @@ export function applicationMenuItems(options: ApplicationMenuOptions) {
           label: item.label,
           type: 'checkbox' as const,
           checked: item.isActive,
+          icon: sessionMenuIcon(),
           click: () => item.show(),
         })),
         ...(isMac

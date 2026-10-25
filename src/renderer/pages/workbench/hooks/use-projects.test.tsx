@@ -261,3 +261,47 @@ describe('useProjects session actions', () => {
     expect(useWorkbenchStore.getState().sessions[REMOTE_SESSION.id]).toBeUndefined()
   })
 })
+
+describe('useProjects window title', () => {
+  it('titles the window session — project — Clotho for a selected session', async () => {
+    const { result } = renderHook(() => useProjects())
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    act(() => {
+      useWorkbenchStore.getState().selectWorkspace(PROJECT.id)
+      useWorkbenchStore.getState().selectSession(REMOTE_SESSION.id)
+    })
+
+    expect(document.title).toBe('Original title — project-1 — Clotho')
+  })
+
+  it('degrades to project — Clotho without a selected session and Clotho on home', async () => {
+    const { result } = renderHook(() => useProjects())
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    act(() => {
+      useWorkbenchStore.getState().selectWorkspace(PROJECT.id)
+    })
+    expect(document.title).toBe('project-1 — Clotho')
+
+    act(() => {
+      useWorkbenchStore.getState().selectWorkspace(null)
+    })
+    expect(document.title).toBe('Clotho')
+  })
+
+  it('truncates a session segment past 32 characters and keeps the project whole', async () => {
+    const { result } = renderHook(() => useProjects())
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+    act(() => {
+      useWorkbenchStore.getState().selectWorkspace(PROJECT.id)
+      useWorkbenchStore.getState().selectSession(REMOTE_SESSION.id)
+    })
+
+    act(() => {
+      useWorkbenchStore.getState().setSessionTitle(REMOTE_SESSION.id, 'a'.repeat(40))
+    })
+
+    expect(document.title).toBe(`${'a'.repeat(31)}… — project-1 — Clotho`)
+  })
+})

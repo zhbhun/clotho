@@ -173,27 +173,18 @@ export async function bootstrap() {
         ? overrides
         : (commandCatalog[commandId]?.defaultBindings ?? [])
     }
-    /** Window-menu entries for every open window, labelled by the project each one shows. */
+    /** Window-menu entries for every open window, labelled by each window's own title. */
     const resolveWindows = async (): Promise<ApplicationWindowItem[]> => {
       const windows = appWindows.windows()
-      const projectWindows = windows.filter((window) => window.kind === 'project')
-      const projects =
-        projectWindows.length === 0 ? [] : await service.listProjects().catch(() => [])
-      let freeIndex = 0
       return windows.map((window) => {
-        const project = window.projectId
-          ? projects.find((item) => item.id === window.projectId)
-          : undefined
-        // Before a window's renderer has loaded, its title is still the bare
-        // app name; the strip only helps once the project title landed.
+        // The renderer owns the window title (`会话 — 项目 — Clotho`); the
+        // menu label is that title minus the app suffix. Before a window's
+        // renderer has loaded, its title is still the bare app name and the
+        // strip is a no-op, so project windows show a placeholder until the
+        // real title lands. Same-named windows get macOS' automatic numbering.
         const fromTitle = window.title.replace(/ — Clotho$/, '')
-        const label = project
-          ? project.name?.trim() || path.basename(project.path)
-          : window.kind === 'project'
-            ? fromTitle === window.title
-              ? '…'
-              : fromTitle
-            : `Clotho ${++freeIndex}`
+        const titled = fromTitle !== window.title
+        const label = window.kind === 'project' && !titled ? '…' : fromTitle
         return {
           id: window.id,
           label,
@@ -423,6 +414,13 @@ export async function bootstrap() {
             projectId: window.projectId ?? null,
             pinnedProjectIds: appWindows.registry.pinnedProjectIds(),
           }
+        },
+        // Electron's page-title-updated does not fire for later renderer JS
+        // title assignments, so the renderer nudges after changing its title.
+        windowTitleChanged: (_params, sender) => {
+          const window = windowOf(sender)
+          if (window) rebuildApplicationMenu()
+          return undefined
         },
         windowOpenProject: ({ projectId, ui }, sender) =>
           appWindows.openProjectWindow(projectId, ui, sender),

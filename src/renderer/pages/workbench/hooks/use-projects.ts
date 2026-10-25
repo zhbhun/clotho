@@ -17,7 +17,11 @@ import {
   workspaceKeyForProject,
 } from '../stores/workbench-store'
 import { findHomeProjectId } from '../utils/home-project'
-import { buildSessionTimeline, pickOpenOrPinnedSessions } from '../utils/session-list'
+import {
+  buildSessionTimeline,
+  pickOpenOrPinnedSessions,
+  sessionDisplayTitle,
+} from '../utils/session-list'
 import { useSessionActions } from './use-session-actions'
 
 export type SessionSidebarTab = 'current' | 'history'
@@ -400,17 +404,30 @@ export function useProjects(
     return () => window.removeEventListener('focus', handleFocus)
   }, [pinnedProjectIds.length, refreshProjects, windowKind])
 
-  // Every window titles itself by the project it shows so the Window menu and
-  // task switcher can tell them apart.
+  // Every window titles itself by the session and project it shows so the
+  // Window menu and task switcher can tell them apart.
   useEffect(() => {
     const boundProjectId = windowKind === 'project' ? pinnedProjectId : currentProjectId
     const project = boundProjectId ? projectMap[boundProjectId] : undefined
-    document.title =
-      project && !project.is_home ? `${projectDisplayName(project)} — Clotho` : 'Clotho'
+    // The blank unsaved draft is the new-chat surface itself, not a session to name.
+    const namedSession = selectedSession && !selectedSession.isUnsavedDraft ? selectedSession : null
+    const rawSessionTitle = namedSession ? sessionDisplayTitle(namedSession, t) : null
+    const sessionSegment =
+      rawSessionTitle && rawSessionTitle.length > 32
+        ? `${rawSessionTitle.slice(0, 31)}…`
+        : rawSessionTitle
+    const parts = [
+      sessionSegment,
+      project && !project.is_home ? projectDisplayName(project) : null,
+    ].filter(Boolean)
+    document.title = parts.length > 0 ? `${parts.join(' — ')} — Clotho` : 'Clotho'
+    // The native page-title-updated event does not fire for later JS title
+    // assignments; nudge the main process so the Window menu relabels.
+    void claude.notifyWindowTitleChanged().catch(() => {})
     return () => {
       document.title = 'Clotho'
     }
-  }, [currentProjectId, pinnedProjectId, projectMap, windowKind])
+  }, [currentProjectId, pinnedProjectId, projectMap, selectedSession, t, windowKind])
 
   const selectProject = useCallback(
     (projectId: string | null) => {

@@ -200,6 +200,9 @@ export function createAppWindows(options: AppWindowsOptions) {
     }
     window.on('move', captureGeometry)
     window.on('resize', captureGeometry)
+    // The renderer titles the window asynchronously after load; the Window
+    // menu labels come from these titles, so rebuild when one lands.
+    window.on('page-title-updated', () => options.onWindowsChanged?.())
     window.on('focus', () => {
       setDialogOwnerWindow(window)
       options.onWindowsChanged?.()

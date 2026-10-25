@@ -1029,6 +1029,11 @@ export const claude = {
     if (!isDesktopRuntime()) return
     return requestFromDesktop('windowWriteUiState', { ui })
   },
+  /** Nudges the main process to rebuild the Window menu after a title change. */
+  async notifyWindowTitleChanged(): Promise<void> {
+    if (!isDesktopRuntime()) return
+    return requestFromDesktop('windowTitleChanged', {})
+  },
   /** Stores the calling project window's workspace ui in its project's state. */
   async writeProjectState(ui: ProjectUiState): Promise<void> {
     if (!isDesktopRuntime()) return

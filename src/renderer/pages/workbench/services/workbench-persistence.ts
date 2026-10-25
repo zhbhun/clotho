@@ -141,6 +141,13 @@ export function startWorkbenchPersistence(options: WorkbenchPersistenceOptions =
       sessionTabsByWorkspace: ui.sessionTabsByWorkspace,
       activeSessionByWorkspace: ui.activeSessionByWorkspace,
     }))
+    // Restore the active session of the restored workspace so the window comes
+    // back showing it (and titling itself by it) instead of a blank home draft.
+    if (!useWorkbenchStore.getState().currentSessionId) {
+      const key = ui.currentWorkspaceKey
+      const sessionId = ui.activeSessionByWorkspace[key] ?? ui.sessionTabsByWorkspace[key]?.at(-1)
+      if (sessionId) useWorkbenchStore.getState().selectSession(sessionId)
+    }
   }
 
   const ready = restore()

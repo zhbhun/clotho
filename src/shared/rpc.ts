@@ -1120,6 +1120,12 @@ export type DesktopRPC = {
       }
       windowWriteUiState: { params: { ui: WorkbenchWindowUiState }; response: void }
       /**
+       * Reports that the calling window's renderer updated `document.title`.
+       * Electron's `page-title-updated` does not fire for later JS assignments,
+       * so the Window menu (labeled from native titles) needs this nudge.
+       */
+      windowTitleChanged: { params: Record<string, never>; response: void }
+      /**
        * Stores the calling project window's workspace ui in its project's
        * persisted state. The project is derived from the calling window.
        */
