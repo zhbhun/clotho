@@ -85,7 +85,7 @@ export function UserCard({
       {editor ?? (
         <div className="group/user-message min-w-16 max-w-[75%]">
           <div
-            className="relative overflow-hidden rounded-[16px] rounded-br-none border border-border/60 bg-chat-message"
+            className="relative overflow-hidden rounded-[16px] rounded-br-none bg-chat-message"
             data-slot="user-message-card"
           >
             <div className={cn('overflow-hidden', !isExpanded && 'max-h-[450px]')}>

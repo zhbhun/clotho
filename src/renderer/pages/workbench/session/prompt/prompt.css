@@ -11,7 +11,9 @@
 }
 
 .prompt-composer-surface {
-  --prompt-composer-border: var(--border);
+  /* Composer sits on --chat-input; its border follows the chat border tier
+     (scaled down from the global --border) rather than the stock gap. */
+  --prompt-composer-border: var(--border-chat-input, var(--input));
 
   position: relative;
   border: 1px solid var(--prompt-composer-border);

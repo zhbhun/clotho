@@ -5,15 +5,19 @@
   --sidebar-accent: var(--session-tab-surface);
   --sidebar-active: color-mix(in oklab, var(--session-tab-surface), var(--color-black) 3.15%);
   /* Sits below --border (toward black, not foreground) so the rail edge reads
-     in dark mode too, where foreground would brighten the line instead. */
-  --sidebar-divider: color-mix(in oklab, var(--background), var(--foreground) 6%);
+     in dark mode too, where foreground would brighten the line instead.
+     Light tracks --border's shadcn-gap mix (9.8113% × 0.75). */
+  --sidebar-divider: color-mix(in oklab, var(--background), var(--foreground) 7.3585%);
   --sidebar-separation-shadow: inset -4px 0 12px
     color-mix(in oklab, var(--color-neutral-950) 2.5%, transparent);
 }
 
 .dark .app-sidebar-layout {
-  /* ~6% oklab keeps the rail just below the near-black canvas without vanishing. */
+  /* ~6% oklab keeps the rail just below the near-black canvas without vanishing.
+     Dark divider = --border's gap (16.6506% × 0.75 = 12.4879% toward the
+     foreground anchor), anchored to the canvas. */
   --sidebar: color-mix(in oklab, var(--background), var(--color-black) 5.76%);
+  --sidebar-divider: color-mix(in oklab, var(--background), var(--foreground) 12.4879%);
   --sidebar-separation-shadow: inset -4px 0 12px
     color-mix(in oklab, var(--color-neutral-950) 22%, transparent);
 }

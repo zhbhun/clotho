@@ -65,6 +65,8 @@
   --color-control-checked-foreground: var(--control-checked-foreground);
   --color-chat-message: var(--chat-message);
   --color-chat-input: var(--chat-input);
+  --color-border-chat-tool: var(--border-chat-tool);
+  --color-border-chat-input: var(--border-chat-input);
 
   --shadow-float: var(--float-shadow);
   --shadow-popover: var(--popover-shadow);
@@ -99,6 +101,11 @@
   --accent: var(--secondary);
   --accent-foreground: var(--foreground);
   --destructive: oklch(0.577 0.245 27.325);
+  /* Border ladders reproduce the shadcn neutral border gap (oklab L ≈ 0.0781
+     light / 0.1238 dark) above each surface anchor. Chat surfaces opt out
+     below: borders drawn on chat-message / chat-tool / chat-input use the
+     scaled "on-*" tiers (0.55× dark / 0.7× light) because the stock gap reads
+     too loud on the compressed dark chat canvas. */
   --border: color-mix(in oklab, var(--background), var(--foreground) 9.8113%);
   --input: var(--border);
   /* Focus border and halo derive from primary, pulled toward the background so the
@@ -119,7 +126,7 @@
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
 
-  /* Application theme extensions */
+  /* Application color extensions */
   --foreground-subtle: color-mix(in oklab, var(--background), var(--foreground) 79.1195%);
   --foreground-subtlest: color-mix(in oklab, var(--background), var(--foreground) 55.8491%);
   --foreground-disabled: color-mix(in oklab, var(--background), var(--foreground) 36.7296%);
@@ -160,6 +167,12 @@
   /* Checked-state black/white for selection controls; palette overrides must not tint it. */
   --control-checked: var(--color-neutral-900);
   --control-checked-foreground: var(--color-white);
+
+  /* Chat-surface border tier: the stock --border gap (0.0781) reads loud on
+     chat bubbles and tool cards, so the conversation and composer areas opt
+     down to 0.7× (0.0547) with mixes anchored to each chat surface. */
+  --border-chat-tool: color-mix(in oklab, var(--chat-tool), var(--foreground) 7.0057%);
+  --border-chat-input: var(--input);
 }
 
 .dark {
@@ -186,8 +199,11 @@
   --accent: var(--secondary);
   --accent-foreground: var(--foreground);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: color-mix(in oklab, var(--background), var(--foreground) 8%);
-  --input: color-mix(in oklab, var(--background), var(--color-white) 17.77%);
+  /* Same shadcn gap rule in dark (0.1238); the chat surfaces override the
+     base tokens with scaled "on-*" tiers (0.1238 × 0.55 = 0.06809) because
+     the stock gap reads too loud on the compressed dark chat canvas. */
+  --border: color-mix(in oklab, var(--background), var(--foreground) 16.6506%);
+  --input: color-mix(in oklab, var(--chat-input), var(--foreground) 19.1893%);
   --ring: color-mix(in oklab, var(--primary) 44%, var(--background));
   --chart-1: color-mix(in oklab, var(--background), var(--foreground) 87.8788%);
   --chart-2: color-mix(in oklab, var(--background), var(--foreground) 49.8182%);
@@ -243,4 +259,9 @@
   --sidebar-active: var(--sidebar-accent);
   --control-checked: var(--color-neutral-100);
   --control-checked-foreground: var(--color-neutral-900);
+
+  /* Chat-surface border tier: 0.1238 × 0.55 = 0.06809 oklab above each chat
+     surface; the stock gap reads too loud on the compressed dark chat canvas. */
+  --border-chat-tool: color-mix(in oklab, var(--chat-tool), var(--foreground) 9.3316%);
+  --border-chat-input: color-mix(in oklab, var(--chat-input), var(--foreground) 10.5541%);
 }

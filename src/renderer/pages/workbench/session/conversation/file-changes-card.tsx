@@ -31,10 +31,10 @@ export function FileChangesCard({
 
   return (
     <div
-      className={cn('overflow-hidden rounded-lg border border-border', className)}
+      className={cn('overflow-hidden rounded-lg border border-border-chat-tool', className)}
       data-slot="file-changes-card"
     >
-      <div className="flex items-center gap-2.5 border-b border-border bg-chat-tool px-3 py-2.5">
+      <div className="flex items-center gap-2.5 border-b border-border-chat-tool bg-chat-tool px-3 py-2.5">
         <FileDiff aria-hidden className="size-4 shrink-0 text-foreground-subtle" />
         <span className="text-sm text-foreground">
           {translate('workbench.conversation.editedFiles', { count: files.length })}
