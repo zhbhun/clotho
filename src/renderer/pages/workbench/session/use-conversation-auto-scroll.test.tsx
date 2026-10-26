@@ -11,6 +11,7 @@ import {
 function AutoScrollHarness({
   contentVersion,
   onResetReady,
+  onViewportElement,
   scrollAnchorRef,
   sessionKey = 'session',
   showViewport = true,
@@ -18,6 +19,7 @@ function AutoScrollHarness({
 }: {
   contentVersion: number
   onResetReady: (resetAutoScroll: () => void) => void
+  onViewportElement?: (element: HTMLDivElement | null) => void
   scrollAnchorRef?: RefObject<ConversationScrollAnchorController | null>
   sessionKey?: string
   showViewport?: boolean
@@ -34,15 +36,19 @@ function AutoScrollHarness({
     onResetReady(resetAutoScroll)
   }, [onResetReady, resetAutoScroll])
 
-  return showViewport ? (
+  if (!showViewport) return null
+  return (
     <div
       data-content-scrolled={isContentScrolled ? 'true' : 'false'}
       data-testid="viewport"
-      ref={viewportRef}
+      ref={(element) => {
+        onViewportElement?.(element)
+        viewportRef(element)
+      }}
     >
       <div>{contentVersion}</div>
     </div>
-  ) : null
+  )
 }
 
 function setScrollMetrics(
@@ -391,5 +397,49 @@ describe('useConversationAutoScroll', () => {
       <AutoScrollHarness contentVersion={1} onResetReady={onResetReady} sessionKey="cancel" />,
     )
     expect(viewport.scrollTop).toBe(0)
+  })
+
+  it('retries the restore once the viewport attaches after the first failed attempt', () => {
+    // Tab switches back render the conversation before the viewport element
+    // reaches the hook, so the first restore attempt has no viewport and must
+    // be retried when it attaches — without a content change.
+    const onResetReady = () => {}
+    // Metrics must exist in the ref callback frame: the real layout has
+    // scrollHeight ready when the element reaches the hook.
+    const handleViewportElement = (element: HTMLDivElement | null) => {
+      if (element) setScrollMetrics(element, { clientHeight: 100, scrollHeight: 500 })
+    }
+    const first = render(
+      <AutoScrollHarness
+        contentVersion={0}
+        onResetReady={onResetReady}
+        onViewportElement={handleViewportElement}
+        sessionKey="late-viewport"
+      />,
+    )
+    const firstViewport = first.getByTestId('viewport')
+    firstViewport.scrollTop = 180
+    fireEvent.scroll(firstViewport)
+    first.unmount()
+
+    const second = render(
+      <AutoScrollHarness
+        contentVersion={0}
+        onResetReady={onResetReady}
+        onViewportElement={handleViewportElement}
+        sessionKey="late-viewport"
+        showViewport={false}
+      />,
+    )
+    second.rerender(
+      <AutoScrollHarness
+        contentVersion={0}
+        onResetReady={onResetReady}
+        onViewportElement={handleViewportElement}
+        sessionKey="late-viewport"
+      />,
+    )
+    const viewport = second.getByTestId('viewport')
+    expect(viewport.scrollTop).toBe(180)
   })
 })

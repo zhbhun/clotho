@@ -78,6 +78,9 @@ export function useConversationAutoScroll(
   viewportRef: RefCallback<HTMLDivElement>
 } {
   const [isContentScrolled, setIsContentScrolled] = useState(false)
+  // The conversation viewport element reaches the virtual list one commit after
+  // mount (via state), so restore retries must also fire when it attaches.
+  const [hasViewport, setHasViewport] = useState(false)
   const sessionState = getConversationScrollState(sessionKey)
   const shouldAutoScrollRef = useRef(true)
   const autoScrollByViewRef = useRef(sessionState.autoScroll)
@@ -137,6 +140,7 @@ export function useConversationAutoScroll(
       removeViewportListenersRef.current?.()
       removeViewportListenersRef.current = null
       viewportElementRef.current = viewport
+      setHasViewport(Boolean(viewport))
       if (!viewport) {
         setIsContentScrolled((current) => (current ? false : current))
         return
@@ -260,7 +264,7 @@ export function useConversationAutoScroll(
     }
     pending.attempts += 1
     if (pending.attempts >= RESTORE_MAX_ATTEMPTS) pendingRestoreRef.current = null
-  }, [contentVersion, scrollAnchorRef])
+  }, [contentVersion, hasViewport, scrollAnchorRef])
 
   // Before paint: a correction that lands after paint is visible as a jump —
   // the user sees the unscrolled content first, then the whole list shift.

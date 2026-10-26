@@ -107,6 +107,10 @@ function VirtualConversationListInner<Row extends VirtualConversationItem>(
         return row && item ? { offset: scrollOffset - item.start, rowKey: row.key } : null
       },
       restoreScrollAnchor(anchor) {
+        // Report failure while the viewport prop has not attached yet: the
+        // virtualizer would skip the scroll and a success here would cancel
+        // the pending restore before the viewport mounts on the next commit.
+        if (!virtualizer.scrollElement) return false
         const index = rowIndexes.get(anchor.rowKey)
         if (index === undefined) return false
         const offset = virtualizer.getOffsetForIndex(index, 'start')?.[0]
