@@ -167,7 +167,7 @@ export function AppearanceSettings() {
                   onCheckedChange={setPointerCursor}
                 />
               </PreferenceRow>
-              <Separator />
+              <Separator className="bg-border-in-card" />
               <PreferenceRow
                 controlId="settings-reduced-motion"
                 description={t('appearance.reducedMotion.description')}

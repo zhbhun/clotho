@@ -252,7 +252,7 @@ export function ThemePaletteSettings({
               const label = t(row.labelKey)
               return (
                 <Fragment key={row.color}>
-                  {index > 0 ? <Separator /> : null}
+                  {index > 0 ? <Separator className="bg-border-in-card" /> : null}
                   <ColorControl
                     color={row.color}
                     label={label}

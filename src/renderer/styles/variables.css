@@ -67,6 +67,7 @@
   --color-chat-input: var(--chat-input);
   --color-border-chat-tool: var(--border-chat-tool);
   --color-border-chat-input: var(--border-chat-input);
+  --color-border-in-card: var(--border-in-card);
 
   --shadow-float: var(--float-shadow);
   --shadow-popover: var(--popover-shadow);
@@ -168,6 +169,10 @@
   --control-checked: var(--color-neutral-900);
   --control-checked-foreground: var(--color-white);
 
+  /* Inset dividers drawn inside cards (settings rows) sit at --border's gap
+     × 0.7 anchored to --card — lighter than the card edge, like list rows. */
+  --border-in-card: color-mix(in oklab, var(--card), var(--foreground) 6.8735%);
+
   /* Chat-surface border tier: the stock --border gap (0.0781) reads loud on
      chat bubbles and tool cards, so the conversation and composer areas opt
      down to 0.7× (0.0547) with mixes anchored to each chat surface. */
@@ -259,6 +264,10 @@
   --sidebar-active: var(--sidebar-accent);
   --control-checked: var(--color-neutral-100);
   --control-checked-foreground: var(--color-neutral-900);
+
+  /* Inset dividers drawn inside cards (settings rows) sit at --border's gap
+     × 0.5 anchored to --card; the stock gap reads loud between rows. */
+  --border-in-card: color-mix(in oklab, var(--card), var(--foreground) 8.9813%);
 
   /* Chat-surface border tier: 0.1238 × 0.55 = 0.06809 oklab above each chat
      surface; the stock gap reads too loud on the compressed dark chat canvas. */

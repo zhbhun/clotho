@@ -14,15 +14,17 @@
 
 .dark .app-sidebar-layout {
   /* ~6% oklab keeps the rail just below the near-black canvas without vanishing.
-     Dark divider = --border's gap (16.6506% × 0.75 = 12.4879% toward the
-     foreground anchor), anchored to the canvas. */
+     Dark divider sits at --border's gap × 0.3 (16.6506% × 0.3 = 4.9939% toward
+     the foreground anchor): at the full 0.75x the rail edge reads louder than
+     the content it separates. */
   --sidebar: color-mix(in oklab, var(--background), var(--color-black) 5.76%);
-  --sidebar-divider: color-mix(in oklab, var(--background), var(--foreground) 12.4879%);
+  --sidebar-divider: color-mix(in oklab, var(--background), var(--foreground) 4.9939%);
   --sidebar-separation-shadow: inset -4px 0 12px
     color-mix(in oklab, var(--color-neutral-950) 22%, transparent);
 }
 
-.app-sidebar-layout [data-slot='sidebar-container'] {
+.app-sidebar-layout [data-slot='sidebar-container'],
+.app-sidebar-layout [data-slot='sidebar'][data-app-sidebar-panel] {
   border-right-color: var(--sidebar-divider);
 }
 
