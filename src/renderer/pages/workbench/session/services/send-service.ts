@@ -1,7 +1,12 @@
 import type { SDKMessage, SDKResultMessage } from '@anthropic-ai/claude-agent-sdk'
 
 import { toast } from '@/shadcn/toast'
-import type { ClaudeAttachment, ClaudeOptions, ClaudeSessionRuntimeChanged } from '@/shared/rpc'
+import type {
+  ClaudeAttachment,
+  ClaudeOptions,
+  ClaudeSessionRuntimeChanged,
+  ClaudeStreamId,
+} from '@/shared/rpc'
 
 import { appI18n } from '../../../../i18n/runtime'
 import type {
@@ -580,9 +585,28 @@ export class SendService {
       }
       return
     }
-    // The query is gone. A watching window resets its streaming chrome; a
-    // window mid-turn learns of the death through its own stream ending.
+    // The query is gone (recycled, rebuilt elsewhere, or died). A watching
+    // window resets its streaming chrome; a window still holding the dead
+    // query's handle drops it synchronously so the next send rebuilds
+    // instead of pushing at a dead query.
+    this.invalidateDeadStream(change.deadStreamId)
     if (this.sendLifecycle.phase === 'idle') this.deactivatePassiveTurn('idle')
+  }
+
+  /**
+   * Drops a held stream after the main process reported its query gone. A
+   * mid-turn window keeps the handle — its own stream ending settles the
+   * turn through handleStreamDeath, which would never fire on a nulled
+   * handle — while an idle window must not wait for it: the recycle race
+   * has already eaten one send that way.
+   */
+  private invalidateDeadStream(deadStreamId: ClaudeStreamId | null) {
+    if (!this.stream || this.stream.streamId !== deadStreamId) return
+    if (this.sendLifecycle.phase !== 'idle') return
+    this.stopToolSubscription?.()
+    this.stopToolSubscription = null
+    this.stream = null
+    this.streamDied = true
   }
 
   private handleStreamDeath(stream: ClaudeSessionStream, error: unknown) {

@@ -195,13 +195,15 @@ export function createSessionQueryRegistry(
     hooks.onRuntimeChanged?.({
       sessionId: entry.sessionId,
       streamId: entry.streamId,
+      deadStreamId: null,
       turnInFlight: entry.state.turnInFlight,
       pendingToolRequestIds: liveToolRequests(entry).map((request) => request.toolUseId),
     })
-  const emitGone = (sessionId: string) =>
+  const emitGone = (entry: SessionQueryEntry) =>
     hooks.onRuntimeChanged?.({
-      sessionId,
+      sessionId: entry.sessionId,
       streamId: null,
+      deadStreamId: entry.streamId,
       turnInFlight: false,
       pendingToolRequestIds: [],
     })
@@ -261,7 +263,7 @@ export function createSessionQueryRegistry(
     } catch (caught) {
       logger.error('session.close_failed', 'Failed to close a session query', { error: caught })
     }
-    emitGone(entry.sessionId)
+    emitGone(entry)
     if (notifyRecycled) hooks.onRecycled?.(entry.sessionId)
   }
 
@@ -296,7 +298,7 @@ export function createSessionQueryRegistry(
           entry.queue.finish()
           // Same signal as an explicit recycle: a renderer holding a closed
           // tab's controller in the background releases it on this push.
-          emitGone(entry.sessionId)
+          emitGone(entry)
           hooks.onRecycled?.(entry.sessionId)
         }
         events.onComplete(streamId, success)
@@ -360,7 +362,14 @@ export function createSessionQueryRegistry(
     return snapshot(entry)
   }
 
-  async function pushRaw({
+  async function pushRaw(params: ClaudeSessionQueryPushParams): Promise<void> {
+    await chain(entryByStreamId(params.streamId)?.sessionId ?? params.streamId, () =>
+      pushChained(params),
+    )
+  }
+
+  /** Runs behind any pending ensure/rebuild/recycle, so a push cannot interleave a teardown. */
+  async function pushChained({
     streamId,
     text,
     attachments,

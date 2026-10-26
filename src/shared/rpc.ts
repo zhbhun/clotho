@@ -616,6 +616,8 @@ export type ClaudeSessionRuntimeChanged = {
   sessionId: string
   /** Null once the query is gone (recycled, rebuilt, or ended). */
   streamId: ClaudeStreamId | null
+  /** The stream the removal ended; null while the query is alive. */
+  deadStreamId: ClaudeStreamId | null
   turnInFlight: boolean
   pendingToolRequestIds: string[]
 }

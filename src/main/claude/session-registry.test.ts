@@ -315,6 +315,7 @@ describe('session runtime changes', () => {
     expect(onRuntimeChanged).toHaveBeenLastCalledWith({
       sessionId: 's1',
       streamId,
+      deadStreamId: null,
       turnInFlight: false,
       pendingToolRequestIds: [],
     })
@@ -324,6 +325,7 @@ describe('session runtime changes', () => {
     expect(onRuntimeChanged).toHaveBeenLastCalledWith({
       sessionId: 's1',
       streamId,
+      deadStreamId: null,
       turnInFlight: true,
       pendingToolRequestIds: [],
     })
@@ -337,6 +339,7 @@ describe('session runtime changes', () => {
     expect(onRuntimeChanged).toHaveBeenLastCalledWith({
       sessionId: 's1',
       streamId,
+      deadStreamId: null,
       turnInFlight: true,
       pendingToolRequestIds: ['tool-1'],
     })
@@ -351,6 +354,7 @@ describe('session runtime changes', () => {
     expect(onRuntimeChanged).toHaveBeenLastCalledWith({
       sessionId: 's1',
       streamId,
+      deadStreamId: null,
       turnInFlight: true,
       pendingToolRequestIds: [],
     })
@@ -359,6 +363,7 @@ describe('session runtime changes', () => {
     expect(onRuntimeChanged).toHaveBeenLastCalledWith({
       sessionId: 's1',
       streamId,
+      deadStreamId: null,
       turnInFlight: false,
       pendingToolRequestIds: [],
     })
@@ -367,6 +372,7 @@ describe('session runtime changes', () => {
     expect(onRuntimeChanged).toHaveBeenLastCalledWith({
       sessionId: 's1',
       streamId: null,
+      deadStreamId: streamId,
       turnInFlight: false,
       pendingToolRequestIds: [],
     })
