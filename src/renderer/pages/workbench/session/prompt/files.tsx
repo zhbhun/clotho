@@ -148,7 +148,7 @@ function FileMentionView({ deleteNode, node }: NodeViewProps) {
       </span>
       <span className="min-w-0 truncate">{name}</span>
       {lineHint ? (
-        <span className="shrink-0 text-xs text-(--prompt-composer-chip) opacity-60">
+        <span className="shrink-0 text-xs leading-6 text-(--prompt-composer-chip) opacity-60">
           {lineHint}
         </span>
       ) : null}
