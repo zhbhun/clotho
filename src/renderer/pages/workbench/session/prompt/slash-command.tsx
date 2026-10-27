@@ -95,6 +95,7 @@ function SlashCommandView({ deleteNode, node }: NodeViewProps) {
               aria-label={`/${name}`}
               className="group/command inline-flex h-6 max-w-64 items-center gap-1 px-1.5 align-top leading-6 text-(--prompt-composer-chip) transition-colors hover:text-(--primary)"
               data-pointer-cursor-target=""
+              tabIndex={-1}
             />
           }
         >

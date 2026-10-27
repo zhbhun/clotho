@@ -116,6 +116,7 @@ function FileMentionView({ deleteNode, node }: NodeViewProps) {
       aria-label={`${name}: ${path}`}
       className="group/file inline-flex h-6 max-w-56 items-center gap-1 px-1.5 align-top text-sm leading-6 text-(--prompt-composer-chip) transition-colors hover:text-(--primary)"
       data-pointer-cursor-target=""
+      tabIndex={-1}
     />
   )
   const triggerContent = (
