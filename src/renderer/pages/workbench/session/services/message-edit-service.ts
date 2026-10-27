@@ -12,6 +12,15 @@ function isMissingCheckpoint(error: string | undefined) {
   return typeof error === 'string' && /no file checkpoint/i.test(error)
 }
 
+/**
+ * Electron wraps an ipcMain.handle rejection as "Error invoking remote method
+ * '<channel>': <cause>"; only the cause carries information for the user.
+ */
+function unwrapDesktopRpcError(message: string) {
+  const match = /^Error invoking remote method '[^']+': (?:Error: )?([\s\S]+)$/.exec(message)
+  return match ? match[1] : message
+}
+
 export class MessageEditService {
   private readonly controller: SessionController
   private activeEdit: ActiveMessageEdit | undefined
@@ -142,12 +151,20 @@ export class MessageEditService {
       const sent = await this.submit(draft, anchor, false)
       return { status: sent ? 'sent' : 'error' }
     } catch (caught) {
+      const raw = unwrapDesktopRpcError(
+        caught instanceof Error ? caught.message : 'Failed to prepare the historical edit',
+      )
       this.release()
       this.controller.runtimeStore.setState({
         runtimeError: {
           kind: 'message-edit',
-          message:
-            caught instanceof Error ? caught.message : 'Failed to prepare the historical edit',
+          // An optimistic send whose CLI turn never ran leaves the card with a
+          // uuid no transcript entry carries; the anchor lookup is how that
+          // surfaces. Editing is impossible — there is nothing to anchor to —
+          // so name the actual situation instead of the lookup failure.
+          message: /Cannot find user message/.test(raw)
+            ? 'This message never reached the session history, so it cannot be edited. Resend it instead.'
+            : raw,
         },
       })
       return { status: 'error' }
@@ -245,7 +262,9 @@ export class MessageEditService {
       this.controller.runtimeStore.setState({
         runtimeError: {
           kind: 'message-edit',
-          message: caught instanceof Error ? caught.message : 'Failed to send the historical edit',
+          message: unwrapDesktopRpcError(
+            caught instanceof Error ? caught.message : 'Failed to send the historical edit',
+          ),
         },
       })
       return false

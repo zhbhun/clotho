@@ -2565,9 +2565,8 @@ describe('SessionController', () => {
     })
   })
 
-  it('attaches a technical error to the persisted user turn', async () => {
+  it('recalls a confirmed turn whose stream died before any content streamed', async () => {
     const client = createClient()
-    const error = new Error('model offline')
     const controlled = createStreamHarness({
       script: (_params, harness) => {
         harness.emit({
@@ -2575,7 +2574,44 @@ describe('SessionController', () => {
           uuid: 'persisted-user-uuid',
           message: { role: 'user', content: 'continue' },
         })
-        harness.fail(error)
+        // No result frame ever arrives — the idle recycle kills the transport.
+        harness.fail(new Error('model offline'))
+      },
+    })
+    client.openSessionStream.mockReturnValue(controlled.stream as never)
+    const store = trackedStore({ ...createOptions('local:posthistory-death'), client })
+    store.getState().setSelectedProviderModel('zhipu', 'glm-5.2')
+    store.getState().setPrompt('continue')
+
+    await store.getState().sendPrompt()
+
+    // The optimistic card is gone and the prompt is back in the composer: the
+    // transcript never saw the turn, so no ghost card may remain to edit.
+    expect(
+      Object.values(store.getState().messages).filter((message) => message.role === 'user'),
+    ).toEqual([])
+    expect(store.getState()).toMatchObject({
+      prompt: 'continue',
+      runtimeError: { kind: 'message-send', message: 'model offline' },
+    })
+  })
+
+  it('attaches a technical error to the persisted user turn', async () => {
+    const client = createClient()
+    const controlled = createStreamHarness({
+      script: (_params, harness) => {
+        harness.emit({
+          type: 'user',
+          uuid: 'persisted-user-uuid',
+          message: { role: 'user', content: 'continue' },
+        })
+        // The CLI's own result frame reports the failed turn.
+        harness.emit({
+          type: 'result',
+          subtype: 'error_during_execution',
+          is_error: true,
+          errors: ['model offline'],
+        })
       },
     })
     client.openSessionStream.mockReturnValue(controlled.stream as never)

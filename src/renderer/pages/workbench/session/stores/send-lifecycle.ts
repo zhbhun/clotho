@@ -38,6 +38,8 @@ export type SendLifecycleEvent =
       result: 'success' | 'error'
       message?: string
       finishedAt: number
+      /** The CLI's result frame — not a transport death — reported this end. */
+      viaResultFrame?: boolean
     }
 
 export type SendLifecycleEffect =
@@ -183,6 +185,26 @@ export function transitionSendLifecycle(
     (state.phase === 'awaiting-response' || state.phase === 'persisted') &&
     event.result === 'error'
   ) {
+    // A turn the CLI's own result frame reports as failed (an error-subtype
+    // result arrives) did produce a transcript turn, so the failure card is
+    // the right terminal. A transport death (recycle, crash) after the user
+    // line landed in history but no result frame ever arrived means the CLI
+    // never answered — the prompt is recalled into the composer like an
+    // unanswered send, or it stays as a ghost card no edit or recall can
+    // resolve (its uuid exists nowhere in the transcript).
+    const unproduced =
+      !event.viaResultFrame && state.snapshot ? !state.snapshot.realContentSeen : false
+    if (unproduced) {
+      return {
+        state: createSendLifecycle(),
+        effect: {
+          kind: 'recalled',
+          snapshot: state.snapshot!,
+          error: event.message ?? 'Failed to execute Claude',
+          activity: 'error',
+        },
+      }
+    }
     return {
       state: createSendLifecycle(),
       effect: {

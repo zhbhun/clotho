@@ -178,10 +178,65 @@ describe('send lifecycle', () => {
     })
   })
 
-  it('attaches a technical failure to the persisted turn using canonical elapsed time', () => {
+  it('attaches a technical failure to the persisted turn when the result frame reported it', () => {
     let lifecycle = transitionSendLifecycle(createSendLifecycle(), {
       type: 'begin',
       snapshot,
+    }).state
+    lifecycle = transitionSendLifecycle(lifecycle, {
+      type: 'history-confirmed',
+      turnId: 'persisted-1',
+      startedAt: 2_000,
+    }).state
+
+    const finished = transitionSendLifecycle(lifecycle, {
+      type: 'finished',
+      result: 'error',
+      message: 'model offline',
+      finishedAt: 12_900,
+      viaResultFrame: true,
+    })
+
+    expect(finished.effect).toEqual({
+      activity: 'error',
+      elapsed: 10,
+      kind: 'failed',
+      message: 'model offline',
+      turnId: 'persisted-1',
+    })
+  })
+
+  it('recalls a confirmed turn whose transport died before any content streamed', () => {
+    let lifecycle = transitionSendLifecycle(createSendLifecycle(), {
+      type: 'begin',
+      snapshot,
+    }).state
+    lifecycle = transitionSendLifecycle(lifecycle, {
+      type: 'history-confirmed',
+      turnId: 'persisted-1',
+      startedAt: 2_000,
+    }).state
+
+    const finished = transitionSendLifecycle(lifecycle, {
+      type: 'finished',
+      result: 'error',
+      message: 'model offline',
+      finishedAt: 12_900,
+    })
+
+    expect(finished.effect).toEqual({
+      activity: 'error',
+      error: 'model offline',
+      kind: 'recalled',
+      snapshot,
+    })
+  })
+
+  it('keeps the failure card when content streamed before the transport died', () => {
+    const snapshotWithContent = { ...snapshot, realContentSeen: true }
+    let lifecycle = transitionSendLifecycle(createSendLifecycle(), {
+      type: 'begin',
+      snapshot: snapshotWithContent,
     }).state
     lifecycle = transitionSendLifecycle(lifecycle, {
       type: 'history-confirmed',

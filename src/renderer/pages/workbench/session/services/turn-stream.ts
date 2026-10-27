@@ -171,15 +171,17 @@ export class TurnStreamService {
     // Synthetic nudges continue an interrupted turn; there is no new user line
     // to unsuppress on, so their streamed output must display right away.
     let suppressUntilRootUserHistory = false
-    if (pendingSend && !pendingSend.isSynthetic && isAwaitingHistory) {
+    if (pendingSend && !pendingSend.isSynthetic) {
       if (carriesRealTurnContent(line)) pendingSend.realContentSeen = true
-      suppressUntilRootUserHistory =
-        !pendingSend.realContentSeen &&
-        latestTurnWasInterrupted(
-          pendingSend.messages,
-          this.controller.conversationStore.getState().interruptedTurnIds,
-        ) &&
-        !hasUserMessageUuid(line, pendingSend.userMessageUuid)
+      if (isAwaitingHistory) {
+        suppressUntilRootUserHistory =
+          !pendingSend.realContentSeen &&
+          latestTurnWasInterrupted(
+            pendingSend.messages,
+            this.controller.conversationStore.getState().interruptedTurnIds,
+          ) &&
+          !hasUserMessageUuid(line, pendingSend.userMessageUuid)
+      }
     }
     const result = this.controller.historyService.ingestLine(line, {
       shouldDeferRootUserHistory: Boolean(pendingSend),

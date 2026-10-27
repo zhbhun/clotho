@@ -461,7 +461,7 @@ export class SendService {
     // A result frame ends the current turn — never the resident stream. A
     // frame reporting a failed turn (API error, turn/budget limits) finishes
     // the turn as a failure instead of a success.
-    if (message.type === 'result') void this.finishTurn(resultFrameFailure(message))
+    if (message.type === 'result') void this.finishTurn(resultFrameFailure(message), true)
   }
 
   /**
@@ -651,7 +651,7 @@ export class SendService {
     })
   }
 
-  private async finishTurn(error: unknown) {
+  private async finishTurn(error: unknown, viaResultFrame = false) {
     const turnActive = this.sendLifecycle.phase !== 'idle'
     if (!turnActive) {
       // Background-task turns carry no user send; frames were ingested, the
@@ -667,8 +667,7 @@ export class SendService {
           ? error
           : error instanceof Error
             ? error.message
-            : 'Failed to execute Claude'
-    // Another window stopped this turn: the interruption marker precedes the
+            : 'Failed to execute Claude' // Another window stopped this turn: the interruption marker precedes the
     // failing result frame, so the same stop UX applies as a local cancel.
     const interruptedElsewhere =
       !isUserCancel &&
@@ -689,6 +688,10 @@ export class SendService {
       result: queryFailure ? 'error' : 'success',
       message: queryFailure ?? undefined,
       finishedAt: Date.now(),
+      // Only the CLI's own result frame proves the turn reached the model and
+      // produced a transcript turn; a transport death (idle recycle, crash)
+      // after the optimistic prompt means the transcript never saw it.
+      viaResultFrame,
     })
     this.turnStream.stop()
     let outcome: SessionActivityEvent = 'success'
