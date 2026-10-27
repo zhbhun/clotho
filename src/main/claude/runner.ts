@@ -24,6 +24,7 @@ import type {
 } from '@/shared/rpc'
 
 import { getLogger } from '../logging/runtime'
+import { applyLoginShellEnv } from '../shell-env'
 import { sampleContextUsage } from './context-usage'
 import type { ModelProxy } from './model-proxy'
 import { createQueryProcess } from './query-process'
@@ -425,6 +426,7 @@ export async function startup({
   options,
   initializeTimeoutMs = 60_000,
 }: ClaudeStartupParams = {}): Promise<ClaudeInitializationResult> {
+  await applyLoginShellEnv()
   const normalizedOptions = normalizeOptions(options)
   const process = createQueryProcess()
   const sdk = sdkQuery({
@@ -475,6 +477,7 @@ export async function rewindSessionFiles({
   dryRun?: boolean
   initializeTimeoutMs?: number
 }): Promise<RewindFilesResult> {
+  await applyLoginShellEnv()
   const process = createQueryProcess()
   const sdk = sdkQuery({
     prompt: pendingPrompt(),
@@ -510,6 +513,7 @@ export async function sampleSessionContextUsage(
   { cwd, sessionId, model, initializeTimeoutMs = 60_000 }: ClaudeSampleContextUsageParams,
   proxy?: ClaudeProxyConnection,
 ): Promise<ClaudeContextUsageSnapshot | null> {
+  await applyLoginShellEnv()
   const process = createQueryProcess()
   const sdk = sdkQuery({
     prompt: pendingPrompt(),
@@ -533,6 +537,61 @@ export async function sampleSessionContextUsage(
   } finally {
     if (timeout) clearTimeout(timeout)
     await closeThrowawayQuery(sdk, process)
+  }
+}
+
+async function startQueryInner(
+  events: ClaudeEventSink,
+  {
+    streamId,
+    options,
+  }: {
+    streamId: ClaudeStreamId
+    options?: ClaudeOptions
+  },
+  proxy: ClaudeProxyConnection,
+  extras: {
+    tolerateResultErrors?: boolean
+    /** Own the query's prompt source: turns arrive as pushes on this queue. */
+    promptQueue: AsyncIterable<SDKUserMessage>
+    /** Clotho-scoped skill/plugin filtering applied at spawn (design D7). */
+    capabilities?: AgentCapabilityFilters
+  },
+  entry: ActiveQueryEntry,
+  resolveInitialized: () => void,
+): Promise<void> {
+  try {
+    entry.sdk = sdkQuery({
+      prompt: extras.promptQueue,
+      options: {
+        ...normalizeOptions(options, proxy, extras.capabilities),
+        forwardSubagentText: true,
+        includePartialMessages: true,
+        abortController: entry.abortController,
+        spawnClaudeCodeProcess: entry.process.spawn,
+        // bypassPermissions auto-approves before the callback runs; omitting it
+        // keeps behavior identical and avoids the SDK shadow warning.
+        ...(options?.permissionMode === 'bypassPermissions'
+          ? {}
+          : {
+              canUseTool: async (toolName, input, toolOpts) =>
+                requestToolPermission(events, streamId, toolName, input, toolOpts),
+            }),
+      },
+    })
+    void streamQuery(
+      events,
+      streamId,
+      entry,
+      entry.sdk,
+      resolveInitialized,
+      extras.tolerateResultErrors,
+    )
+  } catch (caught) {
+    activeQueries.delete(streamId)
+    logQueryTerminal(entry, 'failed', caught)
+    entry.resolveFinished()
+    throw caught
   }
 }
 
@@ -575,39 +634,14 @@ export function startQuery(
   const initialized = new Promise<void>((resolve) => {
     resolveInitialized = resolve
   })
-  try {
-    entry.sdk = sdkQuery({
-      prompt: extras.promptQueue,
-      options: {
-        ...normalizeOptions(options, proxy, extras.capabilities),
-        forwardSubagentText: true,
-        includePartialMessages: true,
-        abortController,
-        spawnClaudeCodeProcess: entry.process.spawn,
-        // bypassPermissions auto-approves before the callback runs; omitting it
-        // keeps behavior identical and avoids the SDK shadow warning.
-        ...(options?.permissionMode === 'bypassPermissions'
-          ? {}
-          : {
-              canUseTool: async (toolName, input, toolOpts) =>
-                requestToolPermission(events, streamId, toolName, input, toolOpts),
-            }),
-      },
-    })
-    void streamQuery(
-      events,
-      streamId,
-      entry,
-      entry.sdk,
-      resolveInitialized,
-      extras.tolerateResultErrors,
+  // The SDK snapshots {...process.env} when it constructs the CLI process, so
+  // the login-shell PATH must be applied before sdkQuery runs. Startup has
+  // normally warmed the capture, so this rarely delays the first turn.
+  void applyLoginShellEnv()
+    .catch(() => false)
+    .then(() =>
+      startQueryInner(events, { streamId, options }, proxy, extras, entry, resolveInitialized),
     )
-  } catch (caught) {
-    activeQueries.delete(streamId)
-    logQueryTerminal(entry, 'failed', caught)
-    entry.resolveFinished()
-    throw caught
-  }
   return { initialized }
 }
 

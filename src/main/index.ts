@@ -2,11 +2,15 @@ import { app } from 'electron'
 import started from 'electron-squirrel-startup'
 
 import { bootstrap } from './bootstrap'
+import { loginShellEnvOnce } from './shell-env'
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
   app.quit()
 } else {
+  // Warm the login-shell environment in parallel with startup; the first
+  // Claude session await-applies it before the SDK spawns the CLI.
+  loginShellEnvOnce()
   void app
     .whenReady()
     .then(() => bootstrap())

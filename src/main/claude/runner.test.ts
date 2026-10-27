@@ -27,6 +27,16 @@ const loggingMocks = vi.hoisted(() => ({
 
 vi.mock('@anthropic-ai/claude-agent-sdk', () => sdkMocks)
 vi.mock('../logging/runtime', () => ({ getLogger: () => loggingMocks }))
+vi.mock('../shell-env', () => ({
+  applyLoginShellEnv: vi.fn(async () => false),
+}))
+
+/** Lets the deferred login-shell-env apply (two microtasks) settle so the
+ * SDK query is constructed before assertions run. */
+async function flushEnvApply() {
+  await Promise.resolve()
+  await Promise.resolve()
+}
 
 type MockQueryOptions = {
   initializationResult?: unknown
@@ -206,12 +216,14 @@ describe('Claude SDK runner', () => {
       proxy,
       { promptQueue: parkedInput() },
     )
+    await flushEnvApply()
     startQuery(
       createEvents(),
       { streamId: 'custom-stream', options: { cwd: '/tmp/app', model: 'zhipu/glm-5.2/fast' } },
       proxy,
       { promptQueue: parkedInput() },
     )
+    await flushEnvApply()
 
     const official = vi.mocked(sdkQuery).mock.calls[0]?.[0].options
     expect(official?.model).toBe('claude-sonnet-4-6')
@@ -385,6 +397,7 @@ describe('Claude SDK runner', () => {
       proxy,
       { promptQueue: parkedInput() },
     )
+    await flushEnvApply()
     await vi.waitFor(() => expect(events.onComplete).toHaveBeenCalledWith('stream-1', false))
 
     expect(events.onError).toHaveBeenCalledWith(
@@ -411,6 +424,7 @@ describe('Claude SDK runner', () => {
       proxy,
       { promptQueue: parkedInput() },
     )
+    await flushEnvApply()
     await vi.waitFor(() => expect(events.onComplete).toHaveBeenCalledWith('stream-1', false))
 
     expect(events.onOutput).toHaveBeenCalledWith('stream-1', resultError)
@@ -445,6 +459,7 @@ describe('Claude SDK runner', () => {
         proxy,
         { promptQueue: parkedInput() },
       )
+      await flushEnvApply()
       await vi.waitFor(() => expect(events.onComplete).toHaveBeenCalledWith('stream-1', true))
 
       expect(events.onOutput).toHaveBeenCalledWith('stream-1', {
@@ -467,6 +482,7 @@ describe('Claude SDK runner', () => {
       proxy,
       { promptQueue: parkedInput() },
     )
+    await flushEnvApply()
     const abortController = vi.mocked(sdkQuery).mock.calls[0]?.[0].options?.abortController
     expect(abortController).toBeInstanceOf(AbortController)
 
@@ -492,6 +508,7 @@ describe('Claude SDK runner', () => {
       proxy,
       { promptQueue: parkedInput() },
     )
+    await flushEnvApply()
     await vi.waitFor(() => expect(events.onOutput).toHaveBeenCalledWith('stream-1', initMessage))
     const abortController = vi.mocked(sdkQuery).mock.calls[0]?.[0].options?.abortController
 
@@ -511,7 +528,9 @@ describe('Claude SDK runner', () => {
       .mockReturnValueOnce(secondQuery as never)
 
     startQuery(createEvents(), { streamId: 'stream-1' }, proxy, { promptQueue: parkedInput() })
+    await flushEnvApply()
     startQuery(createEvents(), { streamId: 'stream-2' }, proxy, { promptQueue: parkedInput() })
+    await flushEnvApply()
 
     closeQuery('stream-1')
 
@@ -531,6 +550,7 @@ describe('Claude SDK runner', () => {
     const query = createClosablePendingMockQuery()
     vi.mocked(sdkQuery).mockReturnValue(query as never)
     startQuery(events, { streamId: 'stream-1' }, proxy, { promptQueue: parkedInput() })
+    await flushEnvApply()
     loggingMocks.info.mockClear()
 
     closeQuery('stream-1')
@@ -559,6 +579,7 @@ describe('Claude SDK runner', () => {
 
     const events = createEvents()
     startQuery(events, { streamId: 'stream-1' }, proxy, { promptQueue: parkedInput() })
+    await flushEnvApply()
     const closing = closeQuery('stream-1')
     await Promise.resolve()
     expect(events.onComplete).not.toHaveBeenCalled()
@@ -578,6 +599,7 @@ describe('Claude SDK runner', () => {
     vi.mocked(sdkQuery).mockReturnValue(query as never)
     const events = createEvents()
     startQuery(events, { streamId: 'stream-1' }, proxy, { promptQueue: parkedInput() })
+    await flushEnvApply()
 
     let isClosed = false
     const closing = closeQuery('stream-1').then(() => {
@@ -607,6 +629,7 @@ describe('Claude SDK runner', () => {
       vi.mocked(sdkQuery).mockReturnValue(query as never)
       const events = createEvents()
       startQuery(events, { streamId: 'stream-1' }, proxy, { promptQueue: parkedInput() })
+      await flushEnvApply()
       let isClosed = false
       const closing = closeQuery('stream-1').then(() => {
         isClosed = true
@@ -630,7 +653,9 @@ describe('Claude SDK runner', () => {
       .mockReturnValueOnce(createMockQuery([]) as never)
 
     startQuery(firstEvents, { streamId: 'stream-1' }, proxy, { promptQueue: parkedInput() })
+    await flushEnvApply()
     startQuery(secondEvents, { streamId: 'stream-2' }, proxy, { promptQueue: parkedInput() })
+    await flushEnvApply()
 
     const firstCanUseTool = vi.mocked(sdkQuery).mock.calls[0]?.[0].options?.canUseTool
     const secondCanUseTool = vi.mocked(sdkQuery).mock.calls[1]?.[0].options?.canUseTool
@@ -677,12 +702,14 @@ describe('Claude SDK runner', () => {
       .mockReturnValueOnce(createMockQuery([]) as never)
 
     startQuery(events, { streamId: 'stream-1' }, proxy, { promptQueue: parkedInput() })
+    await flushEnvApply()
     startQuery(
       events,
       { streamId: 'stream-2', options: { permissionMode: 'bypassPermissions' } },
       proxy,
       { promptQueue: parkedInput() },
     )
+    await flushEnvApply()
 
     expect(vi.mocked(sdkQuery).mock.calls[0]?.[0].options?.canUseTool).toBeTypeOf('function')
     expect(vi.mocked(sdkQuery).mock.calls[1]?.[0].options?.canUseTool).toBeUndefined()
@@ -696,6 +723,7 @@ describe('Claude SDK runner', () => {
     vi.mocked(sdkQuery).mockReturnValue(createMockQuery([]) as never)
 
     startQuery(events, { streamId: 'stream-1' }, proxy, { promptQueue: parkedInput() })
+    await flushEnvApply()
     const canUseTool = vi.mocked(sdkQuery).mock.calls[0]?.[0].options?.canUseTool
     const result = canUseTool?.(
       'Write',
@@ -710,7 +738,7 @@ describe('Claude SDK runner', () => {
     await expect(result).resolves.toEqual({ behavior: 'allow', updatedInput: {} })
   })
 
-  it('filters disabled skills out of the spawn options (design D7)', () => {
+  it('filters disabled skills out of the spawn options (design D7)', async () => {
     const events = createEvents()
     vi.mocked(sdkQuery).mockReturnValue(createMockQuery([]) as never)
 
@@ -726,11 +754,12 @@ describe('Claude SDK runner', () => {
         capabilities: { disabledSkills: ['review'] },
       },
     )
+    await flushEnvApply()
 
     expect(vi.mocked(sdkQuery).mock.calls[0]?.[0].options?.skills).toEqual(['commit', 'deploy'])
   })
 
-  it('passes enabled plugins as local plugin paths at spawn (design D7)', () => {
+  it('passes enabled plugins as local plugin paths at spawn (design D7)', async () => {
     const events = createEvents()
     vi.mocked(sdkQuery).mockReturnValue(createMockQuery([]) as never)
 
@@ -740,13 +769,14 @@ describe('Claude SDK runner', () => {
         enabledPlugins: { 'formatter@acme': '/home/u/.claude/plugins/cache/acme/formatter/1.0.0' },
       },
     })
+    await flushEnvApply()
 
     expect(vi.mocked(sdkQuery).mock.calls[0]?.[0].options?.plugins).toEqual([
       { type: 'local', path: '/home/u/.claude/plugins/cache/acme/formatter/1.0.0' },
     ])
   })
 
-  it('leaves skills and plugins untouched without capability filters', () => {
+  it('leaves skills and plugins untouched without capability filters', async () => {
     const events = createEvents()
     vi.mocked(sdkQuery).mockReturnValue(createMockQuery([]) as never)
 
@@ -756,6 +786,7 @@ describe('Claude SDK runner', () => {
       proxy,
       { promptQueue: parkedInput() },
     )
+    await flushEnvApply()
 
     expect(vi.mocked(sdkQuery).mock.calls[0]?.[0].options?.skills).toEqual(['commit'])
     expect(vi.mocked(sdkQuery).mock.calls[0]?.[0].options?.plugins).toBeUndefined()
