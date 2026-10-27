@@ -124,9 +124,7 @@ function sanitizeStackFrames(value: string, options: CompleteSanitizeLogOptions)
         (_match, prefix: string) => `${prefix}$PATH`,
       )
       const frameName = sanitized.match(/^\s*at\s+([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)/)?.[1]
-      const location = sanitized.match(
-        /\$HOME[^)\s]*|\$PATH|\$WEBVIEW[^)\s]*|node:[^)\s]+/,
-      )?.[0]
+      const location = sanitized.match(/\$HOME[^)\s]*|\$PATH|\$WEBVIEW[^)\s]*|node:[^)\s]+/)?.[0]
       return `    at ${frameName ?? '<unknown>'}${location ? ` (${location})` : ''}`
     })
   if (frames.length === 0) return undefined

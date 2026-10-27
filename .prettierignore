@@ -10,3 +10,5 @@ out/
 .vite/
 package-lock.json
 build/
+openwiki/
+openspec/

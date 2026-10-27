@@ -4,15 +4,15 @@
 
 ## Technology stack
 
-| Layer           | Technology                                                     |
-| --------------- | -------------------------------------------------------------- |
-| Frontend        | React 19, TypeScript 6, Vite 8                                 |
-| Styling / UI    | Tailwind CSS 4, shadcn/ui (`base-mira`, Base UI), Lucide React |
-| Backend         | Node.js (Electron main process), Electron Forge                |
+| Layer           | Technology                                                                           |
+| --------------- | ------------------------------------------------------------------------------------ |
+| Frontend        | React 19, TypeScript 6, Vite 8                                                       |
+| Styling / UI    | Tailwind CSS 4, shadcn/ui (`base-mira`, Base UI), Lucide React                       |
+| Backend         | Node.js (Electron main process), Electron Forge                                      |
 | Bridge          | Electron IPC (`ipcMain.handle` / `webContents.send` via the preload `contextBridge`) |
-| Testing         | Vitest, React Testing Library                                  |
-| Quality         | ESLint 9, Prettier 3                                          |
-| Package manager | **npm**                                                        |
+| Testing         | Vitest, React Testing Library                                                        |
+| Quality         | ESLint 9, Prettier 3                                                                 |
+| Package manager | **npm**                                                                              |
 
 ## Project structure
 

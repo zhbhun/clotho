@@ -10,8 +10,7 @@ export const BUNDLED_MAIN_VIEW_FILE = path.join('../renderer', 'main_window', 'i
  * development or the bundle written by Electron Forge for packaged builds.
  */
 export type MainViewTarget =
-  | { kind: 'dev-server'; url: string }
-  | { kind: 'bundled'; filePath: string }
+  { kind: 'dev-server'; url: string } | { kind: 'bundled'; filePath: string }
 
 type FetchImpl = (
   input: Parameters<typeof fetch>[0],

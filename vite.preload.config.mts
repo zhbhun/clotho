@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import { defineConfig, type Plugin } from 'vite'
+import { type Plugin, defineConfig } from 'vite'
 
 /**
  * @electron-forge/plugin-vite still defaults preload builds to the deprecated

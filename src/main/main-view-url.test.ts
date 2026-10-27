@@ -8,7 +8,10 @@ import { DEV_SERVER_URL, getMainViewTarget } from './main-view-url'
 const MAIN_DIRECTORY = path.resolve('/mock', 'main')
 
 function bundledTarget() {
-  return { kind: 'bundled', filePath: path.resolve(MAIN_DIRECTORY, '../renderer/main_window/index.html') }
+  return {
+    kind: 'bundled',
+    filePath: path.resolve(MAIN_DIRECTORY, '../renderer/main_window/index.html'),
+  }
 }
 
 describe('getMainViewTarget', () => {
