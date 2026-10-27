@@ -54,6 +54,7 @@ function resizeElement(element: Element, height: number) {
 }
 
 function VirtualListHarness({
+  isPinnedToBottom,
   onHandle,
   onTotalSizeChange,
   onVisibleTurnIdsChange,
@@ -61,6 +62,7 @@ function VirtualListHarness({
   scrollMargin,
   viewportTestId = 'viewport',
 }: {
+  isPinnedToBottom?: () => boolean
   onHandle?: (handle: VirtualConversationHandle | null) => void
   onTotalSizeChange?: (size: number) => void
   onVisibleTurnIdsChange?: (ids: Set<string>) => void
@@ -79,6 +81,7 @@ function VirtualListHarness({
     <div data-testid={viewportTestId} ref={setViewport}>
       <VirtualConversationList
         estimateSize={() => 50}
+        isPinnedToBottom={isPinnedToBottom}
         ref={listRef}
         rows={rows}
         scrollMargin={scrollMargin}
@@ -480,5 +483,32 @@ describe('VirtualConversationList', () => {
 
     await waitFor(() => expect(visibleIds.has('turn-80')).toBe(true))
     expect(visibleIds.has('turn-0')).toBe(false)
+  })
+
+  it('skips resize scroll compensation while pinned to the bottom', async () => {
+    const rows = Array.from({ length: 100 }, (_, index) => ({
+      key: `row-${index}`,
+      label: `Row ${index}`,
+      turnId: `turn-${index}`,
+    }))
+    render(<VirtualListHarness rows={rows} isPinnedToBottom={() => true} />)
+    const viewport = screen.getByTestId('viewport')
+    viewport.scrollTop = 100
+    fireEvent.scroll(viewport)
+    // The virtualizer defers measurements until the isScrolling flag settles
+    // (isScrollingResetDelay = 150ms), so wait it out before resizing.
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 200))
+    })
+    ;(viewport.scrollTo as ReturnType<typeof vi.fn>).mockClear()
+
+    const targetRow = screen
+      .getByText('Row 0')
+      .closest<HTMLElement>('[data-conversation-virtual-row]')
+    act(() => resizeElement(targetRow!, 120))
+
+    // The auto-scroll hook owns scrollTop while pinned; the virtualizer's
+    // compensating write is what produced the one-row jitter.
+    expect(viewport.scrollTo).not.toHaveBeenCalled()
   })
 })

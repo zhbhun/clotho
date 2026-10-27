@@ -56,6 +56,7 @@ type ConversationViewProps = {
   expandedTurns: Record<string, boolean>
   interruptedTurnIds?: Set<string>
   interruptedTurnDurations?: Record<string, number>
+  isAutoScrollActive?: () => boolean
   isStreaming: boolean
   messageEdit?: MessageEditConfig
   messages: ClaudeMessage[]
@@ -80,6 +81,7 @@ export function ConversationView({
   expandedTurns,
   interruptedTurnIds = EMPTY_INTERRUPTED_TURN_IDS,
   interruptedTurnDurations,
+  isAutoScrollActive,
   isStreaming,
   messageEdit,
   messages,
@@ -238,6 +240,7 @@ export function ConversationView({
   return (
     <VirtualConversationList
       estimateSize={estimateConversationRowSize}
+      isPinnedToBottom={isAutoScrollActive}
       ref={virtualListRef}
       renderRow={renderRow}
       rows={rows}

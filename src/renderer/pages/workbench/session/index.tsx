@@ -471,7 +471,7 @@ function SessionAreaContent({
     if (!turnScrollRequest) return
     virtualConversationRef.current?.scrollToTurn(turnScrollRequest.turnId)
   }, [turnScrollRequest])
-  const { isContentScrolled, pauseAutoScroll, resetAutoScroll, viewportRef } =
+  const { isAutoScrollActive, isContentScrolled, pauseAutoScroll, resetAutoScroll, viewportRef } =
     useConversationAutoScroll(autoScrollVersion, activeViewKey, sessionId, virtualConversationRef)
   const [conversationViewport, setConversationViewport] = useState<HTMLDivElement | null>(null)
   const [visibleTurnIds, setVisibleTurnIds] = useState<Set<string>>(() => new Set())
@@ -734,6 +734,7 @@ function SessionAreaContent({
                       viewport={conversationViewport}
                       viewKey={activeViewKey}
                       virtualListRef={virtualConversationRef}
+                      isPinnedToBottom={isAutoScrollActive}
                       onOpenSubagent={subagentView.openSubagent}
                       onRespond={respondToolRequest}
                       onRetry={subagentView.retry}
@@ -747,6 +748,7 @@ function SessionAreaContent({
                     >
                       <ConversationView
                         expandedTurns={expandedTurns}
+                        isAutoScrollActive={isAutoScrollActive}
                         isStreaming={isStreaming}
                         messageEdit={messageEdit}
                         messages={rootMessages}

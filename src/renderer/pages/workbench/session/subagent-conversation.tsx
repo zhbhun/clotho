@@ -32,6 +32,7 @@ import { type SessionSubagent, isNaturalSubagentUserMessage } from './subagents'
 export function SubagentConversation({
   error,
   isLoading,
+  isPinnedToBottom,
   messages,
   pendingRequests,
   projectPath,
@@ -47,6 +48,7 @@ export function SubagentConversation({
 }: {
   error: string | null
   isLoading: boolean
+  isPinnedToBottom?: () => boolean
   messages: ClaudeMessage[]
   pendingRequests?: Record<string, ClaudeToolRequest>
   projectPath?: string
@@ -175,6 +177,7 @@ export function SubagentConversation({
           ) : (
             <VirtualConversationList
               estimateSize={estimateSubagentRowSize}
+              isPinnedToBottom={isPinnedToBottom}
               ref={virtualListRef}
               renderRow={renderRow}
               rows={rows}

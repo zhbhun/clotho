@@ -72,6 +72,7 @@ export function useConversationAutoScroll(
   sessionKey: string,
   scrollAnchorRef?: RefObject<ConversationScrollAnchorController | null>,
 ): {
+  isAutoScrollActive: () => boolean
   isContentScrolled: boolean
   pauseAutoScroll: () => void
   resetAutoScroll: () => void
@@ -279,7 +280,11 @@ export function useConversationAutoScroll(
     [],
   )
 
-  return { isContentScrolled, pauseAutoScroll, resetAutoScroll, viewportRef }
+  // Stable read of the live pin state; the virtualizer consults it during
+  // resize compensation so the two scroll writers never correct together.
+  const isAutoScrollActive = useCallback(() => shouldAutoScrollRef.current, [])
+
+  return { isAutoScrollActive, isContentScrolled, pauseAutoScroll, resetAutoScroll, viewportRef }
 }
 
 export interface ConversationScrollAnchorController {

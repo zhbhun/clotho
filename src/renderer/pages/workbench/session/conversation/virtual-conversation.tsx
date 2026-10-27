@@ -10,6 +10,7 @@ import {
   useEffect,
   useImperativeHandle,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 
@@ -31,6 +32,11 @@ export interface VirtualConversationHandle {
 
 type VirtualConversationListProps<Row extends VirtualConversationItem> = {
   estimateSize: (row: Row) => number
+  // While the caller pins the viewport to the bottom, the virtualizer's own
+  // scroll compensation on item resize must stay off: the pin rewrites
+  // scrollTop every frame, and both writers correcting the same re-measure
+  // cancel each other by about one row — the visible jitter during streaming.
+  isPinnedToBottom?: () => boolean
   onTotalSizeChange?: (size: number) => void
   onVisibleTurnIdsChange?: (ids: Set<string>) => void
   rows: Row[]
@@ -43,6 +49,7 @@ type VirtualConversationListProps<Row extends VirtualConversationItem> = {
 function VirtualConversationListInner<Row extends VirtualConversationItem>(
   {
     estimateSize,
+    isPinnedToBottom,
     onTotalSizeChange,
     onVisibleTurnIdsChange,
     rows,
@@ -88,6 +95,13 @@ function VirtualConversationListInner<Row extends VirtualConversationItem>(
     scrollMargin,
     useFlushSync: false,
   })
+  const isPinnedToBottomRef = useRef(isPinnedToBottom)
+  isPinnedToBottomRef.current = isPinnedToBottom
+  // v3.14 reads this instance field on every resizeItem; keep it live outside
+  // the options object so streaming re-renders pick it up without remounting.
+  virtualizer.shouldAdjustScrollPositionOnItemSizeChange = isPinnedToBottomRef.current
+    ? () => false
+    : undefined
   const firstIndexByTurnId = useMemo(() => {
     const indexes = new Map<string, number>()
     rows.forEach((row, index) => {
