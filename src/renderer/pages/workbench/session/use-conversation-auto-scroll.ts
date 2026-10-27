@@ -1,3 +1,4 @@
+import type { VirtualItem } from '@tanstack/virtual-core'
 import {
   type RefCallback,
   type RefObject,
@@ -25,6 +26,10 @@ const RESTORE_MAX_ATTEMPTS = 10
 interface ConversationScrollState {
   anchors: Map<string, ConversationScrollAnchor>
   autoScroll: Map<string, boolean>
+  // Measured row heights per view, snapshotted from the virtualizer before the
+  // tab unmounts; the next mount seeds its virtualizer with them so a restored
+  // anchor lands on measured coordinates instead of estimate-built ones.
+  measurements: Map<string, VirtualItem[]>
   positions: Map<string, number>
 }
 
@@ -39,7 +44,12 @@ export function clearConversationScrollStates() {
 function getConversationScrollState(sessionKey: string) {
   let state = scrollStatesBySession.get(sessionKey)
   if (!state) {
-    state = { anchors: new Map(), autoScroll: new Map(), positions: new Map() }
+    state = {
+      anchors: new Map(),
+      autoScroll: new Map(),
+      measurements: new Map(),
+      positions: new Map(),
+    }
     scrollStatesBySession.set(sessionKey, state)
     if (scrollStatesBySession.size > SCROLL_STATE_CACHE_LIMIT) {
       const oldestKey = scrollStatesBySession.keys().next().value
@@ -72,10 +82,12 @@ export function useConversationAutoScroll(
   sessionKey: string,
   scrollAnchorRef?: RefObject<ConversationScrollAnchorController | null>,
 ): {
+  initialMeasurements: VirtualItem[] | undefined
   isAutoScrollActive: () => boolean
   isContentScrolled: boolean
   pauseAutoScroll: () => void
   resetAutoScroll: () => void
+  saveMeasurements: (viewKey: string, measurements: VirtualItem[]) => void
   viewportRef: RefCallback<HTMLDivElement>
 } {
   const [isContentScrolled, setIsContentScrolled] = useState(false)
@@ -243,7 +255,9 @@ export function useConversationAutoScroll(
   }, [])
 
   // Retry the restore while the conversation lays out: the anchor applies once
-  // its row exists, the raw offset once the content is tall enough.
+  // its row exists and the virtualizer has a scroll element. The raw offset is
+  // only a fallback for views without an anchor — applying it while the anchor
+  // is still waiting would pin the position on estimate-built coordinates.
   useLayoutEffect(() => {
     const pending = pendingRestoreRef.current
     const viewport = viewportElementRef.current
@@ -253,7 +267,7 @@ export function useConversationAutoScroll(
     if (pending.anchor && scrollAnchorRef?.current) {
       restored = scrollAnchorRef.current.restoreScrollAnchor(pending.anchor)
     }
-    if (!restored && pending.position !== undefined) {
+    if (!restored && !pending.anchor && pending.position !== undefined) {
       restored = viewport.scrollHeight - viewport.clientHeight >= pending.position
       if (restored) viewport.scrollTop = pending.position
     }
@@ -284,7 +298,27 @@ export function useConversationAutoScroll(
   // resize compensation so the two scroll writers never correct together.
   const isAutoScrollActive = useCallback(() => shouldAutoScrollRef.current, [])
 
-  return { isAutoScrollActive, isContentScrolled, pauseAutoScroll, resetAutoScroll, viewportRef }
+  const saveMeasurements = useCallback(
+    (savedViewKey: string, measurements: VirtualItem[]) => {
+      if (!measurements.length) return
+      sessionState.measurements.set(savedViewKey, measurements)
+    },
+    [sessionState],
+  )
+
+  // Read once per mount: the seeded virtualizer mutates nothing the snapshot
+  // shares, but a later remount must still see the latest saved heights.
+  const initialMeasurements = sessionState.measurements.get(viewKey)
+
+  return {
+    initialMeasurements,
+    isAutoScrollActive,
+    isContentScrolled,
+    pauseAutoScroll,
+    resetAutoScroll,
+    saveMeasurements,
+    viewportRef,
+  }
 }
 
 export interface ConversationScrollAnchorController {

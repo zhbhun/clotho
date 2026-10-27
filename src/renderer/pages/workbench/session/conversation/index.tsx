@@ -1,3 +1,4 @@
+import { type VirtualItem } from '@tanstack/virtual-core'
 import { ChevronRight, type LucideIcon } from 'lucide-react'
 import { type Ref, useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -54,6 +55,7 @@ export function ConversationState({
 
 type ConversationViewProps = {
   expandedTurns: Record<string, boolean>
+  initialMeasurements?: VirtualItem[]
   interruptedTurnIds?: Set<string>
   interruptedTurnDurations?: Record<string, number>
   isAutoScrollActive?: () => boolean
@@ -63,6 +65,7 @@ type ConversationViewProps = {
   onFork?: (messageUuid: string) => Promise<void>
   onOpenSubagent?: (toolUseId: string) => void
   onRespond: (toolUseId: string, result: ClaudeToolResult) => Promise<void>
+  onSaveMeasurements?: (viewKey: string, measurements: VirtualItem[]) => void
   onTotalSizeChange?: (size: number) => void
   onToggle: (turnId: string) => void
   onVisibleTurnIdsChange?: (ids: Set<string>) => void
@@ -79,6 +82,7 @@ type ConversationViewProps = {
 
 export function ConversationView({
   expandedTurns,
+  initialMeasurements,
   interruptedTurnIds = EMPTY_INTERRUPTED_TURN_IDS,
   interruptedTurnDurations,
   isAutoScrollActive,
@@ -88,6 +92,7 @@ export function ConversationView({
   onFork,
   onOpenSubagent,
   onRespond,
+  onSaveMeasurements,
   onTotalSizeChange,
   onToggle,
   onVisibleTurnIdsChange,
@@ -170,6 +175,14 @@ export function ConversationView({
     if (isStreaming) setEditingMessageId(undefined)
   }, [isStreaming])
 
+  const handleTotalSizeChange = useCallback(
+    (size: number, measurements: VirtualItem[]) => {
+      onSaveMeasurements?.(viewKey, measurements)
+      onTotalSizeChange?.(size)
+    },
+    [onSaveMeasurements, onTotalSizeChange, viewKey],
+  )
+
   const renderRow = useCallback(
     (row: ConversationRow) => {
       const content = (
@@ -240,13 +253,14 @@ export function ConversationView({
   return (
     <VirtualConversationList
       estimateSize={estimateConversationRowSize}
+      initialMeasurements={initialMeasurements}
       isPinnedToBottom={isAutoScrollActive}
       ref={virtualListRef}
       renderRow={renderRow}
       rows={rows}
       viewport={viewport}
       viewKey={viewKey}
-      onTotalSizeChange={onTotalSizeChange}
+      onTotalSizeChange={handleTotalSizeChange}
       onVisibleTurnIdsChange={onVisibleTurnIdsChange}
     />
   )

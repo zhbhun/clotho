@@ -1,3 +1,4 @@
+import { type VirtualItem } from '@tanstack/virtual-core'
 import { CircleAlert, Loader2, RefreshCw } from 'lucide-react'
 import { type Ref, useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -31,6 +32,7 @@ import { type SessionSubagent, isNaturalSubagentUserMessage } from './subagents'
 
 export function SubagentConversation({
   error,
+  initialMeasurements,
   isLoading,
   isPinnedToBottom,
   messages,
@@ -41,12 +43,14 @@ export function SubagentConversation({
   onOpenSubagent,
   onRespond,
   onRetry,
+  onSaveMeasurements,
   onTotalSizeChange,
   viewport,
   viewKey = 'subagent',
   virtualListRef,
 }: {
   error: string | null
+  initialMeasurements?: VirtualItem[]
   isLoading: boolean
   isPinnedToBottom?: () => boolean
   messages: ClaudeMessage[]
@@ -57,6 +61,7 @@ export function SubagentConversation({
   onOpenSubagent: (toolUseId: string) => void
   onRespond?: (toolUseId: string, result: ClaudeToolResult) => Promise<void>
   onRetry: () => void
+  onSaveMeasurements?: (viewKey: string, measurements: VirtualItem[]) => void
   onTotalSizeChange?: (size: number) => void
   viewport?: HTMLDivElement | null
   viewKey?: string
@@ -164,6 +169,14 @@ export function SubagentConversation({
     ],
   )
 
+  const handleTotalSizeChange = useCallback(
+    (size: number, measurements: VirtualItem[]) => {
+      onSaveMeasurements?.(viewKey, measurements)
+      onTotalSizeChange?.(size)
+    },
+    [onSaveMeasurements, onTotalSizeChange, viewKey],
+  )
+
   return (
     <div className="flex min-h-full flex-col">
       <div>
@@ -177,6 +190,7 @@ export function SubagentConversation({
           ) : (
             <VirtualConversationList
               estimateSize={estimateSubagentRowSize}
+              initialMeasurements={initialMeasurements}
               isPinnedToBottom={isPinnedToBottom}
               ref={virtualListRef}
               renderRow={renderRow}
@@ -184,7 +198,7 @@ export function SubagentConversation({
               scrollMargin={scrollMargin}
               viewport={viewport}
               viewKey={viewKey}
-              onTotalSizeChange={onTotalSizeChange}
+              onTotalSizeChange={handleTotalSizeChange}
             />
           )
         ) : null}

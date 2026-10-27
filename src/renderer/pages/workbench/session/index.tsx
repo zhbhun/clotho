@@ -471,8 +471,15 @@ function SessionAreaContent({
     if (!turnScrollRequest) return
     virtualConversationRef.current?.scrollToTurn(turnScrollRequest.turnId)
   }, [turnScrollRequest])
-  const { isAutoScrollActive, isContentScrolled, pauseAutoScroll, resetAutoScroll, viewportRef } =
-    useConversationAutoScroll(autoScrollVersion, activeViewKey, sessionId, virtualConversationRef)
+  const {
+    initialMeasurements,
+    isAutoScrollActive,
+    isContentScrolled,
+    pauseAutoScroll,
+    resetAutoScroll,
+    saveMeasurements,
+    viewportRef,
+  } = useConversationAutoScroll(autoScrollVersion, activeViewKey, sessionId, virtualConversationRef)
   const [conversationViewport, setConversationViewport] = useState<HTMLDivElement | null>(null)
   const [visibleTurnIds, setVisibleTurnIds] = useState<Set<string>>(() => new Set())
   const [isHistorySkeletonVisible, setHistorySkeletonVisible] = useState(false)
@@ -725,6 +732,7 @@ function SessionAreaContent({
                   ) : !isHistoryLoading && subagentView.selectedSubagent ? (
                     <SubagentConversation
                       error={subagentView.error}
+                      initialMeasurements={initialMeasurements}
                       isLoading={subagentView.isLoading}
                       messages={subagentView.selectedMessages}
                       pendingRequests={pendingToolRequests}
@@ -738,6 +746,7 @@ function SessionAreaContent({
                       onOpenSubagent={subagentView.openSubagent}
                       onRespond={respondToolRequest}
                       onRetry={subagentView.retry}
+                      onSaveMeasurements={saveMeasurements}
                       onTotalSizeChange={handleVirtualContentSizeChange}
                     />
                   ) : !isHistoryLoading ? (
@@ -748,6 +757,7 @@ function SessionAreaContent({
                     >
                       <ConversationView
                         expandedTurns={expandedTurns}
+                        initialMeasurements={initialMeasurements}
                         isAutoScrollActive={isAutoScrollActive}
                         isStreaming={isStreaming}
                         messageEdit={messageEdit}
@@ -766,6 +776,7 @@ function SessionAreaContent({
                         viewKey={activeViewKey}
                         virtualListRef={virtualConversationRef}
                         onRespond={respondToolRequest}
+                        onSaveMeasurements={saveMeasurements}
                         onTotalSizeChange={handleVirtualContentSizeChange}
                         onToggle={handleToggleTurn}
                         onVisibleTurnIdsChange={handleVisibleTurnIdsChange}

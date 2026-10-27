@@ -1,3 +1,4 @@
+import { type VirtualItem } from '@tanstack/virtual-core'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -95,13 +96,34 @@ function VirtualListHarness({
   )
 }
 
-function ScrollRestoreHarness({ rows, viewKey }: { rows: TestRow[]; viewKey: string }) {
+function ScrollRestoreHarness({
+  onAutoScroll,
+  rows,
+  sessionKey,
+  viewKey,
+}: {
+  onAutoScroll?: (autoScroll: {
+    initialMeasurements?: VirtualItem[]
+    saveMeasurements: (viewKey: string, measurements: VirtualItem[]) => void
+  }) => void
+  rows: TestRow[]
+  sessionKey?: string
+  viewKey: string
+}) {
   const [viewport, setViewport] = useState<HTMLDivElement | null>(null)
   const listRef = useRef<VirtualConversationHandle>(null)
   // A unique key per mount keeps harness instances from sharing cached scroll
   // state, mirroring one session per instance.
-  const sessionKey = useId()
-  const { viewportRef } = useConversationAutoScroll(rows, viewKey, sessionKey, listRef)
+  const resolvedSessionKey = useId()
+  const { initialMeasurements, saveMeasurements, viewportRef } = useConversationAutoScroll(
+    rows,
+    viewKey,
+    sessionKey ?? resolvedSessionKey,
+    listRef,
+  )
+  useEffect(() => {
+    onAutoScroll?.({ initialMeasurements, saveMeasurements })
+  }, [initialMeasurements, onAutoScroll, saveMeasurements])
   const handleViewportRef = useCallback(
     (element: HTMLDivElement | null) => {
       viewportRef(element)
@@ -114,11 +136,13 @@ function ScrollRestoreHarness({ rows, viewKey }: { rows: TestRow[]; viewKey: str
     <div data-testid="viewport" ref={handleViewportRef}>
       <VirtualConversationList
         estimateSize={(row) => rowHeights.get(row.key) ?? 50}
+        initialMeasurements={initialMeasurements}
         key={viewKey}
         ref={listRef}
         rows={rows}
         viewport={viewport}
         viewKey={viewKey}
+        onTotalSizeChange={(_size, measurements) => saveMeasurements(viewKey, measurements)}
         renderRow={(row) => <button type="button">{row.label}</button>}
       />
     </div>
@@ -419,7 +443,64 @@ describe('VirtualConversationList', () => {
 
     render(<VirtualListHarness rows={rows} onTotalSizeChange={onTotalSizeChange} />)
 
-    expect(onTotalSizeChange).toHaveBeenLastCalledWith(5_000)
+    expect(onTotalSizeChange).toHaveBeenLastCalledWith(5_000, expect.any(Array))
+  })
+
+  it('restores a remounted session onto measured heights, not estimates', async () => {
+    const rows = Array.from({ length: 100 }, (_, index) => ({
+      key: `row-${index}`,
+      label: `Row ${index}`,
+      turnId: `turn-${index}`,
+    }))
+    const sessionKey = 'remount-precision'
+    const first = render(
+      <ScrollRestoreHarness rows={rows} sessionKey={sessionKey} viewKey="root" />,
+    )
+    const firstViewport = first.getByTestId('viewport')
+
+    // Park mid-conversation: the anchor lands on row 2 (estimate start 100,
+    // offset 15). Every estimate equals the default height, so nothing is
+    // measured yet — the virtualizer only caches rows that differ.
+    firstViewport.scrollTop = 115
+    fireEvent.scroll(firstViewport)
+    // The virtualizer defers measurements until the isScrolling flag settles
+    // (isScrollingResetDelay = 150ms).
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 200))
+    })
+
+    // Rows above the fold re-measure at 200px: the delta fills the size cache
+    // and the onTotalSizeChange snapshot carries it into the session state.
+    rows.slice(0, 4).forEach((row) => rowHeights.set(row.key, 200))
+    document.querySelectorAll('[data-conversation-virtual-row]').forEach((el) => {
+      const key = el.getAttribute('data-conversation-virtual-row')
+      resizeObservers.forEach((observer) => observer.resize(el, rowHeights.get(key!) ?? 50))
+    })
+    first.unmount()
+
+    // The next mount knows only the estimate (50): without the seeded
+    // snapshot the restore would land the anchor at its estimate start.
+    rowHeights.clear()
+
+    let savedInitial: VirtualItem[] | undefined
+    render(
+      <ScrollRestoreHarness
+        onAutoScroll={({ initialMeasurements }) => {
+          savedInitial = initialMeasurements
+        }}
+        rows={rows}
+        sessionKey={sessionKey}
+        viewKey="root"
+      />,
+    )
+    const viewport = screen.getByTestId('viewport')
+
+    // The anchor is row 2 at offset 15. The snapshot carries the one row the
+    // first mount actually measured (row 0 at 200px), so row 2's start is
+    // 200 + 50 = 250 and the restore lands at 265; estimates alone would put
+    // it at 2 × 50 = 100 and scroll to 115 instead.
+    expect(savedInitial?.map((item) => item.key)).toEqual(['row-0'])
+    expect(viewport.scrollTop).toBe(265)
   })
 
   it('updates the virtual content size when a mounted row changes height', async () => {
@@ -436,7 +517,9 @@ describe('VirtualConversationList', () => {
 
     act(() => resizeElement(firstRow!, 120))
 
-    await waitFor(() => expect(onTotalSizeChange).toHaveBeenLastCalledWith(5_070))
+    await waitFor(() =>
+      expect(onTotalSizeChange).toHaveBeenLastCalledWith(5_070, expect.any(Array)),
+    )
   })
 
   it('repositions later rows before a resize observer callback yields', () => {
