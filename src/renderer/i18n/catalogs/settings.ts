@@ -532,7 +532,19 @@ export const settingsCatalog = {
   ),
 
   // Subagent editor.
-  'settings.agent.subagent.add': setting('New subagent', '新建子智能体', '新建子智慧體'),
+  'settings.agent.subagent.installed': setting('Installed', '已安装', '已安裝'),
+  'settings.agent.subagent.itemCount_one': setting('{{count}} item', '{{count}} 项'),
+  'settings.agent.subagent.itemCount_other': setting('{{count}} items', '{{count}} 项'),
+  'settings.agent.subagent.add': setting('Add', '添加', '新增'),
+  'settings.agent.subagent.badge.builtin': setting('Built-in', '内置', '內建'),
+  'settings.agent.subagent.badge.plugin': setting('Plugin', '插件', '外掛'),
+  'settings.agent.subagent.badge.custom': setting('Custom', '自定义', '自訂'),
+  'settings.agent.subagent.modelDefault': setting('default', '默认', '預設'),
+  'settings.agent.subagent.refreshError': setting(
+    'Could not resolve subagents, showing custom agents from files',
+    '无法获取子智能体列表，已回退显示文件中的自定义子智能体',
+    '無法取得子智慧體清單，已回退顯示檔案中的自訂子智慧體',
+  ),
   'settings.agent.subagent.nameHint': setting(
     'Also the file name, e.g. code-reviewer',
     '同时是文件名，例如 code-reviewer',

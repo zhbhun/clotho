@@ -480,6 +480,7 @@ export async function bootstrap() {
         agentListSubagents: () => service.listAgentSubagents(),
         agentSaveSubagent: (params) => service.saveAgentSubagent(params),
         agentDeleteSubagent: (params) => service.deleteAgentSubagent(params),
+        agentListAvailableSubagents: () => service.listAgentAvailableSubagents(),
         agentListMcpServers: () => service.listAgentMcpServers(),
         agentSaveMcpServer: (params) => service.saveAgentMcpServer(params),
         agentDeleteMcpServer: (params) => service.deleteAgentMcpServer(params),

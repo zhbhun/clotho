@@ -39,6 +39,7 @@ import {
   listSubagentConfigs,
   saveSubagentConfig,
 } from './claude/agent-config/subagents'
+import { listAvailableSubagents } from './claude/agent-config/supported-agents'
 import {
   deleteWorkflow,
   listWorkflows,
@@ -383,6 +384,7 @@ export function createClaudeDesktopService(
         body: subagent.body,
       }),
     deleteAgentSubagent: ({ file }: { file: string }) => deleteSubagentConfig(file),
+    listAgentAvailableSubagents: () => listAvailableSubagents(),
     listAgentMcpServers: async () => {
       const { servers } = await listMcpServers()
       return servers.map(({ name, type, command, args, env, url, headers }) => ({

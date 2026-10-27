@@ -1,3 +1,4 @@
+import { Puzzle, Sparkles, User } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -11,10 +12,34 @@ import { toast } from '@/shadcn/toast'
 import {
   type AgentSubagentConfig,
   deleteAgentSubagent,
+  listAgentAvailableSubagents,
   listAgentSubagents,
   saveAgentSubagent,
 } from '../../../services/claude/agent-config'
-import { AgentEmpty, AgentSection, DeleteButton } from './agent-shared'
+import { AgentEmpty, DeleteButton } from './agent-shared'
+
+const SOURCES = ['builtin', 'plugin', 'custom'] as const
+type Source = (typeof SOURCES)[number]
+
+const SOURCE_ICON = {
+  builtin: Sparkles,
+  plugin: Puzzle,
+  custom: User,
+} as const
+
+function SourceBadge({ source }: { source: Source }) {
+  const { t } = useTranslation()
+  const Icon = SOURCE_ICON[source]
+  const label = t(`settings.agent.subagent.badge.${source}`)
+  return (
+    <span
+      className="flex shrink-0 items-center rounded border p-1 text-foreground-subtle"
+      title={label}
+    >
+      <Icon className="size-3.5" aria-hidden />
+    </span>
+  )
+}
 
 function SubagentRow({
   subagent,
@@ -26,26 +51,32 @@ function SubagentRow({
   onDelete: () => Promise<void> | void
 }) {
   const { t } = useTranslation()
+  const isReadOnly = subagent.builtin === true
 
   return (
-    <div className="flex min-h-14 items-center gap-3 px-4 py-2">
+    <div className="flex min-h-14 items-center gap-3 px-4 py-3">
+      {subagent.source ? <SourceBadge source={subagent.source} /> : null}
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-normal">{subagent.name || subagent.file}</div>
-        <div className="truncate text-sm text-foreground-subtle">
+        <div className="truncate text-sm font-normal leading-snug">
+          {subagent.name || subagent.file}
+        </div>
+        <div className="truncate text-sm leading-snug text-foreground-subtlest">
           {subagent.broken ? t('settings.agent.broken') : subagent.description}
         </div>
       </div>
-      {subagent.model ? (
-        <span className="shrink-0 text-sm text-foreground-subtlest">{subagent.model}</span>
+      <span className="shrink-0 text-sm text-foreground-subtlest">
+        {subagent.model || t('settings.agent.subagent.modelDefault')}
+      </span>
+      {!isReadOnly ? (
+        <div className="flex shrink-0 items-center gap-1">
+          {!subagent.broken ? (
+            <Button size="sm" variant="ghost" onClick={onEdit}>
+              {t('settings.common.edit')}
+            </Button>
+          ) : null}
+          <DeleteButton label={subagent.file} onDelete={onDelete} />
+        </div>
       ) : null}
-      <div className="flex shrink-0 items-center gap-1">
-        {!subagent.broken ? (
-          <Button size="sm" variant="ghost" onClick={onEdit}>
-            {t('settings.common.edit')}
-          </Button>
-        ) : null}
-        <DeleteButton label={subagent.file} onDelete={onDelete} />
-      </div>
     </div>
   )
 }
@@ -130,6 +161,49 @@ function SubagentEditor({ draft, onClose }: { draft: AgentSubagentConfig; onClos
   )
 }
 
+function sourceOf(subagent: AgentSubagentConfig): Source {
+  return subagent.source ?? 'custom'
+}
+
+function SourceCard({
+  source,
+  rows,
+  hiddenFile,
+  onEdit,
+  onDelete,
+}: {
+  source: Source
+  rows: AgentSubagentConfig[]
+  hiddenFile: string | null
+  onEdit: (subagent: AgentSubagentConfig) => void
+  onDelete: (file: string) => void
+}) {
+  const { t } = useTranslation()
+  return (
+    <div data-source-card={source} className="flex flex-col gap-2">
+      <div className="text-sm text-foreground-subtlest">
+        {t(`settings.agent.subagent.badge.${source}`)}
+      </div>
+      {rows.length === 0 ? (
+        <AgentEmpty />
+      ) : (
+        <div className="divide-y rounded-lg border">
+          {rows.map((subagent) =>
+            subagent.file === hiddenFile ? null : (
+              <SubagentRow
+                key={`${sourceOf(subagent)}:${subagent.file}`}
+                subagent={subagent}
+                onDelete={() => onDelete(subagent.file)}
+                onEdit={() => onEdit(subagent)}
+              />
+            ),
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function AgentSubagentSettings() {
   const { t } = useTranslation()
   const [subagents, setSubagents] = useState<AgentSubagentConfig[]>([])
@@ -139,9 +213,24 @@ export function AgentSubagentSettings() {
 
   const reload = async () => {
     try {
-      setSubagents(await listAgentSubagents())
+      setSubagents(await listAgentAvailableSubagents())
     } catch {
-      toast.add({ id: 'agent-subagents-load', title: t('settings.agent.loadError'), type: 'error' })
+      // Fallback path: the SDK resolve failed on the main side; show the plain
+      // file list so custom agents stay manageable (design D5).
+      try {
+        setSubagents(await listAgentSubagents())
+        toast.add({
+          id: 'agent-subagents-refresh',
+          title: t('settings.agent.subagent.refreshError'),
+          type: 'error',
+        })
+      } catch {
+        toast.add({
+          id: 'agent-subagents-load',
+          title: t('settings.agent.loadError'),
+          type: 'error',
+        })
+      }
     } finally {
       setIsLoading(false)
     }
@@ -176,43 +265,46 @@ export function AgentSubagentSettings() {
     setDraft({ file: '', name: '', description: '', body: '' })
   }
 
+  const bySource = (source: Source) => subagents.filter((subagent) => sourceOf(subagent) === source)
+
   return (
-    <AgentSection
-      addLabel={
-        draft === null || fileBeingEdited !== null ? t('settings.agent.subagent.add') : undefined
-      }
-      onAdd={draft === null || fileBeingEdited !== null ? startCreate : undefined}
-      titleKey="subagents"
-    >
-      <div className="flex flex-col gap-3">
-        {draft ? (
-          <SubagentEditor
-            draft={draft}
-            onClose={() => {
-              setDraft(null)
-              void reload()
-            }}
-          />
-        ) : null}
-        {isLoading ? (
-          <Spinner className="self-center" />
-        ) : subagents.length === 0 ? (
-          <AgentEmpty />
-        ) : (
-          <div className="divide-y rounded-lg border">
-            {subagents.map((subagent) =>
-              subagent.file === fileBeingEdited ? null : (
-                <SubagentRow
-                  key={subagent.file}
-                  subagent={subagent}
-                  onDelete={() => handleDelete(subagent.file)}
-                  onEdit={() => startEdit(subagent)}
-                />
-              ),
-            )}
-          </div>
-        )}
+    <section className="flex flex-col gap-3">
+      <div className="flex min-h-7 items-center justify-between gap-4">
+        <h2 className="text-sm font-medium">
+          {t('settings.agent.subagent.installed')}{' '}
+          <span className="text-foreground-subtlest">
+            {t('settings.agent.subagent.itemCount', { count: subagents.length })}
+          </span>
+        </h2>
+        <Button variant="outline" onClick={startCreate}>
+          {t('settings.agent.subagent.add')}
+        </Button>
       </div>
-    </AgentSection>
+      {draft ? (
+        <SubagentEditor
+          draft={draft}
+          onClose={() => {
+            setDraft(null)
+            void reload()
+          }}
+        />
+      ) : null}
+      {isLoading ? (
+        <Spinner className="self-center" />
+      ) : (
+        <div className="flex flex-col gap-8">
+          {SOURCES.map((source) => (
+            <SourceCard
+              key={source}
+              source={source}
+              rows={bySource(source)}
+              hiddenFile={fileBeingEdited}
+              onEdit={startEdit}
+              onDelete={(file) => void handleDelete(file)}
+            />
+          ))}
+        </div>
+      )}
+    </section>
   )
 }

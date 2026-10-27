@@ -224,6 +224,9 @@ export interface AgentSubagentConfig {
   body: string
   /** The file exists but its frontmatter is unparseable; only deletable. */
   broken?: boolean
+  /** Present only in the available-subagent list resolved via the Agent SDK. */
+  builtin?: boolean
+  source?: 'builtin' | 'plugin' | 'custom'
 }
 
 export interface AgentMcpServerConfig {
@@ -1290,6 +1293,10 @@ export type DesktopRPC = {
       agentDeleteSubagent: {
         params: { file: string }
         response: void
+      }
+      agentListAvailableSubagents: {
+        params: Record<string, never>
+        response: AgentSubagentConfig[]
       }
       agentListMcpServers: {
         params: Record<string, never>

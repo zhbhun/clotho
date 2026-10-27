@@ -15,6 +15,10 @@ export function listAgentSubagents() {
   return requestFromDesktop('agentListSubagents', {})
 }
 
+export function listAgentAvailableSubagents() {
+  return requestFromDesktop('agentListAvailableSubagents', {})
+}
+
 export function saveAgentSubagent(subagent: AgentSubagentConfig) {
   return requestFromDesktop('agentSaveSubagent', { subagent })
 }
