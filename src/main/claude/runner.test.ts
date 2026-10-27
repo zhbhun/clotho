@@ -709,4 +709,55 @@ describe('Claude SDK runner', () => {
 
     await expect(result).resolves.toEqual({ behavior: 'allow', updatedInput: {} })
   })
+
+  it('filters disabled skills out of the spawn options (design D7)', () => {
+    const events = createEvents()
+    vi.mocked(sdkQuery).mockReturnValue(createMockQuery([]) as never)
+
+    startQuery(
+      events,
+      {
+        streamId: 'stream-1',
+        options: { cwd: '/tmp/app', skills: ['commit', 'review', 'deploy'] },
+      },
+      proxy,
+      {
+        promptQueue: parkedInput(),
+        capabilities: { disabledSkills: ['review'] },
+      },
+    )
+
+    expect(vi.mocked(sdkQuery).mock.calls[0]?.[0].options?.skills).toEqual(['commit', 'deploy'])
+  })
+
+  it('passes enabled plugins as local plugin paths at spawn (design D7)', () => {
+    const events = createEvents()
+    vi.mocked(sdkQuery).mockReturnValue(createMockQuery([]) as never)
+
+    startQuery(events, { streamId: 'stream-1', options: { cwd: '/tmp/app' } }, proxy, {
+      promptQueue: parkedInput(),
+      capabilities: {
+        enabledPlugins: { 'formatter@acme': '/home/u/.claude/plugins/cache/acme/formatter/1.0.0' },
+      },
+    })
+
+    expect(vi.mocked(sdkQuery).mock.calls[0]?.[0].options?.plugins).toEqual([
+      { type: 'local', path: '/home/u/.claude/plugins/cache/acme/formatter/1.0.0' },
+    ])
+  })
+
+  it('leaves skills and plugins untouched without capability filters', () => {
+    const events = createEvents()
+    vi.mocked(sdkQuery).mockReturnValue(createMockQuery([]) as never)
+
+    startQuery(
+      events,
+      { streamId: 'stream-1', options: { cwd: '/tmp/app', skills: ['commit'] } },
+      proxy,
+      { promptQueue: parkedInput() },
+    )
+
+    expect(vi.mocked(sdkQuery).mock.calls[0]?.[0].options?.skills).toEqual(['commit'])
+    expect(vi.mocked(sdkQuery).mock.calls[0]?.[0].options?.plugins).toBeUndefined()
+  })
 })

@@ -213,6 +213,71 @@ export interface ClaudeSubagent {
   createdAt: string
 }
 
+/** Renderer-facing types for user-level agent capability management. */
+
+export interface AgentSubagentConfig {
+  file: string
+  name?: string
+  description?: string
+  tools?: string
+  model?: string
+  body: string
+  /** The file exists but its frontmatter is unparseable; only deletable. */
+  broken?: boolean
+}
+
+export interface AgentMcpServerConfig {
+  name: string
+  type: 'stdio' | 'http' | 'sse'
+  command?: string
+  args?: string[]
+  env?: Record<string, string>
+  url?: string
+  headers?: Record<string, string>
+  disabled?: boolean
+}
+
+export interface AgentHookGroup {
+  event: string
+  entries: Array<{
+    matcher?: string
+    hooks: Array<{ type: 'command'; command: string; timeout?: number }>
+  }>
+}
+
+export interface AgentSkillInfo {
+  name: string
+  description: string
+  disabled?: boolean
+}
+
+export interface AgentPluginInfo {
+  id: string
+  name: string
+  marketplace: string
+  version: string
+  installPath: string
+  installedAt?: string
+  disabled?: boolean
+}
+
+export interface AgentMarketplacePlugin {
+  name: string
+  description?: string
+}
+
+export interface AgentMarketplaceInfo {
+  name: string
+  source: { source: string; repo?: string; url?: string }
+  plugins: AgentMarketplacePlugin[]
+}
+
+export interface AgentWorkflowInfo {
+  name: string
+  lastModifiedMs: number
+  content?: string
+}
+
 export type ClaudeWorkflowStatus =
   'starting' | 'running' | 'completed' | 'failed' | 'stopped' | 'unknown'
 
@@ -336,6 +401,8 @@ export interface ClaudeOptions {
   allowedTools?: string[]
   disallowedTools?: string[]
   additionalDirectories?: string[]
+  /** Skill names enabled for the session (SDK `skills` allow-list pass-through). */
+  skills?: string[]
 }
 
 export interface ClaudeStartupParams {
@@ -1211,6 +1278,122 @@ export type DesktopRPC = {
       claudeGetProviderUsage: {
         params: GetProviderUsageParams
         response: ProviderUsageQuota
+      }
+      agentListSubagents: {
+        params: Record<string, never>
+        response: AgentSubagentConfig[]
+      }
+      agentSaveSubagent: {
+        params: { subagent: AgentSubagentConfig }
+        response: void
+      }
+      agentDeleteSubagent: {
+        params: { file: string }
+        response: void
+      }
+      agentListMcpServers: {
+        params: Record<string, never>
+        response: AgentMcpServerConfig[]
+      }
+      agentSaveMcpServer: {
+        params: { server: AgentMcpServerConfig; previousName?: string }
+        response: void
+      }
+      agentDeleteMcpServer: {
+        params: { name: string }
+        response: void
+      }
+      agentSetMcpServerEnabled: {
+        params: { name: string; enabled: boolean }
+        response: void
+      }
+      agentListHookGroups: {
+        params: Record<string, never>
+        response: AgentHookGroup[]
+      }
+      agentSaveHookGroup: {
+        params: { group: AgentHookGroup }
+        response: void
+      }
+      agentDeleteHookGroup: {
+        params: { event: string }
+        response: void
+      }
+      agentListSkills: {
+        params: Record<string, never>
+        response: AgentSkillInfo[]
+      }
+      agentDeleteSkill: {
+        params: { name: string }
+        response: void
+      }
+      agentSetSkillEnabled: {
+        params: { name: string; enabled: boolean }
+        response: void
+      }
+      agentListPlugins: {
+        params: Record<string, never>
+        response: AgentPluginInfo[]
+      }
+      agentListMarketplaces: {
+        params: Record<string, never>
+        response: AgentMarketplaceInfo[]
+      }
+      agentAddMarketplace: {
+        params: { gitUrl: string }
+        response: { name: string }
+      }
+      agentRemoveMarketplace: {
+        params: { name: string }
+        response: void
+      }
+      agentInstallPlugin: {
+        params: { marketplace: string; plugin: string }
+        response: void
+      }
+      agentRemovePlugin: {
+        params: { id: string }
+        response: void
+      }
+      agentSetPluginEnabled: {
+        params: { id: string; enabled: boolean }
+        response: void
+      }
+      agentListWorkflows: {
+        params: Record<string, never>
+        response: AgentWorkflowInfo[]
+      }
+      agentReadWorkflow: {
+        params: { name: string }
+        response: { content: string }
+      }
+      agentSaveWorkflow: {
+        params: { name: string; content: string }
+        response: void
+      }
+      agentRenameWorkflow: {
+        params: { from: string; to: string }
+        response: void
+      }
+      agentDeleteWorkflow: {
+        params: { name: string }
+        response: void
+      }
+      agentGetCapabilityToggles: {
+        params: Record<string, never>
+        response: {
+          disabledPlugins: string[]
+          disabledSkills: string[]
+          disabledMcpServers: string[]
+        }
+      }
+      agentSetCapabilityToggle: {
+        params: { kind: 'plugin' | 'skill' | 'mcp'; name: string; enabled: boolean }
+        response: {
+          disabledPlugins: string[]
+          disabledSkills: string[]
+          disabledMcpServers: string[]
+        }
       }
       shortcutGetOverrides: {
         params: Record<string, never>

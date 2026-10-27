@@ -41,6 +41,7 @@ function settings(overrides: Partial<ClaudeskSettings> = {}): ClaudeskSettings {
   return {
     providers: [],
     ...DEFAULT_APP_PREFERENCES,
+    agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
     ...overrides,
   }
 }
@@ -165,6 +166,30 @@ describe('Clotho settings store', () => {
     })
   })
 
+  test('sanitizes agent capability toggles from the settings file', async () => {
+    fsMock.readFile.mockResolvedValue(
+      JSON.stringify({
+        providers: [],
+        agentCapabilities: {
+          disabledPlugins: ['code-review@claude-plugins-official', '', '  ', 42],
+          disabledSkills: ['cheatsheet', 'cheatsheet'],
+        },
+      }),
+    )
+
+    await expect(readSettings('/test/settings.json')).resolves.toMatchObject({
+      agentCapabilities: {
+        disabledPlugins: ['code-review@claude-plugins-official'],
+        disabledSkills: ['cheatsheet'],
+      },
+    })
+
+    fsMock.readFile.mockResolvedValue(JSON.stringify({ providers: [] }))
+    await expect(readSettings('/test/settings.json')).resolves.toMatchObject({
+      agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
+    })
+  })
+
   test('rejects unreadable settings instead of treating them as defaults', async () => {
     fsMock.readFile.mockResolvedValue('{invalid json')
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
@@ -219,12 +244,14 @@ describe('Clotho settings store', () => {
       providers: [provider],
       defaultModel: 'zhipu/glm-5.2/fast',
       ...DEFAULT_APP_PREFERENCES,
+      agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
     })
     expect(persist).toHaveBeenCalledTimes(2)
     expect(persist).toHaveBeenLastCalledWith({
       providers: [provider],
       defaultModel: 'zhipu/glm-5.2/fast',
       ...DEFAULT_APP_PREFERENCES,
+      agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
     })
   })
 
@@ -259,7 +286,15 @@ describe('Clotho settings store', () => {
     await store.update((current) => ({ ...current, language: 'fr' }))
 
     expect(recover).toHaveBeenCalledTimes(1)
-    expect(persist).toHaveBeenCalledWith({ ...recovered, language: 'fr' })
-    expect(store.get()).toEqual({ ...recovered, language: 'fr' })
+    expect(persist).toHaveBeenCalledWith({
+      ...recovered,
+      language: 'fr',
+      agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
+    })
+    expect(store.get()).toEqual({
+      ...recovered,
+      language: 'fr',
+      agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
+    })
   })
 })

@@ -1,4 +1,8 @@
 // @vitest-environment node
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
+
 import { describe, expect, test, vi } from 'vitest'
 
 import type { AppPreferences, ModelProvider } from '@/shared/rpc'
@@ -59,7 +63,11 @@ function createStore(settings: ClaudeskSettings) {
 function completeSettings(
   settings: Pick<ClaudeskSettings, 'defaultModel' | 'providers'>,
 ): ClaudeskSettings {
-  return { ...settings, ...DEFAULT_APP_PREFERENCES }
+  return {
+    ...settings,
+    ...DEFAULT_APP_PREFERENCES,
+    agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
+  }
 }
 
 function createService(settings: Pick<ClaudeskSettings, 'defaultModel' | 'providers'>) {
@@ -106,6 +114,7 @@ describe('Claude desktop service settings', () => {
       providers: [existingProvider],
       defaultModel: 'zhipu/glm-5.2',
       ...DEFAULT_APP_PREFERENCES,
+      agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
     })
   })
 
@@ -121,6 +130,7 @@ describe('Claude desktop service settings', () => {
       providers: [newProvider],
       defaultModel: undefined,
       ...DEFAULT_APP_PREFERENCES,
+      agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
     }
     expect(persist).toHaveBeenCalledWith(expected)
     expect(proxy.replaceSettings).toHaveBeenCalledWith(expected.providers)
@@ -190,7 +200,74 @@ describe('Claude desktop service settings', () => {
       providers: [existingProvider],
       defaultModel: 'zhipu/glm-5.2',
       ...preferences,
+      agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
     })
     expect(proxy.replaceSettings).not.toHaveBeenCalled()
+  })
+})
+
+describe('Claude desktop service agent capability delegation', () => {
+  /** Isolates HOME so domain modules never touch the developer's real ~/.claude. */
+  async function withIsolatedHome(run: () => Promise<void>) {
+    const home = await mkdtemp(path.join(tmpdir(), 'clotho-svc-'))
+    const previousHome = process.env.HOME
+    process.env.HOME = home
+    try {
+      await run()
+    } finally {
+      if (previousHome === undefined) delete process.env.HOME
+      else process.env.HOME = previousHome
+      await rm(home, { recursive: true, force: true })
+    }
+  }
+
+  test('delegates subagent operations with expected args', async () => {
+    await withIsolatedHome(async () => {
+      const { service } = createService({ providers: [] })
+      await expect(service.listAgentSubagents()).resolves.toEqual([])
+      await service.saveAgentSubagent({
+        subagent: { file: 'a', body: 'x' },
+      })
+      const listed = await service.listAgentSubagents()
+      expect(listed).toHaveLength(1)
+      expect(listed[0]?.file).toBe('a')
+      expect(listed[0]?.body?.trim()).toBe('x')
+      await service.deleteAgentSubagent({ file: 'a' })
+      await expect(service.listAgentSubagents()).resolves.toEqual([])
+    })
+  })
+
+  test('delegates MCP server rename as save plus delete of the old name', async () => {
+    await withIsolatedHome(async () => {
+      const { service } = createService({ providers: [] })
+      await expect(service.listAgentMcpServers()).resolves.toEqual([])
+      await service.saveAgentMcpServer({
+        server: { name: 'docs', type: 'http', url: 'https://mcp.example' },
+      })
+      await service.saveAgentMcpServer({
+        server: { name: 'docs2', type: 'http', url: 'https://mcp.example' },
+        previousName: 'docs',
+      })
+      await expect(service.listAgentMcpServers()).resolves.toEqual([
+        { name: 'docs2', type: 'http', url: 'https://mcp.example' },
+      ])
+    })
+  })
+
+  test('delegates hook, skill, marketplace, plugin, and workflow operations', async () => {
+    await withIsolatedHome(async () => {
+      const { service } = createService({ providers: [] })
+      await expect(service.listAgentHookGroups()).resolves.toEqual([])
+      await expect(service.listAgentSkills()).resolves.toEqual([])
+      await expect(service.listAgentPlugins()).resolves.toEqual([])
+      await expect(service.listAgentMarketplaces()).resolves.toEqual([])
+      await expect(service.listAgentWorkflows()).resolves.toEqual([])
+      await expect(service.removeAgentMarketplace({ name: 'nope' })).rejects.toThrow(
+        /Unknown marketplace/,
+      )
+      await expect(service.removeAgentPlugin({ id: 'p@nope' })).rejects.toThrow(
+        /Unknown installed plugin/,
+      )
+    })
   })
 })

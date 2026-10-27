@@ -327,9 +327,27 @@ export type ClaudeProxyConnection = Pick<ModelProxy, 'sessionThinking' | 'settin
  */
 const TOOL_SEARCH_ENV = { ENABLE_TOOL_SEARCH: 'true' }
 
+/**
+ * Clotho-scoped agent capability enforcement (design D7): applied at session
+ * spawn so the CLI's own files stay untouched. Disabled skills are omitted
+ * from the SDK `skills` allow-list; every installed-but-enabled plugin is
+ * passed as a local plugin entry pointing at its install path; any disabled
+ * MCP server switches the query to strict MCP config carrying only the
+ * enabled servers (the CLI files keep every entry).
+ */
+export interface AgentCapabilityFilters {
+  disabledSkills?: string[]
+  /** id → installPath for every plugin not disabled in Clotho. */
+  enabledPlugins?: Record<string, string>
+  /** name → config for every MCP server not disabled in Clotho. Present
+   * only when at least one server is disabled (strict mode otherwise). */
+  enabledMcpServers?: NonNullable<Options['mcpServers']>
+}
+
 function normalizeOptions(
   options: ClaudeOptions | undefined,
   proxy?: ClaudeProxyConnection,
+  capabilities?: AgentCapabilityFilters,
 ): Options {
   const qualifiedModel = options?.model
   const isClaudeModel = qualifiedModel?.startsWith('claude/') ?? false
@@ -339,6 +357,22 @@ function normalizeOptions(
     cwd: options?.cwd ?? os.homedir(),
     enableFileCheckpointing: true,
     settings: { env: { ...TOOL_SEARCH_ENV } },
+  }
+  if (capabilities?.disabledSkills?.length) {
+    const disabled = new Set(capabilities.disabledSkills)
+    const enabled = (options?.skills ?? []).filter((skill) => !disabled.has(skill))
+    if (enabled.length || options?.skills) normalized.skills = enabled
+  }
+  if (capabilities?.enabledPlugins) {
+    const plugins = Object.values(capabilities.enabledPlugins).map((installPath) => ({
+      type: 'local' as const,
+      path: installPath,
+    }))
+    if (plugins.length) normalized.plugins = plugins
+  }
+  if (capabilities?.enabledMcpServers) {
+    normalized.mcpServers = capabilities.enabledMcpServers
+    normalized.strictMcpConfig = true
   }
   // SDK sessions otherwise run on a two-line stub system prompt; the Claude
   // Code preset keeps sessions on the same prompt as the interactive CLI.
@@ -516,6 +550,8 @@ export function startQuery(
     tolerateResultErrors?: boolean
     /** Own the query's prompt source: turns arrive as pushes on this queue. */
     promptQueue: AsyncIterable<SDKUserMessage>
+    /** Clotho-scoped skill/plugin filtering applied at spawn (design D7). */
+    capabilities?: AgentCapabilityFilters
   },
 ): { initialized: Promise<void> } {
   const startedAt = Date.now()
@@ -543,7 +579,7 @@ export function startQuery(
     entry.sdk = sdkQuery({
       prompt: extras.promptQueue,
       options: {
-        ...normalizeOptions(options, proxy),
+        ...normalizeOptions(options, proxy, extras.capabilities),
         forwardSubagentText: true,
         includePartialMessages: true,
         abortController,

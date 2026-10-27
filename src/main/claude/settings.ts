@@ -29,6 +29,26 @@ export interface ClaudeskSettings {
   defaultPermissionMode: AppDefaultPermissionMode
   archiveInactiveSessions: AppArchiveInactiveDays
   appearance: AppAppearancePreferences
+  /**
+   * Clotho-session-scoped enable state for user-level Claude Code
+   * capabilities. Absent entries mean enabled; the CLI's own enable state is
+   * never touched.
+   */
+  agentCapabilities?: AgentCapabilityToggles
+}
+
+/**
+ * Clotho-scoped enable toggles for capabilities whose CLI files are the
+ * source of content (design D1/D7): disabling hides a capability from Clotho
+ * sessions only.
+ */
+export interface AgentCapabilityToggles {
+  /** Disabled plugin ids, keyed as `<plugin>@<marketplace>`. */
+  disabledPlugins?: string[]
+  /** Disabled skill directory names under `~/.claude/skills/`. */
+  disabledSkills?: string[]
+  /** Disabled MCP server names from `~/.claude.json` `mcpServers`. */
+  disabledMcpServers?: string[]
 }
 
 const LANGUAGES: AppLanguagePreference[] = [
@@ -132,6 +152,26 @@ function sanitizeThemePalette(value: unknown, fallback: AppThemePalette): AppThe
   }
 }
 
+export function sanitizeAgentCapabilityToggles(value: unknown): AgentCapabilityToggles {
+  const candidate =
+    value && typeof value === 'object' && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : {}
+  const stringList = (input: unknown): string[] =>
+    Array.isArray(input)
+      ? Array.from(
+          new Set(
+            input.filter((entry): entry is string => typeof entry === 'string' && !!entry.trim()),
+          ),
+        )
+      : []
+  return {
+    disabledPlugins: stringList(candidate.disabledPlugins),
+    disabledSkills: stringList(candidate.disabledSkills),
+    disabledMcpServers: stringList(candidate.disabledMcpServers),
+  }
+}
+
 export function sanitizeAppPreferences(value: unknown): AppPreferences {
   const candidate =
     value && typeof value === 'object' && !Array.isArray(value)
@@ -214,6 +254,7 @@ export async function readSettings(filePath = settingsJsonPath()): Promise<Claud
         providers,
       ),
       ...sanitizeAppPreferences(candidate),
+      agentCapabilities: sanitizeAgentCapabilityToggles(candidate.agentCapabilities),
     }
   } catch (caught) {
     if ((caught as NodeJS.ErrnoException).code === 'ENOENT') {
@@ -267,6 +308,11 @@ function cloneSettings(settings: ClaudeskSettings): ClaudeskSettings {
         dark: { ...settings.appearance.themePalettes.dark },
         light: { ...settings.appearance.themePalettes.light },
       },
+    },
+    agentCapabilities: {
+      disabledPlugins: [...(settings.agentCapabilities?.disabledPlugins ?? [])],
+      disabledSkills: [...(settings.agentCapabilities?.disabledSkills ?? [])],
+      disabledMcpServers: [...(settings.agentCapabilities?.disabledMcpServers ?? [])],
     },
   }
 }

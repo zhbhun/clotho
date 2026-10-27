@@ -25,6 +25,7 @@ import type {
 import { getLogger } from '../logging/runtime'
 import { prepareAttachments } from './attachments'
 import type { ModelProxy } from './model-proxy'
+import type { AgentCapabilityFilters } from './runner'
 import {
   AsyncInputQueue,
   type ClaudeEventSink,
@@ -184,6 +185,8 @@ export function createSessionQueryRegistry(
     onRecycled?: (sessionId: string) => void
     /** Fired on every live-shape change: new query, turn flips, tool requests, teardown. */
     onRuntimeChanged?: (change: ClaudeSessionRuntimeChanged) => void
+    /** Resolves Clotho-scoped skill/plugin filters applied at each spawn (design D7). */
+    resolveAgentCapabilities?: () => Promise<AgentCapabilityFilters | undefined>
   } = {},
 ): SessionQueryRegistry {
   const entries = new Map<string, SessionQueryEntry>()
@@ -356,6 +359,7 @@ export function createSessionQueryRegistry(
     startQuery(decorateSink(entry), { streamId, options: queryOptions }, proxy, {
       tolerateResultErrors: true,
       promptQueue: queue,
+      capabilities: await hooks.resolveAgentCapabilities?.(),
     })
     armIdleTimer(entry)
     emitRuntime(entry)

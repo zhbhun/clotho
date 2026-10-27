@@ -1,4 +1,7 @@
 import type {
+  AgentHookGroup,
+  AgentMcpServerConfig,
+  AgentSubagentConfig,
   AppPreferences,
   ClaudeInitializationResult,
   ClaudePurgeDeadPairsParams,
@@ -20,6 +23,29 @@ import type {
 } from '@/shared/rpc'
 import type { SessionListFlags } from '@/shared/session'
 
+import { deleteHookGroup, listHookGroups, saveHookGroup } from './claude/agent-config/hooks'
+import { deleteMcpServer, listMcpServers, saveMcpServer } from './claude/agent-config/mcp-servers'
+import {
+  addMarketplace,
+  installPlugin,
+  listInstalledPlugins,
+  listMarketplaces,
+  removeInstalledPlugin,
+  removeMarketplace,
+} from './claude/agent-config/plugins'
+import { deleteSkill, listSkills } from './claude/agent-config/skills'
+import {
+  deleteSubagentConfig,
+  listSubagentConfigs,
+  saveSubagentConfig,
+} from './claude/agent-config/subagents'
+import {
+  deleteWorkflow,
+  listWorkflows,
+  readWorkflow,
+  renameWorkflow,
+  saveWorkflow,
+} from './claude/agent-config/workflows'
 import { getAttachmentPreview, snapshotAttachments } from './claude/attachments'
 import { getProjectGitBranch, listProjectGitBranches, switchProjectGitBranch } from './claude/git'
 import { buildModelCatalog } from './claude/model-catalog'
@@ -30,6 +56,7 @@ import { setProjectDefaultModel } from './claude/projects'
 import { getProviderUsage } from './claude/provider-usage'
 import { normalizeProvider } from './claude/providers'
 import {
+  type AgentCapabilityFilters,
   type ClaudeEventSink,
   controlQuery,
   rewindSessionFiles,
@@ -127,6 +154,74 @@ export function createClaudeDesktopService(
   const sessionRegistry = createSessionQueryRegistry(events, proxy, {
     onRecycled: sessionHooks?.onSessionRecycled,
     onRuntimeChanged: sessionHooks?.onSessionRuntimeChanged,
+    resolveAgentCapabilities: async () => {
+      const capabilities = settingsStore.get().agentCapabilities
+      if (!capabilities) return undefined
+      const disabledPlugins = capabilities.disabledPlugins ?? []
+      const disabledSkills = capabilities.disabledSkills ?? []
+      const disabledMcpServers = capabilities.disabledMcpServers ?? []
+      const [installed, mcp] = await Promise.all([
+        disabledPlugins.length ? listInstalledPlugins() : Promise.resolve([]),
+        disabledMcpServers.length ? listMcpServers() : Promise.resolve(null),
+      ])
+      const enabledPaths = installed
+        .filter((plugin) => !disabledPlugins.includes(plugin.id))
+        .map((plugin) => plugin.installPath)
+      const enabledServers =
+        mcp && disabledMcpServers.length
+          ? Object.fromEntries(
+              mcp.servers
+                .filter((server) => !disabledMcpServers.includes(server.name))
+                .flatMap(
+                  (
+                    server,
+                  ): Array<
+                    [string, NonNullable<AgentCapabilityFilters['enabledMcpServers']>[string]]
+                  > => {
+                    // Map the loose file config onto the SDK's strict union;
+                    // entries failing their type's required field are dropped.
+                    if (server.type === 'stdio') {
+                      return server.command
+                        ? [
+                            [
+                              server.name,
+                              {
+                                type: 'stdio',
+                                command: server.command,
+                                args: server.args,
+                                env: server.env,
+                              },
+                            ],
+                          ]
+                        : []
+                    }
+                    return server.url
+                      ? [
+                          server.type === 'sse'
+                            ? [
+                                server.name,
+                                { type: 'sse' as const, url: server.url, headers: server.headers },
+                              ]
+                            : [
+                                server.name,
+                                { type: 'http' as const, url: server.url, headers: server.headers },
+                              ],
+                        ]
+                      : []
+                  },
+                ),
+            )
+          : undefined
+      return {
+        disabledSkills,
+        enabledPlugins: enabledPaths.length
+          ? Object.fromEntries(
+              enabledPaths.map((installPath, index) => [String(index), installPath]),
+            )
+          : undefined,
+        enabledMcpServers: enabledServers,
+      }
+    },
   })
 
   async function persistProvider(provider: ModelProvider, operation: 'create' | 'update') {
@@ -261,6 +356,117 @@ export function createClaudeDesktopService(
     getDefaultModel: () => settingsStore.get().defaultModel ?? null,
     fetchProviderModels: (params: FetchProviderModelsParams) => fetchProviderModels(params),
     getProviderUsage: (params: GetProviderUsageParams) => getProviderUsage(params),
+    listAgentSubagents: async (): Promise<AgentSubagentConfig[]> => {
+      const files = await listSubagentConfigs()
+      return files.map((file) =>
+        'broken' in file
+          ? { file: file.file, body: '', broken: true }
+          : {
+              file: file.file,
+              name: file.fields.name,
+              description: file.fields.description,
+              tools: file.fields.tools,
+              model: file.fields.model,
+              body: file.body,
+            },
+      )
+    },
+    saveAgentSubagent: ({ subagent }: { subagent: AgentSubagentConfig }) =>
+      saveSubagentConfig({
+        file: subagent.file,
+        frontmatter: {
+          name: subagent.name,
+          description: subagent.description,
+          tools: subagent.tools,
+          model: subagent.model,
+        },
+        body: subagent.body,
+      }),
+    deleteAgentSubagent: ({ file }: { file: string }) => deleteSubagentConfig(file),
+    listAgentMcpServers: async () => {
+      const { servers } = await listMcpServers()
+      return servers.map(({ name, type, command, args, env, url, headers }) => ({
+        name,
+        type,
+        command,
+        args,
+        env,
+        url,
+        headers,
+      }))
+    },
+    saveAgentMcpServer: ({
+      server,
+      previousName,
+    }: {
+      server: AgentMcpServerConfig
+      previousName?: string
+    }) => {
+      const { name, type, command, args, env, url, headers } = server
+      const persist = () => saveMcpServer(name, { type, command, args, env, url, headers })
+      if (previousName && previousName !== name) {
+        return persist().then(() => deleteMcpServer(previousName))
+      }
+      return persist()
+    },
+    deleteAgentMcpServer: ({ name }: { name: string }) => deleteMcpServer(name),
+    listAgentHookGroups: (): Promise<AgentHookGroup[]> => listHookGroups(),
+    saveAgentHookGroup: ({ group }: { group: AgentHookGroup }) =>
+      saveHookGroup(group.event, group.entries),
+    deleteAgentHookGroup: ({ event }: { event: string }) => deleteHookGroup(event),
+    listAgentSkills: () => listSkills(),
+    deleteAgentSkill: ({ name }: { name: string }) => deleteSkill(name),
+    listAgentPlugins: () => listInstalledPlugins(),
+    listAgentMarketplaces: () => listMarketplaces(),
+    addAgentMarketplace: ({ gitUrl }: { gitUrl: string }) =>
+      addMarketplace(gitUrl).then((name) => ({ name })),
+    removeAgentMarketplace: ({ name }: { name: string }) => removeMarketplace(name),
+    installAgentPlugin: ({ marketplace, plugin }: { marketplace: string; plugin: string }) =>
+      installPlugin(marketplace, plugin),
+    removeAgentPlugin: ({ id }: { id: string }) => removeInstalledPlugin(id),
+    listAgentWorkflows: () => listWorkflows(),
+    readAgentWorkflow: ({ name }: { name: string }) =>
+      readWorkflow(name).then((content) => ({ content })),
+    saveAgentWorkflow: ({ name, content }: { name: string; content: string }) =>
+      saveWorkflow(name, content),
+    renameAgentWorkflow: ({ from, to }: { from: string; to: string }) => renameWorkflow(from, to),
+    deleteAgentWorkflow: ({ name }: { name: string }) => deleteWorkflow(name),
+    getAgentCapabilityToggles: async () => {
+      const toggles = settingsStore.get().agentCapabilities
+      return {
+        disabledPlugins: toggles?.disabledPlugins ?? [],
+        disabledSkills: toggles?.disabledSkills ?? [],
+        disabledMcpServers: toggles?.disabledMcpServers ?? [],
+      }
+    },
+    setAgentCapabilityToggle: async ({
+      kind,
+      name,
+      enabled,
+    }: {
+      kind: 'plugin' | 'skill' | 'mcp'
+      name: string
+      enabled: boolean
+    }) => {
+      const key =
+        kind === 'plugin'
+          ? 'disabledPlugins'
+          : kind === 'mcp'
+            ? 'disabledMcpServers'
+            : 'disabledSkills'
+      const next = await settingsStore.update((settings) => {
+        const current = settings.agentCapabilities ?? {}
+        const disabled = new Set(current[key] ?? [])
+        if (enabled) disabled.delete(name)
+        else disabled.add(name)
+        return { ...settings, agentCapabilities: { ...current, [key]: [...disabled] } }
+      })
+      return {
+        disabledPlugins: next.agentCapabilities?.disabledPlugins ?? [],
+        disabledSkills: next.agentCapabilities?.disabledSkills ?? [],
+        disabledMcpServers: next.agentCapabilities?.disabledMcpServers ?? [],
+      }
+    },
     createProvider: ({ provider }: { provider: ModelProvider }) =>
       persistProvider(provider, 'create'),
     updateProvider: ({ provider }: { provider: ModelProvider }) =>

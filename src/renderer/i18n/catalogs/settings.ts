@@ -451,4 +451,172 @@ export const settingsCatalog = {
     '此设置区域遇到意外错误，其他设置仍可正常使用。',
     '此設定區域遇到意外錯誤，其他設定仍可正常使用。',
   ),
+
+  // Agent capability groups and categories (settings page sidebar).
+  'settings.groups.base': setting('Settings', '设置', '設定'),
+  'settings.groups.agent': setting('Agent capabilities', 'Agent 能力', 'Agent 能力'),
+  'settings.categories.agentSubagents': setting('Subagents', '子智能体', '子智慧體'),
+  'settings.categories.agentPlugins': setting('Plugins', '插件', '外掛'),
+  'settings.categories.agentMcp': setting('MCP servers', 'MCP 服务器', 'MCP 伺服器'),
+  'settings.categories.agentSkills': setting('Skills', '技能', '技能'),
+  'settings.categories.agentHooks': setting('Hooks', '钩子', '鉤子'),
+  'settings.categories.agentWorkflows': setting('Workflows', '工作流', '工作流'),
+
+  // Agent capability shared copy.
+  'settings.agent.title.subagents': setting('Subagents', '子智能体', '子智慧體'),
+  'settings.agent.title.plugins': setting('Plugins', '插件', '外掛'),
+  'settings.agent.title.mcp': setting('MCP servers', 'MCP 服务器', 'MCP 伺服器'),
+  'settings.agent.title.skills': setting('Skills', '技能', '技能'),
+  'settings.agent.title.hooks': setting('Hooks', '钩子', '鉤子'),
+  'settings.agent.title.workflows': setting('Workflows', '工作流', '工作流'),
+  'settings.agent.description.subagents': setting(
+    'Create and edit user-level subagents (~/.claude/agents).',
+    '创建和编辑用户级子智能体（~/.claude/agents）。',
+    '建立與編輯使用者層級子智慧體（~/.claude/agents）。',
+  ),
+  'settings.agent.description.plugins': setting(
+    'Manage installed plugins and marketplaces (~/.claude/plugins).',
+    '管理已安装插件与插件市场（~/.claude/plugins）。',
+    '管理已安裝外掛與外掛市場（~/.claude/plugins）。',
+  ),
+  'settings.agent.description.mcp': setting(
+    'Manage user-level MCP servers in ~/.claude.json.',
+    '管理 ~/.claude.json 中的用户级 MCP 服务器。',
+    '管理 ~/.claude.json 中的使用者層級 MCP 伺服器。',
+  ),
+  'settings.agent.description.skills': setting(
+    'Manage user-level skills (~/.claude/skills).',
+    '管理用户级技能（~/.claude/skills）。',
+    '管理使用者層級技能（~/.claude/skills）。',
+  ),
+  'settings.agent.description.hooks': setting(
+    'Manage command hooks in ~/.claude/settings.json.',
+    '管理 ~/.claude/settings.json 中的命令钩子。',
+    '管理 ~/.claude/settings.json 中的命令鉤子。',
+  ),
+  'settings.agent.description.workflows': setting(
+    'Manage workflow files under ~/.claude/workflows.',
+    '管理 ~/.claude/workflows 下的工作流文件。',
+    '管理 ~/.claude/workflows 下的工作流檔案。',
+  ),
+  'settings.agent.loadError': setting('Failed to load the list', '加载列表失败', '載入清單失敗'),
+  'settings.agent.saveError': setting('Failed to save', '保存失败', '儲存失敗'),
+  'settings.agent.deleteError': setting('Failed to delete', '删除失败', '刪除失敗'),
+  'settings.agent.empty': setting('Nothing here yet', '暂无内容', '暫無內容'),
+  'settings.agent.add': setting('Add', '添加', '新增'),
+  'settings.agent.confirmDelete': setting(
+    'This cannot be undone. Delete it?',
+    '删除后无法恢复，确定删除吗？',
+    '刪除後無法復原，確定刪除嗎？',
+  ),
+  'settings.agent.deleteConfirmTitle': setting('Delete confirmation', '删除确认', '刪除確認'),
+  'settings.agent.enabled': setting(
+    'Enabled in Clotho sessions',
+    '在 Clotho 会话中启用',
+    '在 Clotho 會話中啟用',
+  ),
+  'settings.agent.enabledHint': setting(
+    'Clotho-only toggle; the CLI files are not modified.',
+    '仅对 Clotho 会话生效，不会修改 CLI 文件。',
+    '僅對 Clotho 會話生效，不會修改 CLI 檔案。',
+  ),
+  'settings.agent.name': setting('Name', '名称', '名稱'),
+  'settings.agent.description': setting('Description', '描述', '描述'),
+  'settings.agent.tools': setting('Tools', '工具', '工具'),
+  'settings.agent.model': setting('Model', '模型', '模型'),
+  'settings.agent.prompt': setting('System prompt', '系统提示词', '系統提示詞'),
+  'settings.agent.broken': setting(
+    'Unreadable file; delete or fix it on disk.',
+    '文件无法解析，请删除或在磁盘上修复。',
+    '檔案無法解析，請刪除或在磁碟上修復。',
+  ),
+
+  // Subagent editor.
+  'settings.agent.subagent.add': setting('New subagent', '新建子智能体', '新建子智慧體'),
+  'settings.agent.subagent.nameHint': setting(
+    'Also the file name, e.g. code-reviewer',
+    '同时是文件名，例如 code-reviewer',
+    '同時是檔案名，例如 code-reviewer',
+  ),
+  'settings.agent.subagent.toolsHint': setting(
+    'Comma-separated tool names; empty means all',
+    '逗号分隔的工具名；留空表示全部',
+    '逗號分隔的工具名；留空表示全部',
+  ),
+
+  // MCP servers.
+  'settings.agent.mcp.add': setting('Add server', '添加服务器', '新增伺服器'),
+  'settings.agent.mcp.type': setting('Type', '类型', '類型'),
+  'settings.agent.mcp.command': setting('Command', '命令', '命令'),
+  'settings.agent.mcp.args': setting('Arguments', '参数', '參數'),
+  'settings.agent.mcp.argsHint': setting('Space separated', '空格分隔', '空格分隔'),
+  'settings.agent.mcp.env': setting('Environment', '环境变量', '環境變數'),
+  'settings.agent.mcp.envHint': setting(
+    'One KEY=value per line',
+    '每行一个 KEY=value',
+    '每行一個 KEY=value',
+  ),
+  'settings.agent.mcp.url': setting('URL', 'URL', 'URL'),
+  'settings.agent.mcp.headers': setting('Headers', '请求头', '請求頭'),
+  'settings.agent.mcp.headersHint': setting(
+    'One Header: value per line',
+    '每行一个 Header: value',
+    '每行一個 Header: value',
+  ),
+  'settings.agent.mcp.stdioHint': setting(
+    'Local process over stdio',
+    '本地进程（stdio）',
+    '本地行程（stdio）',
+  ),
+  'settings.agent.mcp.httpHint': setting(
+    'Remote HTTP server',
+    '远程 HTTP 服务器',
+    '遠端 HTTP 伺服器',
+  ),
+  'settings.agent.mcp.sseHint': setting('Server-sent events endpoint', 'SSE 端点', 'SSE 端點'),
+
+  // Hooks.
+  'settings.agent.hooks.add': setting('Add hook', '添加钩子', '新增鉤子'),
+  'settings.agent.hooks.event': setting('Event', '事件', '事件'),
+  'settings.agent.hooks.eventHint': setting(
+    'e.g. Stop, PreToolUse',
+    '例如 Stop、PreToolUse',
+    '例如 Stop、PreToolUse',
+  ),
+  'settings.agent.hooks.matcher': setting('Matcher', '匹配器', '匹配器'),
+  'settings.agent.hooks.matcherHint': setting(
+    'Tool-name pattern; empty matches all',
+    '工具名模式；留空匹配全部',
+    '工具名模式；留空匹配全部',
+  ),
+  'settings.agent.hooks.command': setting('Command', '命令', '命令'),
+  'settings.agent.hooks.timeout': setting('Timeout (s)', '超时（秒）', '逾時（秒）'),
+  'settings.agent.hooks.addCommand': setting('Add command', '添加命令', '新增命令'),
+
+  // Skills.
+  'settings.agent.skills.addHint': setting(
+    'Create skill directories under ~/.claude/skills',
+    '在 ~/.claude/skills 下创建技能目录',
+    '在 ~/.claude/skills 下建立技能目錄',
+  ),
+
+  // Plugins.
+  'settings.agent.plugins.installed': setting('Installed', '已安装', '已安裝'),
+  'settings.agent.plugins.marketplaces': setting('Marketplaces', '插件市场', '外掛市場'),
+  'settings.agent.plugins.addMarketplace': setting('Add marketplace', '添加市场', '新增市場'),
+  'settings.agent.plugins.gitUrl': setting('Git URL', 'Git URL', 'Git URL'),
+  'settings.agent.plugins.install': setting('Install', '安装', '安裝'),
+  'settings.agent.plugins.installedAt': setting('Installed at', '安装时间', '安裝時間'),
+  'settings.agent.plugins.marketplaceError': setting(
+    'Failed to add the marketplace',
+    '添加市场失败',
+    '新增市場失敗',
+  ),
+  'settings.agent.plugins.installError': setting('Failed to install', '安装失败', '安裝失敗'),
+
+  // Workflows.
+  'settings.agent.workflows.add': setting('New workflow', '新建工作流', '新建工作流'),
+  'settings.agent.workflows.rename': setting('Rename', '重命名', '重新命名'),
+  'settings.agent.workflows.content': setting('Content', '内容', '內容'),
+  'settings.agent.workflows.modified': setting('Last modified', '修改时间', '修改時間'),
 } satisfies Record<string, TranslationRow>

@@ -1,4 +1,17 @@
-import { ArrowLeft, FolderKanban, Keyboard, Library, Palette, Settings2 } from 'lucide-react'
+import {
+  ArrowLeft,
+  Bot,
+  FolderKanban,
+  Keyboard,
+  Library,
+  Palette,
+  Puzzle,
+  Server,
+  Settings2,
+  Sparkles,
+  Webhook,
+  Workflow,
+} from 'lucide-react'
 import {
   type CSSProperties,
   type KeyboardEvent,
@@ -40,6 +53,12 @@ import { ShortcutDialog } from '../../components/shortcut-dialog'
 import { ShortcutScope } from '../../components/shortcut-scope'
 import { TransientScrollArea } from '../../components/transient-scroll-area'
 import type { ClaudeProject } from '../../services/claude/claude'
+import { AgentHookSettings } from './components/agent-hook-settings'
+import { AgentMcpSettings } from './components/agent-mcp-settings'
+import { AgentPluginSettings } from './components/agent-plugin-settings'
+import { AgentSkillSettings } from './components/agent-skill-settings'
+import { AgentSubagentSettings } from './components/agent-subagent-settings'
+import { AgentWorkflowSettings } from './components/agent-workflow-settings'
 import { AppearanceSettings } from './components/appearance-settings'
 import { LanguageSettings } from './components/language-settings'
 import { PermissionSettings } from './components/permission-settings'
@@ -48,13 +67,33 @@ import { ProviderSettings } from './components/provider-settings'
 import { SessionSettings } from './components/session-settings'
 import { ShortcutSettings } from './components/shortcut-settings'
 
-const CATEGORIES = [
+const BASE_CATEGORIES = [
   { id: 'general', labelKey: 'settings.categories.general', icon: Settings2 },
   { id: 'models', labelKey: 'settings.categories.models', icon: Library },
   { id: 'appearance', labelKey: 'settings.categories.appearance', icon: Palette },
   { id: 'shortcuts', labelKey: 'settings.categories.shortcuts', icon: Keyboard },
   { id: 'projects', labelKey: 'settings.categories.projects', icon: FolderKanban },
 ] as const
+
+const AGENT_CATEGORIES = [
+  { id: 'agent-subagents', labelKey: 'settings.categories.agentSubagents', icon: Bot },
+  { id: 'agent-plugins', labelKey: 'settings.categories.agentPlugins', icon: Puzzle },
+  { id: 'agent-mcp', labelKey: 'settings.categories.agentMcp', icon: Server },
+  { id: 'agent-skills', labelKey: 'settings.categories.agentSkills', icon: Sparkles },
+  { id: 'agent-hooks', labelKey: 'settings.categories.agentHooks', icon: Webhook },
+  { id: 'agent-workflows', labelKey: 'settings.categories.agentWorkflows', icon: Workflow },
+] as const
+
+/**
+ * Sidebar groups in display order; flattened, they are the arrow-key navigation
+ * order (design D9 — grouping never changes the keyboard contract).
+ */
+const CATEGORY_GROUPS = [
+  { labelKey: 'settings.groups.base', categories: BASE_CATEGORIES },
+  { labelKey: 'settings.groups.agent', categories: AGENT_CATEGORIES },
+] as const
+
+const CATEGORIES = [...BASE_CATEGORIES, ...AGENT_CATEGORIES] as const
 
 export type SettingsCategoryId = (typeof CATEGORIES)[number]['id']
 
@@ -270,40 +309,45 @@ function SettingsPageContent({
               </SidebarHeader>
 
               <SidebarContent className="pt-2">
-                <SidebarGroup className="py-0">
-                  <SidebarGroupLabel className="h-7 px-2 text-sm text-foreground-subtlest">
-                    {t('settings.title')}
-                  </SidebarGroupLabel>
-                  <SidebarGroupContent>
-                    <SidebarMenu className="app-region-no-drag gap-0.5">
-                      {CATEGORIES.map((item, index) => {
-                        const Icon = item.icon
+                {CATEGORY_GROUPS.map((group) => (
+                  <SidebarGroup className="py-0" key={group.labelKey}>
+                    <SidebarGroupLabel className="h-7 px-2 text-sm text-foreground-subtlest">
+                      {t(group.labelKey)}
+                    </SidebarGroupLabel>
+                    <SidebarGroupContent>
+                      <SidebarMenu className="app-region-no-drag gap-0.5">
+                        {group.categories.map((item) => {
+                          const index = CATEGORIES.findIndex(
+                            (candidate) => candidate.id === item.id,
+                          )
+                          const Icon = item.icon
 
-                        return (
-                          <SidebarMenuItem key={item.id}>
-                            <SidebarMenuButton
-                              aria-current={item.id === categoryId ? 'page' : undefined}
-                              className="h-[30px] px-2 text-sm font-normal"
-                              isActive={item.id === categoryId}
-                              onClick={() => {
-                                setCategoryId(item.id)
-                                setFocusedCategoryId(item.id)
-                              }}
-                              onKeyDown={(event) => handleCategoryKeyDown(event, index)}
-                              ref={(node) => {
-                                categoryRefs.current[index] = node
-                              }}
-                              tabIndex={item.id === focusedCategoryId ? 0 : -1}
-                            >
-                              <Icon />
-                              <span>{t(item.labelKey)}</span>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        )
-                      })}
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </SidebarGroup>
+                          return (
+                            <SidebarMenuItem key={item.id}>
+                              <SidebarMenuButton
+                                aria-current={item.id === categoryId ? 'page' : undefined}
+                                className="h-[30px] px-2 text-sm font-normal"
+                                isActive={item.id === categoryId}
+                                onClick={() => {
+                                  setCategoryId(item.id)
+                                  setFocusedCategoryId(item.id)
+                                }}
+                                onKeyDown={(event) => handleCategoryKeyDown(event, index)}
+                                ref={(node) => {
+                                  categoryRefs.current[index] = node
+                                }}
+                                tabIndex={item.id === focusedCategoryId ? 0 : -1}
+                              >
+                                <Icon />
+                                <span>{t(item.labelKey)}</span>
+                              </SidebarMenuButton>
+                            </SidebarMenuItem>
+                          )
+                        })}
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </SidebarGroup>
+                ))}
               </SidebarContent>
             </Sidebar>
 
@@ -344,6 +388,24 @@ function SettingsPageContent({
                         onReload={onReloadProjects}
                         onRemoveProject={onRemoveProject}
                       />
+                    </SettingsCategory>
+                    <SettingsCategory isActive={category.id === 'agent-subagents'}>
+                      <AgentSubagentSettings />
+                    </SettingsCategory>
+                    <SettingsCategory isActive={category.id === 'agent-plugins'}>
+                      <AgentPluginSettings />
+                    </SettingsCategory>
+                    <SettingsCategory isActive={category.id === 'agent-mcp'}>
+                      <AgentMcpSettings />
+                    </SettingsCategory>
+                    <SettingsCategory isActive={category.id === 'agent-skills'}>
+                      <AgentSkillSettings />
+                    </SettingsCategory>
+                    <SettingsCategory isActive={category.id === 'agent-hooks'}>
+                      <AgentHookSettings />
+                    </SettingsCategory>
+                    <SettingsCategory isActive={category.id === 'agent-workflows'}>
+                      <AgentWorkflowSettings />
                     </SettingsCategory>
                   </div>
                 </div>

@@ -477,6 +477,39 @@ export async function bootstrap() {
         },
         claudeFetchProviderModels: (params) => service.fetchProviderModels(params),
         claudeGetProviderUsage: (params) => service.getProviderUsage(params),
+        agentListSubagents: () => service.listAgentSubagents(),
+        agentSaveSubagent: (params) => service.saveAgentSubagent(params),
+        agentDeleteSubagent: (params) => service.deleteAgentSubagent(params),
+        agentListMcpServers: () => service.listAgentMcpServers(),
+        agentSaveMcpServer: (params) => service.saveAgentMcpServer(params),
+        agentDeleteMcpServer: (params) => service.deleteAgentMcpServer(params),
+        agentSetMcpServerEnabled: () => {
+          // Clotho-scoped toggle state lives in Clotho settings; persisted by the renderer store.
+        },
+        agentListHookGroups: () => service.listAgentHookGroups(),
+        agentSaveHookGroup: (params) => service.saveAgentHookGroup(params),
+        agentDeleteHookGroup: (params) => service.deleteAgentHookGroup(params),
+        agentListSkills: () => service.listAgentSkills(),
+        agentDeleteSkill: (params) => service.deleteAgentSkill(params),
+        agentSetSkillEnabled: () => {
+          // Clotho-scoped toggle state lives in Clotho settings; persisted by the renderer store.
+        },
+        agentListPlugins: () => service.listAgentPlugins(),
+        agentListMarketplaces: () => service.listAgentMarketplaces(),
+        agentAddMarketplace: (params) => service.addAgentMarketplace(params),
+        agentRemoveMarketplace: (params) => service.removeAgentMarketplace(params),
+        agentInstallPlugin: (params) => service.installAgentPlugin(params),
+        agentRemovePlugin: (params) => service.removeAgentPlugin(params),
+        agentSetPluginEnabled: () => {
+          // Clotho-scoped toggle state lives in Clotho settings; persisted by the renderer store.
+        },
+        agentListWorkflows: () => service.listAgentWorkflows(),
+        agentReadWorkflow: (params) => service.readAgentWorkflow(params),
+        agentSaveWorkflow: (params) => service.saveAgentWorkflow(params),
+        agentRenameWorkflow: (params) => service.renameAgentWorkflow(params),
+        agentDeleteWorkflow: (params) => service.deleteAgentWorkflow(params),
+        agentGetCapabilityToggles: () => service.getAgentCapabilityToggles(),
+        agentSetCapabilityToggle: (params) => service.setAgentCapabilityToggle(params),
         shortcutGetOverrides: () => shortcutStore.get(),
         shortcutSetOverride: (params) => {
           const overrides = shortcutStore.set(params.commandId, params.bindings)
