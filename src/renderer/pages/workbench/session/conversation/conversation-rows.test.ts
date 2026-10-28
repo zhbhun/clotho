@@ -904,6 +904,122 @@ describe('buildConversationRows', () => {
     expect(rows[2]).toMatchObject({ item: expect.objectContaining({ id: 'text-1' }) })
     expect(rows[3]).toMatchObject({ isActive: false, isExpanded: false, isLast: true })
   })
+
+  it('collapses a successfully completed sent turn to the worked-for summary', () => {
+    const rows = buildConversationRows({
+      expandedTurns: {},
+      interruptedTurnIds: new Set(),
+      isStreaming: false,
+      lastSentTurnId: 'user-1',
+      streamingElapsed: 0,
+      turns: [
+        turn('user-1', [
+          { id: 'thinking-1', kind: 'thinking', text: 'Reasoning' },
+          { id: 'tool-1', kind: 'tool' },
+          { id: 'text-1', kind: 'text', text: 'Final answer' },
+        ]),
+      ],
+    })
+
+    expect(rows.map((row) => row.key)).toEqual([
+      'turn:user-1:user',
+      'turn:user-1:status',
+      'turn:user-1:summary:text-1',
+    ])
+    expect(rows[1]).toMatchObject({ isExpanded: false, status: 'completed' })
+    expect(rows[2]).toMatchObject({ item: expect.objectContaining({ id: 'text-1' }) })
+  })
+
+  it('keeps a sent turn expanded while it streams', () => {
+    const rows = buildConversationRows({
+      expandedTurns: {},
+      interruptedTurnIds: new Set(),
+      isStreaming: true,
+      lastSentTurnId: 'user-1',
+      streamingElapsed: 3,
+      turns: [
+        turn('user-1', [
+          { id: 'tool-1', kind: 'tool' },
+          { id: 'text-1', kind: 'text', text: 'Partial' },
+        ]),
+      ],
+    })
+
+    expect(rows[1]).toMatchObject({ isExpanded: true, status: 'processing' })
+  })
+
+  it('keeps a failed sent turn expanded', () => {
+    const rows = buildConversationRows({
+      expandedTurns: {},
+      interruptedTurnIds: new Set(),
+      isStreaming: false,
+      lastSentTurnId: 'user-1',
+      streamingElapsed: 0,
+      turnFailures: { 'user-1': { elapsed: 12, message: 'model offline' } },
+      turns: [
+        turn('user-1', [
+          { id: 'tool-1', kind: 'tool' },
+          { id: 'text-1', kind: 'text', text: 'Partial' },
+        ]),
+      ],
+    })
+
+    expect(rows[1]).toMatchObject({ isExpanded: true, status: 'failed' })
+  })
+
+  it('keeps an interrupted sent turn expanded', () => {
+    const rows = buildConversationRows({
+      expandedTurns: {},
+      interruptedTurnIds: new Set(['user-1']),
+      isStreaming: false,
+      lastSentTurnId: 'user-1',
+      streamingElapsed: 0,
+      turns: [
+        turn('user-1', [
+          { id: 'tool-1', kind: 'tool' },
+          { id: 'text-1', kind: 'text', text: 'Partial' },
+        ]),
+      ],
+    })
+
+    expect(rows[1]).toMatchObject({ isExpanded: true, status: 'interrupted' })
+  })
+
+  it('lets an explicit expandedTurns entry override the completed-turn collapse', () => {
+    const rows = buildConversationRows({
+      expandedTurns: { 'user-1': true },
+      interruptedTurnIds: new Set(),
+      isStreaming: false,
+      lastSentTurnId: 'user-1',
+      streamingElapsed: 0,
+      turns: [
+        turn('user-1', [
+          { id: 'tool-1', kind: 'tool' },
+          { id: 'text-1', kind: 'text', text: 'Final answer' },
+        ]),
+      ],
+    })
+
+    expect(rows[1]).toMatchObject({ isExpanded: true, status: 'completed' })
+  })
+
+  it('keeps a manual collapse on a still-streaming sent turn', () => {
+    const rows = buildConversationRows({
+      expandedTurns: { 'user-1': false },
+      interruptedTurnIds: new Set(),
+      isStreaming: true,
+      lastSentTurnId: 'user-1',
+      streamingElapsed: 3,
+      turns: [
+        turn('user-1', [
+          { id: 'tool-1', kind: 'tool' },
+          { id: 'text-1', kind: 'text', text: 'Partial' },
+        ]),
+      ],
+    })
+
+    expect(rows[1]).toMatchObject({ isExpanded: false, status: 'processing' })
+  })
 })
 
 describe('buildSubagentConversationRows', () => {

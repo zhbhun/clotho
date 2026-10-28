@@ -201,8 +201,12 @@ export function buildConversationRows(options: {
       : isInterrupted
         ? 'interrupted'
         : undefined
+    // A successfully finished turn folds back to the Worked-for summary; only
+    // streaming, failed, and interrupted turns stay expanded by default.
+    const isTurnCompleted = !isStreaming && !turnTerminalStatus
     const isExpanded =
-      options.expandedTurns[turnId] ?? turn.userMessage.id === options.lastSentTurnId
+      options.expandedTurns[turnId] ??
+      (turn.userMessage.id === options.lastSentTurnId && !isTurnCompleted)
     const timelineItems = turn.timelineItems.filter(
       (item) => toolRequestFor(options.pendingRequests, item)?.kind !== 'ask',
     )
