@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE: role model mapping settings</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #171717;
+    --muted: #737373;
+    --border: #e5e5e5;
+    --accent: #171717;
+    --card: #ffffff;
+    --subtle: #fafafa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #282a36;
+      --fg: #f8f8f2;
+      --muted: #8b8fa3;
+      --border: #3a3d4d;
+      --accent: #ff79c6;
+      --card: #2e3041;
+      --subtle: #242634;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ===== app shell (mimics settings page) ===== */
+  .app { display: flex; height: 100vh; }
+  .sidebar {
+    width: 208px;
+    border-right: 1px solid var(--border);
+    padding: 12px 8px;
+    flex-shrink: 0;
+  }
+  .sidebar h2 { font-size: 11px; font-weight: 500; color: var(--muted); padding: 8px 8px 4px; text-transform: none; }
+  .nav-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px; border-radius: 6px; font-size: 13px;
+    color: var(--fg); cursor: default;
+  }
+  .nav-item.active { background: var(--subtle); font-weight: 500; }
+  .nav-item .icon { width: 14px; height: 14px; opacity: .6; flex-shrink: 0; }
+  .content { flex: 1; overflow-y: auto; padding: 24px 32px; max-width: 720px; }
+  .content h1 { font-size: 17px; font-weight: 600; margin-bottom: 20px; }
+
+  .proto-banner {
+    background: var(--subtle); border: 1px dashed var(--border);
+    border-radius: 8px; padding: 8px 12px; font-size: 12px; color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  /* ===== shared primitives (mimic shadcn) ===== */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; }
+  .row {
+    display: grid; grid-template-columns: minmax(120px, 1fr) 250px;
+    align-items: center; gap: 12px;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    min-height: 64px;
+  }
+  .row:last-child { border-bottom: none; }
+  .row-label { font-weight: 400; font-size: 14px; }
+  .row-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .section-title { font-size: 14px; font-weight: 600; margin: 28px 0 10px; }
+  .section-title:first-of-type { margin-top: 0; }
+
+  .picker {
+    display: flex; align-items: center; justify-content: space-between;
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 5px 10px; font-size: 13px; background: var(--bg);
+    color: var(--fg); cursor: default; min-height: 32px;
+  }
+  .picker.placeholder { color: var(--muted); }
+  .picker .chev { opacity: .5; font-size: 11px; }
+  .picker .clear { opacity: 0; margin-right: 6px; }
+  .picker.has-value:hover .clear { opacity: .5; }
+  .picker.has-value:hover .chev { display: none; }
+
+  .badge {
+    display: inline-block; font-size: 10px; font-weight: 500;
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 0 5px; margin-left: 6px; color: var(--muted);
+    vertical-align: 1px;
+  }
+
+  .hint { font-size: 12px; color: var(--muted); padding: 10px 24px; border-top: 1px solid var(--border); }
+
+  /* ===== floating switcher ===== */
+  .switcher {
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 4px; align-items: center;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 6px; box-shadow: 0 4px 24px rgba(0,0,0,.12);
+    z-index: 50;
+  }
+  .switcher button {
+    border: none; background: none; font: inherit; font-size: 12px;
+    padding: 5px 12px; border-radius: 6px; cursor: pointer; color: var(--fg);
+  }
+  .switcher button.active { background: var(--accent); color: var(--bg); }
+  .switcher .sep { width: 1px; height: 16px; background: var(--border); margin: 0 2px; }
+  .switcher .q { font-size: 11px; color: var(--muted); padding: 0 8px; max-width: 220px; }
+
+  /* ===== settings section header with action ===== */
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin: 28px 0 10px; }
+  .section-head .section-title { margin: 0; }
+  .wand-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid var(--border); border-radius: 6px; background: var(--bg);
+    font: inherit; font-size: 13px; padding: 5px 12px; color: var(--fg); cursor: default;
+  }
+
+  .variant { display: none; }
+  .variant.active { display: block; }
+
+  /* ===== variant B specifics: inline pills inside default-model card ===== */
+  .role-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    border: 1px solid var(--border); border-radius: 999px;
+    padding: 2px 10px; font-size: 12px; margin: 3px 4px 3px 0;
+    background: var(--bg);
+  }
+  .role-chip .role { font-weight: 500; }
+  .role-chip .model { color: var(--muted); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .role-chip.unset { border-style: dashed; color: var(--muted); }
+
+  /* ===== variant C specifics: per-role table with effective model ===== */
+  .table-row {
+    display: grid; grid-template-columns: 110px 1fr 250px;
+    align-items: center; gap: 12px; padding: 12px 24px;
+    border-bottom: 1px solid var(--border); font-size: 13px;
+  }
+  .table-row:last-child { border-bottom: none; }
+  .table-head { font-size: 11px; color: var(--muted); font-weight: 500; padding: 8px 24px; display: grid; grid-template-columns: 110px 1fr 250px; gap: 12px; border-bottom: 1px solid var(--border); }
+  .effective { color: var(--muted); font-size: 12px; }
+  .effective strong { color: var(--fg); font-weight: 400; }
+</style>
+</head>
+<body>
+
+<!-- PROTOTYPE: role-model mapping, variant B adopted.
+     默认模型卡并入角色行;标题改为"模型映射"。 -->
+
+<div class="proto-banner" style="position:fixed;top:12px;right:16px;max-width:320px;z-index:60">
+  PROTOTYPE(丢弃用)· 已定 B:角色行并入一张卡,标题"模型映射"
+</div>
+
+<div class="app">
+  <!-- ===== shared sidebar ===== -->
+  <nav class="sidebar">
+    <div class="nav-item"><span class="icon">⚙</span>通用</div>
+    <div class="nav-item active"><span class="icon">📚</span>模型</div>
+    <div class="nav-item"><span class="icon">🎨</span>外观</div>
+    <div class="nav-item"><span class="icon">⌨</span>快捷键</div>
+    <div class="nav-item"><span class="icon">🗂</span>项目</div>
+    <h2>Agent 能力</h2>
+    <div class="nav-item"><span class="icon">🤖</span>子代理</div>
+    <div class="nav-item"><span class="icon">🧩</span>插件</div>
+    <div class="nav-item"><span class="icon">🖥</span>MCP 服务器</div>
+    <div class="nav-item"><span class="icon">✨</span>技能</div>
+    <div class="nav-item"><span class="icon">🪝</span>钩子</div>
+  </nav>
+
+  <main class="content">
+
+    <!-- ================= VARIANT A: separate card ================= -->
+
+    <!-- ================= VARIANT B: merged into default-model card ================= -->
+    <section class="variant" id="variant-B">
+      <h1>模型</h1>
+
+      <!-- NEW: one card holds default + roles (old style restored) -->
+      <div class="section-head">
+        <div class="section-title">模型映射</div>
+        <span class="wand-btn">✨ 一键设置</span>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin:0 0 10px">仅自定义模型会话生效;留空走默认模型。</p>
+      <div class="card">
+        <div class="row">
+          <div>
+            <div class="row-label">默认模型</div>
+            <div class="row-desc">新会话使用的模型,也是未映射角色的实际模型</div>
+          </div>
+          <div class="picker has-value"><span>Zhipu GLM · GLM 5.3 Flash</span><span><span class="clear">✕</span><span class="chev">▾</span></span></div>
+        </div>
+        <div class="row">
+          <div>
+            <div class="row-label">Haiku</div>
+            <div class="row-desc">Claude Code 的快速模型;子代理指定 haiku 时使用</div>
+          </div>
+          <div class="picker has-value"><span>Zhipu GLM · GLM 5.3 Flash</span><span><span class="clear">✕</span><span class="chev">▾</span></span></div>
+        </div>
+        <div class="row">
+          <div>
+            <div class="row-label">Sonnet</div>
+            <div class="row-desc">Claude Code 的默认均衡模型;子代理指定 sonnet 时使用</div>
+          </div>
+          <div class="picker placeholder"><span>未配置</span><span class="chev">▾</span></div>
+        </div>
+        <div class="row">
+          <div>
+            <div class="row-label">Opus</div>
+            <div class="row-desc">Claude Code 的高能力模型;子代理指定 opus 时使用</div>
+          </div>
+          <div class="picker placeholder"><span>未配置</span><span class="chev">▾</span></div>
+        </div>
+              </div>
+
+      <div class="section-title">供应商</div>
+      <div class="card">
+        <div class="row">
+          <div><div class="row-label">Zhipu GLM</div><div class="row-desc">open.bigmodel.cn · 2 个模型</div></div>
+          <div style="text-align:right;color:var(--muted);font-size:12px">已启用</div>
+        </div>
+        <div class="row">
+          <div><div class="row-label">Kimi For Coding</div><div class="row-desc">api.kimi.com · 4 个模型</div></div>
+          <div style="text-align:right;color:var(--muted);font-size:12px">已启用</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= VARIANT C: table with effective model ================= -->
+
+  </main>
+</div>
+
+<!-- ===== floating switcher ===== -->
+<div class="switcher">
+  <span class="q">B 已选定:角色行并入"模型映射"卡</span>
+</div>
+
+<script>
+  document.getElementById('variant-B').classList.add('active');
+</script>
+</body>
+</html>
