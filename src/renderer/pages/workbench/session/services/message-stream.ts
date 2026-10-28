@@ -146,7 +146,23 @@ export class StreamAssembler {
       }
       return true
     }
+    if (type === 'result') {
+      // The turn is over: retire every placeholder it leaves behind. A frame the
+      // assembler never covered (finalize bails when the assistant frame carries
+      // blocks the stream never emitted, e.g. an unstreamed thinking block) would
+      // otherwise survive into the next turn and render the stale text under the
+      // new prompt until that turn's message_start replaces it.
+      this.retireAllStreams()
+      return false
+    }
     return false
+  }
+
+  private retireAllStreams() {
+    if (!this.streaming.size) return
+    this.streaming.clear()
+    this.streamMeta.clear()
+    this.revision += 1
   }
 
   private handleStreamEvent(envelope: StreamEventEnvelope, receivedAt: string) {

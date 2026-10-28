@@ -288,4 +288,49 @@ describe('StreamAssembler', () => {
     expect(stream.processLine('not json')).toBe(false)
     expect(stream.processLine(line({ type: 'system', subtype: 'init' }))).toBe(false)
   })
+
+  it('retires a leftover placeholder when the result frame ends the turn', () => {
+    const stream = new StreamAssembler()
+    stream.processLine(line({ type: 'stream_event', event: { type: 'message_start' } }))
+    stream.processLine(
+      line({
+        type: 'stream_event',
+        event: {
+          type: 'content_block_delta',
+          index: 0,
+          delta: { type: 'text_delta', text: 'streamed text' },
+        },
+      }),
+    )
+    // The assistant frame carries a block the stream never emitted (an
+    // unstreamed thinking block), so finalize bails and the placeholder keeps
+    // the streamed text past message_stop.
+    stream.processLine(
+      line({
+        type: 'assistant',
+        uuid: 'assistant-1',
+        message: {
+          role: 'assistant',
+          content: [
+            { type: 'thinking', thinking: 'unstreamed' },
+            { type: 'text', text: 'streamed text' },
+          ],
+        },
+      }),
+    )
+    stream.processLine(line({ type: 'stream_event', event: { type: 'message_stop' } }))
+    expect(stream.getAll()).toMatchObject([
+      { uuid: 'assistant-1' },
+      { role: 'assistant', content: 'streamed text' },
+    ])
+
+    expect(
+      stream.processLine(line({ type: 'result', subtype: 'success', result: 'streamed text' })),
+    ).toBe(false)
+    expect(stream.getAll()).toMatchObject([{ uuid: 'assistant-1' }])
+
+    // The next turn's optimistic prompt must not inherit the stale reply.
+    stream.commit({ id: 'local-user-2', role: 'user', content: 'next prompt' })
+    expect(stream.getAll().map((message) => message.role)).toEqual(['assistant', 'user'])
+  })
 })
