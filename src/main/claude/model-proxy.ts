@@ -5,7 +5,7 @@ import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import type { ReadableStream as NodeWebReadableStream } from 'node:stream/web'
 
-import type { ModelProvider, ProviderModel } from '@/shared/rpc'
+import type { ClaudeModelRoleMapping, ModelProvider, ProviderModel } from '@/shared/rpc'
 
 import { anthropicToChatCompletions } from './chat-completions-request'
 import { chatCompletionsToAnthropic, chatErrorToAnthropic } from './chat-completions-response'
@@ -38,10 +38,15 @@ export type ModelProxyServe = (
   options: ModelProxyServeOptions,
 ) => ModelProxyServer | Promise<ModelProxyServer>
 
+export interface ModelProxySettings {
+  providers: ModelProvider[]
+  modelMappings: ClaudeModelRoleMapping
+}
+
 export interface ModelProxy {
   baseURL: string
   authToken: string
-  replaceSettings: (providers: ModelProvider[]) => void
+  replaceSettings: (settings: ModelProxySettings) => void
   /** Forward mapping: the claude effort/thinking for a session on this model. */
   sessionThinking: (model?: string) => SessionThinking | undefined
   /**
@@ -54,6 +59,7 @@ export interface ModelProxy {
 
 export interface CreateModelProxyOptions {
   providers: ModelProvider[]
+  modelMappings?: ClaudeModelRoleMapping
   authToken?: string
   fetch?: ModelProxyFetch
   serve?: ModelProxyServe
@@ -311,13 +317,22 @@ async function handleProxyRequest(
   )
 }
 
+/** CLI env var each role alias resolves through. */
+const MODEL_ROLE_MAPPING_ENV = {
+  haiku: 'ANTHROPIC_DEFAULT_HAIKU_MODEL',
+  sonnet: 'ANTHROPIC_DEFAULT_SONNET_MODEL',
+  opus: 'ANTHROPIC_DEFAULT_OPUS_MODEL',
+} as const
+
 export async function createModelProxy({
   providers,
+  modelMappings = {},
   authToken = randomBytes(32).toString('base64url'),
   fetch: fetchUpstream = (request) => fetch(request),
   serve = serveWithNode,
 }: CreateModelProxyOptions): Promise<ModelProxy> {
   let routes = providerMap(providers)
+  let mappings: ClaudeModelRoleMapping = { ...modelMappings }
   const server = await serve({
     hostname: '127.0.0.1',
     idleTimeout: 0,
@@ -405,8 +420,9 @@ export async function createModelProxy({
   return {
     baseURL: `http://127.0.0.1:${server.port}`,
     authToken,
-    replaceSettings(providers) {
-      routes = providerMap(providers)
+    replaceSettings(settings) {
+      routes = providerMap(settings.providers)
+      mappings = { ...settings.modelMappings }
     },
     sessionThinking(model) {
       return sessionThinkingFor(resolveModel(routes, model)?.model)
@@ -423,7 +439,21 @@ export async function createModelProxy({
         // any role it needs from ANTHROPIC_MODEL and CLAUDE_CODE_SUBAGENT_MODEL.
         env.ANTHROPIC_MODEL = model
         env.CLAUDE_CODE_SUBAGENT_MODEL = model
+        // Role aliases (haiku/sonnet/opus) bypass ANTHROPIC_MODEL: without an
+        // explicit role env the CLI falls back to first-party catalog ids,
+        // which fail this proxy's providerId/modelId validation. Map each role
+        // to its configured override, falling back to the session model so
+        // role-pinned subagents work with zero mappings.
+        for (const [role, name] of Object.entries(MODEL_ROLE_MAPPING_ENV)) {
+          const mapping = mappings[role as keyof ClaudeModelRoleMapping]
+          env[name] = mapping && resolveModel(routes, mapping) ? mapping : model
+        }
       }
+      // clotho never maps the fable slot: when ANTHROPIC_DEFAULT_FABLE_MODEL
+      // equals the session model, the CLI adds a "Claude Fable 5" identity
+      // paragraph to the system prompt. Shadow the env so a user-level CLI
+      // setting cannot leak through the env merge and re-enable it.
+      env.ANTHROPIC_DEFAULT_FABLE_MODEL = ''
       if (current && current.model.contextWindow > 0) {
         const contextWindow = String(current.model.contextWindow)
         env.CLAUDE_CODE_AUTO_COMPACT_WINDOW = contextWindow

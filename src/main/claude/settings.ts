@@ -11,6 +11,7 @@ import type {
   AppReducedMotionPreference,
   AppTheme,
   AppThemePalette,
+  ClaudeModelRoleMapping,
   ModelProvider,
 } from '@/shared/rpc'
 
@@ -29,6 +30,8 @@ export interface ClaudeskSettings {
   defaultPermissionMode: AppDefaultPermissionMode
   archiveInactiveSessions: AppArchiveInactiveDays
   appearance: AppAppearancePreferences
+  /** Role-to-model overrides for custom-model sessions; empty when unmapped. */
+  modelMappings: ClaudeModelRoleMapping
   /**
    * Clotho-session-scoped enable state for user-level Claude Code
    * capabilities. Absent entries mean enabled; the CLI's own enable state is
@@ -110,7 +113,7 @@ export const DEFAULT_APP_PREFERENCES: AppPreferences = {
 }
 
 export function defaultSettings(): ClaudeskSettings {
-  return { providers: [], ...sanitizeAppPreferences({}) }
+  return { providers: [], modelMappings: {}, ...sanitizeAppPreferences({}) }
 }
 
 export function settingsJsonPath() {
@@ -170,6 +173,33 @@ export function sanitizeAgentCapabilityToggles(value: unknown): AgentCapabilityT
     disabledSkills: stringList(candidate.disabledSkills),
     disabledMcpServers: stringList(candidate.disabledMcpServers),
   }
+}
+
+const MODEL_MAPPING_ROLES = ['haiku', 'sonnet', 'opus'] as const
+
+/**
+ * Keep only role mappings that resolve against the current providers, so a
+ * deleted provider or model cannot leave a dangling role override.
+ */
+export function sanitizeModelMappings(
+  value: unknown,
+  providers: ModelProvider[],
+): ClaudeModelRoleMapping {
+  const candidate =
+    value && typeof value === 'object' && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : {}
+  const availableModels = new Set(
+    providers.flatMap((provider) => provider.models.map((model) => `${provider.id}/${model.id}`)),
+  )
+  const mappings: ClaudeModelRoleMapping = {}
+  for (const role of MODEL_MAPPING_ROLES) {
+    const mapping = candidate[role]
+    if (typeof mapping === 'string' && mapping.trim() && availableModels.has(mapping)) {
+      mappings[role] = mapping
+    }
+  }
+  return mappings
 }
 
 export function sanitizeAppPreferences(value: unknown): AppPreferences {
@@ -254,6 +284,7 @@ export async function readSettings(filePath = settingsJsonPath()): Promise<Claud
         providers,
       ),
       ...sanitizeAppPreferences(candidate),
+      modelMappings: sanitizeModelMappings(candidate.modelMappings, providers),
       agentCapabilities: sanitizeAgentCapabilityToggles(candidate.agentCapabilities),
     }
   } catch (caught) {
@@ -309,6 +340,7 @@ function cloneSettings(settings: ClaudeskSettings): ClaudeskSettings {
         light: { ...settings.appearance.themePalettes.light },
       },
     },
+    modelMappings: { ...settings.modelMappings },
     agentCapabilities: {
       disabledPlugins: [...(settings.agentCapabilities?.disabledPlugins ?? [])],
       disabledSkills: [...(settings.agentCapabilities?.disabledSkills ?? [])],

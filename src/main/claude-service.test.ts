@@ -65,6 +65,7 @@ function completeSettings(
 ): ClaudeskSettings {
   return {
     ...settings,
+    modelMappings: {},
     ...DEFAULT_APP_PREFERENCES,
     agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
   }
@@ -113,6 +114,7 @@ describe('Claude desktop service settings', () => {
     expect(store.get()).toEqual({
       providers: [existingProvider],
       defaultModel: 'zhipu/glm-5.2',
+      modelMappings: {},
       ...DEFAULT_APP_PREFERENCES,
       agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
     })
@@ -129,11 +131,12 @@ describe('Claude desktop service settings', () => {
     const expected = {
       providers: [newProvider],
       defaultModel: undefined,
+      modelMappings: {},
       ...DEFAULT_APP_PREFERENCES,
       agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
     }
     expect(persist).toHaveBeenCalledWith(expected)
-    expect(proxy.replaceSettings).toHaveBeenCalledWith(expected.providers)
+    expect(proxy.replaceSettings).toHaveBeenCalledWith(expected)
   })
 
   test('clears the default model when an edited provider removes its model', async () => {
@@ -166,7 +169,7 @@ describe('Claude desktop service settings', () => {
     )
 
     expect(store.get().defaultModel).toBe('zhipu/glm-4.7')
-    expect(proxy.replaceSettings).toHaveBeenCalledWith([existingProvider])
+    expect(proxy.replaceSettings).toHaveBeenCalledWith(store.get())
   })
 
   test('rejects creating a provider with an existing id instead of overwriting it', async () => {
@@ -183,7 +186,7 @@ describe('Claude desktop service settings', () => {
     expect(proxy.replaceSettings).not.toHaveBeenCalled()
   })
 
-  test('persists application preferences without changing model proxy settings', async () => {
+  test('persists application preferences and refreshes proxy role mappings', async () => {
     const { persist, proxy, service } = createService({
       providers: [existingProvider],
       defaultModel: 'zhipu/glm-5.2',
@@ -192,17 +195,19 @@ describe('Claude desktop service settings', () => {
       ...DEFAULT_APP_PREFERENCES,
       language: 'zh-CN',
       appearance: { ...DEFAULT_APP_PREFERENCES.appearance, theme: 'dark' },
+      modelMappings: { haiku: 'zhipu/glm-4.7' },
     }
 
     await expect(service.saveAppPreferences({ preferences })).resolves.toEqual(preferences)
 
-    expect(persist).toHaveBeenCalledWith({
+    const expected = {
       providers: [existingProvider],
       defaultModel: 'zhipu/glm-5.2',
       ...preferences,
       agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
-    })
-    expect(proxy.replaceSettings).not.toHaveBeenCalled()
+    }
+    expect(persist).toHaveBeenCalledWith(expected)
+    expect(proxy.replaceSettings).toHaveBeenCalledWith(expected)
   })
 })
 

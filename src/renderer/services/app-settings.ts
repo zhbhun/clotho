@@ -4,6 +4,7 @@ import type {
   AppPreferences,
   AppReducedMotionPreference,
   AppTheme,
+  ClaudeModelRoleMapping,
 } from '@/shared/rpc'
 
 import { LANGUAGE_PREFERENCES, type LanguagePreference } from '../i18n/languages'
@@ -80,6 +81,17 @@ function isTheme(value: unknown): value is AppTheme {
   return value === 'dark' || value === 'light' || value === 'system'
 }
 
+function sanitizeModelMappings(value: unknown): ClaudeModelRoleMapping | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined
+  const candidate = value as Record<string, unknown>
+  const mappings: ClaudeModelRoleMapping = {}
+  for (const role of ['haiku', 'sonnet', 'opus'] as const) {
+    const mapped = candidate[role]
+    if (typeof mapped === 'string' && mapped.includes('/')) mappings[role] = mapped
+  }
+  return Object.keys(mappings).length > 0 ? mappings : undefined
+}
+
 function sanitizePreferences(value: unknown): AppPreferences {
   const candidate =
     value && typeof value === 'object' && !Array.isArray(value)
@@ -115,12 +127,14 @@ function sanitizePreferences(value: unknown): AppPreferences {
         ? resolveThemePalettes(appearance.themePalettes)
         : DEFAULT_APPEARANCE_PREFERENCES.themePalettes,
     },
+    modelMappings: sanitizeModelMappings(candidate.modelMappings),
   }
 }
 
 function clonePreferences(preferences: AppPreferences): AppPreferences {
   return {
     ...preferences,
+    modelMappings: preferences.modelMappings ? { ...preferences.modelMappings } : undefined,
     appearance: {
       ...preferences.appearance,
       themePalettes: {
@@ -147,6 +161,7 @@ export function createAppSettingsService(client: AppSettingsClient) {
       ? current.archiveInactiveSessions
       : base.archiveInactiveSessions,
     appearance: dirtyFields.has('appearance') ? current.appearance : base.appearance,
+    modelMappings: dirtyFields.has('modelMappings') ? current.modelMappings : base.modelMappings,
   })
 
   const writeDirtyFields = async () => {
@@ -241,6 +256,14 @@ export function createAppSettingsService(client: AppSettingsClient) {
       current = sanitizePreferences({ ...current, appearance: preferences })
       return persist('appearance')
     },
+    loadModelMappings(): ClaudeModelRoleMapping {
+      return { ...(current.modelMappings ?? {}) }
+    },
+    saveModelMappings(mappings: ClaudeModelRoleMapping) {
+      const sanitized = sanitizeModelMappings(mappings)
+      current = { ...current, modelMappings: sanitized }
+      return persist('modelMappings')
+    },
     async flush() {
       while (write || dirtyFields.size) await (write ?? startWrite())
     },
@@ -277,3 +300,6 @@ export const saveLanguagePreference = (language: LanguagePreference) =>
 export const loadAppearancePreferences = () => appSettings.loadAppearancePreferences()
 export const saveAppearancePreferences = (preferences: AppearancePreferences) =>
   appSettings.saveAppearancePreferences(preferences)
+export const loadModelMappings = () => appSettings.loadModelMappings()
+export const saveModelMappings = (mappings: ClaudeModelRoleMapping) =>
+  appSettings.saveModelMappings(mappings)

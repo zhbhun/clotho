@@ -40,6 +40,7 @@ const provider: ModelProvider = {
 function settings(overrides: Partial<ClaudeskSettings> = {}): ClaudeskSettings {
   return {
     providers: [],
+    modelMappings: {},
     ...DEFAULT_APP_PREFERENCES,
     agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
     ...overrides,
@@ -166,6 +167,33 @@ describe('Clotho settings store', () => {
     })
   })
 
+  test('keeps resolvable role mappings and drops dangling ones', async () => {
+    fsMock.readFile.mockResolvedValue(
+      JSON.stringify({
+        providers: [provider],
+        modelMappings: {
+          haiku: 'zhipu/glm-5.2/fast',
+          sonnet: 'zhipu/deleted-model',
+          opus: 'deleted-provider/whatever',
+          fable: 'zhipu/glm-5.2/fast',
+          junk: 42,
+        },
+      }),
+    )
+
+    await expect(readSettings('/test/settings.json')).resolves.toMatchObject({
+      modelMappings: { haiku: 'zhipu/glm-5.2/fast' },
+    })
+  })
+
+  test('defaults missing role mappings to an empty object', async () => {
+    fsMock.readFile.mockResolvedValue(JSON.stringify({ providers: [provider] }))
+
+    await expect(readSettings('/test/settings.json')).resolves.toMatchObject({
+      modelMappings: {},
+    })
+  })
+
   test('sanitizes agent capability toggles from the settings file', async () => {
     fsMock.readFile.mockResolvedValue(
       JSON.stringify({
@@ -243,6 +271,7 @@ describe('Clotho settings store', () => {
     expect(store.get()).toEqual({
       providers: [provider],
       defaultModel: 'zhipu/glm-5.2/fast',
+      modelMappings: {},
       ...DEFAULT_APP_PREFERENCES,
       agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
     })
@@ -250,6 +279,7 @@ describe('Clotho settings store', () => {
     expect(persist).toHaveBeenLastCalledWith({
       providers: [provider],
       defaultModel: 'zhipu/glm-5.2/fast',
+      modelMappings: {},
       ...DEFAULT_APP_PREFERENCES,
       agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
     })

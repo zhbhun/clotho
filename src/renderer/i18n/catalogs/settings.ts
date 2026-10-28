@@ -65,7 +65,36 @@ export const settingsCatalog = {
     '正在儲存預設模型',
   ),
   'settings.defaultModel.search': setting('Search models...', '搜索模型...', '搜尋模型...'),
-  'settings.defaultModel.title': setting('Default model', '默认模型', '預設模型'),
+  'settings.modelMapping.title': setting('Model mapping', '模型映射', '模型對應'),
+  'settings.modelMapping.description': setting(
+    'Only applies to custom-model sessions; unset roles use the default model.',
+    '仅自定义模型会话生效；留空走默认模型。',
+    '僅自訂模型工作階段生效；留空走預設模型。',
+  ),
+  'settings.modelMapping.fillAll': setting('Set all', '一键设置', '一鍵設定'),
+  'settings.modelMapping.fillAllAria': setting(
+    'Set all role models',
+    '一键设置所有角色模型',
+    '一鍵設定所有角色模型',
+  ),
+  'settings.modelMapping.role.haiku.description': setting(
+    'Fast model for Claude Code',
+    'Claude Code 的快速模型',
+  ),
+  'settings.modelMapping.role.opus.description': setting(
+    'High-capability model for Claude Code',
+    'Claude Code 的高能力模型',
+  ),
+  'settings.modelMapping.role.sonnet.description': setting(
+    'Default balanced model for Claude Code',
+    'Claude Code 的默认均衡模型',
+    'Claude Code 的預設平衡模型',
+  ),
+  'settings.modelMapping.saveError': setting(
+    'Model mappings could not be saved. Please try again.',
+    '模型映射保存失败，请重试',
+    '模型對應儲存失敗，請重試',
+  ),
   'settings.project.add': setting('Add project', '添加项目', '新增專案'),
   'settings.project.confirmDescription': setting(
     'Remove “{{name}}” from the Clotho project list.',

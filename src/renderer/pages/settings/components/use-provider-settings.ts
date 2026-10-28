@@ -3,7 +3,9 @@ import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/react/shallow'
 
 import { toast } from '@/shadcn/toast'
+import type { ClaudeModelRoleMapping } from '@/shared/rpc'
 
+import { loadModelMappings, saveModelMappings } from '../../../services/app-settings'
 import type { ModelProvider } from '../../../services/claude/claude'
 import { claude } from '../../../services/claude/claude'
 import { loadModelSettings } from '../../../services/claude/model-settings'
@@ -33,6 +35,7 @@ export function useProviderSettings() {
   const [hasLoadError, setHasLoadError] = useState(false)
   const [deletingProviderId, setDeletingProviderId] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<ModelProvider | null>(null)
+  const [modelMappings, setModelMappings] = useState<ClaudeModelRoleMapping>({})
   const editor = useProviderEditor({ defaultModel, providers, replaceSettings })
 
   const loadModelConfiguration = useCallback(async () => {
@@ -55,6 +58,10 @@ export function useProviderSettings() {
     }
     void loadModelConfiguration()
   }, [isSettingsLoaded, loadModelConfiguration])
+
+  useEffect(() => {
+    setModelMappings(loadModelMappings())
+  }, [isSettingsLoaded])
 
   // Fetch quota for every provider once the settings are available; the store
   // keeps results cached so the model selector can reuse them later.
@@ -104,6 +111,13 @@ export function useProviderSettings() {
     return saved
   }
 
+  async function saveMappings(mappings: ClaudeModelRoleMapping) {
+    await saveModelMappings(mappings)
+    const saved = loadModelMappings()
+    setModelMappings(saved)
+    return saved
+  }
+
   return {
     defaultModel,
     deleteProvider,
@@ -112,9 +126,11 @@ export function useProviderSettings() {
     hasLoadError,
     isLoading,
     loadModelConfiguration,
+    modelMappings,
     providers,
     refreshProviderUsage,
     saveDefaultModel,
+    saveMappings,
     setDeleteTarget,
     usageByProviderId,
     usagePendingIds,

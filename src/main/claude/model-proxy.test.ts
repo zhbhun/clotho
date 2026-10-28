@@ -483,13 +483,16 @@ describe('model proxy', () => {
       providers: [provider],
       serve: harness.serve,
     })
-    proxy.replaceSettings([
-      {
-        ...provider,
-        baseURL: 'https://replacement.example/anthropic',
-        authToken: 'replacement-secret',
-      },
-    ])
+    proxy.replaceSettings({
+      providers: [
+        {
+          ...provider,
+          baseURL: 'https://replacement.example/anthropic',
+          authToken: 'replacement-secret',
+        },
+      ],
+      modelMappings: {},
+    })
 
     await harness.request(
       new Request(`${proxy.baseURL}/v1/messages`, {
@@ -514,7 +517,7 @@ describe('model proxy', () => {
       serve: harness.serve,
     })
 
-    proxy.replaceSettings([kimiProvider])
+    proxy.replaceSettings({ providers: [kimiProvider], modelMappings: {} })
 
     expect(proxy.settingsEnv('kimi/k3/long')).toMatchObject({
       ANTHROPIC_MODEL: 'kimi/k3/long',
@@ -524,7 +527,7 @@ describe('model proxy', () => {
     })
   })
 
-  test('never configures the role-based ANTHROPIC_DEFAULT model env vars', async () => {
+  test('falls back every unmapped role to the session model and shadows fable', async () => {
     const harness = createServeHarness()
     const proxy = await createModelProxy({
       authToken: 'local-secret',
@@ -534,10 +537,36 @@ describe('model proxy', () => {
     })
 
     const env = proxy.settingsEnv('zhipu/glm-5.2/fast')
-    for (const name of Object.keys(env)) {
-      expect(name).not.toMatch(/^ANTHROPIC_DEFAULT_/)
-    }
-    expect(env.ANTHROPIC_MODEL).toBe('zhipu/glm-5.2/fast')
+    expect(env).toMatchObject({
+      ANTHROPIC_MODEL: 'zhipu/glm-5.2/fast',
+      CLAUDE_CODE_SUBAGENT_MODEL: 'zhipu/glm-5.2/fast',
+      ANTHROPIC_DEFAULT_HAIKU_MODEL: 'zhipu/glm-5.2/fast',
+      ANTHROPIC_DEFAULT_SONNET_MODEL: 'zhipu/glm-5.2/fast',
+      ANTHROPIC_DEFAULT_OPUS_MODEL: 'zhipu/glm-5.2/fast',
+      ANTHROPIC_DEFAULT_FABLE_MODEL: '',
+    })
+  })
+
+  test('injects resolvable role mappings and falls back the rest', async () => {
+    const harness = createServeHarness()
+    const proxy = await createModelProxy({
+      authToken: 'local-secret',
+      fetch: vi.fn(async () => Response.json({ ok: true })),
+      providers: [provider, kimiProvider],
+      modelMappings: {
+        haiku: 'kimi/k3/long',
+        sonnet: 'zhipu/missing',
+      },
+      serve: harness.serve,
+    })
+
+    const env = proxy.settingsEnv('zhipu/glm-5.2/fast')
+    expect(env).toMatchObject({
+      ANTHROPIC_DEFAULT_HAIKU_MODEL: 'kimi/k3/long',
+      ANTHROPIC_DEFAULT_SONNET_MODEL: 'zhipu/glm-5.2/fast',
+      ANTHROPIC_DEFAULT_OPUS_MODEL: 'zhipu/glm-5.2/fast',
+      ANTHROPIC_DEFAULT_FABLE_MODEL: '',
+    })
   })
 
   test('keeps an immutable snapshot of provider configuration', async () => {

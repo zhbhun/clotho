@@ -1,12 +1,14 @@
-import { ChevronDown, X } from 'lucide-react'
+import { ChevronDown, WandSparkles, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
 import { Card, CardContent } from '@/shadcn/card'
 import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from '@/shadcn/field'
+import { Spinner } from '@/shadcn/spinner'
 import { toast } from '@/shadcn/toast'
 import { cn } from '@/shadcn/utils'
+import type { ClaudeModelRoleMapping } from '@/shared/rpc'
 
 import type { ModelProvider } from '../../services/claude/claude'
 import {
@@ -26,6 +28,10 @@ interface ModelChoice {
   providerName: string
   modelName: string
 }
+
+type ModelMappingRole = keyof ClaudeModelRoleMapping
+
+const MODEL_MAPPING_ROLES: ModelMappingRole[] = ['haiku', 'sonnet', 'opus']
 
 function modelChoices(providers: ModelProvider[]): ModelChoice[] {
   return providers.flatMap((provider) =>
@@ -123,25 +129,90 @@ function ModelTargetPicker({
   )
 }
 
+function FillAllModels({
+  providers,
+  choices,
+  disabled,
+  onSelect,
+}: {
+  providers: ModelProvider[]
+  choices: ModelChoice[]
+  disabled: boolean
+  onSelect: (value: string) => void
+}) {
+  const { t } = useTranslation()
+  return (
+    <Menu modal>
+      <MenuTrigger
+        render={
+          <Button
+            aria-label={t('settings.modelMapping.fillAllAria')}
+            disabled={disabled || choices.length === 0}
+            variant="outline"
+          />
+        }
+      >
+        <WandSparkles data-icon="inline-start" />
+        {t('settings.modelMapping.fillAll')}
+      </MenuTrigger>
+      <MenuContent align="end" className="w-72" glass>
+        <MenuSearch placeholder={t('settings.defaultModel.search')} />
+        <MenuList>
+          <MenuEmpty>{t('settings.defaultModel.empty')}</MenuEmpty>
+          {providers.map((provider) =>
+            provider.models.length > 0 ? (
+              <MenuGroup heading={provider.name || provider.id} key={provider.id}>
+                {provider.models.map((model) => {
+                  const qualifiedModel = `${provider.id}/${model.id}`
+                  return (
+                    <MenuItem
+                      key={qualifiedModel}
+                      value={`${provider.name} ${provider.id} ${model.displayName} ${model.id}`}
+                      onSelect={() => onSelect(qualifiedModel)}
+                    >
+                      <span className="truncate">{model.displayName || model.id}</span>
+                    </MenuItem>
+                  )
+                })}
+              </MenuGroup>
+            ) : null,
+          )}
+        </MenuList>
+      </MenuContent>
+    </Menu>
+  )
+}
+
 export function DefaultModelSettings({
   providers,
   model,
+  modelMappings,
   onSave,
+  onSaveMappings,
 }: {
   providers: ModelProvider[]
   model: string | null
+  modelMappings: ClaudeModelRoleMapping
   onSave: (model: string | null) => Promise<string | null>
+  onSaveMappings: (mappings: ClaudeModelRoleMapping) => Promise<ClaudeModelRoleMapping>
 }) {
   const { t } = useTranslation()
   const [draft, setDraft] = useState<string | null>(model)
+  const [mappingsDraft, setMappingsDraft] = useState<ClaudeModelRoleMapping>(modelMappings)
   const [isSaving, setIsSaving] = useState(false)
   const confirmed = useRef<string | null>(model)
+  const confirmedMappings = useRef<ClaudeModelRoleMapping>(modelMappings)
   const choices = useMemo(() => modelChoices(providers), [providers])
 
   useEffect(() => {
     confirmed.current = model
     setDraft(model)
   }, [model])
+
+  useEffect(() => {
+    confirmedMappings.current = modelMappings
+    setMappingsDraft(modelMappings)
+  }, [modelMappings])
 
   async function persist(next: string | null) {
     setDraft(next)
@@ -163,8 +234,53 @@ export function DefaultModelSettings({
     }
   }
 
+  async function persistMappings(next: ClaudeModelRoleMapping) {
+    setMappingsDraft(next)
+    setIsSaving(true)
+    try {
+      const saved = await onSaveMappings(next)
+      confirmedMappings.current = saved
+      setMappingsDraft(saved)
+    } catch {
+      setMappingsDraft(confirmedMappings.current)
+      toast.add({
+        id: 'settings-model-mapping-save-error',
+        title: t('common.toast.saveFailed'),
+        description: t('settings.modelMapping.saveError'),
+        type: 'error',
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  function updateMapping(role: ModelMappingRole, value: string | undefined) {
+    const next = { ...mappingsDraft }
+    if (value) next[role] = value
+    else delete next[role]
+    void persistMappings(next)
+  }
+
+  function fillAll(value: string) {
+    void persistMappings(Object.fromEntries(MODEL_MAPPING_ROLES.map((role) => [role, value])))
+  }
+
   return (
-    <SettingsSection title={t('settings.defaultModel.title')}>
+    <SettingsSection
+      title={t('settings.modelMapping.title')}
+      description={t('settings.modelMapping.description')}
+      action={
+        <>
+          {isSaving ? <Spinner aria-label={t('settings.defaultModel.saving')} /> : null}
+          <FillAllModels
+            providers={providers}
+            choices={choices}
+            disabled={isSaving}
+            onSelect={fillAll}
+          />
+        </>
+      }
+    >
       <Card className="gap-0 py-0">
         <CardContent className="px-0">
           <FieldGroup className="gap-0">
@@ -186,6 +302,32 @@ export function DefaultModelSettings({
                 onChange={(value) => void persist(value ?? null)}
               />
             </Field>
+            {MODEL_MAPPING_ROLES.map((role) => {
+              const pickerId = `settings-model-mapping-${role}`
+              return (
+                <Field
+                  className="grid min-h-16 items-center gap-3 border-b px-6 py-4 last:border-b-0 md:grid-cols-[minmax(120px,1fr)_250px]"
+                  key={role}
+                >
+                  <FieldContent className="min-w-0">
+                    <FieldLabel className="font-normal capitalize" htmlFor={pickerId}>
+                      {role}
+                    </FieldLabel>
+                    <FieldDescription className="truncate">
+                      {t(`settings.modelMapping.role.${role}.description` as never)}
+                    </FieldDescription>
+                  </FieldContent>
+                  <ModelTargetPicker
+                    id={pickerId}
+                    value={mappingsDraft[role]}
+                    providers={providers}
+                    choices={choices}
+                    disabled={isSaving}
+                    onChange={(value) => updateMapping(role, value)}
+                  />
+                </Field>
+              )
+            })}
           </FieldGroup>
           {choices.length === 0 ? (
             <p className="border-t px-6 py-4 text-xs text-muted-foreground">

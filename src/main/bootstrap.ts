@@ -231,7 +231,10 @@ export async function bootstrap() {
     const proxySettings = settingsStore.get()
     let modelProxy
     try {
-      modelProxy = await createModelProxy({ providers: proxySettings.providers })
+      modelProxy = await createModelProxy({
+        providers: proxySettings.providers,
+        modelMappings: proxySettings.modelMappings,
+      })
     } catch (caught) {
       modelProxyLogger.error('model_proxy.failed', 'The local model proxy failed to start', {
         error: caught,

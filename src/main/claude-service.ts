@@ -73,7 +73,12 @@ import {
   resolveSessionEditAnchor,
 } from './claude/session'
 import { createSessionQueryRegistry } from './claude/session-registry'
-import { type SettingsStore, sanitizeAppPreferences, sanitizeDefaultModel } from './claude/settings'
+import {
+  type SettingsStore,
+  sanitizeAppPreferences,
+  sanitizeDefaultModel,
+  sanitizeModelMappings,
+} from './claude/settings'
 import { dropTrailingTurn, purgeDeadPairs } from './claude/transcript'
 import {
   addProjectFromFolder,
@@ -251,9 +256,10 @@ export function createClaudeDesktopService(
         ...settings,
         providers,
         defaultModel: sanitizeDefaultModel(settings.defaultModel, providers),
+        modelMappings: sanitizeModelMappings(settings.modelMappings, providers),
       }
     })
-    proxy.replaceSettings(next.providers)
+    proxy.replaceSettings(next)
     return normalizedProvider
   }
 
@@ -480,9 +486,10 @@ export function createClaudeDesktopService(
           ...settings,
           providers,
           defaultModel: sanitizeDefaultModel(settings.defaultModel, providers),
+          modelMappings: sanitizeModelMappings(settings.modelMappings, providers),
         }
       })
-      proxy.replaceSettings(next.providers)
+      proxy.replaceSettings(next)
     },
     saveDefaultModel: async ({ defaultModel }: { defaultModel: string | null }) => {
       const next = await settingsStore.update((settings) => {
@@ -492,22 +499,35 @@ export function createClaudeDesktopService(
         }
         return { ...settings, defaultModel: sanitized }
       })
-      proxy.replaceSettings(next.providers)
+      proxy.replaceSettings(next)
       return next.defaultModel ?? null
     },
     getAppPreferences: () => {
       const { language, defaultPermissionMode, appearance, archiveInactiveSessions } =
         settingsStore.get()
-      return { language, defaultPermissionMode, appearance, archiveInactiveSessions }
+      const { modelMappings } = settingsStore.get()
+      return {
+        language,
+        defaultPermissionMode,
+        appearance,
+        archiveInactiveSessions,
+        modelMappings,
+      }
     },
     saveAppPreferences: async ({ preferences }: { preferences: AppPreferences }) => {
       const sanitized = sanitizeAppPreferences(preferences)
-      const next = await settingsStore.update((settings) => ({ ...settings, ...sanitized }))
+      const next = await settingsStore.update((settings) => ({
+        ...settings,
+        ...sanitized,
+        modelMappings: sanitizeModelMappings(preferences.modelMappings, settings.providers),
+      }))
+      proxy.replaceSettings(next)
       return {
         language: next.language,
         defaultPermissionMode: next.defaultPermissionMode,
         appearance: next.appearance,
         archiveInactiveSessions: next.archiveInactiveSessions,
+        modelMappings: next.modelMappings,
       }
     },
     setProjectModel: (params: { projectId: string; providerId: string; modelId: string }) =>

@@ -20,6 +20,7 @@ import {
 import { ProviderEditorForm } from '../../../components/model-configuration/provider-editor-form'
 import { providerPresets } from '../../../components/model-configuration/provider-presets'
 import { useProviderDraft } from '../../../components/model-configuration/use-provider-draft'
+import { loadModelMappings, saveModelMappings } from '../../../services/app-settings'
 import type { ModelProvider } from '../../../services/claude/claude'
 import { claude } from '../../../services/claude/claude'
 import { useModelConfigurationStore } from '../../../stores/model-configuration-context'
@@ -224,8 +225,13 @@ export function ModelOnboarding({
           ) : (
             <DefaultModelSettings
               model={defaultModel}
+              modelMappings={loadModelMappings()}
               providers={mappingProviders}
               onSave={saveDefaultModel}
+              onSaveMappings={async (mappings) => {
+                await saveModelMappings(mappings)
+                return loadModelMappings()
+              }}
             />
           )}
         </div>

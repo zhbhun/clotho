@@ -70,7 +70,9 @@ export function ProviderSettings() {
       <DefaultModelSettings
         providers={settings.providers}
         model={settings.defaultModel}
+        modelMappings={settings.modelMappings}
         onSave={settings.saveDefaultModel}
+        onSaveMappings={settings.saveMappings}
       />
 
       <SettingsSection

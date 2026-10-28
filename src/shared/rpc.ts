@@ -95,11 +95,19 @@ export interface AppAppearancePreferences {
   }
 }
 
+/** CLI model role aliases that can be mapped to provider models. */
+export type ClaudeModelRoleMapping = {
+  haiku?: string
+  sonnet?: string
+  opus?: string
+}
+
 export interface AppPreferences {
   language: AppLanguagePreference
   defaultPermissionMode: AppDefaultPermissionMode
   archiveInactiveSessions: AppArchiveInactiveDays
   appearance: AppAppearancePreferences
+  modelMappings?: ClaudeModelRoleMapping
 }
 
 export type ProjectIconName =
