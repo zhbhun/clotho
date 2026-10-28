@@ -141,6 +141,12 @@ Keep names short while preserving meaning. Split and refine names as responsibil
 - Write commit messages in English.
 - No AI-attribution trailers (e.g. `AI-Co-Authored-By`), even if a skill suggests one.
 
+### OpenSpec workflow
+
+- New features and functional changes MUST go through the OpenSpec spec-driven workflow: propose (create the change with proposal/specs/design/tasks) → apply (implement the tasks) → archive (sync specs and move the change to `openspec/changes/archive/`).
+- For proposals involving UI or interaction changes, produce a prototype with the `prototype` skill and keep it at `openspec/changes/<change-name>/prototype.html`.
+- Archiving must move leftover change-root files (e.g. `prototype.html`) into the archive together with the change — nothing left behind in `openspec/changes/`.
+
 <!-- OPENWIKI:START -->
 
 ## OpenWiki
