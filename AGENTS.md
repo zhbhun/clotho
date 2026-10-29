@@ -142,9 +142,8 @@ Keep names short while preserving meaning. Split and refine names as responsibil
 
 ### OpenSpec workflow
 
-- New features and functional changes MUST go through the OpenSpec spec-driven workflow: propose (create the change with proposal/specs/design/tasks) → apply (implement the tasks) → archive (sync specs and move the change to `openspec/changes/archive/`).
-- For proposals involving UI or interaction changes, produce a prototype with the `prototype` skill and keep it at `openspec/changes/<change-name>/prototype.html`.
-- Archiving must move leftover change-root files (e.g. `prototype.html`) into the archive together with the change — nothing left behind in `openspec/changes/`.
+- New features and functional changes MUST go through the OpenSpec spec-driven workflow: explore (think through ideas) → propose (create the change with proposal/specs/design/tasks) → apply (implement the tasks) → archive (sync specs and move the change to `openspec/changes/archive/`).
+- When explore involves UI or interaction adjustments, build a prototype demo with the `prototype` skill in a temporary directory, move it to `openspec/changes/<change-name>/prototype.html` at propose, and archive it together with the change.
 
 <!-- OPENWIKI:START -->
 
