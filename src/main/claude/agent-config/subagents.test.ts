@@ -65,8 +65,6 @@ name: reviewer
 custom-key: keep-me
 description: old
 ---
-
-body
 `
     const parsed = parseFrontmatter(source)
     const output = serializeSubagent({
@@ -83,6 +81,72 @@ description: 'new description'
 
 new body
 `)
+  })
+
+  it('serializes extended fields (booleans, numbers, enums, lists) as quoted strings', () => {
+    const output = serializeSubagent({
+      file: 'reviewer',
+      frontmatter: {
+        name: 'reviewer',
+        disallowedTools: 'Bash(git push *), Danger',
+        permissionMode: 'acceptEdits',
+        effort: 'high',
+        maxTurns: '30',
+        background: 'true',
+        omitClaudeMd: 'true',
+        memory: 'project',
+        isolation: 'worktree',
+        skills: 'dataviz, review',
+        color: 'blue',
+      },
+      body: 'b',
+    })
+    expect(output).toContain("disallowedTools: 'Bash(git push *), Danger'")
+    expect(output).toContain("permissionMode: 'acceptEdits'")
+    expect(output).toContain("effort: 'high'")
+    expect(output).toContain("maxTurns: '30'")
+    expect(output).toContain("background: 'true'")
+    expect(output).toContain("omitClaudeMd: 'true'")
+    expect(output).toContain("memory: 'project'")
+    expect(output).toContain("isolation: 'worktree'")
+    expect(output).toContain("skills: 'dataviz, review'")
+    expect(output).toContain("color: 'blue'")
+  })
+
+  it('omits an owned key when its value is undefined, including on an existing line', () => {
+    const source = `---
+name: reviewer
+tools: Read, Grep
+---
+`
+    const parsed = parseFrontmatter(source)
+    const output = serializeSubagent({
+      file: 'reviewer',
+      frontmatter: { name: 'reviewer', tools: undefined },
+      body: '',
+      rawLines: parsed?.raw,
+    })
+    expect(output).toBe(`---
+name: 'reviewer'
+---
+
+`)
+  })
+
+  it('parses extended owned keys back out of a file', () => {
+    const source = `---
+name: reviewer
+background: 'true'
+maxTurns: '30'
+memory: local
+unknown-key: keep
+---
+`
+    const parsed = parseFrontmatter(source)
+    expect(parsed?.fields.background).toBe('true')
+    expect(parsed?.fields.maxTurns).toBe('30')
+    expect(parsed?.fields.memory).toBe('local')
+    expect(parsed?.raw).toContain('unknown-key: keep')
   })
 })
 

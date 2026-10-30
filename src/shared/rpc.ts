@@ -223,12 +223,26 @@ export interface ClaudeSubagent {
 
 /** Renderer-facing types for user-level agent capability management. */
 
-export interface AgentSubagentConfig {
+/** Frontmatter fields the form owns; string fields are comma-separated lists. */
+export interface AgentSubagentFields {
+  tools?: string
+  model?: string
+  disallowedTools?: string
+  permissionMode?: string
+  effort?: string
+  maxTurns?: string
+  background?: boolean
+  omitClaudeMd?: boolean
+  memory?: string
+  isolation?: string
+  skills?: string
+  color?: string
+}
+
+export interface AgentSubagentConfig extends AgentSubagentFields {
   file: string
   name?: string
   description?: string
-  tools?: string
-  model?: string
   body: string
   /** The file exists but its frontmatter is unparseable; only deletable. */
   broken?: boolean

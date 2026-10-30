@@ -1,7 +1,9 @@
 import { type AgentInfo, query } from '@anthropic-ai/claude-agent-sdk'
 
+import { type AgentSubagentFields } from '@/shared/rpc'
+
 import { getLogger } from '../../logging/runtime'
-import { type SubagentConfigFile, listSubagentConfigs } from './subagents'
+import { type SubagentConfigFile, listSubagentConfigs, subagentFieldsFrom } from './subagents'
 
 const logger = getLogger('agent-config')
 
@@ -11,13 +13,11 @@ export type AvailableSubagentSource = 'builtin' | 'plugin' | 'custom'
  * Renderer-facing shape for the available-subagent list; mirrors
  * `AgentSubagentConfig` with source classification from the SDK resolution.
  */
-export interface AvailableSubagent {
+export interface AvailableSubagent extends AgentSubagentFields {
   name: string
   description: string
-  model?: string
   source: AvailableSubagentSource
   builtin: boolean
-  tools?: string
   body: string
   /** File stem; the write target of the existing file CRUD for custom agents only. */
   file: string
@@ -37,10 +37,9 @@ function customSubagentFrom(config: SubagentConfigFile): AvailableSubagent {
   return {
     name: config.file,
     description: config.fields.description ?? '',
-    model: config.fields.model,
     source: 'custom',
     builtin: false,
-    tools: config.fields.tools,
+    ...subagentFieldsFrom(config.fields),
     body: config.body,
     file: config.file,
   }

@@ -1,12 +1,9 @@
-import { Puzzle, Sparkles, User } from 'lucide-react'
+import { ChevronRight, Puzzle, Sparkles, User } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
-import { Input } from '@/shadcn/input'
-import { Label } from '@/shadcn/label'
 import { Spinner } from '@/shadcn/spinner'
-import { Textarea } from '@/shadcn/textarea'
 import { toast } from '@/shadcn/toast'
 
 import {
@@ -14,9 +11,9 @@ import {
   deleteAgentSubagent,
   listAgentAvailableSubagents,
   listAgentSubagents,
-  saveAgentSubagent,
 } from '../../../services/claude/agent-config'
 import { AgentEmpty, DeleteButton } from './agent-shared'
+import { SubagentEditor } from './subagent-editor'
 
 const SOURCES = ['builtin', 'plugin', 'custom'] as const
 type Source = (typeof SOURCES)[number]
@@ -52,6 +49,9 @@ function SubagentRow({
 }) {
   const { t } = useTranslation()
   const isReadOnly = subagent.builtin === true
+  const modelLabel = subagent.model
+    ? subagent.model.charAt(0).toUpperCase() + subagent.model.slice(1)
+    : t('settings.agent.subagent.modelDefault')
 
   return (
     <div className="flex min-h-14 items-center gap-3 px-4 py-3">
@@ -64,99 +64,23 @@ function SubagentRow({
           {subagent.broken ? t('settings.agent.broken') : subagent.description}
         </div>
       </div>
-      <span className="shrink-0 text-sm text-foreground-subtlest">
-        {subagent.model || t('settings.agent.subagent.modelDefault')}
-      </span>
+      <span className="shrink-0 text-sm text-foreground-subtlest">{modelLabel}</span>
       {!isReadOnly ? (
-        <div className="flex shrink-0 items-center gap-1">
-          {!subagent.broken ? (
-            <Button size="sm" variant="ghost" onClick={onEdit}>
-              {t('settings.common.edit')}
-            </Button>
-          ) : null}
+        // A broken file cannot open in the editor; the row delete button is
+        // its only removal path (rpc.ts: broken files are "only deletable").
+        subagent.broken ? (
           <DeleteButton label={subagent.file} onDelete={onDelete} />
-        </div>
+        ) : (
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            aria-label={t('settings.common.edit')}
+            onClick={onEdit}
+          >
+            <ChevronRight />
+          </Button>
+        )
       ) : null}
-    </div>
-  )
-}
-
-function SubagentEditor({ draft, onClose }: { draft: AgentSubagentConfig; onClose: () => void }) {
-  const { t } = useTranslation()
-  const [form, setForm] = useState(draft)
-  const [isSaving, setIsSaving] = useState(false)
-
-  const handleSave = async () => {
-    setIsSaving(true)
-    try {
-      await saveAgentSubagent({ ...form, file: form.file || (form.name ?? '').trim() })
-      onClose()
-    } catch {
-      toast.add({ id: 'agent-subagent-save', title: t('settings.agent.saveError'), type: 'error' })
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  return (
-    <div className="flex flex-col gap-4 rounded-lg border p-4">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="agent-subagent-name">{t('settings.agent.name')}</Label>
-          <Input
-            id="agent-subagent-name"
-            value={form.name ?? ''}
-            onChange={(event) => setForm({ ...form, name: event.target.value })}
-          />
-          <p className="text-xs text-foreground-subtlest">
-            {t('settings.agent.subagent.nameHint')}
-          </p>
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="agent-subagent-model">{t('settings.agent.model')}</Label>
-          <Input
-            id="agent-subagent-model"
-            placeholder="sonnet"
-            value={form.model ?? ''}
-            onChange={(event) => setForm({ ...form, model: event.target.value })}
-          />
-        </div>
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="agent-subagent-description">{t('settings.agent.description')}</Label>
-        <Input
-          id="agent-subagent-description"
-          value={form.description ?? ''}
-          onChange={(event) => setForm({ ...form, description: event.target.value })}
-        />
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="agent-subagent-tools">{t('settings.agent.tools')}</Label>
-        <Input
-          id="agent-subagent-tools"
-          value={form.tools ?? ''}
-          onChange={(event) => setForm({ ...form, tools: event.target.value })}
-        />
-        <p className="text-xs text-foreground-subtlest">{t('settings.agent.subagent.toolsHint')}</p>
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="agent-subagent-body">{t('settings.agent.prompt')}</Label>
-        <Textarea
-          className="min-h-40 font-mono"
-          id="agent-subagent-body"
-          value={form.body}
-          onChange={(event) => setForm({ ...form, body: event.target.value })}
-        />
-      </div>
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={onClose}>
-          {t('settings.common.cancel')}
-        </Button>
-        <Button disabled={isSaving || !form.name?.trim()} onClick={() => void handleSave()}>
-          {isSaving ? <Spinner /> : null}
-          {t('settings.common.save')}
-        </Button>
-      </div>
     </div>
   )
 }
@@ -176,7 +100,7 @@ function SourceCard({
   rows: AgentSubagentConfig[]
   hiddenFile: string | null
   onEdit: (subagent: AgentSubagentConfig) => void
-  onDelete: (file: string) => void
+  onDelete: (file: string) => Promise<void> | void
 }) {
   const { t } = useTranslation()
   return (
@@ -193,8 +117,8 @@ function SourceCard({
               <SubagentRow
                 key={`${sourceOf(subagent)}:${subagent.file}`}
                 subagent={subagent}
-                onDelete={() => onDelete(subagent.file)}
                 onEdit={() => onEdit(subagent)}
+                onDelete={() => onDelete(subagent.file)}
               />
             ),
           )}
@@ -242,6 +166,21 @@ export function AgentSubagentSettings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const handleDeleteAndClose = async (file: string) => {
+    try {
+      await deleteAgentSubagent(file)
+      setDraft(null)
+      await reload()
+    } catch {
+      toast.add({
+        id: 'agent-subagent-delete',
+        title: t('settings.agent.deleteError'),
+        type: 'error',
+      })
+    }
+  }
+
+  // Row delete keeps the editor open; it never targets the file being edited.
   const handleDelete = async (file: string) => {
     try {
       await deleteAgentSubagent(file)
@@ -287,6 +226,7 @@ export function AgentSubagentSettings() {
             setDraft(null)
             void reload()
           }}
+          onDelete={handleDeleteAndClose}
         />
       ) : null}
       {isLoading ? (
@@ -300,7 +240,7 @@ export function AgentSubagentSettings() {
               rows={bySource(source)}
               hiddenFile={fileBeingEdited}
               onEdit={startEdit}
-              onDelete={(file) => void handleDelete(file)}
+              onDelete={handleDelete}
             />
           ))}
         </div>

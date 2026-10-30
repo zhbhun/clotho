@@ -38,6 +38,8 @@ import {
   deleteSubagentConfig,
   listSubagentConfigs,
   saveSubagentConfig,
+  subagentFieldsFrom,
+  subagentFieldsTo,
 } from './claude/agent-config/subagents'
 import { listAvailableSubagents } from './claude/agent-config/supported-agents'
 import {
@@ -372,8 +374,7 @@ export function createClaudeDesktopService(
               file: file.file,
               name: file.fields.name,
               description: file.fields.description,
-              tools: file.fields.tools,
-              model: file.fields.model,
+              ...subagentFieldsFrom(file.fields),
               body: file.body,
             },
       )
@@ -384,8 +385,7 @@ export function createClaudeDesktopService(
         frontmatter: {
           name: subagent.name,
           description: subagent.description,
-          tools: subagent.tools,
-          model: subagent.model,
+          ...subagentFieldsTo(subagent),
         },
         body: subagent.body,
       }),

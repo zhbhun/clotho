@@ -145,7 +145,7 @@ describe('AgentSubagentSettings', () => {
     expect(plugin.getByText('暂无内容')).toBeInTheDocument()
   })
 
-  it('edits a custom subagent through the RPC', async () => {
+  it('edits a custom subagent through the chevron and the RPC', async () => {
     await setup([CUSTOM])
     mock.saveAgentSubagent.mockResolvedValue(undefined)
     const user = userEvent.setup()
@@ -161,18 +161,43 @@ describe('AgentSubagentSettings', () => {
     )
   })
 
-  it('deletes a custom subagent after confirmation', async () => {
+  it('deletes a custom subagent from the editor after confirmation', async () => {
     await setup([{ ...CUSTOM, file: 'old', name: 'old', model: undefined }])
     mock.deleteAgentSubagent.mockResolvedValue(undefined)
     const user = userEvent.setup()
 
-    await user.click(within(getCard('custom')).getByRole('button', { name: 'old' }))
+    // The row has no delete action; open the editor via the chevron.
+    expect(
+      within(getCard('custom')).queryByRole('button', { name: '删除' }),
+    ).not.toBeInTheDocument()
+    await user.click(within(getCard('custom')).getByRole('button', { name: '编辑' }))
+    await user.click(await screen.findByRole('button', { name: '删除' }))
+    // Confirm inside the dialog.
     await user.click(await screen.findByRole('button', { name: '删除' }))
 
     await waitFor(() => expect(mock.deleteAgentSubagent).toHaveBeenCalledWith('old'))
   })
 
-  it('shows a default tag when the SDK reports no model', async () => {
+  it('deletes a broken subagent from its row without opening the editor', async () => {
+    await setup([{ ...CUSTOM, broken: true }])
+    mock.deleteAgentSubagent.mockResolvedValue(undefined)
+    const user = userEvent.setup()
+
+    // The broken row shows the broken hint and a row delete button, no chevron.
+    expect(
+      within(getCard('custom')).getByText('文件无法解析，请删除或在磁盘上修复。'),
+    ).toBeInTheDocument()
+    expect(
+      within(getCard('custom')).queryByRole('button', { name: '编辑' }),
+    ).not.toBeInTheDocument()
+    await user.click(within(getCard('custom')).getByRole('button', { name: 'reviewer' }))
+    // Confirm inside the dialog.
+    await user.click(await screen.findByRole('button', { name: '删除' }))
+
+    await waitFor(() => expect(mock.deleteAgentSubagent).toHaveBeenCalledWith('reviewer'))
+  })
+
+  it('shows the capitalized model label or the default tag', async () => {
     await setup([{ ...BUILTIN, model: undefined }])
 
     const row = screen.getByText('Explore').closest('div[class*="items-center"]') as HTMLElement
@@ -206,6 +231,72 @@ describe('AgentSubagentSettings', () => {
     await waitFor(() =>
       expect(mock.saveAgentSubagent).toHaveBeenCalledWith(
         expect.objectContaining({ file: 'my-agent', name: 'my-agent' }),
+      ),
+    )
+  })
+
+  it('strips newlines from the description', async () => {
+    await setup([CUSTOM])
+    const user = userEvent.setup()
+
+    await user.click(within(getCard('custom')).getByRole('button', { name: '编辑' }))
+    const description = screen.getByLabelText('描述')
+    await user.type(description, '{Enter}')
+    expect(description).toHaveValue('Reviews code')
+  })
+
+  it('opens the advanced section expanded with a set count for a configured agent', async () => {
+    await setup([{ ...CUSTOM, permissionMode: 'acceptEdits', background: true }])
+    const user = userEvent.setup()
+
+    await user.click(within(getCard('custom')).getByRole('button', { name: '编辑' }))
+    // Header shows the count of set advanced fields; the body is expanded.
+    // CUSTOM already sets model, plus permissionMode and background here = 3.
+    expect(screen.getByRole('button', { name: /高级选项\s*已设 3 项/ })).toBeInTheDocument()
+    expect(screen.getByLabelText('权限模式')).toBeInTheDocument()
+  })
+
+  it('starts the advanced section collapsed for a plain agent', async () => {
+    await setup([{ ...CUSTOM, model: undefined }])
+    const user = userEvent.setup()
+
+    await user.click(within(getCard('custom')).getByRole('button', { name: '编辑' }))
+    expect(screen.getByRole('button', { name: /高级选项\s*已设 0 项/ })).toBeInTheDocument()
+    expect(screen.queryByLabelText('权限模式')).not.toBeInTheDocument()
+  })
+
+  it('keeps a hand-written unknown model id selectable in the model select', async () => {
+    await setup([{ ...CUSTOM, model: 'claude-opus-5-5' }])
+    const user = userEvent.setup()
+
+    await user.click(within(getCard('custom')).getByRole('button', { name: '编辑' }))
+    // The select shows the raw id as its value; saving it back preserves it.
+    await user.click(screen.getByRole('button', { name: '保存' }))
+
+    await waitFor(() =>
+      expect(mock.saveAgentSubagent).toHaveBeenCalledWith(
+        expect.objectContaining({ file: 'reviewer', model: 'claude-opus-5-5' }),
+      ),
+    )
+  })
+
+  it('omits the tools key in all-tools mode and writes checked names in custom mode', async () => {
+    await setup([CUSTOM])
+    mock.saveAgentSubagent.mockResolvedValue(undefined)
+    const user = userEvent.setup()
+
+    await user.click(within(getCard('custom')).getByRole('button', { name: '编辑' }))
+    // CUSTOM sets model, so the advanced section starts expanded.
+
+    // Switch to all tools: no tools field.
+    const toolsTrigger = screen.getByLabelText('工具')
+    await user.click(toolsTrigger)
+    await user.click(await screen.findByRole('option', { name: '所有工具' }))
+    await user.click(screen.getByRole('button', { name: '保存' }))
+
+    await waitFor(() =>
+      expect(mock.saveAgentSubagent).toHaveBeenCalledWith(
+        expect.objectContaining({ file: 'reviewer', tools: undefined }),
       ),
     )
   })

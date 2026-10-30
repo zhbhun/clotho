@@ -80,15 +80,51 @@ async function requestToggle(kind: 'plugin' | 'skill', name: string, enabled: bo
   return requestFromDesktop('agentSetCapabilityToggle', { kind, name, enabled })
 }
 
+/** Shared delete-confirmation dialog: title, copy, and confirm/cancel actions. */
+function DeleteConfirmDialog({
+  open,
+  onOpenChange,
+  onDelete,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onDelete: () => Promise<void> | void
+}) {
+  const { t } = useTranslation()
+  return (
+    <AppAlertDialog onOpenChange={onOpenChange} open={open}>
+      <AppAlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t('settings.agent.deleteConfirmTitle')}</AlertDialogTitle>
+          <AlertDialogDescription>{t('settings.agent.confirmDelete')}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{t('settings.common.cancel')}</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => {
+              onOpenChange(false)
+              void onDelete()
+            }}
+          >
+            {t('settings.common.delete')}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AppAlertDialogContent>
+    </AppAlertDialog>
+  )
+}
+
 /** Delete button with a confirm dialog; runs `onDelete` only on confirm. */
 export function DeleteButton({
   label,
   onDelete,
+  children,
 }: {
   label: string
   onDelete: () => Promise<void> | void
+  /** Render text inside the trigger instead of a trash icon. */
+  children?: ReactNode
 }) {
-  const { t } = useTranslation()
   const [confirmOpen, setConfirmOpen] = useState(false)
 
   return (
@@ -96,31 +132,43 @@ export function DeleteButton({
       <Button
         aria-label={label}
         className="text-foreground-subtlest"
-        size="icon-sm"
+        size={children ? 'sm' : 'icon-sm'}
+        variant="ghost"
+        onClick={() => setConfirmOpen(true)}
+      >
+        {children ?? <Trash2 />}
+      </Button>
+      <DeleteConfirmDialog onDelete={onDelete} onOpenChange={setConfirmOpen} open={confirmOpen} />
+    </>
+  )
+}
+
+/**
+ * Danger-styled delete trigger + shared confirm dialog, for editor footers.
+ * Same dialog contract as `DeleteButton`; only the trigger styling differs.
+ */
+export function DeleteConfirmButton({
+  label,
+  onDelete,
+}: {
+  label: string
+  onDelete: () => Promise<void> | void
+}) {
+  const [confirmOpen, setConfirmOpen] = useState(false)
+
+  return (
+    <>
+      <Button
+        aria-label={label}
+        className="text-destructive"
+        size="sm"
         variant="ghost"
         onClick={() => setConfirmOpen(true)}
       >
         <Trash2 />
+        {label}
       </Button>
-      <AppAlertDialog onOpenChange={setConfirmOpen} open={confirmOpen}>
-        <AppAlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('settings.agent.deleteConfirmTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>{t('settings.agent.confirmDelete')}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('settings.common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                setConfirmOpen(false)
-                void onDelete()
-              }}
-            >
-              {t('settings.common.delete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AppAlertDialogContent>
-      </AppAlertDialog>
+      <DeleteConfirmDialog onDelete={onDelete} onOpenChange={setConfirmOpen} open={confirmOpen} />
     </>
   )
 }

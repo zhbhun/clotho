@@ -1,6 +1,8 @@
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
+import { type AgentSubagentFields } from '@/shared/rpc'
+
 import { getLogger } from '../../logging/runtime'
 
 const logger = getLogger('agent-config')
@@ -11,7 +13,71 @@ export interface SubagentFrontmatter {
   description?: string
   tools?: string
   model?: string
+  disallowedTools?: string
+  permissionMode?: string
+  effort?: string
+  maxTurns?: string
+  background?: string
+  omitClaudeMd?: string
+  memory?: string
+  isolation?: string
+  skills?: string
+  color?: string
 }
+
+/** Decode file strings to the renderer contract; booleans are `'true'`/absent. */
+export function subagentFieldsFrom(frontmatter: SubagentFrontmatter): AgentSubagentFields {
+  return {
+    tools: frontmatter.tools,
+    model: frontmatter.model,
+    disallowedTools: frontmatter.disallowedTools,
+    permissionMode: frontmatter.permissionMode,
+    effort: frontmatter.effort,
+    maxTurns: frontmatter.maxTurns,
+    background: frontmatter.background === 'true' ? true : undefined,
+    omitClaudeMd: frontmatter.omitClaudeMd === 'true' ? true : undefined,
+    memory: frontmatter.memory,
+    isolation: frontmatter.isolation,
+    skills: frontmatter.skills,
+    color: frontmatter.color,
+  }
+}
+
+/** Encode the renderer contract back to file strings; booleans become `'true'`. */
+export function subagentFieldsTo(fields: AgentSubagentFields): SubagentFrontmatter {
+  return {
+    tools: fields.tools,
+    model: fields.model,
+    disallowedTools: fields.disallowedTools,
+    permissionMode: fields.permissionMode,
+    effort: fields.effort,
+    maxTurns: fields.maxTurns,
+    background: fields.background === undefined ? undefined : String(fields.background),
+    omitClaudeMd: fields.omitClaudeMd === undefined ? undefined : String(fields.omitClaudeMd),
+    memory: fields.memory,
+    isolation: fields.isolation,
+    skills: fields.skills,
+    color: fields.color,
+  }
+}
+
+/** Frontmatter keys the editor writes; every other line round-trips verbatim. */
+const OWNED_KEYS = [
+  'name',
+  'description',
+  'tools',
+  'model',
+  'disallowedTools',
+  'permissionMode',
+  'effort',
+  'maxTurns',
+  'background',
+  'omitClaudeMd',
+  'memory',
+  'isolation',
+  'skills',
+  'color',
+] as const
 
 export interface SubagentConfigFile {
   /** File stem; also the write target for save/delete. */
@@ -53,10 +119,9 @@ export function parseFrontmatter(
     if (!line.trim()) continue
     const parsed = parseFrontmatterLine(line)
     if (!parsed) continue
-    if (parsed.key === 'name') fields.name = unquote(parsed.value)
-    else if (parsed.key === 'description') fields.description = unquote(parsed.value)
-    else if (parsed.key === 'tools') fields.tools = unquote(parsed.value)
-    else if (parsed.key === 'model') fields.model = unquote(parsed.value)
+    if ((OWNED_KEYS as readonly string[]).includes(parsed.key)) {
+      fields[parsed.key as keyof SubagentFrontmatter] = unquote(parsed.value)
+    }
   }
   return { fields, raw: rawLines, body: source.slice(match[0].length).replace(/^\r?\n/, '') }
 }
@@ -80,7 +145,7 @@ export function serializeSubagent(config: {
   /** Previously parsed raw frontmatter lines; unknown keys are preserved. */
   rawLines?: string[]
 }): string {
-  const owned = new Set(['name', 'description', 'tools', 'model'])
+  const owned = new Set<string>(OWNED_KEYS)
   const lines: string[] = []
   const written = new Set<string>()
   for (const line of config.rawLines ?? []) {
@@ -94,7 +159,7 @@ export function serializeSubagent(config: {
       lines.push(line)
     }
   }
-  for (const key of ['name', 'description', 'tools', 'model'] as const) {
+  for (const key of OWNED_KEYS) {
     if (written.has(key) || config.frontmatter[key] === undefined) continue
     lines.push(`${key}: ${quote(config.frontmatter[key])}`)
   }

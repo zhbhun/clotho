@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE: subagent form advanced fields</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #171717;
+    --muted: #737373;
+    --border: #e5e5e5;
+    --accent: #171717;
+    --card: #ffffff;
+    --subtle: #fafafa;
+    --danger: #dc2626;
+    --dot: #e03131;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #282a36;
+      --fg: #f8f8f2;
+      --muted: #8b8fa3;
+      --border: #3a3d4d;
+      --accent: #ff79c6;
+      --card: #2e3041;
+      --subtle: #242634;
+      --danger: #ff5555;
+      --dot: #ff5555;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .app { display: flex; height: 100vh; }
+  .sidebar {
+    width: 208px;
+    border-right: 1px solid var(--border);
+    padding: 12px 8px;
+    flex-shrink: 0;
+  }
+  .sidebar h2 { font-size: 11px; font-weight: 500; color: var(--muted); padding: 8px 8px 4px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px; border-radius: 6px; font-size: 13px;
+    color: var(--fg); cursor: default;
+  }
+  .nav-item.active { background: var(--subtle); font-weight: 500; }
+  .nav-item .icon { width: 14px; height: 14px; opacity: .6; flex-shrink: 0; }
+  .content { flex: 1; overflow-y: auto; padding: 24px 32px; max-width: 760px; }
+
+  .proto-banner {
+    background: var(--subtle); border: 1px dashed var(--border);
+    border-radius: 8px; padding: 8px 12px; font-size: 12px; color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .label { font-size: 13px; font-weight: 500; display: block; margin-bottom: 5px; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .input, .picker {
+    width: 100%;
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 6px 10px; font: inherit; font-size: 13px;
+    background: var(--bg); color: var(--fg);
+  }
+  .input::placeholder { color: var(--muted); opacity: .8; }
+  .picker {
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: default; min-height: 32px; position: relative;
+  }
+  .picker.placeholder { color: var(--muted); }
+  .picker .chev { opacity: .5; font-size: 11px; }
+
+  .menu {
+    display: none;
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    padding: 4px; z-index: 30; max-height: 260px; overflow-y: auto;
+  }
+  .menu.open { display: block; }
+  .menu .opt {
+    padding: 6px 10px; border-radius: 6px; font-size: 13px;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  }
+  .menu .opt:hover { background: var(--subtle); }
+  .menu .opt .tick { visibility: hidden; font-size: 11px; }
+  .menu .opt.selected .tick { visibility: visible; }
+
+  textarea.input { min-height: 140px; font-family: ui-monospace, monospace; resize: vertical; }
+  textarea.desc { min-height: 56px; font-family: inherit; resize: none; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid var(--border); border-radius: 6px; background: var(--bg);
+    font: inherit; font-size: 13px; padding: 5px 14px; color: var(--fg); cursor: default;
+  }
+  .btn.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+
+  .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .switch {
+    width: 32px; height: 18px; border-radius: 999px;
+    background: var(--border); position: relative; flex-shrink: 0;
+  }
+  .switch::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 14px; height: 14px; border-radius: 50%; background: var(--bg);
+    box-shadow: 0 1px 2px rgba(0,0,0,.2);
+  }
+  .switch.on { background: var(--accent); }
+  .switch.on::after { left: 16px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  h1 { font-size: 17px; font-weight: 600; margin-bottom: 14px; }
+
+  /* ===== list view ===== */
+  .list-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .list-head h2 { font-size: 14px; font-weight: 500; }
+  .list-head .count { color: var(--muted); font-weight: 400; }
+  .src-label { font-size: 13px; color: var(--muted); margin: 20px 0 8px; }
+  .src-label:first-of-type { margin-top: 0; }
+  .card { border: 1px solid var(--border); border-radius: 10px; background: var(--card); }
+  .item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+  }
+  .item:last-child { border-bottom: none; }
+  .item .badge {
+    display: flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; border: 1px solid var(--border); border-radius: 6px;
+    flex-shrink: 0; opacity: .8; color: var(--fg);
+  }
+  .item .badge.claude { color: #d97757; }
+  @media (prefers-color-scheme: dark) { .item .badge.claude { color: #e8825f; } }
+  .item .meta { min-width: 0; flex: 1; }
+  .item .name { font-size: 14px; font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item .desc { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item .model { font-size: 13px; color: var(--muted); flex-shrink: 0; }
+  .item .go {
+    border: none; background: none; color: var(--muted); font-size: 14px;
+    cursor: pointer; padding: 4px 6px; flex-shrink: 0;
+  }
+  .item .go:hover { color: var(--fg); }
+
+  /* ===== editor ===== */
+  .editor { border: 1px solid var(--border); border-radius: 10px; padding: 16px; background: var(--card); display: flex; flex-direction: column; gap: 14px; }
+  .editor-foot { display: flex; justify-content: space-between; gap: 8px; }
+  .editor-foot .right { display: flex; gap: 8px; }
+  .back {
+    border: none; background: none; font: inherit; font-size: 13px;
+    color: var(--muted); cursor: pointer; padding: 0; margin-bottom: 10px;
+  }
+  .back:hover { color: var(--fg); }
+
+  .collap-head {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 500; cursor: default;
+    padding: 4px 0; user-select: none;
+  }
+  .collap-head .chev { transition: transform .15s; opacity: .6; font-size: 11px; display: inline-block; }
+  .collap.open .collap-head .chev { transform: rotate(90deg); }
+  .collap-body { display: none; flex-direction: column; gap: 14px; padding-top: 12px; }
+  .collap.open .collap-body { display: flex; }
+  .collap-count { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 4px; }
+
+  /* ===== tools grid ===== */
+  .tools-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
+    border: 1px solid var(--border); border-radius: 8px; padding: 6px;
+  }
+  .tool {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; border-radius: 6px; font-size: 13px;
+  }
+  .tool:hover { background: var(--subtle); }
+  .cb {
+    width: 15px; height: 15px; border: 1px solid var(--border); border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; flex-shrink: 0; background: var(--bg); color: var(--bg);
+  }
+  .cb.checked { background: var(--fg); border-color: var(--fg); }
+</style>
+</head>
+<body>
+
+<!-- PROTOTYPE (throwaway): subagent list row + editor (variant A adopted).
+     Settled so far: A-based editor; delete in detail footer; English UI;
+     name hint in placeholder; description single-line textarea;
+     tools as mode picker + checkbox grid; isolation as switch; memory plain enum;
+     color fixed 8; collapse arrow right-by-default, down when open. -->
+
+<div class="app">
+  <nav class="sidebar">
+    <div class="nav-item"><span class="icon">⚙</span>General</div>
+    <div class="nav-item"><span class="icon">📚</span>Models</div>
+    <div class="nav-item"><span class="icon">🎨</span>Appearance</div>
+    <h2>Agent capabilities</h2>
+    <div class="nav-item active"><span class="icon">🤖</span>Subagents</div>
+    <div class="nav-item"><span class="icon">🧩</span>Plugins</div>
+    <div class="nav-item"><span class="icon">🖥</span>MCP servers</div>
+    <div class="nav-item"><span class="icon">✨</span>Skills</div>
+    <div class="nav-item"><span class="icon">🪝</span>Hooks</div>
+  </nav>
+
+  <main class="content">
+    <div class="proto-banner">PROTOTYPE (throwaway) · variant A adopted · tools grid + switches this round</div>
+
+    <!-- ================= LIST VIEW ================= -->
+    <section class="view" id="view-list">
+      <h1>Subagents</h1>
+      <div class="list-head">
+        <h2>Installed <span class="count">6 items</span></h2>
+        <button class="btn" onclick="show('editor')">Add</button>
+      </div>
+
+      <div class="src-label">Built-in</div>
+      <div class="card">
+        <div class="item">
+          <span class="badge claude">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden><path d="M12 2l1.8 5.6a2 2 0 0 0 1.3 1.3L20.7 10.7a1.2 1.2 0 0 1 0 2.6l-5.6 1.8a2 2 0 0 0-1.3 1.3L12 22l-1.8-5.6a2 2 0 0 0-1.3-1.3L3.3 13.3a1.2 1.2 0 0 1 0-2.6l5.6-1.8a2 2 0 0 0 1.3-1.3L12 2z"/></svg>
+          </span>
+          <div class="meta">
+            <div class="name">general-purpose</div>
+            <div class="desc">General-purpose agent for researching complex questions</div>
+          </div>
+        </div>
+        <div class="item">
+          <span class="badge claude">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden><path d="M12 2l1.8 5.6a2 2 0 0 0 1.3 1.3L20.7 10.7a1.2 1.2 0 0 1 0 2.6l-5.6 1.8a2 2 0 0 0-1.3 1.3L12 22l-1.8-5.6a2 2 0 0 0-1.3-1.3L3.3 13.3a1.2 1.2 0 0 1 0-2.6l5.6-1.8a2 2 0 0 0 1.3-1.3L12 2z"/></svg>
+          </span>
+          <div class="meta">
+            <div class="name">Explore</div>
+            <div class="desc">Read-only search agent for broad fan-out searches</div>
+          </div>
+        </div>
+        <div class="item">
+          <span class="badge claude">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden><path d="M12 2l1.8 5.6a2 2 0 0 0 1.3 1.3L20.7 10.7a1.2 1.2 0 0 1 0 2.6l-5.6 1.8a2 2 0 0 0-1.3 1.3L12 22l-1.8-5.6a2 2 0 0 0-1.3-1.3L3.3 13.3a1.2 1.2 0 0 1 0-2.6l5.6-1.8a2 2 0 0 0 1.3-1.3L12 2z"/></svg>
+          </span>
+          <div class="meta">
+            <div class="name">Plan</div>
+            <div class="desc">Software architect agent for designing implementation plans</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="src-label">Plugin</div>
+      <div class="card">
+        <div class="item">
+          <span class="badge">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden><path d="M19.439 7.85c-.049.322.059.648.289.878l1.568 1.568c.47.47.706 1.087.706 1.704s-.235 1.233-.706 1.704l-1.611 1.611a.98.98 0 0 1-.837.276c-.47-.07-.802-.48-.968-.925a2.501 2.501 0 1 0-3.214 3.214c.446.166.855.497.925.968a.979.979 0 0 1-.276.837l-1.61 1.61a2.404 2.404 0 0 1-1.705.707 2.402 2.402 0 0 1-1.704-.706l-1.568-1.568a1.026 1.026 0 0 0-.877-.29c-.493.074-.84.504-1.02.968a2.5 2.5 0 1 1-3.237-3.237c.464-.18.894-.527.967-1.02a1.026 1.026 0 0 0-.289-.877l-1.568-1.568A2.402 2.402 0 0 1 1.998 12c0-.617.236-1.234.706-1.704L4.23 8.77c.24-.24.581-.353.917-.303.515.077.877.528 1.073 1.01a2.5 2.5 0 1 0 3.259-3.259c-.482-.196-.933-.558-1.01-1.073-.05-.336.062-.676.303-.917l1.525-1.525A2.402 2.402 0 0 1 12 1.998c.617 0 1.234.236 1.704.706l1.568 1.568c.23.23.556.338.877.29.493-.074.84-.504 1.02-.968a2.5 2.5 0 1 1 3.237 3.237c-.464.18-.894.527-.967 1.02Z"/></svg>
+          </span>
+          <div class="meta">
+            <div class="name">cavecrew-investigator</div>
+            <div class="desc">Read-only code locator · caveman:cavecrew</div>
+          </div>
+          <span class="model">haiku</span>
+        </div>
+      </div>
+
+      <div class="src-label">Custom</div>
+      <div class="card">
+        <div class="item">
+          <span class="badge">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </span>
+          <div class="meta">
+            <div class="name">code-reviewer</div>
+            <div class="desc">Reviews code changes and suggests improvements</div>
+          </div>
+          <span class="model">sonnet</span>
+          <button class="go" title="Open details" onclick="show('editor')">›</button>
+        </div>
+        <div class="item">
+          <span class="badge">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </span>
+          <div class="meta">
+            <div class="name">docs-writer</div>
+            <div class="desc">Keeps project docs up to date</div>
+          </div>
+          <button class="go" title="Open details" onclick="show('editor')">›</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= EDITOR ================= -->
+    <section class="view" id="view-editor">
+      <button class="back" onclick="show('list')">‹ Back to list</button>
+      <h1>Edit subagent</h1>
+      <div class="editor">
+        <div>
+          <label class="label">Name</label>
+          <input class="input" value="code-reviewer" placeholder="Unique, also the filename, no ':' — e.g. code-reviewer">
+        </div>
+
+        <div>
+          <label class="label">Description</label>
+          <textarea class="input desc" id="desc" rows="2" placeholder="When to delegate to this agent">Reviews code changes and suggests improvements</textarea>
+        </div>
+
+        <div class="collap open" id="collap-main">
+          <div class="collap-head" onclick="toggleCollap('collap-main')">
+            <span class="chev">▶</span> Advanced options<span class="collap-count">3 set</span>
+          </div>
+          <div class="collap-body">
+            <div class="grid2">
+              <div>
+                <label class="label">Model</label>
+                <div class="picker" data-menu="menu-model"><span data-value="sonnet">sonnet</span><span class="chev">▾</span></div>
+              </div>
+              <div>
+                <label class="label">Permission mode</label>
+                <div class="picker placeholder" data-menu="menu-perm"><span data-value="">inherit</span><span class="chev">▾</span></div>
+              </div>
+            </div>
+            <div class="grid2">
+              <div>
+                <label class="label">Reasoning effort</label>
+                <div class="picker placeholder" data-menu="menu-effort"><span data-value="">inherit</span><span class="chev">▾</span></div>
+              </div>
+              <div>
+                <label class="label">Max turns</label>
+                <input class="input" type="number" min="1" placeholder="Unlimited" value="">
+              </div>
+            </div>
+
+            <div>
+              <label class="label">Tools</label>
+              <div style="display:flex;align-items:center;gap:12px">
+                <div class="picker" data-menu="menu-toolsmode" style="width:160px"><span data-value="custom">custom</span><span class="chev">▾</span></div>
+                <span class="hint" style="margin:0">Controls which tools this subagent may call.</span>
+              </div>
+              <div id="tools-custom" style="margin-top:8px">
+                <div class="tools-grid" id="tools-grid"></div>
+              </div>
+            </div>
+
+            <div>
+              <label class="label">Skills</label>
+              <input class="input" value="" placeholder="Comma-separated skill names to preload, e.g. dataviz, review">
+            </div>
+
+            <div class="grid2">
+              <div class="switch-row">
+                <div>
+                  <div class="label" style="margin:0">Run in background</div>
+                  <div class="hint">Always run as a background task</div>
+                </div>
+                <div class="switch" onclick="this.classList.toggle('on')"></div>
+              </div>
+              <div class="switch-row">
+                <div>
+                  <div class="label" style="margin:0">Skip CLAUDE.md</div>
+                  <div class="hint">Do not load instruction files</div>
+                </div>
+                <div class="switch on" onclick="this.classList.toggle('on')"></div>
+              </div>
+            </div>
+
+            <div class="grid2">
+              <div>
+                <label class="label">Memory</label>
+                <div class="picker placeholder" data-menu="menu-memory"><span data-value="">none</span><span class="chev">▾</span></div>
+              </div>
+              <div>
+                <label class="label">Color</label>
+                <div class="picker placeholder" data-menu="menu-color"><span data-value="">none</span><span class="chev">▾</span></div>
+              </div>
+            </div>
+
+            <div class="switch-row">
+              <div>
+                <div class="label" style="margin:0">File isolation</div>
+                <div class="hint">Run in a temp git worktree</div>
+              </div>
+              <div class="switch" onclick="this.classList.toggle('on')"></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="label">System prompt</label>
+          <textarea class="input">You are a code review specialist...</textarea>
+        </div>
+
+        <div class="editor-foot">
+          <button class="btn danger" onclick="show('list')">Delete</button>
+          <div class="right">
+            <button class="btn" onclick="show('list')">Cancel</button>
+            <button class="btn primary" onclick="show('list')">Save</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  function show(v) {
+    for (const id of ['list', 'editor']) {
+      document.getElementById('view-' + id).classList.toggle('active', id === v)
+    }
+    const url = new URL(location)
+    url.searchParams.set('view', v)
+    history.replaceState(null, '', url)
+  }
+  function toggleCollap(id) {
+    document.getElementById(id).classList.toggle('open')
+  }
+
+  // ===== dropdowns =====
+  const MENUS = {
+    'menu-model': [
+      ['', 'default'],
+      ['sonnet', 'sonnet'],
+      ['opus', 'opus'],
+      ['haiku', 'haiku'],
+      ['inherit', 'inherit'],
+    ],
+    'menu-perm': [
+      ['', 'inherit'],
+      ['default', 'default'],
+      ['acceptEdits', 'acceptEdits'],
+      ['auto', 'auto'],
+      ['dontAsk', 'dontAsk'],
+      ['bypassPermissions', 'bypassPermissions'],
+      ['plan', 'plan'],
+    ],
+    'menu-effort': [
+      ['', 'inherit'],
+      ['low', 'low'],
+      ['medium', 'medium'],
+      ['high', 'high'],
+      ['xhigh', 'xhigh'],
+      ['max', 'max'],
+    ],
+    'menu-toolsmode': [
+      ['all', 'all tools'],
+      ['custom', 'custom'],
+    ],
+    'menu-memory': [
+      ['', 'none'],
+      ['user', 'user'],
+      ['project', 'project'],
+      ['local', 'local'],
+    ],
+    'menu-color': [
+      ['', 'none'],
+      ['red', 'red'], ['blue', 'blue'], ['green', 'green'], ['yellow', 'yellow'],
+      ['purple', 'purple'], ['orange', 'orange'], ['pink', 'pink'], ['cyan', 'cyan'],
+    ],
+  }
+
+  for (const [menuId, options] of Object.entries(MENUS)) {
+    const picker = document.querySelector(`[data-menu="${menuId}"]`)
+    const menu = document.createElement('div')
+    menu.className = 'menu'
+    menu.id = menuId
+    for (const [value, label] of options) {
+      const opt = document.createElement('div')
+      opt.className = 'opt'
+      opt.dataset.value = value
+      opt.innerHTML = `<span>${label}</span><span class="tick">✓</span>`
+      opt.onclick = () => {
+        const labelEl = picker.querySelector('[data-value]')
+        labelEl.dataset.value = value
+        labelEl.textContent = label
+        picker.classList.toggle('placeholder', value === '')
+        for (const o of menu.querySelectorAll('.opt')) {
+          o.classList.toggle('selected', o === opt)
+        }
+        menu.classList.remove('open')
+        if (menuId === 'menu-toolsmode') {
+          document.getElementById('tools-custom').style.display = value === 'custom' ? 'block' : 'none'
+        }
+      }
+      menu.appendChild(opt)
+    }
+    picker.appendChild(menu)
+    picker.onclick = (e) => {
+      if (e.target.closest('.menu')) return
+      for (const m of document.querySelectorAll('.menu')) {
+        if (m !== menu) m.classList.remove('open')
+      }
+      menu.classList.toggle('open')
+    }
+  }
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.picker')) {
+      for (const m of document.querySelectorAll('.menu')) m.classList.remove('open')
+    }
+  })
+
+  // ===== tools grid =====
+  const TOOLS = ['Read', 'Grep', 'Glob', 'Bash', 'Edit', 'Write', 'WebFetch', 'WebSearch', 'TodoWrite']
+  const grid = document.getElementById('tools-grid')
+  for (const name of TOOLS) {
+    const cell = document.createElement('div')
+    cell.className = 'tool'
+    cell.innerHTML = `<span class="cb checked">✓</span><span>${name}</span>`
+    cell.onclick = () => {
+      cell.querySelector('.cb').classList.toggle('checked')
+    }
+    grid.appendChild(cell)
+  }
+
+  // description: single line only
+  const desc = document.getElementById('desc')
+  desc.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') e.preventDefault()
+  })
+  desc.addEventListener('input', () => {
+    if (desc.value.includes('\n')) desc.value = desc.value.replace(/\n/g, '')
+  })
+
+  const fromUrl = new URLSearchParams(location.search).get('view')
+  show(fromUrl === 'editor' ? 'editor' : 'list')
+</script>
+</body>
+</html>

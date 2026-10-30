@@ -3,11 +3,27 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { classifyAgent, resolveAvailableSubagents } from './supported-agents'
 
-vi.mock('./subagents', () => ({
+vi.mock('./subagents', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./subagents')>()),
   listSubagentConfigs: vi.fn(async () => [
     {
       file: 'reviewer',
-      fields: { name: 'reviewer', description: 'Reviews code', tools: 'Read', model: 'haiku' },
+      fields: {
+        name: 'reviewer',
+        description: 'Reviews code',
+        tools: 'Read',
+        model: 'haiku',
+        disallowedTools: 'Bash(git push *)',
+        permissionMode: 'acceptEdits',
+        effort: 'high',
+        maxTurns: '30',
+        background: 'true',
+        omitClaudeMd: 'true',
+        memory: 'project',
+        isolation: 'worktree',
+        skills: 'dataviz',
+        color: 'blue',
+      },
       raw: [],
       body: 'You are a reviewer.',
     },
@@ -65,6 +81,16 @@ describe('resolveAvailableSubagents', () => {
         source: 'custom',
         builtin: false,
         tools: 'Read',
+        disallowedTools: 'Bash(git push *)',
+        permissionMode: 'acceptEdits',
+        effort: 'high',
+        maxTurns: '30',
+        background: true,
+        omitClaudeMd: true,
+        memory: 'project',
+        isolation: 'worktree',
+        skills: 'dataviz',
+        color: 'blue',
         body: 'You are a reviewer.',
         file: 'reviewer',
       },
