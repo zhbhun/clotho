@@ -1,6 +1,6 @@
 import type { TFunction } from 'i18next'
 import { ChevronDown } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
@@ -23,7 +23,8 @@ import { cn } from '@/shadcn/utils'
 
 import { type AgentSubagentConfig, saveAgentSubagent } from '../../../services/claude/agent-config'
 import { DeleteConfirmButton, capitalize } from './agent-shared'
-import { useSubagentDetailStore } from './subagent-detail-store'
+import { useSettingsDetailStore } from './settings-detail-store'
+import { useDetailDirty } from './use-detail-dirty'
 
 /** Common tools shown as checkboxes; other entries in `tools` pass through on save. */
 const GRID_TOOLS = [
@@ -402,18 +403,18 @@ export function SubagentEditor({
   const [form, setForm] = useState(draft)
   const [isSaving, setIsSaving] = useState(false)
   const isNew = draft.file === ''
-  const setDirty = useSubagentDetailStore((state) => state.setDirty)
-  const requestLeave = useSubagentDetailStore((state) => state.requestLeave)
-  const backToList = useSubagentDetailStore((state) => state.backToList)
+  const requestLeave = useSettingsDetailStore((state) => state.requestLeave)
+  const backToList = useSettingsDetailStore((state) => state.backToList)
+  const setLeaf = useSettingsDetailStore((state) => state.setLeaf)
 
   // Dirty = current form differs from the snapshot taken at mount.
-  const baselineRef = useRef(JSON.stringify(draft))
-  useEffect(() => {
-    setDirty(JSON.stringify(form) !== baselineRef.current)
-  }, [form, setDirty])
-  useEffect(() => () => setDirty(false), [setDirty])
+  useDetailDirty(form)
 
   const title = isNew ? t('settings.agent.subagent.new') : draft.name || draft.file
+
+  // The breadcrumb leaf is fixed at open time; the store already holds it
+  // from openDetail, so no per-keystroke sync here.
+  useEffect(() => () => setLeaf(''), [setLeaf])
 
   const handleSave = async () => {
     setIsSaving(true)

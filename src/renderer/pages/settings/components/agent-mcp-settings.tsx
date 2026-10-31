@@ -17,7 +17,17 @@ import {
   saveAgentMcpServer,
   setAgentCapabilityToggle,
 } from '../../../services/claude/agent-config'
+import { AgentDetailPage } from './agent-detail-page'
 import { AgentEmpty, AgentSection, DeleteButton } from './agent-shared'
+import { useSettingsDetailStore } from './settings-detail-store'
+
+const MCP_CATEGORY = 'agent-mcp' as const
+
+/** True when the shared detail view is open for the MCP category. */
+function useMcpDetailOpen() {
+  const view = useSettingsDetailStore((state) => state.view)
+  return view.kind === 'detail' && view.categoryId === MCP_CATEGORY
+}
 
 const SERVER_TYPES = ['stdio', 'http', 'sse'] as const
 
@@ -39,14 +49,7 @@ function stringifyKeyValueBlock(record: Record<string, string> | undefined): str
     .join('\n')
 }
 
-function McpEditor({
-  draft,
-  onClose,
-}: {
-  draft: AgentMcpServerConfig
-  previousName: string | null
-  onClose: () => void
-}) {
+function McpEditor({ draft, onClose }: { draft: AgentMcpServerConfig; onClose: () => void }) {
   const { t } = useTranslation()
   const [form, setForm] = useState(draft)
   const [envText, setEnvText] = useState(stringifyKeyValueBlock(draft.env))
@@ -73,7 +76,15 @@ function McpEditor({
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border p-4">
+    <AgentDetailPage
+      title={draft.name || t('settings.agent.mcp.add')}
+      descriptionKey="settings.agent.mcp.detailDescription"
+      leaf={draft.name ? t('settings.common.edit') : t('settings.agent.mcp.add')}
+      formValue={{ form, envText, headersText }}
+      isSaving={isSaving}
+      isSaveDisabled={!form.name.trim()}
+      onSave={() => void handleSave()}
+    >
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="agent-mcp-name">{t('settings.agent.name')}</Label>
@@ -151,16 +162,7 @@ function McpEditor({
           </div>
         </>
       )}
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={onClose}>
-          {t('settings.common.cancel')}
-        </Button>
-        <Button disabled={isSaving || !form.name.trim()} onClick={() => void handleSave()}>
-          {isSaving ? <Spinner /> : null}
-          {t('settings.common.save')}
-        </Button>
-      </div>
-    </div>
+    </AgentDetailPage>
   )
 }
 
@@ -208,6 +210,9 @@ export function AgentMcpSettings() {
   const [servers, setServers] = useState<AgentMcpServerConfig[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [draft, setDraft] = useState<AgentMcpServerConfig | null>(null)
+  const isDetailOpen = useMcpDetailOpen()
+  const openDetail = useSettingsDetailStore((state) => state.openDetail)
+  const backToList = useSettingsDetailStore((state) => state.backToList)
 
   const reload = async () => {
     try {
@@ -237,33 +242,38 @@ export function AgentMcpSettings() {
   const handleDelete = async (name: string) => {
     try {
       await deleteAgentMcpServer(name)
+      backToList()
       await reload()
     } catch {
       toast.add({ id: 'agent-mcp-delete', title: t('settings.agent.deleteError'), type: 'error' })
     }
   }
 
+  const startEdit = (server: AgentMcpServerConfig) => {
+    setDraft({ ...server })
+    openDetail(MCP_CATEGORY, server.name, t('settings.common.edit'))
+  }
+
+  const startCreate = () => {
+    setDraft({ name: '', type: 'stdio', command: '', args: [], env: {} })
+    openDetail(MCP_CATEGORY, null, t('settings.agent.mcp.add'))
+  }
+
+  if (isDetailOpen && draft) {
+    return (
+      <McpEditor
+        draft={draft}
+        onClose={() => {
+          backToList()
+          void reload()
+        }}
+      />
+    )
+  }
+
   return (
-    <AgentSection
-      addLabel={draft ? undefined : t('settings.agent.mcp.add')}
-      onAdd={
-        draft
-          ? undefined
-          : () => setDraft({ name: '', type: 'stdio', command: '', args: [], env: {} })
-      }
-      titleKey="mcp"
-    >
+    <AgentSection addLabel={t('settings.agent.mcp.add')} onAdd={startCreate} titleKey="mcp">
       <div className="flex flex-col gap-3">
-        {draft ? (
-          <McpEditor
-            draft={draft}
-            onClose={() => {
-              setDraft(null)
-              void reload()
-            }}
-            previousName={null}
-          />
-        ) : null}
         {isLoading ? (
           <Spinner className="self-center" />
         ) : servers.length === 0 ? (
@@ -275,7 +285,7 @@ export function AgentMcpSettings() {
                 key={server.name}
                 server={server}
                 onDelete={() => handleDelete(server.name)}
-                onEdit={() => setDraft({ ...server })}
+                onEdit={() => startEdit(server)}
                 onToggle={(enabled) => void handleToggle(server, enabled)}
               />
             ))}

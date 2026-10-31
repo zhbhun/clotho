@@ -10,6 +10,7 @@ import { appI18n } from '../../../i18n/runtime'
 import * as agentConfig from '../../../services/claude/agent-config'
 import { ShortcutRuntimeProvider, shortcutRuntime } from '../../../services/shortcuts/runtime'
 import { AgentWorkflowSettings } from './agent-workflow-settings'
+import { useSettingsDetailStore } from './settings-detail-store'
 
 vi.mock('../../../services/claude/agent-config', () => ({
   listAgentSubagents: vi.fn(),
@@ -43,6 +44,7 @@ const mock = vi.mocked(agentConfig, true)
 beforeEach(async () => {
   await appI18n.changeLanguage('zh-CN')
   vi.clearAllMocks()
+  useSettingsDetailStore.setState({ view: { kind: 'list' }, isDirty: false, leaf: '' })
   mock.getAgentCapabilityToggles.mockResolvedValue({
     disabledPlugins: [],
     disabledSkills: [],

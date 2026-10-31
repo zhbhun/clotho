@@ -10,6 +10,7 @@ import { appI18n } from '../../../i18n/runtime'
 import type { ClaudeProject } from '../../../services/claude/claude'
 import { ShortcutRuntimeProvider, shortcutRuntime } from '../../../services/shortcuts/runtime'
 import { ProjectSettings } from './project-settings'
+import { useSettingsDetailStore } from './settings-detail-store'
 
 const alpha: ClaudeProject = {
   id: 'alpha',
@@ -28,6 +29,7 @@ function renderWithShortcuts(element: ReactElement) {
 describe('ProjectSettings', () => {
   beforeEach(async () => {
     await appI18n.changeLanguage('zh-CN')
+    useSettingsDetailStore.setState({ view: { kind: 'list' }, isDirty: false, leaf: '' })
   })
 
   it('requires confirmation before removing a project', async () => {
@@ -36,12 +38,7 @@ describe('ProjectSettings', () => {
 
     renderWithShortcuts(
       <TooltipProvider>
-        <ProjectSettings
-          projects={[alpha]}
-          onCreateProject={vi.fn()}
-          onEditProject={vi.fn()}
-          onRemoveProject={onRemoveProject}
-        />
+        <ProjectSettings projects={[alpha]} onRemoveProject={onRemoveProject} />
       </TooltipProvider>,
     )
 
@@ -63,13 +60,7 @@ describe('ProjectSettings', () => {
   it('keeps the project list visible while a refresh reloads the catalog', () => {
     renderWithShortcuts(
       <TooltipProvider>
-        <ProjectSettings
-          isLoading
-          projects={[alpha]}
-          onCreateProject={vi.fn()}
-          onEditProject={vi.fn()}
-          onRemoveProject={vi.fn()}
-        />
+        <ProjectSettings isLoading projects={[alpha]} onRemoveProject={vi.fn()} />
       </TooltipProvider>,
     )
 
@@ -85,8 +76,6 @@ describe('ProjectSettings', () => {
         <TooltipProvider>
           <ProjectSettings
             projects={[alpha]}
-            onCreateProject={vi.fn()}
-            onEditProject={vi.fn()}
             onRemoveProject={vi.fn(async () => {
               throw new Error('Unable to write project data')
             })}

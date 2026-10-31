@@ -1,5 +1,5 @@
 import { FolderPlus, Pencil, Plus, Trash2 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -25,10 +25,58 @@ import { toast } from '@/shadcn/toast'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip'
 
 import { AppAlertDialog, AppAlertDialogContent } from '../../../components/app-dialog'
+import { ProjectForm } from '../../../components/project-form'
 import { ProjectIcon } from '../../../components/project-icon'
 import { ProjectPath } from '../../../components/project-path'
 import type { ClaudeProject } from '../../../services/claude/claude'
 import { compareProjectsByName, isUserProject, projectDisplayName } from '../../../utils/project'
+import { useSettingsDetailStore } from './settings-detail-store'
+
+const PROJECT_CATEGORY = 'projects' as const
+
+/** True when the shared detail view is open for the projects category. */
+function useProjectDetailOpen() {
+  const view = useSettingsDetailStore((state) => state.view)
+  return view.kind === 'detail' && view.categoryId === PROJECT_CATEGORY
+}
+
+/**
+ * Detail-page body for the project editor: header + the shared ProjectForm.
+ * Cancel routes through the shared leave gate; dirty tracking works through
+ * ProjectForm's `onDirtyChange`.
+ */
+function ProjectEditorPage({ project }: { project: ClaudeProject | null }) {
+  const { t } = useTranslation()
+  const isDetailOpen = useProjectDetailOpen()
+  const backToList = useSettingsDetailStore((state) => state.backToList)
+  const setLeaf = useSettingsDetailStore((state) => state.setLeaf)
+  const setDirty = useSettingsDetailStore((state) => state.setDirty)
+  const requestLeave = useSettingsDetailStore((state) => state.requestLeave)
+
+  useEffect(() => {
+    setLeaf(project ? t('project.edit') : t('project.add'))
+  }, [project, setLeaf, t])
+  useEffect(() => () => setLeaf(''), [setLeaf])
+  useEffect(() => () => setDirty(false), [setDirty])
+
+  if (!isDetailOpen) return null
+
+  return (
+    <section className="flex flex-col gap-6" data-settings-detail-page>
+      <header className="flex flex-col gap-1">
+        <h1 className="text-xl font-medium tracking-tight">
+          {project ? t('project.edit') : t('project.add')}
+        </h1>
+      </header>
+      <ProjectForm
+        project={project}
+        onDirtyChange={setDirty}
+        onSaved={backToList}
+        onCancel={requestLeave}
+      />
+    </section>
+  )
+}
 
 function ProjectRows({
   projects,
@@ -104,26 +152,33 @@ export function ProjectSettings({
   error,
   isLoading = false,
   projects,
-  onCreateProject,
-  onEditProject,
   onReload,
   onRemoveProject,
 }: {
   error?: string | null
   isLoading?: boolean
   projects: ClaudeProject[]
-  onCreateProject: () => void
-  onEditProject: (project: ClaudeProject) => void
   onReload?: () => Promise<void> | void
   onRemoveProject: (project: ClaudeProject) => Promise<void> | void
 }) {
   const { t } = useTranslation()
   const [removeTarget, setRemoveTarget] = useState<ClaudeProject | null>(null)
   const [isRemoving, setRemoving] = useState(false)
+  const isDetailOpen = useProjectDetailOpen()
+  const detailView = useSettingsDetailStore((state) => state.view)
+  const openDetail = useSettingsDetailStore((state) => state.openDetail)
   const sortedProjects = useMemo(
     () => projects.filter(isUserProject).toSorted(compareProjectsByName),
     [projects],
   )
+  const detailProject =
+    isDetailOpen && detailView.kind === 'detail' && detailView.file !== null
+      ? (projects.find((project) => project.id === detailView.file) ?? null)
+      : null
+
+  const startCreate = () => openDetail(PROJECT_CATEGORY, null, t('project.add'))
+  const startEdit = (project: ClaudeProject) =>
+    openDetail(PROJECT_CATEGORY, project.id, t('project.edit'))
 
   async function handleRemove() {
     if (!removeTarget) return
@@ -187,7 +242,7 @@ export function ProjectSettings({
           <EmptyDescription>{t('settings.project.emptyDescription')}</EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button type="button" variant="outline" onClick={onCreateProject}>
+          <Button type="button" variant="outline" onClick={startCreate}>
             <Plus data-icon="inline-start" />
             {t('settings.project.add')}
           </Button>
@@ -198,7 +253,7 @@ export function ProjectSettings({
     content = (
       <ProjectRows
         projects={sortedProjects}
-        onEditProject={onEditProject}
+        onEditProject={startEdit}
         onRemoveProject={(project) => {
           setRemoveTarget(project)
         }}
@@ -206,12 +261,16 @@ export function ProjectSettings({
     )
   }
 
+  if (isDetailOpen) {
+    return <ProjectEditorPage project={detailProject} />
+  }
+
   return (
     <>
       <section className="flex flex-col gap-3">
         {sortedProjects.length > 0 ? (
           <div className="flex min-h-7 items-center justify-end">
-            <Button type="button" variant="outline" onClick={onCreateProject}>
+            <Button type="button" variant="outline" onClick={startCreate}>
               <Plus data-icon="inline-start" />
               {t('settings.project.add')}
             </Button>

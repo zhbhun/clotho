@@ -15,7 +15,7 @@ import {
   listAgentSubagents,
 } from '../../../services/claude/agent-config'
 import { AgentEmpty, DeleteButton, capitalize } from './agent-shared'
-import { useSubagentDetailStore } from './subagent-detail-store'
+import { useSettingsDetailStore } from './settings-detail-store'
 import { SubagentEditor } from './subagent-editor'
 
 const SOURCES = ['builtin', 'plugin', 'custom'] as const
@@ -139,9 +139,19 @@ export function AgentSubagentSettings() {
   const { t } = useTranslation()
   const [subagents, setSubagents] = useState<AgentSubagentConfig[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const view = useSubagentDetailStore((state) => state.view)
-  const openDetail = useSubagentDetailStore((state) => state.openDetail)
-  const backToList = useSubagentDetailStore((state) => state.backToList)
+  const view = useSettingsDetailStore((state) => state.view)
+  const openDetailAction = useSettingsDetailStore((state) => state.openDetail)
+  const backToList = useSettingsDetailStore((state) => state.backToList)
+  // This category owns the detail page only while it is open for subagents;
+  // another category may claim the shared detail view.
+  const isDetailOpen = view.kind === 'detail' && view.categoryId === 'agent-subagents'
+  const detailFile = isDetailOpen ? view.file : null
+  const openDetail = (file: string | null) =>
+    openDetailAction(
+      'agent-subagents',
+      file,
+      file ? t('settings.common.edit') : t('settings.agent.subagent.new'),
+    )
 
   const reload = async () => {
     try {
@@ -176,7 +186,6 @@ export function AgentSubagentSettings() {
 
   // Refresh the list whenever the detail page closes, so a save or delete
   // made there is reflected without a manual refresh control.
-  const isDetailOpen = view.kind === 'detail'
   useEffect(() => {
     if (!isDetailOpen) void reload()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -213,12 +222,11 @@ export function AgentSubagentSettings() {
   const bySource = (source: Source) => subagents.filter((subagent) => sourceOf(subagent) === source)
 
   if (isDetailOpen) {
-    const file = view.file
-    const existing = file ? subagents.find((subagent) => subagent.file === file) : null
+    const existing = detailFile ? subagents.find((subagent) => subagent.file === detailFile) : null
     return (
       <section className="flex flex-col gap-3" data-subagent-detail-page>
         <SubagentEditor
-          draft={existing ?? newSubagentDraft(file)}
+          draft={existing ?? newSubagentDraft(detailFile)}
           onDelete={handleDeleteAndClose}
         />
       </section>

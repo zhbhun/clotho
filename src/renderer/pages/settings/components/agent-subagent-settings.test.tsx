@@ -10,7 +10,7 @@ import { appI18n } from '../../../i18n/runtime'
 import * as agentConfig from '../../../services/claude/agent-config'
 import { ShortcutRuntimeProvider, shortcutRuntime } from '../../../services/shortcuts/runtime'
 import { AgentSubagentSettings } from './agent-subagent-settings'
-import { useSubagentDetailStore } from './subagent-detail-store'
+import { useSettingsDetailStore } from './settings-detail-store'
 
 vi.mock('../../../services/claude/agent-config', () => ({
   listAgentSubagents: vi.fn(),
@@ -27,7 +27,7 @@ beforeEach(async () => {
   await appI18n.changeLanguage('zh-CN')
   vi.clearAllMocks()
   // The detail-view store is module-level; reset it between tests.
-  useSubagentDetailStore.setState({ view: { kind: 'list' }, isDirty: false })
+  useSettingsDetailStore.setState({ view: { kind: 'list' }, isDirty: false })
   mock.getAgentCapabilityToggles.mockResolvedValue({
     disabledPlugins: [],
     disabledSkills: [],
@@ -351,14 +351,14 @@ describe('AgentSubagentSettings', () => {
     const user = userEvent.setup()
 
     await user.click(within(getCard('custom')).getByRole('button', { name: '编辑' }))
-    expect(useSubagentDetailStore.getState().isDirty).toBe(false)
+    expect(useSettingsDetailStore.getState().isDirty).toBe(false)
 
     await user.type(screen.getByLabelText('名称'), '-x')
-    expect(useSubagentDetailStore.getState().isDirty).toBe(true)
+    expect(useSettingsDetailStore.getState().isDirty).toBe(true)
 
     // Dirty Cancel opens the leave-pending gate instead of leaving directly.
     await user.click(screen.getByRole('button', { name: '取消' }))
-    expect(useSubagentDetailStore.getState().view.kind).toBe('detail')
-    expect(useSubagentDetailStore.getState().isLeavePending).toBe(true)
+    expect(useSettingsDetailStore.getState().view.kind).toBe('detail')
+    expect(useSettingsDetailStore.getState().isLeavePending).toBe(true)
   })
 })

@@ -16,7 +16,7 @@ import {
 import { ShortcutRuntimeProvider, shortcutRuntime } from '../../services/shortcuts/runtime'
 import { ModelConfigurationProvider } from '../../stores/model-configuration-context'
 import { ProviderUsageProvider } from '../../stores/provider-usage-context'
-import { useSubagentDetailStore } from './components/subagent-detail-store'
+import { useSettingsDetailStore } from './components/settings-detail-store'
 import { SettingsPage } from './index'
 
 let savedPreferences: AppPreferences[] = []
@@ -42,7 +42,7 @@ describe('SettingsPage', () => {
     await appI18n.changeLanguage('zh-CN')
     localStorage.clear()
     savedPreferences = []
-    useSubagentDetailStore.setState({ view: { kind: 'list' }, isDirty: false })
+    useSettingsDetailStore.setState({ view: { kind: 'list' }, isDirty: false, leaf: '' })
     await initializeAppSettings({
       load: async () => DEFAULT_APP_PREFERENCES,
       save: async (preferences) => {
@@ -176,12 +176,16 @@ describe('SettingsPage', () => {
 
   describe('subagent detail leave guard', () => {
     function renderSubagentsPage(detailFile: string | null) {
-      useSubagentDetailStore.setState({ view: { kind: 'detail', file: detailFile } })
+      useSettingsDetailStore.setState({
+        view: { kind: 'detail', categoryId: 'agent-subagents', file: detailFile },
+        leaf: detailFile ?? '新建子智能体',
+        isDirty: false,
+      })
       render(<TestSettingsPage open initialCategory="agent-subagents" onOpenChange={vi.fn()} />)
       // The mounted editor re-derives isDirty from its untouched form; flip it
       // afterwards to simulate unsaved changes.
       return {
-        markDirty: () => useSubagentDetailStore.setState({ isDirty: true }),
+        markDirty: () => useSettingsDetailStore.setState({ isDirty: true }),
       }
     }
 
@@ -195,7 +199,7 @@ describe('SettingsPage', () => {
 
       // A clean hand-off activates the clicked category and closes the detail.
       expect(screen.getByRole('heading', { name: '外观' })).toBeInTheDocument()
-      expect(useSubagentDetailStore.getState().view.kind).toBe('list')
+      expect(useSettingsDetailStore.getState().view.kind).toBe('list')
     })
 
     it('keeps the detail page and blocks the category when leaving dirty via the sidebar', async () => {
@@ -207,12 +211,12 @@ describe('SettingsPage', () => {
 
       // The discard dialog is pending; the category never activated.
       expect(await screen.findByRole('alertdialog', { name: '放弃更改？' })).toBeInTheDocument()
-      expect(useSubagentDetailStore.getState().view.kind).toBe('detail')
-      expect(useSubagentDetailStore.getState().isLeavePending).toBe(true)
+      expect(useSettingsDetailStore.getState().view.kind).toBe('detail')
+      expect(useSettingsDetailStore.getState().isLeavePending).toBe(true)
 
       // Resolve the dialog so its portal does not leak into the next test.
       await user.click(screen.getByRole('button', { name: '放弃' }))
-      expect(useSubagentDetailStore.getState().isLeavePending).toBe(false)
+      expect(useSettingsDetailStore.getState().isLeavePending).toBe(false)
     })
 
     it('keeps the detail page and blocks the leave when the breadcrumb root is dirty', async () => {
@@ -220,25 +224,25 @@ describe('SettingsPage', () => {
       const { markDirty } = renderSubagentsPage('reviewer')
       markDirty()
 
-      await user.click(screen.getByTestId('subagent-breadcrumb-root'))
+      await user.click(screen.getByTestId('settings-breadcrumb-root'))
 
       expect(await screen.findByRole('alertdialog', { name: '放弃更改？' })).toBeInTheDocument()
-      expect(useSubagentDetailStore.getState().view.kind).toBe('detail')
+      expect(useSettingsDetailStore.getState().view.kind).toBe('detail')
 
       // Resolve the dialog so its portal does not leak into the next test.
       await user.click(screen.getByRole('button', { name: '放弃' }))
-      expect(useSubagentDetailStore.getState().isLeavePending).toBe(false)
+      expect(useSettingsDetailStore.getState().isLeavePending).toBe(false)
     })
 
     it('returns to the list directly from a clean breadcrumb root', async () => {
       const user = userEvent.setup()
       renderSubagentsPage('reviewer')
 
-      await user.click(screen.getByTestId('subagent-breadcrumb-root'))
+      await user.click(screen.getByTestId('settings-breadcrumb-root'))
 
       // A clean breadcrumb-root leave goes straight back to the list header.
       expect(screen.getByRole('heading', { name: '子智能体' })).toBeInTheDocument()
-      expect(useSubagentDetailStore.getState().view.kind).toBe('list')
+      expect(useSettingsDetailStore.getState().view.kind).toBe('list')
     })
   })
 })

@@ -7,14 +7,14 @@ import { toast } from '@/shadcn/toast'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip'
 import type { ProjectIcon as ProjectIconValue } from '@/shared/rpc'
 
-import { ProjectIcon } from '../../../components/project-icon'
-import type { MessageKey } from '../../../i18n/resources'
+import type { MessageKey } from '../i18n/resources'
+import { EmojiPicker } from '../pages/workbench/components/emoji-picker/emoji-picker'
 import {
   ProjectImageError,
   type ProjectImageErrorCode,
   projectIconDataUrlFromFile,
-} from '../../../utils/project-image'
-import { EmojiPicker } from './emoji-picker/emoji-picker'
+} from '../utils/project-image'
+import { ProjectIcon } from './project-icon'
 
 const PROJECT_IMAGE_ERROR_KEYS = {
   'png-unavailable': 'project.error.image.pngUnavailable',

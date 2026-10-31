@@ -26,9 +26,9 @@ The system SHALL present the full set of subagents available to Clotho sessions 
 
 Each custom-subagent row SHALL show, from left to right: the source icon badge, the subagent name, the description (single line, truncating), a model label that shows the localized `default` tag when no model is declared or the declared model with its first letter capitalized, and a chevron button that opens the detail page for that subagent. A custom subagent whose file is broken (unparseable frontmatter) SHALL show the broken hint instead of the description and a row delete button instead of the chevron — the detail page cannot open it, so the row is its only removal path. Non-broken rows SHALL NOT carry a delete action; deletion happens inside the detail page.
 
-The editor SHALL open as a second-level detail page within the Subagents category instead of an inline block on the list page: activating the Add action or a row's chevron switches the content pane from the list to the detail page, and leaving the detail page (save, cancel, or breadcrumb navigation) returns to the list. While the detail page is open, the content region SHALL show a breadcrumb bar above the scrollable content, outside the centered content container, left-aligned with the title area: the root entry `Subagents` (clickable) followed by the current entry — the subagent's name when editing, or the localized `New subagent` when creating. The breadcrumb bar SHALL NOT appear on the list page. The detail page content SHALL keep its own page header: an h1 title matching the breadcrumb leaf and, below it, a localized description line ("Fill in the name, tools and system prompt of the subagent. Saving returns you to the list.").
+The editor SHALL open as a second-level detail page within the Subagents category, following the shared detail-page navigation defined in `settings-detail-navigation`: the breadcrumb bar, the unsaved-changes guard, and the uniform page structure (h1 title, description line, form, footer with Delete left and Cancel/Save right) are owned by that capability. The detail page SHALL show, below the page header, a localized description line ("Fill in the name, tools and system prompt of the subagent. Saving returns you to the list."). The breadcrumb leaf is the localized `Edit` when editing, or the localized `New subagent` when creating, fixed at open time (it does not follow keystrokes).
 
-The detail page SHALL present, in order: the Name field on its own row (a text input whose placeholder states the naming rules concisely, with no hint line below), the Description as a single-line textarea (Enter key and pasted newlines are stripped), an "Advanced options" collapsible section, the system prompt body as a multi-line textarea, and a footer row with a danger-styled Delete button on the left and Cancel and Save buttons on the right (Save the primary action). The Advanced options section SHALL start expanded when editing a subagent that has any advanced field set, and collapsed otherwise, and its header SHALL show a count of currently-set advanced fields. It SHALL expose:
+The detail page SHALL present, in order: the Name field on its own row (a text input whose placeholder states the naming rules concisely, with no hint line below), the Description as a single-line textarea (Enter key and pasted newlines are stripped), an "Advanced options" collapsible section, the system prompt body as a multi-line textarea, and the footer row (see `settings-detail-navigation`). The Advanced options section SHALL start expanded when editing a subagent that has any advanced field set, and collapsed otherwise, and its header SHALL show a count of currently-set advanced fields. It SHALL expose:
 
 - Model: a select with values `default`, `sonnet`, `opus`, `haiku`, `inherit` (replacing the previous free-text input).
 - Permission mode: a select with values `inherit`, `default`, `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions`, `plan`.
@@ -42,8 +42,6 @@ The detail page SHALL present, in order: the Name field on its own row (a text i
 - Memory: a select with values `none`, `user`, `project`, `local`.
 - Color: a select with the fixed set `none`, `red`, `blue`, `green`, `yellow`, `purple`, `orange`, `pink`, `cyan`.
 - File isolation: a switch (on = `isolation: worktree`).
-
-The detail page SHALL track whether the form has unsaved changes. When it does, list-bound navigation — clicking the breadcrumb root, clicking a sidebar category, or clicking Cancel — SHALL open a confirmation dialog before leaving; confirming discards the changes and returns to the list, declining keeps editing. When the form has no unsaved changes, those paths return to the list directly. Saving always returns to the list. The Esc key and the sidebar's Back action keep their existing behavior of closing the entire settings page without this confirmation.
 
 The editor SHALL NOT expose `mcpServers`, `hooks`, `experimental`, `initialPrompt`, or `autoCompactWindow`; when present in an existing file these keys SHALL be preserved verbatim on save, together with any other unrecognized frontmatter keys.
 
@@ -62,7 +60,7 @@ The available-subagent list SHALL be resolved when the page is opened and cached
 #### Scenario: Custom subagent opens via chevron
 
 - **WHEN** `~/.claude/agents/reviewer.md` exists and the user clicks the chevron on the `reviewer` row
-- **THEN** the content pane switches to the detail page for `reviewer` with its fields populated, and the breadcrumb bar above the content shows `Subagents > reviewer`
+- **THEN** the content pane switches to the detail page for `reviewer` with its fields populated, and the breadcrumb bar above the content shows `Subagents > Edit`
 
 #### Scenario: Add opens the detail page for a new subagent
 
@@ -124,10 +122,15 @@ The available-subagent list SHALL be resolved when the page is opened and cached
 - **WHEN** the detail page opens for editing `reviewer` (or for a new subagent)
 - **THEN** the page shows an h1 title with the subagent name (or the localized `New subagent`) and below it the localized description line about filling in name, tools and system prompt
 
+#### Scenario: Breadcrumb leaf is fixed while editing
+
+- **WHEN** the user renames the subagent in the detail page's Name field
+- **THEN** the breadcrumb's current entry stays on the localized `Edit` label it showed at open, before saving
+
 #### Scenario: Breadcrumb root navigates back with confirmation when dirty
 
 - **WHEN** the user has modified any field on the detail page and clicks the breadcrumb root `Subagents`
-- **THEN** a confirmation dialog asks whether to discard the changes; confirming returns to the list, declining keeps editing
+- **THEN** a confirmation dialog asks whether to discard the changes, naming the subagent; confirming returns to the list, declining keeps editing
 
 #### Scenario: Sidebar navigation with unsaved changes confirms
 
@@ -181,7 +184,7 @@ The available-subagent list SHALL be resolved when the page is opened and cached
 
 ### Requirement: MCP server management
 
-The system SHALL list user-scoped MCP servers from the `mcpServers` field of `~/.claude.json`, and let the user create, edit, delete, enable, and disable them for Clotho sessions. The editor SHALL support the server types Claude Code supports for user scope (stdio with command/args/env; http and sse with url/headers). Writes SHALL re-read `~/.claude.json` immediately before writing and replace the file atomically, because concurrently running CLI processes rewrite that file; the write SHALL preserve every unrelated field it read.
+The system SHALL list user-scoped MCP servers from the `mcpServers` field of `~/.claude.json`, and let the user create, edit, delete, enable, and disable them for Clotho sessions. Creating or editing a server SHALL open a second-level detail page following the shared navigation defined in `settings-detail-navigation` instead of an inline block on the list page; the list page shows only the server rows with their toggle, edit, and delete actions. The editor SHALL support the server types Claude Code supports for user scope (stdio with command/args/env; http and sse with url/headers). Writes SHALL re-read `~/.claude.json` immediately before writing and replace the file atomically, because concurrently running CLI processes rewrite that file; the write SHALL preserve every unrelated field it read.
 
 #### Scenario: List MCP servers
 
@@ -190,8 +193,13 @@ The system SHALL list user-scoped MCP servers from the `mcpServers` field of `~/
 
 #### Scenario: Create a stdio MCP server
 
-- **WHEN** the user submits a new server of type stdio with a command and optional args/env
-- **THEN** the system re-reads `~/.claude.json`, adds the entry to its `mcpServers`, and atomically replaces the file
+- **WHEN** the user activates Add, fills the detail page with a server of type stdio with a command and optional args/env, and saves
+- **THEN** the system re-reads `~/.claude.json`, adds the entry to its `mcpServers`, atomically replaces the file, and returns to the list showing the new server
+
+#### Scenario: Edit an MCP server on the detail page
+
+- **WHEN** the user activates a server row's edit action and saves the detail page
+- **THEN** the entry in `~/.claude.json` is updated and the view returns to the list
 
 #### Scenario: Disable an MCP server for Clotho sessions
 
@@ -205,7 +213,7 @@ The system SHALL list user-scoped MCP servers from the `mcpServers` field of `~/
 
 ### Requirement: Hook management
 
-The system SHALL list command-type hooks from the `hooks` field of `~/.claude/settings.json`, and let the user create, edit, and delete them. The editor SHALL offer the Claude Code hook events and, per event, CLI file format entries: an optional matcher and one or more commands. The system SHALL NOT invent non-command hook types.
+The system SHALL list command-type hooks from the `hooks` field of `~/.claude/settings.json`, and let the user create, edit, and delete them. Creating or editing a hook SHALL open a second-level detail page following the shared navigation defined in `settings-detail-navigation` instead of an inline block on the list page; the list page shows only the configured events with their edit and delete actions. The editor SHALL offer the Claude Code hook events and, per event, CLI file format entries: an optional matcher and one or more commands. The system SHALL NOT invent non-command hook types.
 
 #### Scenario: List hooks
 
@@ -214,8 +222,13 @@ The system SHALL list command-type hooks from the `hooks` field of `~/.claude/se
 
 #### Scenario: Create a hook
 
-- **WHEN** the user submits a hook for an event with an optional matcher and one or more command strings
-- **THEN** the system writes a command-type hook entry in the CLI file format into `~/.claude/settings.json`, preserving all other settings fields
+- **WHEN** the user activates Add, fills the detail page for an event with an optional matcher and one or more command strings, and saves
+- **THEN** the system writes a command-type hook entry in the CLI file format into `~/.claude/settings.json`, preserving all other settings fields, and returns to the list
+
+#### Scenario: Edit a hook on the detail page
+
+- **WHEN** the user activates an event row's edit action and saves the detail page
+- **THEN** the event's entry in `~/.claude/settings.json` is updated and the view returns to the list
 
 #### Scenario: Delete a hook
 
@@ -267,7 +280,7 @@ The system SHALL list installed plugins from `~/.claude/plugins/installed_plugin
 
 ### Requirement: Workflow management
 
-The system SHALL list user-level workflow files under `~/.claude/workflows/`, and let the user create, edit (as text), rename, and delete them. Workflows need no configuration injection; management is file CRUD.
+The system SHALL list user-level workflow files under `~/.claude/workflows/`, and let the user create, edit (as text), rename, and delete them. Creating or editing a workflow SHALL open a second-level detail page following the shared navigation defined in `settings-detail-navigation` instead of an inline block on the list page; the list page shows only the workflow rows. Workflows need no configuration injection; management is file CRUD.
 
 #### Scenario: List workflows
 
@@ -276,8 +289,13 @@ The system SHALL list user-level workflow files under `~/.claude/workflows/`, an
 
 #### Scenario: Edit a workflow
 
-- **WHEN** the user saves an edited workflow
-- **THEN** the file content under `~/.claude/workflows/` is replaced and the list reflects the change
+- **WHEN** the user saves an edited workflow on the detail page
+- **THEN** the file content under `~/.claude/workflows/` is replaced and the view returns to the list reflecting the change
+
+#### Scenario: Rename a workflow
+
+- **WHEN** the user changes a workflow's name on the detail page and saves
+- **THEN** the workflow file is renamed under `~/.claude/workflows/` and the list shows the new name
 
 #### Scenario: Delete a workflow
 
@@ -297,3 +315,4 @@ All main-process writes to `~/.claude/settings.json` and `~/.claude.json` SHALL 
 
 - **WHEN** a managed file exists but fails JSON parsing during a read or write operation
 - **THEN** the operation reports a parse error to the renderer instead of overwriting the file
+

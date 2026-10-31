@@ -128,6 +128,19 @@ export const settingsCatalog = {
   ),
   'settings.project.removeNamed': setting('Remove {{name}}', '移除 {{name}}'),
   'settings.provider.add': setting('Add provider', '新增供应商', '新增供應商'),
+  'settings.provider.detailDescription': setting(
+    'Configure the endpoint, authentication, and available models. Saving returns you to the list.',
+    '配置端点、认证方式和可用模型，保存后返回列表。',
+    '設定端點、驗證方式和可用模型，儲存後返回列表。',
+  ),
+  'settings.detail.discardTitle': setting('Discard changes?', '放弃更改？', '放棄變更？'),
+  'settings.detail.discardDescription': setting(
+    'You have unsaved changes to {{subject}}. Leaving this page will discard them.',
+    '{{subject}} 有未保存的更改，离开此页面将丢弃这些更改。',
+    '{{subject}} 有未儲存的變更，離開此頁面將丟棄這些變更。',
+  ),
+  'settings.detail.discardKeepEditing': setting('Keep editing', '继续编辑', '繼續編輯'),
+  'settings.detail.discardConfirm': setting('Discard', '放弃', '放棄'),
   'settings.provider.addFromPreset': setting('Add from preset', '从预设添加', '從預設新增'),
   'settings.provider.addModel': setting('Add model', '添加模型', '新增模型'),
   'settings.provider.apiType': setting('API Type', 'API 类型', 'API 類型'),
@@ -568,14 +581,6 @@ export const settingsCatalog = {
     '填写子智能体的名称、工具和系统提示词，保存后返回列表。',
     '填寫子智慧體的名稱、工具和系統提示詞，儲存後返回列表。',
   ),
-  'settings.agent.subagent.discardTitle': setting('Discard changes?', '放弃更改？', '放棄變更？'),
-  'settings.agent.subagent.discardDescription': setting(
-    'You have unsaved changes to {{subject}}. Leaving this page will discard them.',
-    '{{subject}} 有未保存的更改，离开此页面将丢弃这些更改。',
-    '{{subject}} 有未儲存的變更，離開此頁面將丟棄這些變更。',
-  ),
-  'settings.agent.subagent.discardKeepEditing': setting('Keep editing', '继续编辑', '繼續編輯'),
-  'settings.agent.subagent.discardConfirm': setting('Discard', '放弃', '放棄'),
   'settings.agent.subagent.itemCount_one': setting('{{count}} item', '{{count}} 项'),
   'settings.agent.subagent.itemCount_other': setting('{{count}} items', '{{count}} 项'),
   'settings.agent.subagent.add': setting('Add', '添加', '新增'),
@@ -680,6 +685,11 @@ export const settingsCatalog = {
 
   // MCP servers.
   'settings.agent.mcp.add': setting('Add server', '添加服务器', '新增伺服器'),
+  'settings.agent.mcp.detailDescription': setting(
+    'Configure the server connection. Saving returns you to the list.',
+    '配置服务器连接信息，保存后返回列表。',
+    '設定伺服器連線資訊，儲存後返回列表。',
+  ),
   'settings.agent.mcp.type': setting('Type', '类型', '類型'),
   'settings.agent.mcp.command': setting('Command', '命令', '命令'),
   'settings.agent.mcp.args': setting('Arguments', '参数', '參數'),
@@ -711,6 +721,11 @@ export const settingsCatalog = {
 
   // Hooks.
   'settings.agent.hooks.add': setting('Add hook', '添加钩子', '新增鉤子'),
+  'settings.agent.hooks.detailDescription': setting(
+    'Choose the event, an optional matcher, and the commands to run. Saving returns you to the list.',
+    '选择事件、可选的匹配器和要运行的命令，保存后返回列表。',
+    '選擇事件、可選的匹配器和要執行的命令，儲存後返回列表。',
+  ),
   'settings.agent.hooks.event': setting('Event', '事件', '事件'),
   'settings.agent.hooks.eventHint': setting(
     'e.g. Stop, PreToolUse',
@@ -750,6 +765,11 @@ export const settingsCatalog = {
 
   // Workflows.
   'settings.agent.workflows.add': setting('New workflow', '新建工作流', '新建工作流'),
+  'settings.agent.workflows.detailDescription': setting(
+    'Set the workflow name and body. Saving returns you to the list.',
+    '设置工作流的名称和内容，保存后返回列表。',
+    '設定工作流的名稱和內容，儲存後返回列表。',
+  ),
   'settings.agent.workflows.rename': setting('Rename', '重命名', '重新命名'),
   'settings.agent.workflows.content': setting('Content', '内容', '內容'),
   'settings.agent.workflows.modified': setting('Last modified', '修改时间', '修改時間'),

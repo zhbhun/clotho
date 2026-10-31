@@ -15,7 +15,17 @@ import {
   listAgentHookGroups,
   saveAgentHookGroup,
 } from '../../../services/claude/agent-config'
+import { AgentDetailPage } from './agent-detail-page'
 import { AgentEmpty, AgentSection, DeleteButton } from './agent-shared'
+import { useSettingsDetailStore } from './settings-detail-store'
+
+const HOOK_CATEGORY = 'agent-hooks' as const
+
+/** True when the shared detail view is open for the hooks category. */
+function useHookDetailOpen() {
+  const view = useSettingsDetailStore((state) => state.view)
+  return view.kind === 'detail' && view.categoryId === HOOK_CATEGORY
+}
 
 type HookDraft = {
   /** Empty when creating a new event group. */
@@ -71,8 +81,18 @@ function HookEditor({ draft, onClose }: { draft: HookDraft; onClose: () => void 
     }
   }
 
+  const title = form.event.trim() || t('settings.agent.hooks.add')
+
   return (
-    <div className="flex flex-col gap-4 rounded-lg border p-4">
+    <AgentDetailPage
+      title={title}
+      descriptionKey="settings.agent.hooks.detailDescription"
+      leaf={draft.event.trim() ? t('settings.common.edit') : t('settings.agent.hooks.add')}
+      formValue={form}
+      isSaving={isSaving}
+      isSaveDisabled={!form.event.trim() || form.commands.some((entry) => !entry.command.trim())}
+      onSave={() => void handleSave()}
+    >
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="agent-hook-event">{t('settings.agent.hooks.event')}</Label>
@@ -141,7 +161,7 @@ function HookEditor({ draft, onClose }: { draft: HookDraft; onClose: () => void 
           ) : null}
         </div>
       ))}
-      <div className="flex items-center justify-between">
+      <div>
         <Button
           size="sm"
           variant="outline"
@@ -152,22 +172,8 @@ function HookEditor({ draft, onClose }: { draft: HookDraft; onClose: () => void 
           <Plus />
           {t('settings.agent.hooks.addCommand')}
         </Button>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={onClose}>
-            {t('settings.common.cancel')}
-          </Button>
-          <Button
-            disabled={
-              isSaving || !form.event.trim() || form.commands.some((entry) => !entry.command.trim())
-            }
-            onClick={() => void handleSave()}
-          >
-            {isSaving ? <Spinner /> : null}
-            {t('settings.common.save')}
-          </Button>
-        </div>
       </div>
-    </div>
+    </AgentDetailPage>
   )
 }
 
@@ -176,6 +182,9 @@ export function AgentHookSettings() {
   const [groups, setGroups] = useState<AgentHookGroup[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [draft, setDraft] = useState<HookDraft | null>(null)
+  const isDetailOpen = useHookDetailOpen()
+  const openDetail = useSettingsDetailStore((state) => state.openDetail)
+  const backToList = useSettingsDetailStore((state) => state.backToList)
 
   const reload = async () => {
     try {
@@ -196,28 +205,38 @@ export function AgentHookSettings() {
   const handleDelete = async (event: string) => {
     try {
       await deleteAgentHookGroup(event)
+      backToList()
       await reload()
     } catch {
       toast.add({ id: 'agent-hook-delete', title: t('settings.agent.deleteError'), type: 'error' })
     }
   }
 
+  const startEdit = (group: AgentHookGroup) => {
+    setDraft(draftFromGroup(group))
+    openDetail(HOOK_CATEGORY, group.event, t('settings.common.edit'))
+  }
+
+  const startCreate = () => {
+    setDraft(emptyDraft())
+    openDetail(HOOK_CATEGORY, null, t('settings.agent.hooks.add'))
+  }
+
+  if (isDetailOpen && draft) {
+    return (
+      <HookEditor
+        draft={draft}
+        onClose={() => {
+          backToList()
+          void reload()
+        }}
+      />
+    )
+  }
+
   return (
-    <AgentSection
-      addLabel={draft ? undefined : t('settings.agent.hooks.add')}
-      onAdd={draft ? undefined : () => setDraft(emptyDraft())}
-      titleKey="hooks"
-    >
+    <AgentSection addLabel={t('settings.agent.hooks.add')} onAdd={startCreate} titleKey="hooks">
       <div className="flex flex-col gap-3">
-        {draft ? (
-          <HookEditor
-            draft={draft}
-            onClose={() => {
-              setDraft(null)
-              void reload()
-            }}
-          />
-        ) : null}
         {isLoading ? (
           <Spinner className="self-center" />
         ) : groups.length === 0 ? (
@@ -235,11 +254,7 @@ export function AgentHookSettings() {
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setDraft(draftFromGroup(group))}
-                    >
+                    <Button size="sm" variant="ghost" onClick={() => startEdit(group)}>
                       {t('settings.common.edit')}
                     </Button>
                     <DeleteButton label={group.event} onDelete={() => handleDelete(group.event)} />

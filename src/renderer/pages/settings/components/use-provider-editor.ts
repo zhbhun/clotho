@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { toast } from '@/shadcn/toast'
@@ -16,6 +16,7 @@ import type { ProviderPreset } from '../../../components/model-configuration/pro
 import { useProviderDraft } from '../../../components/model-configuration/use-provider-draft'
 import type { ModelProvider } from '../../../services/claude/claude'
 import { claude } from '../../../services/claude/claude'
+import { useSettingsDetailStore } from './settings-detail-store'
 
 export function useProviderEditor({
   defaultModel,
@@ -27,9 +28,18 @@ export function useProviderEditor({
   replaceSettings: (providers: ModelProvider[], defaultModel: string | null) => void
 }) {
   const { t } = useTranslation()
-  const [editingMode, setEditingMode] = useState<'create' | 'update' | null>(null)
   const [isSavingProvider, setIsSavingProvider] = useState(false)
-  const editorTriggerRef = useRef<HTMLButtonElement | null>(null)
+  const openDetail = useSettingsDetailStore((state) => state.openDetail)
+  const backToList = useSettingsDetailStore((state) => state.backToList)
+  // The editing mode derives from the shared detail store, so every
+  // ProviderSettings instance (list section and detail page) agrees on it.
+  const detailView = useSettingsDetailStore((state) => state.view)
+  const editingMode: 'create' | 'update' | null =
+    detailView.kind === 'detail' && detailView.categoryId === 'models'
+      ? detailView.file === null
+        ? 'create'
+        : 'update'
+      : null
   const draft = useProviderDraft({
     initial: createProviderDraft,
     fetchErrorToast: {
@@ -40,26 +50,23 @@ export function useProviderEditor({
   })
 
   function closeEditor() {
-    setEditingMode(null)
     draft.clearErrors()
+    backToList()
   }
 
   function openBlank() {
-    editorTriggerRef.current = null
     draft.resetProvider(createProviderDraft())
-    setEditingMode('create')
+    openDetail('models', null, t('settings.provider.add'))
   }
 
   function openFromPreset(preset: ProviderPreset) {
-    editorTriggerRef.current = null
     draft.resetProvider(providerFromPreset(preset))
-    setEditingMode('create')
+    openDetail('models', null, t('settings.provider.add'))
   }
 
-  function openExisting(provider: ModelProvider, trigger: HTMLButtonElement) {
-    editorTriggerRef.current = trigger
+  function openExisting(provider: ModelProvider) {
     draft.resetProvider({ ...provider, models: provider.models.map((model) => ({ ...model })) })
-    setEditingMode('update')
+    openDetail('models', provider.id, t('settings.provider.edit'))
   }
 
   async function saveEditing() {
@@ -114,7 +121,8 @@ export function useProviderEditor({
 
     const nextProviders = upsertProvider(providers, saved)
     replaceSettings(nextProviders, defaultModel)
-    setEditingMode(null)
+    draft.clearErrors()
+    backToList()
 
     try {
       replaceSettings(nextProviders, await claude.getDefaultModel())
@@ -134,7 +142,6 @@ export function useProviderEditor({
     applyPresetToEditing: draft.applyPreset,
     closeEditor,
     editingProvider: editingMode ? draft.provider : null,
-    editorTriggerRef,
     fetchModels: draft.fetchModels,
     isEditingExisting: editingMode === 'update',
     isFetchingModels: draft.isFetchingModels,

@@ -275,8 +275,6 @@ function WorkbenchContent() {
           open={isSettingsOpen}
           projects={workbench.projects}
           returnFocusRef={settingsReturnFocusRef}
-          onCreateProject={() => setProjectDialog({ selectAfterSave: false })}
-          onEditProject={(project) => setProjectDialog({ project, selectAfterSave: false })}
           onOpenChange={setIsSettingsOpen}
           onReloadProjects={workbench.refreshProjects}
           onRemoveProject={(project) => workbench.removeProject(project.id)}

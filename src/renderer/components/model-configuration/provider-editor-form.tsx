@@ -29,6 +29,7 @@ import {
 } from '@/shadcn/select'
 import { Separator } from '@/shadcn/separator'
 import { Spinner } from '@/shadcn/spinner'
+import { cn } from '@/shadcn/utils'
 import { Switch } from '@/shadcn/switch'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip'
 import { normalizeProviderApiType } from '@/shared/provider'
@@ -173,6 +174,7 @@ export function ProviderEditorForm({
   onFetchModels,
   onPreset,
   isFetchingModels,
+  className,
 }: {
   provider: ModelProvider
   providerIdError: string | null
@@ -185,13 +187,15 @@ export function ProviderEditorForm({
   onFetchModels: () => void
   onPreset?: (preset: ProviderPreset) => void
   isFetchingModels: boolean
+  /** Overrides the default Card padding this form ships with. */
+  className?: string
 }) {
   const { t } = useTranslation()
   const suffix = provider.id || 'new'
   const apiType = normalizeProviderApiType(provider.apiType)
 
   return (
-    <FieldGroup className="gap-5 px-6 py-4">
+    <FieldGroup className={cn('gap-5 px-6 py-4', className)}>
       <FieldGroup className="grid gap-4 md:grid-cols-2">
         <Field data-invalid={Boolean(providerIdError)}>
           <FieldLabel className="font-normal text-foreground" htmlFor={`provider-${suffix}-id`}>

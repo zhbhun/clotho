@@ -24,7 +24,7 @@ export function ProviderListCard({
   isUsagePending: boolean
   provider: ModelProvider
   usage: ProviderUsageQuota | undefined
-  onEdit: (trigger: HTMLButtonElement) => void
+  onEdit: () => void
   onRefreshUsage?: () => void
   onDelete: () => void
 }) {
@@ -57,7 +57,7 @@ export function ProviderListCard({
             aria-label={t('settings.provider.editProvider', { name })}
             size="icon"
             variant="mute"
-            onClick={(event) => onEdit(event.currentTarget)}
+            onClick={onEdit}
           >
             <Pencil />
           </Button>

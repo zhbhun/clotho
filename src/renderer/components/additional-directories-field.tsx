@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
 
-import { ProjectPath } from '../../../components/project-path'
-import { projectNameFromPath } from '../../../utils/project'
+import { projectNameFromPath } from '../utils/project'
+import { ProjectPath } from './project-path'
 
 export function AdditionalDirectoriesField({
   disabled,

@@ -16,10 +16,20 @@ import {
   renameAgentWorkflow,
   saveAgentWorkflow,
 } from '../../../services/claude/agent-config'
+import { AgentDetailPage } from './agent-detail-page'
 import { AgentEmpty, AgentSection, DeleteButton } from './agent-shared'
+import { useSettingsDetailStore } from './settings-detail-store'
 
 function formatTime(ms: number) {
   return new Date(ms).toLocaleString()
+}
+
+const WORKFLOW_CATEGORY = 'agent-workflows' as const
+
+/** True when the shared detail view is open for the workflows category. */
+function useWorkflowDetailOpen() {
+  const view = useSettingsDetailStore((state) => state.view)
+  return view.kind === 'detail' && view.categoryId === WORKFLOW_CATEGORY
 }
 
 function WorkflowEditor({
@@ -48,7 +58,15 @@ function WorkflowEditor({
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border p-4">
+    <AgentDetailPage
+      title={draft.name || t('settings.agent.workflows.add')}
+      descriptionKey="settings.agent.workflows.detailDescription"
+      leaf={draft.name ? t('settings.common.edit') : t('settings.agent.workflows.add')}
+      formValue={{ name, content }}
+      isSaving={isSaving}
+      isSaveDisabled={!name.trim()}
+      onSave={() => void handleSave()}
+    >
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="agent-workflow-name">{t('settings.agent.name')}</Label>
         <Input
@@ -66,16 +84,7 @@ function WorkflowEditor({
           onChange={(event) => setContent(event.target.value)}
         />
       </div>
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={onClose}>
-          {t('settings.common.cancel')}
-        </Button>
-        <Button disabled={isSaving || !name.trim()} onClick={() => void handleSave()}>
-          {isSaving ? <Spinner /> : null}
-          {t('settings.common.save')}
-        </Button>
-      </div>
-    </div>
+    </AgentDetailPage>
   )
 }
 
@@ -84,6 +93,9 @@ export function AgentWorkflowSettings() {
   const [workflows, setWorkflows] = useState<AgentWorkflowInfo[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [draft, setDraft] = useState<{ name: string; content: string } | null>(null)
+  const isDetailOpen = useWorkflowDetailOpen()
+  const openDetail = useSettingsDetailStore((state) => state.openDetail)
+  const backToList = useSettingsDetailStore((state) => state.backToList)
 
   const reload = async () => {
     try {
@@ -105,16 +117,21 @@ export function AgentWorkflowSettings() {
     try {
       const { content } = await readAgentWorkflow(name)
       setDraft({ name, content })
+      openDetail(WORKFLOW_CATEGORY, name, t('settings.common.edit'))
     } catch {
       toast.add({ id: 'agent-workflow-read', title: t('settings.agent.loadError'), type: 'error' })
     }
   }
 
-  const startCreate = () => setDraft({ name: '', content: '' })
+  const startCreate = () => {
+    setDraft({ name: '', content: '' })
+    openDetail(WORKFLOW_CATEGORY, null, t('settings.agent.workflows.add'))
+  }
 
   const handleDelete = async (name: string) => {
     try {
       await deleteAgentWorkflow(name)
+      backToList()
       await reload()
     } catch {
       toast.add({
@@ -125,22 +142,25 @@ export function AgentWorkflowSettings() {
     }
   }
 
+  if (isDetailOpen && draft) {
+    return (
+      <WorkflowEditor
+        draft={draft}
+        onClose={() => {
+          backToList()
+          void reload()
+        }}
+      />
+    )
+  }
+
   return (
     <AgentSection
-      addLabel={draft ? undefined : t('settings.agent.workflows.add')}
-      onAdd={draft ? undefined : startCreate}
+      addLabel={t('settings.agent.workflows.add')}
+      onAdd={startCreate}
       titleKey="workflows"
     >
       <div className="flex flex-col gap-3">
-        {draft ? (
-          <WorkflowEditor
-            draft={draft}
-            onClose={() => {
-              setDraft(null)
-              void reload()
-            }}
-          />
-        ) : null}
         {isLoading ? (
           <Spinner className="self-center" />
         ) : workflows.length === 0 ? (

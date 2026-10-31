@@ -82,8 +82,8 @@ import { PermissionSettings } from './components/permission-settings'
 import { ProjectSettings } from './components/project-settings'
 import { ProviderSettings } from './components/provider-settings'
 import { SessionSettings } from './components/session-settings'
+import { useSettingsDetailStore } from './components/settings-detail-store'
 import { ShortcutSettings } from './components/shortcut-settings'
-import { useSubagentDetailStore } from './components/subagent-detail-store'
 
 const BASE_CATEGORIES = [
   { id: 'general', labelKey: 'settings.categories.general', icon: Settings2 },
@@ -123,8 +123,6 @@ type SettingsPageProps = {
   open: boolean
   projects?: ClaudeProject[]
   returnFocusRef?: RefObject<HTMLElement | null>
-  onCreateProject?: () => void
-  onEditProject?: (project: ClaudeProject) => void
   onOpenChange: (open: boolean) => void
   onReloadProjects?: () => Promise<void> | void
   onRemoveProject?: (project: ClaudeProject) => Promise<void> | void
@@ -251,20 +249,20 @@ function DiscardChangesDialog({
     <AppAlertDialog onOpenChange={onOpenChange} open={open}>
       <AppAlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{t('settings.agent.subagent.discardTitle')}</AlertDialogTitle>
+          <AlertDialogTitle>{t('settings.detail.discardTitle')}</AlertDialogTitle>
           <AlertDialogDescription>
-            {t('settings.agent.subagent.discardDescription', { subject })}
+            {t('settings.detail.discardDescription', { subject })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>{t('settings.agent.subagent.discardKeepEditing')}</AlertDialogCancel>
+          <AlertDialogCancel>{t('settings.detail.discardKeepEditing')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={() => {
               onOpenChange(false)
               onDiscard()
             }}
           >
-            {t('settings.agent.subagent.discardConfirm')}
+            {t('settings.detail.discardConfirm')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AppAlertDialogContent>
@@ -280,8 +278,6 @@ function SettingsPageContent({
   open,
   projects = [],
   returnFocusRef,
-  onCreateProject = () => {},
-  onEditProject = () => {},
   onOpenChange,
   onReloadProjects,
   onRemoveProject = () => {},
@@ -294,25 +290,26 @@ function SettingsPageContent({
   const category = CATEGORIES.find((item) => item.id === categoryId) ?? CATEGORIES[0]
   const settingsSidebarWidth = useSidebarResize()?.width ?? APP_SIDEBAR_DEFAULT_WIDTH
 
-  const subagentDetail = useSubagentDetailStore()
-  const isSubagentDetailOpen = subagentDetail.view.kind === 'detail'
-  const subagentLeaf =
-    subagentDetail.view.kind === 'detail'
-      ? (subagentDetail.view.file ?? t('settings.agent.subagent.new'))
-      : ''
+  const detail = useSettingsDetailStore()
+  const isDetailOpen = detail.view.kind === 'detail'
+  const detailCategoryId = detail.view.kind === 'detail' ? detail.view.categoryId : null
+  const detailLeaf = isDetailOpen ? detail.leaf : ''
+  const detailCategory = detailCategoryId
+    ? (CATEGORIES.find((item) => item.id === detailCategoryId) ?? null)
+    : null
 
   /**
-   * Sidebar navigation while the detail page is open: with unsaved changes the
+   * Sidebar navigation while any detail page is open: with unsaved changes the
    * store gates the leave behind the discard dialog and the clicked category
-   * stays inactive (D4); a clean detail closes and the category activates.
+   * stays inactive; a clean detail closes and the category activates.
    */
   const selectCategory = (id: SettingsCategoryId) => {
-    if (isSubagentDetailOpen) {
-      if (subagentDetail.isDirty) {
-        subagentDetail.requestLeave()
+    if (isDetailOpen) {
+      if (detail.isDirty) {
+        detail.requestLeave()
         return
       }
-      subagentDetail.backToList()
+      detail.backToList()
     }
     setCategoryId(id)
     setFocusedCategoryId(id)
@@ -432,39 +429,40 @@ function SettingsPageContent({
             </Sidebar>
 
             <SidebarInset className="min-w-0 overflow-hidden">
-              {isSubagentDetailOpen ? (
-                <div className="shrink-0 px-6 pb-3 pt-8" data-subagent-breadcrumb-bar>
-                  <Breadcrumb>
+              {isDetailOpen ? (
+                <div
+                  className="app-region-drag flex h-10 shrink-0 items-center px-6"
+                  data-settings-breadcrumb-bar
+                >
+                  <Breadcrumb className="app-region-no-drag">
                     <BreadcrumbList>
                       <BreadcrumbItem>
                         <BreadcrumbLink
                           className="cursor-pointer text-foreground-subtlest"
-                          data-testid="subagent-breadcrumb-root"
-                          onClick={subagentDetail.requestLeave}
+                          data-testid="settings-breadcrumb-root"
+                          onClick={detail.requestLeave}
                         >
-                          {t('settings.categories.agentSubagents')}
+                          {detailCategory ? t(detailCategory.labelKey) : ''}
                         </BreadcrumbLink>
                       </BreadcrumbItem>
                       <BreadcrumbSeparator />
                       <BreadcrumbItem className="min-w-0">
-                        <BreadcrumbPage className="max-w-80 truncate">
-                          {subagentLeaf}
-                        </BreadcrumbPage>
+                        <BreadcrumbPage className="max-w-80 truncate">{detailLeaf}</BreadcrumbPage>
                       </BreadcrumbItem>
                     </BreadcrumbList>
                   </Breadcrumb>
                 </div>
               ) : null}
-              <TransientScrollArea className={isSubagentDetailOpen ? 'min-h-0 flex-1' : 'h-svh'}>
-                <div className="px-6 py-12">
+              <TransientScrollArea className={isDetailOpen ? 'min-h-0 flex-1' : 'h-svh'}>
+                <div className={cn('px-6', isDetailOpen ? 'pb-12 pt-10' : 'py-12')}>
                   <div
                     className={cn(APP_CONTENT_CONTAINER_CLASS, 'flex flex-col gap-8')}
                     data-settings-content
                   >
-                    {/* The subagent detail page renders its own h1 (subagent
-                        name or New subagent); the category header would
-                        duplicate the breadcrumb root above it. */}
-                    {!isSubagentDetailOpen ? (
+                    {/* A detail page renders its own h1 (entry name or create
+                        label); the category header would duplicate the
+                        breadcrumb root above it. */}
+                    {!isDetailOpen ? (
                       <header>
                         <h1 className="text-xl font-medium tracking-tight">
                           {t(category.labelKey)}
@@ -493,8 +491,6 @@ function SettingsPageContent({
                         error={error}
                         isLoading={isProjectLoading}
                         projects={projects}
-                        onCreateProject={onCreateProject}
-                        onEditProject={onEditProject}
                         onReload={onReloadProjects}
                         onRemoveProject={onRemoveProject}
                       />
@@ -525,12 +521,12 @@ function SettingsPageContent({
         </DialogContent>
       </Dialog>
       <DiscardChangesDialog
-        open={subagentDetail.isLeavePending}
-        subject={subagentLeaf}
+        open={detail.isLeavePending}
+        subject={detailLeaf}
         onOpenChange={(next) => {
-          if (!next) subagentDetail.cancelLeave()
+          if (!next) detail.cancelLeave()
         }}
-        onDiscard={subagentDetail.confirmLeave}
+        onDiscard={detail.confirmLeave}
       />
     </ShortcutScope>
   )
