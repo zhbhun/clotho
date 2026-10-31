@@ -391,7 +391,7 @@ function SettingsPageContent({
                 </SidebarMenu>
               </SidebarHeader>
 
-              <SidebarContent className="pt-2">
+              <SidebarContent className="gap-3 pt-2">
                 {CATEGORY_GROUPS.map((group) => (
                   <SidebarGroup className="py-0" key={group.labelKey}>
                     <SidebarGroupLabel className="h-7 px-2 text-sm text-foreground-subtlest">
