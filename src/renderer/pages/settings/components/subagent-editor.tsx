@@ -1,5 +1,6 @@
+import type { TFunction } from 'i18next'
 import { ChevronDown } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
@@ -21,7 +22,8 @@ import { toast } from '@/shadcn/toast'
 import { cn } from '@/shadcn/utils'
 
 import { type AgentSubagentConfig, saveAgentSubagent } from '../../../services/claude/agent-config'
-import { DeleteConfirmButton } from './agent-shared'
+import { DeleteConfirmButton, capitalize } from './agent-shared'
+import { useSubagentDetailStore } from './subagent-detail-store'
 
 /** Common tools shown as checkboxes; other entries in `tools` pass through on save. */
 const GRID_TOOLS = [
@@ -41,6 +43,16 @@ const PERMISSION_MODES = ['default', 'acceptEdits', 'auto', 'dontAsk', 'bypassPe
 const EFFORTS = ['low', 'medium', 'high', 'xhigh', 'max']
 const MEMORIES = ['user', 'project', 'local']
 const COLORS = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink', 'cyan']
+
+/**
+ * UI label for an enum option: the translated `option.*` key when present,
+ * else the capitalized raw value (a hand-written unknown stays round-trippable,
+ * design D3). Storage keeps the lowercase literal.
+ */
+function optionLabel(t: TFunction, option: string): string {
+  const key = `settings.agent.subagent.option.${option}`
+  return t(key, { defaultValue: capitalize(option) })
+}
 
 /** Editor state; tools mode is UI-only (design D2): `all` omits the tools key. */
 type ToolsMode = 'all' | 'custom'
@@ -85,15 +97,18 @@ function SelectField({
   emptyLabel: string
   onChange: (value: string | undefined) => void
 }) {
+  const { t } = useTranslation()
   const items = [
     { value: '', label: emptyLabel },
     // A hand-written value outside the enum stays selectable so it round-trips (design D3).
     ...(!value || options.includes(value) || value === '' ? [] : [{ value, label: value }]),
-    ...options.map((option) => ({ value: option, label: option })),
+    ...options.map((option) => ({ value: option, label: optionLabel(t, option) })),
   ]
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={id}>{label}</Label>
+      <Label className="font-normal" htmlFor={id}>
+        {label}
+      </Label>
       <Select
         items={items}
         value={value ?? ''}
@@ -198,7 +213,7 @@ function AdvancedOptions({
     <div className="flex flex-col gap-3">
       <button
         type="button"
-        className="flex items-center gap-1.5 text-sm font-medium text-foreground"
+        className="flex items-center gap-1.5 text-sm font-normal text-foreground"
         onClick={() => setIsOpen(!isOpen)}
       >
         <ChevronDown className={cn('size-3.5 transition-transform', !isOpen && '-rotate-90')} />
@@ -215,7 +230,7 @@ function AdvancedOptions({
               label={t('settings.agent.model')}
               value={form.model}
               options={MODEL_OPTIONS}
-              emptyLabel={t('settings.agent.subagent.modelDefault')}
+              emptyLabel={t('settings.agent.subagent.option.default')}
               onChange={(model) => set({ model })}
             />
             <SelectField
@@ -237,7 +252,7 @@ function AdvancedOptions({
               onChange={(effort) => set({ effort })}
             />
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="agent-subagent-max-turns">
+              <Label className="font-normal" htmlFor="agent-subagent-max-turns">
                 {t('settings.agent.subagent.maxTurns')}
               </Label>
               <Input
@@ -251,7 +266,9 @@ function AdvancedOptions({
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="agent-subagent-tools">{t('settings.agent.tools')}</Label>
+            <Label className="font-normal" htmlFor="agent-subagent-tools">
+              {t('settings.agent.tools')}
+            </Label>
             <div className="flex items-center gap-3">
               <Select
                 items={[
@@ -302,7 +319,7 @@ function AdvancedOptions({
             ) : null}
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="agent-subagent-disallowed">
+            <Label className="font-normal" htmlFor="agent-subagent-disallowed">
               {t('settings.agent.subagent.disallowedTools')}
             </Label>
             <Input
@@ -316,7 +333,9 @@ function AdvancedOptions({
             </p>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="agent-subagent-skills">{t('settings.agent.subagent.skills')}</Label>
+            <Label className="font-normal" htmlFor="agent-subagent-skills">
+              {t('settings.agent.subagent.skills')}
+            </Label>
             <Input
               id="agent-subagent-skills"
               value={form.skills ?? ''}
@@ -356,12 +375,16 @@ function AdvancedOptions({
               onChange={(color) => set({ color })}
             />
           </div>
-          <SwitchField
-            label={t('settings.agent.subagent.isolation')}
-            hint={t('settings.agent.subagent.isolationHint')}
-            checked={form.isolation === 'worktree'}
-            onCheckedChange={(isolation) => set({ isolation: isolation ? 'worktree' : undefined })}
-          />
+          <div className="sm:max-w-[calc(50%-1rem)]">
+            <SwitchField
+              label={t('settings.agent.subagent.isolation')}
+              hint={t('settings.agent.subagent.isolationHint')}
+              checked={form.isolation === 'worktree'}
+              onCheckedChange={(isolation) =>
+                set({ isolation: isolation ? 'worktree' : undefined })
+              }
+            />
+          </div>
         </div>
       ) : null}
     </div>
@@ -370,23 +393,33 @@ function AdvancedOptions({
 
 export function SubagentEditor({
   draft,
-  onClose,
   onDelete,
 }: {
   draft: AgentSubagentConfig
-  onClose: () => void
   onDelete?: (file: string) => Promise<void> | void
 }) {
   const { t } = useTranslation()
   const [form, setForm] = useState(draft)
   const [isSaving, setIsSaving] = useState(false)
   const isNew = draft.file === ''
+  const setDirty = useSubagentDetailStore((state) => state.setDirty)
+  const requestLeave = useSubagentDetailStore((state) => state.requestLeave)
+  const backToList = useSubagentDetailStore((state) => state.backToList)
+
+  // Dirty = current form differs from the snapshot taken at mount.
+  const baselineRef = useRef(JSON.stringify(draft))
+  useEffect(() => {
+    setDirty(JSON.stringify(form) !== baselineRef.current)
+  }, [form, setDirty])
+  useEffect(() => () => setDirty(false), [setDirty])
+
+  const title = isNew ? t('settings.agent.subagent.new') : draft.name || draft.file
 
   const handleSave = async () => {
     setIsSaving(true)
     try {
       await saveAgentSubagent({ ...form, file: form.file || (form.name ?? '').trim() })
-      onClose()
+      backToList()
     } catch {
       toast.add({ id: 'agent-subagent-save', title: t('settings.agent.saveError'), type: 'error' })
     } finally {
@@ -395,56 +428,71 @@ export function SubagentEditor({
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border p-4">
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="agent-subagent-name">{t('settings.agent.name')}</Label>
-        <Input
-          id="agent-subagent-name"
-          value={form.name ?? ''}
-          placeholder={t('settings.agent.subagent.namePlaceholder')}
-          onChange={(event) => setForm({ ...form, name: event.target.value })}
-        />
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="agent-subagent-description">{t('settings.agent.description')}</Label>
-        <Textarea
-          id="agent-subagent-description"
-          className="min-h-14 resize-none"
-          value={form.description ?? ''}
-          placeholder={t('settings.agent.subagent.descriptionPlaceholder')}
-          onChange={(event) =>
-            setForm({ ...form, description: event.target.value.replace(/\n/g, '') })
-          }
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') event.preventDefault()
-          }}
-        />
-      </div>
-      <AdvancedOptions form={form} setForm={setForm} />
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="agent-subagent-body">{t('settings.agent.prompt')}</Label>
-        <Textarea
-          className="min-h-40 font-mono"
-          id="agent-subagent-body"
-          value={form.body}
-          onChange={(event) => setForm({ ...form, body: event.target.value })}
-        />
-      </div>
-      <div className="flex items-center justify-between gap-2">
-        {!isNew && onDelete ? (
-          <DeleteConfirmButton
-            label={t('settings.common.delete')}
-            onDelete={() => onDelete(draft.file)}
+    <div className="flex flex-col gap-6">
+      <header className="flex flex-col gap-1">
+        <h1 className="text-xl font-medium tracking-tight">{title}</h1>
+        <p className="text-sm text-foreground-subtlest">
+          {t('settings.agent.subagent.detailDescription')}
+        </p>
+      </header>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1.5">
+          <Label className="font-normal" htmlFor="agent-subagent-name">
+            {t('settings.agent.name')}
+          </Label>
+          <Input
+            id="agent-subagent-name"
+            value={form.name ?? ''}
+            placeholder={t('settings.agent.subagent.namePlaceholder')}
+            onChange={(event) => setForm({ ...form, name: event.target.value })}
           />
-        ) : null}
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={onClose}>
-            {t('settings.common.cancel')}
-          </Button>
-          <Button disabled={isSaving || !form.name?.trim()} onClick={() => void handleSave()}>
-            {isSaving ? <Spinner /> : null}
-            {t('settings.common.save')}
-          </Button>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label className="font-normal" htmlFor="agent-subagent-description">
+            {t('settings.agent.description')}
+          </Label>
+          <Textarea
+            id="agent-subagent-description"
+            className="min-h-14 resize-none"
+            value={form.description ?? ''}
+            placeholder={t('settings.agent.subagent.descriptionPlaceholder')}
+            onChange={(event) =>
+              setForm({ ...form, description: event.target.value.replace(/\n/g, '') })
+            }
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') event.preventDefault()
+            }}
+          />
+        </div>
+        <AdvancedOptions form={form} setForm={setForm} />
+        <div className="flex flex-col gap-1.5">
+          <Label className="font-normal" htmlFor="agent-subagent-body">
+            {t('settings.agent.prompt')}
+          </Label>
+          <Textarea
+            className="min-h-40 font-mono"
+            id="agent-subagent-body"
+            value={form.body}
+            onChange={(event) => setForm({ ...form, body: event.target.value })}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          {!isNew && onDelete ? (
+            <DeleteConfirmButton
+              className="mr-auto"
+              label={t('settings.common.delete')}
+              onDelete={() => onDelete(draft.file)}
+            />
+          ) : null}
+          <div className="ml-auto flex gap-2">
+            <Button variant="outline" onClick={requestLeave}>
+              {t('settings.common.cancel')}
+            </Button>
+            <Button disabled={isSaving || !form.name?.trim()} onClick={() => void handleSave()}>
+              {isSaving ? <Spinner /> : null}
+              {t('settings.common.save')}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

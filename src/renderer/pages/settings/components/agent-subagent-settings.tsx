@@ -1,7 +1,9 @@
-import { ChevronRight, Puzzle, Sparkles, User } from 'lucide-react'
+import ClaudeIcon from '@thesvg/react/claude'
+import { ChevronRight, Puzzle, UserRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { Badge } from '@/shadcn/badge'
 import { Button } from '@/shadcn/button'
 import { Spinner } from '@/shadcn/spinner'
 import { toast } from '@/shadcn/toast'
@@ -12,16 +14,17 @@ import {
   listAgentAvailableSubagents,
   listAgentSubagents,
 } from '../../../services/claude/agent-config'
-import { AgentEmpty, DeleteButton } from './agent-shared'
+import { AgentEmpty, DeleteButton, capitalize } from './agent-shared'
+import { useSubagentDetailStore } from './subagent-detail-store'
 import { SubagentEditor } from './subagent-editor'
 
 const SOURCES = ['builtin', 'plugin', 'custom'] as const
 type Source = (typeof SOURCES)[number]
 
 const SOURCE_ICON = {
-  builtin: Sparkles,
+  builtin: ClaudeIcon,
   plugin: Puzzle,
-  custom: User,
+  custom: UserRound,
 } as const
 
 function SourceBadge({ source }: { source: Source }) {
@@ -33,7 +36,7 @@ function SourceBadge({ source }: { source: Source }) {
       className="flex shrink-0 items-center rounded border p-1 text-foreground-subtle"
       title={label}
     >
-      <Icon className="size-3.5" aria-hidden />
+      <Icon className="size-3.5" variant="mono" aria-hidden />
     </span>
   )
 }
@@ -50,8 +53,8 @@ function SubagentRow({
   const { t } = useTranslation()
   const isReadOnly = subagent.builtin === true
   const modelLabel = subagent.model
-    ? subagent.model.charAt(0).toUpperCase() + subagent.model.slice(1)
-    : t('settings.agent.subagent.modelDefault')
+    ? capitalize(subagent.model)
+    : t('settings.agent.subagent.option.default')
 
   return (
     <div className="flex min-h-14 items-center gap-3 px-4 py-3">
@@ -64,7 +67,9 @@ function SubagentRow({
           {subagent.broken ? t('settings.agent.broken') : subagent.description}
         </div>
       </div>
-      <span className="shrink-0 text-sm text-foreground-subtlest">{modelLabel}</span>
+      <Badge className="shrink-0 font-normal" variant="outline">
+        {modelLabel}
+      </Badge>
       {!isReadOnly ? (
         // A broken file cannot open in the editor; the row delete button is
         // its only removal path (rpc.ts: broken files are "only deletable").
@@ -89,16 +94,20 @@ function sourceOf(subagent: AgentSubagentConfig): Source {
   return subagent.source ?? 'custom'
 }
 
+/** Blank editor draft for a new subagent; `file` fills in from the name on save. */
+function newSubagentDraft(file: string | null): AgentSubagentConfig {
+  const name = file ?? ''
+  return { file: name, name, description: '', body: '' }
+}
+
 function SourceCard({
   source,
   rows,
-  hiddenFile,
   onEdit,
   onDelete,
 }: {
   source: Source
   rows: AgentSubagentConfig[]
-  hiddenFile: string | null
   onEdit: (subagent: AgentSubagentConfig) => void
   onDelete: (file: string) => Promise<void> | void
 }) {
@@ -112,16 +121,14 @@ function SourceCard({
         <AgentEmpty />
       ) : (
         <div className="divide-y rounded-lg border">
-          {rows.map((subagent) =>
-            subagent.file === hiddenFile ? null : (
-              <SubagentRow
-                key={`${sourceOf(subagent)}:${subagent.file}`}
-                subagent={subagent}
-                onEdit={() => onEdit(subagent)}
-                onDelete={() => onDelete(subagent.file)}
-              />
-            ),
-          )}
+          {rows.map((subagent) => (
+            <SubagentRow
+              key={`${sourceOf(subagent)}:${subagent.file}`}
+              subagent={subagent}
+              onEdit={() => onEdit(subagent)}
+              onDelete={() => onDelete(subagent.file)}
+            />
+          ))}
         </div>
       )}
     </div>
@@ -132,8 +139,9 @@ export function AgentSubagentSettings() {
   const { t } = useTranslation()
   const [subagents, setSubagents] = useState<AgentSubagentConfig[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [draft, setDraft] = useState<AgentSubagentConfig | null>(null)
-  const [fileBeingEdited, setFileBeingEdited] = useState<string | null>(null)
+  const view = useSubagentDetailStore((state) => state.view)
+  const openDetail = useSubagentDetailStore((state) => state.openDetail)
+  const backToList = useSubagentDetailStore((state) => state.backToList)
 
   const reload = async () => {
     try {
@@ -166,10 +174,18 @@ export function AgentSubagentSettings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Refresh the list whenever the detail page closes, so a save or delete
+  // made there is reflected without a manual refresh control.
+  const isDetailOpen = view.kind === 'detail'
+  useEffect(() => {
+    if (!isDetailOpen) void reload()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDetailOpen])
+
   const handleDeleteAndClose = async (file: string) => {
     try {
       await deleteAgentSubagent(file)
-      setDraft(null)
+      backToList()
       await reload()
     } catch {
       toast.add({
@@ -180,7 +196,7 @@ export function AgentSubagentSettings() {
     }
   }
 
-  // Row delete keeps the editor open; it never targets the file being edited.
+  // Row delete keeps the detail page open; it never targets the file being edited.
   const handleDelete = async (file: string) => {
     try {
       await deleteAgentSubagent(file)
@@ -194,17 +210,20 @@ export function AgentSubagentSettings() {
     }
   }
 
-  const startEdit = (subagent: AgentSubagentConfig) => {
-    setFileBeingEdited(subagent.file)
-    setDraft({ ...subagent })
-  }
-
-  const startCreate = () => {
-    setFileBeingEdited(null)
-    setDraft({ file: '', name: '', description: '', body: '' })
-  }
-
   const bySource = (source: Source) => subagents.filter((subagent) => sourceOf(subagent) === source)
+
+  if (isDetailOpen) {
+    const file = view.file
+    const existing = file ? subagents.find((subagent) => subagent.file === file) : null
+    return (
+      <section className="flex flex-col gap-3" data-subagent-detail-page>
+        <SubagentEditor
+          draft={existing ?? newSubagentDraft(file)}
+          onDelete={handleDeleteAndClose}
+        />
+      </section>
+    )
+  }
 
   return (
     <section className="flex flex-col gap-3">
@@ -215,20 +234,10 @@ export function AgentSubagentSettings() {
             {t('settings.agent.subagent.itemCount', { count: subagents.length })}
           </span>
         </h2>
-        <Button variant="outline" onClick={startCreate}>
+        <Button variant="outline" onClick={() => openDetail(null)}>
           {t('settings.agent.subagent.add')}
         </Button>
       </div>
-      {draft ? (
-        <SubagentEditor
-          draft={draft}
-          onClose={() => {
-            setDraft(null)
-            void reload()
-          }}
-          onDelete={handleDeleteAndClose}
-        />
-      ) : null}
       {isLoading ? (
         <Spinner className="self-center" />
       ) : (
@@ -238,8 +247,7 @@ export function AgentSubagentSettings() {
               key={source}
               source={source}
               rows={bySource(source)}
-              hiddenFile={fileBeingEdited}
-              onEdit={startEdit}
+              onEdit={(subagent) => openDetail(subagent.file)}
               onDelete={handleDelete}
             />
           ))}

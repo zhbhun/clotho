@@ -12,6 +12,7 @@ import {
 } from '@/shadcn/alert-dialog'
 import { Button } from '@/shadcn/button'
 import { toast } from '@/shadcn/toast'
+import { cn } from '@/shadcn/utils'
 
 import { AppAlertDialog, AppAlertDialogContent } from '../../../components/app-dialog'
 import { SettingsSection } from '../../../components/settings-section'
@@ -54,6 +55,11 @@ export function AgentSection({
 export function AgentEmpty() {
   const { t } = useTranslation()
   return <p className="text-sm text-foreground-subtlest">{t('settings.agent.empty')}</p>
+}
+
+/** UI label for a lowercase enum value; storage keeps the verbatim literal. */
+export function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
 /**
@@ -150,9 +156,12 @@ export function DeleteButton({
 export function DeleteConfirmButton({
   label,
   onDelete,
+  className,
 }: {
   label: string
   onDelete: () => Promise<void> | void
+  /** Extra classes for the trigger, e.g. `mr-auto` to pin it left. */
+  className?: string
 }) {
   const [confirmOpen, setConfirmOpen] = useState(false)
 
@@ -160,7 +169,7 @@ export function DeleteConfirmButton({
     <>
       <Button
         aria-label={label}
-        className="text-destructive"
+        className={cn('text-destructive', className)}
         size="sm"
         variant="ghost"
         onClick={() => setConfirmOpen(true)}

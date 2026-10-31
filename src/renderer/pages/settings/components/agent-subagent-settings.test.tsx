@@ -10,6 +10,7 @@ import { appI18n } from '../../../i18n/runtime'
 import * as agentConfig from '../../../services/claude/agent-config'
 import { ShortcutRuntimeProvider, shortcutRuntime } from '../../../services/shortcuts/runtime'
 import { AgentSubagentSettings } from './agent-subagent-settings'
+import { useSubagentDetailStore } from './subagent-detail-store'
 
 vi.mock('../../../services/claude/agent-config', () => ({
   listAgentSubagents: vi.fn(),
@@ -25,6 +26,8 @@ const mock = vi.mocked(agentConfig, true)
 beforeEach(async () => {
   await appI18n.changeLanguage('zh-CN')
   vi.clearAllMocks()
+  // The detail-view store is module-level; reset it between tests.
+  useSubagentDetailStore.setState({ view: { kind: 'list' }, isDirty: false })
   mock.getAgentCapabilityToggles.mockResolvedValue({
     disabledPlugins: [],
     disabledSkills: [],
@@ -299,5 +302,63 @@ describe('AgentSubagentSettings', () => {
         expect.objectContaining({ file: 'reviewer', tools: undefined }),
       ),
     )
+  })
+
+  it('switches to the detail page via the chevron and back on save', async () => {
+    await setup([CUSTOM])
+    mock.saveAgentSubagent.mockResolvedValue(undefined)
+    const user = userEvent.setup()
+
+    // Detail page replaces the list: heading gone, page header shows the name.
+    await user.click(within(getCard('custom')).getByRole('button', { name: '编辑' }))
+    expect(screen.getByRole('heading', { name: 'reviewer' })).toBeInTheDocument()
+    expect(
+      screen.getByText('填写子智能体的名称、工具和系统提示词，保存后返回列表。'),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '保存' }))
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: /已安装 \d+ 项/ })).toBeInTheDocument(),
+    )
+    // The list reloads after the detail page closes (mount + close at minimum).
+    await waitFor(() =>
+      expect(mock.listAgentAvailableSubagents.mock.calls.length).toBeGreaterThanOrEqual(2),
+    )
+  })
+
+  it('opens the detail page for a new subagent with the New subagent title', async () => {
+    await setup([BUILTIN])
+    const user = userEvent.setup()
+
+    await user.click(screen.getByRole('button', { name: '添加' }))
+    expect(screen.getByRole('heading', { name: '新建子智能体' })).toBeInTheDocument()
+    expect(screen.getByLabelText('名称')).toHaveValue('')
+  })
+
+  it('returns to the list on cancel without saving', async () => {
+    await setup([CUSTOM])
+    const user = userEvent.setup()
+
+    await user.click(within(getCard('custom')).getByRole('button', { name: '编辑' }))
+    await user.click(screen.getByRole('button', { name: '取消' }))
+
+    expect(await screen.findByRole('heading', { name: /已安装 \d+ 项/ })).toBeInTheDocument()
+    expect(mock.saveAgentSubagent).not.toHaveBeenCalled()
+  })
+
+  it('marks the store dirty when a field changes and gates Cancel behind confirmation', async () => {
+    await setup([CUSTOM])
+    const user = userEvent.setup()
+
+    await user.click(within(getCard('custom')).getByRole('button', { name: '编辑' }))
+    expect(useSubagentDetailStore.getState().isDirty).toBe(false)
+
+    await user.type(screen.getByLabelText('名称'), '-x')
+    expect(useSubagentDetailStore.getState().isDirty).toBe(true)
+
+    // Dirty Cancel opens the leave-pending gate instead of leaving directly.
+    await user.click(screen.getByRole('button', { name: '取消' }))
+    expect(useSubagentDetailStore.getState().view.kind).toBe('detail')
+    expect(useSubagentDetailStore.getState().isLeavePending).toBe(true)
   })
 })

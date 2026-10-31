@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE: subagent detail page navigation</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #171717;
+    --muted: #737373;
+    --border: #e5e5e5;
+    --accent: #171717;
+    --card: #ffffff;
+    --subtle: #fafafa;
+    --danger: #dc2626;
+    --overlay: rgba(0,0,0,.35);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #282a36;
+      --fg: #f8f8f2;
+      --muted: #8b8fa3;
+      --border: #3a3d4d;
+      --accent: #ff79c6;
+      --card: #2e3041;
+      --subtle: #242634;
+      --danger: #ff5555;
+      --overlay: rgba(0,0,0,.55);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .app { display: flex; height: 100vh; }
+  .sidebar {
+    width: 208px; border-right: 1px solid var(--border);
+    padding: 12px 8px; flex-shrink: 0;
+    display: flex; flex-direction: column;
+  }
+  .sidebar .back-row {
+    display: flex; align-items: center; gap: 8px;
+    height: 32px; padding: 0 8px; margin-bottom: 12px;
+    color: var(--muted); font-size: 13px; border-radius: 6px;
+  }
+  .sidebar h2 { font-size: 11px; font-weight: 500; color: var(--muted); padding: 8px 8px 4px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px; border-radius: 6px; font-size: 13px;
+    color: var(--fg); cursor: default;
+  }
+  .nav-item.active { background: var(--subtle); font-weight: 500; }
+  .nav-item .icon { width: 14px; height: 14px; opacity: .6; flex-shrink: 0; }
+
+  /* content region: top bar (breadcrumb) + scrollable centered content */
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .topbar {
+    flex-shrink: 0;
+    padding: 18px 32px 0;
+  }
+  .scroll { flex: 1; overflow-y: auto; padding: 16px 32px 32px; }
+  .content-inner { max-width: 672px; margin: 0 auto; }
+
+  .proto-banner {
+    background: var(--subtle); border: 1px dashed var(--border);
+    border-radius: 8px; padding: 8px 12px; font-size: 12px; color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  /* ===== breadcrumb ===== */
+  .bc {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 14px; min-height: 22px;
+  }
+  .bc .bc-link { color: var(--muted); cursor: pointer; }
+  .bc .bc-link:hover { color: var(--fg); text-decoration: underline; }
+  .bc .bc-sep { color: var(--muted); opacity: .7; font-size: 12px; }
+  .bc .bc-page { color: var(--fg); }
+
+  /* ===== page head ===== */
+  .head h1 { font-size: 17px; font-weight: 600; }
+  .page-desc { font-size: 12px; color: var(--muted); margin-top: 6px; margin-bottom: 20px; }
+
+  /* ===== list view ===== */
+  .list-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .list-head h2 { font-size: 14px; font-weight: 500; }
+  .list-head .count { color: var(--muted); font-weight: 400; }
+  .src-label { font-size: 13px; color: var(--muted); margin: 20px 0 8px; }
+  .src-label:first-of-type { margin-top: 0; }
+  .card { border: 1px solid var(--border); border-radius: 10px; background: var(--card); }
+  .item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+  }
+  .item:last-child { border-bottom: none; }
+  .item .badge {
+    display: flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; border: 1px solid var(--border); border-radius: 6px;
+    flex-shrink: 0; opacity: .8; color: var(--fg);
+  }
+  .item .badge.claude { color: #d97757; }
+  @media (prefers-color-scheme: dark) { .item .badge.claude { color: #e8825f; } }
+  .item .meta { min-width: 0; flex: 1; }
+  .item .name { font-size: 14px; font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item .desc { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item .model { font-size: 13px; color: var(--muted); flex-shrink: 0; }
+  .item .go {
+    border: none; background: none; color: var(--muted); font-size: 14px;
+    cursor: pointer; padding: 4px 6px; flex-shrink: 0;
+  }
+  .item .go:hover { color: var(--fg); }
+
+  /* ===== editor ===== */
+  .editor { border: 1px solid var(--border); border-radius: 10px; padding: 16px; background: var(--card); display: flex; flex-direction: column; gap: 14px; }
+  .label { font-size: 13px; font-weight: 500; display: block; margin-bottom: 5px; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .input {
+    width: 100%;
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 6px 10px; font: inherit; font-size: 13px;
+    background: var(--bg); color: var(--fg);
+  }
+  .input::placeholder { color: var(--muted); opacity: .8; }
+  textarea.input { min-height: 140px; font-family: ui-monospace, monospace; resize: vertical; }
+  textarea.desc { min-height: 56px; font-family: inherit; resize: none; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } }
+
+  .editor-foot { display: flex; justify-content: space-between; gap: 8px; }
+  .editor-foot .right { display: flex; gap: 8px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid var(--border); border-radius: 6px; background: var(--bg);
+    font: inherit; font-size: 13px; padding: 5px 14px; color: var(--fg); cursor: default;
+  }
+  .btn.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+
+  /* ===== confirm dialog ===== */
+  .overlay {
+    display: none; position: fixed; inset: 0; background: var(--overlay);
+    z-index: 50; align-items: center; justify-content: center;
+  }
+  .overlay.open { display: flex; }
+  .dlg {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    width: 380px; max-width: calc(100vw - 48px);
+    padding: 20px; box-shadow: 0 16px 48px rgba(0,0,0,.25);
+  }
+  .dlg h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+  .dlg p { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+  .dlg .foot { display: flex; justify-content: flex-end; gap: 8px; }
+
+  .view { display: none; }
+  .view.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- PROTOTYPE (throwaway): subagent detail as a second-level page.
+     Decided layout: breadcrumb bar spans the content region (right of the
+     sidebar), left-aligned with the title area; the content below keeps its
+     own h1 title + description. Unsaved-changes confirm on breadcrumb /
+     sidebar navigation; Save returns to list; Esc closes settings (not shown). -->
+
+<div class="app">
+  <nav class="sidebar">
+    <div class="back-row">‹ Back</div>
+    <div class="nav-item"><span class="icon">⚙</span>General</div>
+    <div class="nav-item"><span class="icon">📚</span>Models</div>
+    <div class="nav-item"><span class="icon">🎨</span>Appearance</div>
+    <h2>Agent capabilities</h2>
+    <div class="nav-item active"><span class="icon">🤖</span>Subagents</div>
+    <div class="nav-item" onclick="navAway()"><span class="icon">🧩</span>Plugins</div>
+    <div class="nav-item" onclick="navAway()"><span class="icon">🖥</span>MCP servers</div>
+    <div class="nav-item" onclick="navAway()"><span class="icon">✨</span>Skills</div>
+    <div class="nav-item" onclick="navAway()"><span class="icon">🪝</span>Hooks</div>
+  </nav>
+
+  <div class="main">
+    <div class="topbar" id="topbar" style="display:none">
+      <div class="bc">
+        <span class="bc-link" onclick="leaveEditor()">Subagents</span>
+        <span class="bc-sep">›</span>
+        <span class="bc-page" id="bc-leaf">New subagent</span>
+      </div>
+    </div>
+
+    <div class="scroll">
+      <div class="content-inner">
+
+        <!-- ================= LIST VIEW ================= -->
+        <section class="view" id="view-list">
+          <div class="proto-banner">PROTOTYPE (throwaway) · second-level detail page</div>
+          <div class="head"><h1>Subagents</h1></div>
+          <div class="list-head">
+            <h2>Installed <span class="count">6 items</span></h2>
+            <button class="btn" onclick="openEditor('new')">Add</button>
+          </div>
+
+          <div class="src-label">Built-in</div>
+          <div class="card">
+            <div class="item">
+              <span class="badge claude">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden><path d="M12 2l1.8 5.6a2 2 0 0 0 1.3 1.3L20.7 10.7a1.2 1.2 0 0 1 0 2.6l-5.6 1.8a2 2 0 0 0-1.3 1.3L12 22l-1.8-5.6a2 2 0 0 0-1.3-1.3L3.3 13.3a1.2 1.2 0 0 1 0-2.6l5.6-1.8a2 2 0 0 0 1.3-1.3L12 2z"/></svg>
+              </span>
+              <div class="meta">
+                <div class="name">general-purpose</div>
+                <div class="desc">General-purpose agent for researching complex questions</div>
+              </div>
+            </div>
+            <div class="item">
+              <span class="badge claude">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden><path d="M12 2l1.8 5.6a2 2 0 0 0 1.3 1.3L20.7 10.7a1.2 1.2 0 0 1 0 2.6l-5.6 1.8a2 2 0 0 0-1.3 1.3L3.3 13.3a1.2 1.2 0 0 1 0-2.6l5.6-1.8a2 2 0 0 0 1.3-1.3L12 2z"/></svg>
+              </span>
+              <div class="meta">
+                <div class="name">Explore</div>
+                <div class="desc">Read-only search agent for broad fan-out searches</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="src-label">Plugin</div>
+          <div class="card">
+            <div class="item">
+              <span class="badge">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden><path d="M19.439 7.85c-.049.322.059.648.289.878l1.568 1.568c.47.47.706 1.087.706 1.704s-.235 1.233-.706 1.704l-1.611 1.611a.98.98 0 0 1-.837.276c-.47-.07-.802-.48-.968-.925a2.501 2.501 0 1 0-3.214 3.214c.446.166.855.497.925.968a.979.979 0 0 1-.276.837l-1.61 1.61a2.404 2.404 0 0 1-1.705.707 2.402 2.402 0 0 1-1.704-.706l-1.568-1.568a1.026 1.026 0 0 0-.877-.29c-.493.074-.84.504-1.02.968a2.5 2.5 0 1 1-3.237-3.237c.464-.18.894-.527.967-1.02a1.026 1.026 0 0 0-.289-.877l-1.568-1.568A2.402 2.402 0 0 1 1.998 12c0-.617.236-1.234.706-1.704L4.23 8.77c.24-.24.581-.353.917-.303.515.077.877.528 1.073 1.01a2.5 2.5 0 1 0 3.259-3.259c-.482-.196-.933-.558-1.01-1.073-.05-.336.062-.676.303-.917l1.525-1.525A2.402 2.402 0 0 1 12 1.998c.617 0 1.234.236 1.704.706l1.568 1.568c.23.23.556.338.877.29.493-.074.84-.504 1.02-.968a2.5 2.5 0 1 1 3.237 3.237c-.464.18-.894.527-.967 1.02Z"/></svg>
+              </span>
+              <div class="meta">
+                <div class="name">cavecrew-investigator</div>
+                <div class="desc">Read-only code locator · caveman:cavecrew</div>
+              </div>
+              <span class="model">haiku</span>
+            </div>
+          </div>
+
+          <div class="src-label">Custom</div>
+          <div class="card">
+            <div class="item">
+              <span class="badge">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </span>
+              <div class="meta">
+                <div class="name">code-reviewer</div>
+                <div class="desc">Reviews code changes and suggests improvements</div>
+              </div>
+              <span class="model">sonnet</span>
+              <button class="go" title="Open details" onclick="openEditor('code-reviewer')">›</button>
+            </div>
+            <div class="item">
+              <span class="badge">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </span>
+              <div class="meta">
+                <div class="name">docs-writer</div>
+                <div class="desc">Keeps project docs up to date</div>
+              </div>
+              <button class="go" title="Open details" onclick="openEditor('docs-writer')">›</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= EDITOR VIEW ================= -->
+        <section class="view" id="view-editor">
+          <div class="head">
+            <h1 id="editor-title">New subagent</h1>
+            <div class="page-desc">Fill in the name, tools and system prompt of the subagent. Saving returns you to the list.</div>
+          </div>
+          <div class="editor">
+            <div>
+              <label class="label">Name</label>
+              <input class="input" id="fName" value="code-reviewer" placeholder="Unique, also the filename, no ':' — e.g. code-reviewer" oninput="markDirty()">
+            </div>
+
+            <div>
+              <label class="label">Description</label>
+              <textarea class="input desc" id="fDesc" rows="2" placeholder="When to delegate to this agent" oninput="markDirty()">Reviews code changes and suggests improvements</textarea>
+            </div>
+
+            <div>
+              <label class="label">System prompt</label>
+              <textarea class="input" id="fBody" oninput="markDirty()">You are a code review specialist...</textarea>
+            </div>
+
+            <div class="editor-foot">
+              <button class="btn danger" onclick="leaveEditor()">Delete</button>
+              <div class="right">
+                <button class="btn" onclick="leaveEditor()">Cancel</button>
+                <button class="btn primary" onclick="saveEditor()">Save</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- confirm dialog -->
+<div class="overlay" id="confirm-overlay">
+  <div class="dlg">
+    <h3>Discard changes?</h3>
+    <p>You have unsaved changes to <span id="confirm-name">code-reviewer</span>. Leaving this page will discard them.</p>
+    <div class="foot">
+      <button class="btn" onclick="confirmStay()">Keep editing</button>
+      <button class="btn primary" onclick="confirmLeave()">Discard</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== dirty tracking =====
+  let dirty = false
+  let currentName = 'code-reviewer'
+  function markDirty() { dirty = true }
+  function resetDirty() { dirty = false }
+
+  const saved = {}
+  function snapshot(id) { saved[id] = JSON.stringify([fName.value, fDesc.value, fBody.value]) }
+  function isDirty() {
+    return dirty || saved[currentName] !== JSON.stringify([fName.value, fDesc.value, fBody.value])
+  }
+
+  // ===== views =====
+  function show(v) {
+    document.getElementById('view-list').classList.toggle('active', v === 'list')
+    document.getElementById('view-editor').classList.toggle('active', v === 'editor')
+    document.getElementById('topbar').style.display = v === 'editor' ? 'block' : 'none'
+    const url = new URL(location)
+    url.searchParams.set('view', v)
+    history.replaceState(null, '', url)
+  }
+
+  function openEditor(name) {
+    currentName = name === 'new' ? 'New subagent' : name
+    if (name === 'new') {
+      fName.value = ''; fDesc.value = ''; fBody.value = ''
+    } else if (name === 'code-reviewer') {
+      fName.value = 'code-reviewer'
+      fDesc.value = 'Reviews code changes and suggests improvements'
+      fBody.value = 'You are a code review specialist...'
+    } else {
+      fName.value = 'docs-writer'
+      fDesc.value = 'Keeps project docs up to date'
+      fBody.value = 'You keep the documentation current...'
+    }
+    resetDirty()
+    snapshot(currentName)
+    document.getElementById('bc-leaf').textContent = currentName
+    document.getElementById('editor-title').textContent = currentName
+    document.getElementById('confirm-name').textContent = currentName
+    show('editor')
+  }
+
+  function saveEditor() {
+    saved[currentName] = JSON.stringify([fName.value, fDesc.value, fBody.value])
+    resetDirty()
+    show('list')
+  }
+
+  // ===== leave paths =====
+  function leaveEditor() {
+    if (!isDirty()) return show('list')
+    document.getElementById('confirm-overlay').classList.add('open')
+  }
+  function navAway() {
+    if (document.getElementById('view-editor').classList.contains('active') && isDirty()) {
+      document.getElementById('confirm-overlay').classList.add('open')
+    }
+  }
+  function confirmStay() {
+    document.getElementById('confirm-overlay').classList.remove('open')
+  }
+  function confirmLeave() {
+    document.getElementById('confirm-overlay').classList.remove('open')
+    resetDirty()
+    show('list')
+  }
+
+  // Esc = close whole settings (out of scope here; noted only)
+
+  const fromUrl = new URLSearchParams(location.search).get('view')
+  show(fromUrl === 'editor' ? 'editor' : 'list')
+</script>
+</body>
+</html>

@@ -14,6 +14,9 @@ import {
   initializeAppSettings,
 } from '../../services/app-settings'
 import { ShortcutRuntimeProvider, shortcutRuntime } from '../../services/shortcuts/runtime'
+import { ModelConfigurationProvider } from '../../stores/model-configuration-context'
+import { ProviderUsageProvider } from '../../stores/provider-usage-context'
+import { useSubagentDetailStore } from './components/subagent-detail-store'
 import { SettingsPage } from './index'
 
 let savedPreferences: AppPreferences[] = []
@@ -22,9 +25,13 @@ function TestSettingsPage(props: ComponentProps<typeof SettingsPage>) {
   return (
     <LanguageProvider initialPreference="zh-CN" instance={appI18n}>
       <ThemeProvider disableTransitionOnChange={false}>
-        <ShortcutRuntimeProvider runtime={shortcutRuntime}>
-          <SettingsPage {...props} />
-        </ShortcutRuntimeProvider>
+        <ModelConfigurationProvider>
+          <ProviderUsageProvider>
+            <ShortcutRuntimeProvider runtime={shortcutRuntime}>
+              <SettingsPage {...props} />
+            </ShortcutRuntimeProvider>
+          </ProviderUsageProvider>
+        </ModelConfigurationProvider>
       </ThemeProvider>
     </LanguageProvider>
   )
@@ -35,6 +42,7 @@ describe('SettingsPage', () => {
     await appI18n.changeLanguage('zh-CN')
     localStorage.clear()
     savedPreferences = []
+    useSubagentDetailStore.setState({ view: { kind: 'list' }, isDirty: false })
     await initializeAppSettings({
       load: async () => DEFAULT_APP_PREFERENCES,
       save: async (preferences) => {
@@ -164,5 +172,73 @@ describe('SettingsPage', () => {
     for (const name of ['子智能体', '插件', 'MCP 服务器', '技能', '钩子', '工作流']) {
       expect(screen.getByRole('button', { name })).toBeInTheDocument()
     }
+  })
+
+  describe('subagent detail leave guard', () => {
+    function renderSubagentsPage(detailFile: string | null) {
+      useSubagentDetailStore.setState({ view: { kind: 'detail', file: detailFile } })
+      render(<TestSettingsPage open initialCategory="agent-subagents" onOpenChange={vi.fn()} />)
+      // The mounted editor re-derives isDirty from its untouched form; flip it
+      // afterwards to simulate unsaved changes.
+      return {
+        markDirty: () => useSubagentDetailStore.setState({ isDirty: true }),
+      }
+    }
+
+    it('lets a clean detail page hand off to a clicked sidebar category', async () => {
+      const user = userEvent.setup()
+      renderSubagentsPage('reviewer')
+
+      // The detail page replaces the list; the category header is suppressed.
+      expect(screen.getByRole('heading', { name: 'reviewer' })).toBeInTheDocument()
+      await user.click(screen.getByRole('button', { name: '外观' }))
+
+      // A clean hand-off activates the clicked category and closes the detail.
+      expect(screen.getByRole('heading', { name: '外观' })).toBeInTheDocument()
+      expect(useSubagentDetailStore.getState().view.kind).toBe('list')
+    })
+
+    it('keeps the detail page and blocks the category when leaving dirty via the sidebar', async () => {
+      const user = userEvent.setup()
+      const { markDirty } = renderSubagentsPage('reviewer')
+      markDirty()
+
+      await user.click(screen.getByRole('button', { name: '外观' }))
+
+      // The discard dialog is pending; the category never activated.
+      expect(await screen.findByRole('alertdialog', { name: '放弃更改？' })).toBeInTheDocument()
+      expect(useSubagentDetailStore.getState().view.kind).toBe('detail')
+      expect(useSubagentDetailStore.getState().isLeavePending).toBe(true)
+
+      // Resolve the dialog so its portal does not leak into the next test.
+      await user.click(screen.getByRole('button', { name: '放弃' }))
+      expect(useSubagentDetailStore.getState().isLeavePending).toBe(false)
+    })
+
+    it('keeps the detail page and blocks the leave when the breadcrumb root is dirty', async () => {
+      const user = userEvent.setup()
+      const { markDirty } = renderSubagentsPage('reviewer')
+      markDirty()
+
+      await user.click(screen.getByTestId('subagent-breadcrumb-root'))
+
+      expect(await screen.findByRole('alertdialog', { name: '放弃更改？' })).toBeInTheDocument()
+      expect(useSubagentDetailStore.getState().view.kind).toBe('detail')
+
+      // Resolve the dialog so its portal does not leak into the next test.
+      await user.click(screen.getByRole('button', { name: '放弃' }))
+      expect(useSubagentDetailStore.getState().isLeavePending).toBe(false)
+    })
+
+    it('returns to the list directly from a clean breadcrumb root', async () => {
+      const user = userEvent.setup()
+      renderSubagentsPage('reviewer')
+
+      await user.click(screen.getByTestId('subagent-breadcrumb-root'))
+
+      // A clean breadcrumb-root leave goes straight back to the list header.
+      expect(screen.getByRole('heading', { name: '子智能体' })).toBeInTheDocument()
+      expect(useSubagentDetailStore.getState().view.kind).toBe('list')
+    })
   })
 })
