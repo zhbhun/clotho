@@ -281,20 +281,28 @@ export interface AgentPluginInfo {
   name: string
   marketplace: string
   version: string
+  scope: string
   installPath: string
+  /** Enable state from the CLI's `enabledPlugins` in `~/.claude/settings.json`. */
+  enabled: boolean
   installedAt?: string
-  disabled?: boolean
+  /** CLI-reported install warnings (e.g. dependencies it refused to install). */
+  notes?: string[]
 }
 
 export interface AgentMarketplacePlugin {
+  /** `<plugin>@<marketplace>` id used to install from the catalog. */
+  pluginId: string
   name: string
   description?: string
+  marketplaceName: string
+  installCount?: number
 }
 
 export interface AgentMarketplaceInfo {
   name: string
   source: { source: string; repo?: string; url?: string }
-  plugins: AgentMarketplacePlugin[]
+  installLocation: string
 }
 
 export interface AgentWorkflowInfo {
@@ -1364,20 +1372,28 @@ export type DesktopRPC = {
         params: Record<string, never>
         response: AgentPluginInfo[]
       }
+      agentListAvailablePlugins: {
+        params: Record<string, never>
+        response: AgentMarketplacePlugin[]
+      }
       agentListMarketplaces: {
         params: Record<string, never>
         response: AgentMarketplaceInfo[]
       }
       agentAddMarketplace: {
-        params: { gitUrl: string }
-        response: { name: string }
+        params: { source: string }
+        response: void
       }
       agentRemoveMarketplace: {
         params: { name: string }
         response: void
       }
+      agentRefreshMarketplace: {
+        params: { name?: string }
+        response: void
+      }
       agentInstallPlugin: {
-        params: { marketplace: string; plugin: string }
+        params: { pluginId: string }
         response: void
       }
       agentRemovePlugin: {
@@ -1411,15 +1427,13 @@ export type DesktopRPC = {
       agentGetCapabilityToggles: {
         params: Record<string, never>
         response: {
-          disabledPlugins: string[]
           disabledSkills: string[]
           disabledMcpServers: string[]
         }
       }
       agentSetCapabilityToggle: {
-        params: { kind: 'plugin' | 'skill' | 'mcp'; name: string; enabled: boolean }
+        params: { kind: 'skill' | 'mcp'; name: string; enabled: boolean }
         response: {
-          disabledPlugins: string[]
           disabledSkills: string[]
           disabledMcpServers: string[]
         }

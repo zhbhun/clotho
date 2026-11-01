@@ -1,216 +1,193 @@
 import { execFile } from 'node:child_process'
-import { promises as fs } from 'node:fs'
-import path from 'node:path'
-import { promisify } from 'node:util'
 
-import { readJsonFile, writeJsonAtomic } from './fs-safe'
+import { resolveClaudeCodeBinary } from '../sdk-binary'
 
-const execFileAsync = promisify(execFile)
+const CLI_TIMEOUT_MS = 30_000
+const CLI_MAX_BUFFER = 10 * 1024 * 1024
 
 /**
- * Plugin management over the CLI's own files (design D6): installed plugins
- * from `~/.claude/plugins/installed_plugins.json`, marketplaces from
- * `known_marketplaces.json` + `marketplaces/` git clones. Clotho-scoped
- * enable state lives in Clotho's settings, never in the CLI's files.
+ * Plugin management over the Claude Code CLI's own `plugin` subcommands: the
+ * CLI resolves installs, marketplaces, and enable state (`enabledPlugins` in
+ * `~/.claude/settings.json`) and owns every file under `~/.claude/plugins/`.
+ * Clotho only invokes the CLI and reads its JSON output.
  */
+
 export interface InstalledPlugin {
   /** `<plugin>@<marketplace>`. */
   id: string
   name: string
   marketplace: string
   version: string
+  scope: string
   installPath: string
+  enabled: boolean
   installedAt?: string
+  /** CLI-reported install warnings (e.g. dependencies it refused to install). */
+  notes?: string[]
 }
 
 export interface MarketplacePlugin {
+  pluginId: string
   name: string
   description?: string
-  source?: string
+  marketplaceName: string
+  installCount?: number
 }
 
 export interface MarketplaceInfo {
   name: string
   source: { source: string; repo?: string; url?: string }
   installLocation: string
-  plugins: MarketplacePlugin[]
 }
 
-export interface PluginInstallEntry {
-  scope: string
-  installPath: string
+/** Raw shapes from `claude plugin list --json` / `--available --json`. */
+interface CliInstalledPlugin {
+  id: string
   version: string
-  installedAt: string
-  lastUpdated?: string
-  gitCommitSha?: string
+  scope: string
+  enabled: boolean
+  installPath: string
+  installedAt?: string
+  notes?: string[]
   [extra: string]: unknown
 }
 
-type InstalledPluginsFile = { version?: number; plugins?: Record<string, PluginInstallEntry[]> }
-type KnownMarketplacesFile = Record<
-  string,
-  { source: MarketplaceInfo['source']; installLocation: string; lastUpdated?: string }
->
-
-export function pluginsDir(claudeDir = path.join(process.env.HOME ?? '', '.claude')) {
-  return path.join(claudeDir, 'plugins')
+interface CliAvailablePlugin {
+  pluginId?: string
+  name: string
+  description?: string
+  marketplaceName: string
+  installCount?: number
+  [extra: string]: unknown
 }
 
-export function installedPluginsPath(claudeDir?: string) {
-  return path.join(pluginsDir(claudeDir), 'installed_plugins.json')
+interface CliMarketplace {
+  name: string
+  source: string
+  repo?: string
+  url?: string
+  path?: string
+  installLocation: string
+  [extra: string]: unknown
 }
 
-export function knownMarketplacesPath(claudeDir?: string) {
-  return path.join(pluginsDir(claudeDir), 'known_marketplaces.json')
-}
-
-export async function listInstalledPlugins(claudeDir?: string): Promise<InstalledPlugin[]> {
-  const read = await readJsonFile<InstalledPluginsFile>(installedPluginsPath(claudeDir))
-  if (!read.ok) return []
-  return Object.entries(read.value.plugins ?? {}).flatMap(([id, entries]) => {
-    const entry = entries.find((candidate) => candidate.scope === 'user') ?? entries[0]
-    if (!entry) return []
-    const at = id.lastIndexOf('@')
-    return [
-      {
-        id,
-        name: at > 0 ? id.slice(0, at) : id,
-        marketplace: at > 0 ? id.slice(at + 1) : '',
-        version: entry.version,
-        installPath: entry.installPath,
-        installedAt: entry.installedAt,
-      },
-    ]
-  })
-}
-
-export async function listMarketplaces(claudeDir?: string): Promise<MarketplaceInfo[]> {
-  const read = await readJsonFile<KnownMarketplacesFile>(knownMarketplacesPath(claudeDir))
-  if (!read.ok) return []
-  return Promise.all(
-    Object.entries(read.value).map(async ([name, entry]) => ({
-      name,
-      source: entry.source,
-      installLocation: entry.installLocation,
-      plugins: await readMarketplacePlugins(entry.installLocation),
-    })),
-  )
-}
-
-async function readMarketplacePlugins(installLocation: string): Promise<MarketplacePlugin[]> {
-  const manifestPath = path.join(installLocation, '.claude-plugin', 'marketplace.json')
-  const read = await readJsonFile<{ plugins?: MarketplacePlugin[] }>(manifestPath)
-  return read.ok ? (read.value.plugins ?? []) : []
-}
-
-export async function removeInstalledPlugin(id: string, claudeDir?: string): Promise<void> {
-  const read = await readJsonFile<InstalledPluginsFile>(installedPluginsPath(claudeDir))
-  const entry = read.ok
-    ? ((read.value.plugins?.[id] ?? []).find((candidate) => candidate.scope === 'user') ??
-      read.value.plugins?.[id]?.[0])
-    : undefined
-  if (!entry) throw new Error(`Unknown installed plugin: ${id}`)
-  await fs.rm(entry.installPath, { recursive: true, force: true })
-  await writeJsonAtomic<InstalledPluginsFile>(installedPluginsPath(claudeDir), (current) => {
-    const plugins = { ...(current.plugins ?? {}) }
-    delete plugins[id]
-    return { ...current, plugins }
-  })
-}
-
-function marketplaceNameFromSource(source: string): string {
-  const withoutGit = source.replace(/\.git$/, '')
-  const lastSegment = withoutGit.split('/').pop() ?? withoutGit
-  if (!lastSegment || !/^[\w.-]+$/.test(lastSegment)) {
-    throw new Error(`Cannot derive a marketplace name from: ${source}`)
-  }
-  return lastSegment
-}
-
-export async function addMarketplace(gitUrl: string, claudeDir?: string): Promise<string> {
-  if (!/^https?:\/\/|^[^@]+@[^:]+:/.test(gitUrl)) {
-    throw new Error(`Not a git URL: ${gitUrl}`)
-  }
-  const name = marketplaceNameFromSource(gitUrl)
-  const installLocation = path.join(pluginsDir(claudeDir), 'marketplaces', name)
-  await fs.mkdir(path.dirname(installLocation), { recursive: true })
-  await execFileAsync('git', ['clone', '--depth', '1', gitUrl, installLocation])
-  await writeJsonAtomic<KnownMarketplacesFile>(knownMarketplacesPath(claudeDir), (current) => ({
-    ...current,
-    [name]: {
-      source: { source: 'git', url: gitUrl },
-      installLocation,
-      lastUpdated: new Date().toISOString(),
-    },
-  }))
-  return name
-}
-
-export async function removeMarketplace(name: string, claudeDir?: string): Promise<void> {
-  const read = await readJsonFile<KnownMarketplacesFile>(knownMarketplacesPath(claudeDir))
-  const entry = read.ok ? read.value[name] : undefined
-  if (!entry) throw new Error(`Unknown marketplace: ${name}`)
-  await fs.rm(entry.installLocation, { recursive: true, force: true })
-  await writeJsonAtomic<KnownMarketplacesFile>(knownMarketplacesPath(claudeDir), (current) => {
-    const next = { ...current }
-    delete next[name]
-    return next
-  })
+/** Resolves the same binary Clotho sessions spawn, falling back to `PATH`. */
+function claudeBinary(): string {
+  return resolveClaudeCodeBinary() ?? 'claude'
 }
 
 /**
- * Install = copy from the marketplace checkout into the plugins cache and
- * record a v2-shaped `installed_plugins.json` entry. A file copy never
- * executes plugin content; plugin code only runs inside sessions.
+ * Promise wrapper over execFile (hand-rolled instead of `promisify` so the
+ * resolve shape is exactly `{ stdout, stderr }` regardless of the callee).
  */
-export async function installPlugin(
-  marketplace: string,
-  pluginName: string,
-  claudeDir?: string,
-): Promise<void> {
-  const read = await readJsonFile<KnownMarketplacesFile>(knownMarketplacesPath(claudeDir))
-  const marketplaceEntry = read.ok ? read.value[marketplace] : undefined
-  if (!marketplaceEntry) throw new Error(`Unknown marketplace: ${marketplace}`)
-  const plugins = await readMarketplacePlugins(marketplaceEntry.installLocation)
-  const manifest = plugins.find((plugin) => plugin.name === pluginName)
-  if (!manifest) throw new Error(`${pluginName} is not in marketplace ${marketplace}`)
-
-  const pluginId = `${pluginName}@${marketplace}`
-  const cacheRoot = path.join(
-    pluginsDir(claudeDir),
-    'cache',
-    marketplace,
-    pluginName,
-    manifest.source ?? 'local',
-  )
-  await fs.rm(cacheRoot, { recursive: true, force: true })
-  await fs.mkdir(path.dirname(cacheRoot), { recursive: true })
-  await fs.cp(path.join(marketplaceEntry.installLocation, pluginNameToPath(manifest)), cacheRoot, {
-    recursive: true,
+function run(
+  file: string,
+  args: string[],
+  options: { timeout: number; maxBuffer: number; encoding: string },
+): Promise<{ stdout: string; stderr: string }> {
+  return new Promise((resolve, reject) => {
+    execFile(file, args, options, (error, stdout, stderr) => {
+      if (error) reject(error)
+      else resolve({ stdout: String(stdout), stderr: String(stderr) })
+    })
   })
+}
 
-  const now = new Date().toISOString()
-  await writeJsonAtomic<InstalledPluginsFile>(installedPluginsPath(claudeDir), (current) => ({
-    ...current,
-    version: current.version ?? 2,
-    plugins: {
-      ...(current.plugins ?? {}),
-      [pluginId]: [
-        {
-          scope: 'user',
-          installPath: cacheRoot,
-          version: manifest.source ?? 'local',
-          installedAt: now,
-          lastUpdated: now,
-        },
-      ],
-    },
+async function runPluginCommand(args: string[]): Promise<string> {
+  try {
+    const { stdout } = await run(claudeBinary(), ['plugin', ...args], {
+      timeout: CLI_TIMEOUT_MS,
+      maxBuffer: CLI_MAX_BUFFER,
+      encoding: 'utf-8',
+    })
+    return stdout
+  } catch (caught) {
+    const error = caught as { stderr?: string; message?: string }
+    const detail = error.stderr?.trim() || error.message || 'unknown error'
+    throw new Error(`claude plugin ${args.join(' ')} failed: ${detail}`)
+  }
+}
+
+async function runPluginCommandJson<T>(args: string[]): Promise<T> {
+  const stdout = await runPluginCommand([...args, '--json'])
+  try {
+    return JSON.parse(stdout) as T
+  } catch {
+    throw new Error(`claude plugin ${args.join(' ')} printed invalid JSON`)
+  }
+}
+
+function splitPluginId(id: string): { name: string; marketplace: string } {
+  const at = id.lastIndexOf('@')
+  return at > 0
+    ? { name: id.slice(0, at), marketplace: id.slice(at + 1) }
+    : { name: id, marketplace: '' }
+}
+
+export async function listInstalledPlugins(): Promise<InstalledPlugin[]> {
+  const installed = await runPluginCommandJson<CliInstalledPlugin[]>(['list'])
+  return installed.map((entry) => ({
+    ...splitPluginId(entry.id),
+    id: entry.id,
+    version: entry.version,
+    scope: entry.scope,
+    installPath: entry.installPath,
+    enabled: entry.enabled,
+    installedAt: entry.installedAt,
+    notes: entry.notes,
   }))
 }
 
-/** Marketplace manifests may point at `plugins/<name>` or a `source` path. */
-function pluginNameToPath(manifest: MarketplacePlugin): string {
-  if (!manifest.source || manifest.source === 'local') return manifest.name
-  // A relative source path inside the checkout (e.g. "plugins/foo" or "./foo").
-  return manifest.source.replace(/^\.\//, '')
+export async function listMarketplacePlugins(): Promise<MarketplacePlugin[]> {
+  const catalog = await runPluginCommandJson<{
+    installed?: unknown
+    available?: CliAvailablePlugin[]
+  }>(['list', '--available'])
+  return (catalog.available ?? []).map((entry) => ({
+    pluginId: entry.pluginId ?? `${entry.name}@${entry.marketplaceName}`,
+    name: entry.name,
+    description: entry.description,
+    marketplaceName: entry.marketplaceName,
+    installCount: entry.installCount,
+  }))
+}
+
+export async function listMarketplaces(): Promise<MarketplaceInfo[]> {
+  const marketplaces = await runPluginCommandJson<CliMarketplace[]>(['marketplace', 'list'])
+  return marketplaces.map((entry) => ({
+    name: entry.name,
+    source: { source: entry.source, repo: entry.repo, url: entry.url },
+    installLocation: entry.installLocation,
+  }))
+}
+
+export async function installPlugin(pluginId: string): Promise<void> {
+  if (!pluginId.trim()) throw new Error('Installing a plugin requires a plugin id')
+  await runPluginCommand(['install', pluginId])
+}
+
+export async function removeInstalledPlugin(id: string): Promise<void> {
+  if (!id.trim()) throw new Error('Uninstalling a plugin requires a plugin id')
+  await runPluginCommand(['uninstall', id])
+}
+
+export async function setPluginEnabled(id: string, enabled: boolean): Promise<void> {
+  if (!id.trim()) throw new Error('Toggling a plugin requires a plugin id')
+  await runPluginCommand([enabled ? 'enable' : 'disable', id])
+}
+
+export async function addMarketplace(source: string): Promise<void> {
+  if (!source.trim()) throw new Error('Adding a marketplace requires a source')
+  await runPluginCommand(['marketplace', 'add', source])
+}
+
+export async function removeMarketplace(name: string): Promise<void> {
+  if (!name.trim()) throw new Error('Removing a marketplace requires a name')
+  await runPluginCommand(['marketplace', 'remove', name])
+}
+
+export async function refreshMarketplace(name?: string): Promise<void> {
+  await runPluginCommand(
+    name?.trim() ? ['marketplace', 'update', name.trim()] : ['marketplace', 'update'],
+  )
 }

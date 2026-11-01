@@ -29,9 +29,12 @@ import {
   addMarketplace,
   installPlugin,
   listInstalledPlugins,
+  listMarketplacePlugins,
   listMarketplaces,
+  refreshMarketplace,
   removeInstalledPlugin,
   removeMarketplace,
+  setPluginEnabled,
 } from './claude/agent-config/plugins'
 import { deleteSkill, listSkills } from './claude/agent-config/skills'
 import {
@@ -165,16 +168,11 @@ export function createClaudeDesktopService(
     resolveAgentCapabilities: async () => {
       const capabilities = settingsStore.get().agentCapabilities
       if (!capabilities) return undefined
-      const disabledPlugins = capabilities.disabledPlugins ?? []
       const disabledSkills = capabilities.disabledSkills ?? []
       const disabledMcpServers = capabilities.disabledMcpServers ?? []
-      const [installed, mcp] = await Promise.all([
-        disabledPlugins.length ? listInstalledPlugins() : Promise.resolve([]),
-        disabledMcpServers.length ? listMcpServers() : Promise.resolve(null),
-      ])
-      const enabledPaths = installed
-        .filter((plugin) => !disabledPlugins.includes(plugin.id))
-        .map((plugin) => plugin.installPath)
+      // Plugins are no longer injected per-session: the CLI mounts
+      // `enabledPlugins` from `~/.claude/settings.json` itself (design D3).
+      const mcp = disabledMcpServers.length ? await listMcpServers() : null
       const enabledServers =
         mcp && disabledMcpServers.length
           ? Object.fromEntries(
@@ -222,11 +220,6 @@ export function createClaudeDesktopService(
           : undefined
       return {
         disabledSkills,
-        enabledPlugins: enabledPaths.length
-          ? Object.fromEntries(
-              enabledPaths.map((installPath, index) => [String(index), installPath]),
-            )
-          : undefined,
         enabledMcpServers: enabledServers,
       }
     },
@@ -425,13 +418,15 @@ export function createClaudeDesktopService(
     listAgentSkills: () => listSkills(),
     deleteAgentSkill: ({ name }: { name: string }) => deleteSkill(name),
     listAgentPlugins: () => listInstalledPlugins(),
+    listAgentAvailablePlugins: () => listMarketplacePlugins(),
     listAgentMarketplaces: () => listMarketplaces(),
-    addAgentMarketplace: ({ gitUrl }: { gitUrl: string }) =>
-      addMarketplace(gitUrl).then((name) => ({ name })),
+    addAgentMarketplace: ({ source }: { source: string }) => addMarketplace(source),
     removeAgentMarketplace: ({ name }: { name: string }) => removeMarketplace(name),
-    installAgentPlugin: ({ marketplace, plugin }: { marketplace: string; plugin: string }) =>
-      installPlugin(marketplace, plugin),
+    refreshAgentMarketplace: ({ name }: { name?: string }) => refreshMarketplace(name),
+    installAgentPlugin: ({ pluginId }: { pluginId: string }) => installPlugin(pluginId),
     removeAgentPlugin: ({ id }: { id: string }) => removeInstalledPlugin(id),
+    setAgentPluginEnabled: ({ id, enabled }: { id: string; enabled: boolean }) =>
+      setPluginEnabled(id, enabled),
     listAgentWorkflows: () => listWorkflows(),
     readAgentWorkflow: ({ name }: { name: string }) =>
       readWorkflow(name).then((content) => ({ content })),
@@ -442,7 +437,6 @@ export function createClaudeDesktopService(
     getAgentCapabilityToggles: async () => {
       const toggles = settingsStore.get().agentCapabilities
       return {
-        disabledPlugins: toggles?.disabledPlugins ?? [],
         disabledSkills: toggles?.disabledSkills ?? [],
         disabledMcpServers: toggles?.disabledMcpServers ?? [],
       }
@@ -452,16 +446,11 @@ export function createClaudeDesktopService(
       name,
       enabled,
     }: {
-      kind: 'plugin' | 'skill' | 'mcp'
+      kind: 'skill' | 'mcp'
       name: string
       enabled: boolean
     }) => {
-      const key =
-        kind === 'plugin'
-          ? 'disabledPlugins'
-          : kind === 'mcp'
-            ? 'disabledMcpServers'
-            : 'disabledSkills'
+      const key = kind === 'mcp' ? 'disabledMcpServers' : 'disabledSkills'
       const next = await settingsStore.update((settings) => {
         const current = settings.agentCapabilities ?? {}
         const disabled = new Set(current[key] ?? [])
@@ -470,7 +459,6 @@ export function createClaudeDesktopService(
         return { ...settings, agentCapabilities: { ...current, [key]: [...disabled] } }
       })
       return {
-        disabledPlugins: next.agentCapabilities?.disabledPlugins ?? [],
         disabledSkills: next.agentCapabilities?.disabledSkills ?? [],
         disabledMcpServers: next.agentCapabilities?.disabledMcpServers ?? [],
       }

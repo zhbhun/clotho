@@ -44,7 +44,6 @@ beforeEach(async () => {
   await appI18n.changeLanguage('zh-CN')
   vi.clearAllMocks()
   mock.getAgentCapabilityToggles.mockResolvedValue({
-    disabledPlugins: [],
     disabledSkills: ['already-off'],
     disabledMcpServers: [],
   })
@@ -77,7 +76,6 @@ describe('AgentSkillSettings', () => {
   it('toggles a skill through the capability toggle RPC', async () => {
     mock.listAgentSkills.mockResolvedValue([{ name: 'commit', description: '' }])
     mock.setAgentCapabilityToggle.mockResolvedValue({
-      disabledPlugins: [],
       disabledSkills: ['commit'],
       disabledMcpServers: [],
     })

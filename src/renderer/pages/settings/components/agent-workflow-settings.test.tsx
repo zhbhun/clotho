@@ -46,7 +46,6 @@ beforeEach(async () => {
   vi.clearAllMocks()
   useSettingsDetailStore.setState({ view: { kind: 'list' }, isDirty: false, leaf: '' })
   mock.getAgentCapabilityToggles.mockResolvedValue({
-    disabledPlugins: [],
     disabledSkills: [],
     disabledMcpServers: [],
   })

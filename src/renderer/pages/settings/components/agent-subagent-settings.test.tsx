@@ -29,7 +29,6 @@ beforeEach(async () => {
   // The detail-view store is module-level; reset it between tests.
   useSettingsDetailStore.setState({ view: { kind: 'list' }, isDirty: false })
   mock.getAgentCapabilityToggles.mockResolvedValue({
-    disabledPlugins: [],
     disabledSkills: [],
     disabledMcpServers: [],
   })

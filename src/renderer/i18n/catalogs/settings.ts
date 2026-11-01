@@ -753,7 +753,29 @@ export const settingsCatalog = {
   'settings.agent.plugins.installed': setting('Installed', '已安装', '已安裝'),
   'settings.agent.plugins.marketplaces': setting('Marketplaces', '插件市场', '外掛市場'),
   'settings.agent.plugins.addMarketplace': setting('Add marketplace', '添加市场', '新增市場'),
-  'settings.agent.plugins.gitUrl': setting('Git URL', 'Git URL', 'Git URL'),
+  'settings.agent.plugins.sourcePlaceholder': setting(
+    'Marketplace source (git URL, GitHub repo, URL, or local path)',
+    '市场来源（git URL、GitHub 仓库、URL 或本地路径）',
+    '市場來源（git URL、GitHub 儲存庫、URL 或本機路徑）',
+  ),
+  'settings.agent.plugins.browseCatalog': setting('Browse catalog', '浏览目录', '瀏覽目錄'),
+  'settings.agent.plugins.refresh': setting('Refresh', '刷新', '整理'),
+  'settings.agent.plugins.refreshAll': setting('Refresh all', '全部刷新', '全部整理'),
+  'settings.agent.plugins.refreshError': setting(
+    'Failed to refresh the marketplace',
+    '刷新市场失败',
+    '整理市場失敗',
+  ),
+  'settings.agent.plugins.restartHint': setting(
+    'Plugin changes apply to new sessions',
+    '插件变更将在新会话中生效',
+    '外掛變更將在新工作階段中生效',
+  ),
+  'settings.agent.plugins.installCount': setting(
+    '{{count}} installs',
+    '{{count}} 次安装',
+    '{{count}} 次安裝',
+  ),
   'settings.agent.plugins.install': setting('Install', '安装', '安裝'),
   'settings.agent.plugins.installedAt': setting('Installed at', '安装时间', '安裝時間'),
   'settings.agent.plugins.marketplaceError': setting(

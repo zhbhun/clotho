@@ -1,6 +1,7 @@
 import type {
   AgentHookGroup,
   AgentMarketplaceInfo,
+  AgentMarketplacePlugin,
   AgentMcpServerConfig,
   AgentPluginInfo,
   AgentSubagentConfig,
@@ -66,24 +67,36 @@ export function listAgentPlugins() {
   return requestFromDesktop('agentListPlugins', {})
 }
 
+export function listAgentAvailablePlugins() {
+  return requestFromDesktop('agentListAvailablePlugins', {})
+}
+
 export function listAgentMarketplaces() {
   return requestFromDesktop('agentListMarketplaces', {})
 }
 
-export function addAgentMarketplace(gitUrl: string) {
-  return requestFromDesktop('agentAddMarketplace', { gitUrl })
+export function addAgentMarketplace(source: string) {
+  return requestFromDesktop('agentAddMarketplace', { source })
 }
 
 export function removeAgentMarketplace(name: string) {
   return requestFromDesktop('agentRemoveMarketplace', { name })
 }
 
-export function installAgentPlugin(marketplace: string, plugin: string) {
-  return requestFromDesktop('agentInstallPlugin', { marketplace, plugin })
+export function refreshAgentMarketplace(name?: string) {
+  return requestFromDesktop('agentRefreshMarketplace', { name })
+}
+
+export function installAgentPlugin(pluginId: string) {
+  return requestFromDesktop('agentInstallPlugin', { pluginId })
 }
 
 export function removeAgentPlugin(id: string) {
   return requestFromDesktop('agentRemovePlugin', { id })
+}
+
+export function setAgentPluginEnabled(id: string, enabled: boolean) {
+  return requestFromDesktop('agentSetPluginEnabled', { id, enabled })
 }
 
 export function listAgentWorkflows(): Promise<AgentWorkflowInfo[]> {
@@ -110,11 +123,7 @@ export function getAgentCapabilityToggles() {
   return requestFromDesktop('agentGetCapabilityToggles', {})
 }
 
-export function setAgentCapabilityToggle(
-  kind: 'plugin' | 'skill' | 'mcp',
-  name: string,
-  enabled: boolean,
-) {
+export function setAgentCapabilityToggle(kind: 'skill' | 'mcp', name: string, enabled: boolean) {
   return requestFromDesktop('agentSetCapabilityToggle', { kind, name, enabled })
 }
 
@@ -123,6 +132,7 @@ export type {
   AgentMcpServerConfig,
   AgentPluginInfo,
   AgentMarketplaceInfo,
+  AgentMarketplacePlugin,
   AgentSubagentConfig,
   AgentWorkflowInfo,
 }

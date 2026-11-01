@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { type ExecException, type ExecFileOptions, execFile } from 'node:child_process'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
@@ -15,6 +16,8 @@ import {
   DEFAULT_APP_PREFERENCES,
   createSettingsStore,
 } from './claude/settings'
+
+vi.mock('node:child_process', () => ({ execFile: vi.fn() }))
 
 const existingProvider: ModelProvider = {
   id: 'zhipu',
@@ -67,7 +70,7 @@ function completeSettings(
     ...settings,
     modelMappings: {},
     ...DEFAULT_APP_PREFERENCES,
-    agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
+    agentCapabilities: { disabledSkills: [], disabledMcpServers: [] },
   }
 }
 
@@ -116,7 +119,7 @@ describe('Claude desktop service settings', () => {
       defaultModel: 'zhipu/glm-5.2',
       modelMappings: {},
       ...DEFAULT_APP_PREFERENCES,
-      agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
+      agentCapabilities: { disabledSkills: [], disabledMcpServers: [] },
     })
   })
 
@@ -133,7 +136,7 @@ describe('Claude desktop service settings', () => {
       defaultModel: undefined,
       modelMappings: {},
       ...DEFAULT_APP_PREFERENCES,
-      agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
+      agentCapabilities: { disabledSkills: [], disabledMcpServers: [] },
     }
     expect(persist).toHaveBeenCalledWith(expected)
     expect(proxy.replaceSettings).toHaveBeenCalledWith(expected)
@@ -204,7 +207,7 @@ describe('Claude desktop service settings', () => {
       providers: [existingProvider],
       defaultModel: 'zhipu/glm-5.2',
       ...preferences,
-      agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
+      agentCapabilities: { disabledSkills: [], disabledMcpServers: [] },
     }
     expect(persist).toHaveBeenCalledWith(expected)
     expect(proxy.replaceSettings).toHaveBeenCalledWith(expected)
@@ -259,20 +262,82 @@ describe('Claude desktop service agent capability delegation', () => {
     })
   })
 
+  // Plugin operations spawn the CLI; covered in the dedicated test below.
+
+  test('delegates plugin operations to the CLI with error propagation', async () => {
+    await withIsolatedHome(async () => {
+      const execFileMock = vi.mocked(execFile)
+      execFileMock.mockImplementation(((
+        _file: string,
+        args: readonly string[] | null | undefined,
+        _options: ExecFileOptions | null | undefined,
+        callback: (error: ExecException | null, stdout: string, stderr: string) => void,
+      ) => {
+        const argv = args ?? []
+        if (argv.includes('list')) {
+          callback(
+            null,
+            argv.includes('--available') ? '{"installed":[],"available":[]}' : '[]',
+            '',
+          )
+        } else if (argv.includes('remove') || argv.includes('uninstall')) {
+          callback(
+            Object.assign(new Error('boom'), {
+              cmd: 'claude plugin remove nope',
+              stderr: 'CLI refused',
+            }),
+            '',
+            'CLI refused',
+          )
+        } else {
+          callback(null, '', '')
+        }
+      }) as typeof execFile)
+      const { service } = createService({ providers: [] })
+      await expect(service.listAgentPlugins()).resolves.toEqual([])
+      await expect(service.listAgentMarketplaces()).resolves.toEqual([])
+      await expect(service.listAgentAvailablePlugins()).resolves.toEqual([])
+      await expect(
+        service.setAgentPluginEnabled({ id: 'p@a', enabled: true }),
+      ).resolves.toBeUndefined()
+      await expect(service.removeAgentMarketplace({ name: 'nope' })).rejects.toThrow(
+        /claude plugin marketplace remove nope failed: CLI refused/,
+      )
+      await expect(service.removeAgentPlugin({ id: 'p@nope' })).rejects.toThrow(
+        /claude plugin uninstall p@nope failed: CLI refused/,
+      )
+      expect(execFileMock).toHaveBeenCalledWith(
+        expect.any(String),
+        ['plugin', 'enable', 'p@a'],
+        expect.anything(),
+        expect.any(Function),
+      )
+    })
+  })
+
+  test('delegates MCP server rename as save plus delete of the old name', async () => {
+    await withIsolatedHome(async () => {
+      const { service } = createService({ providers: [] })
+      await expect(service.listAgentMcpServers()).resolves.toEqual([])
+      await service.saveAgentMcpServer({
+        server: { name: 'docs', type: 'http', url: 'https://mcp.example' },
+      })
+      await service.saveAgentMcpServer({
+        server: { name: 'docs2', type: 'http', url: 'https://mcp.example' },
+        previousName: 'docs',
+      })
+      await expect(service.listAgentMcpServers()).resolves.toEqual([
+        { name: 'docs2', type: 'http', url: 'https://mcp.example' },
+      ])
+    })
+  })
+
   test('delegates hook, skill, marketplace, plugin, and workflow operations', async () => {
     await withIsolatedHome(async () => {
       const { service } = createService({ providers: [] })
       await expect(service.listAgentHookGroups()).resolves.toEqual([])
       await expect(service.listAgentSkills()).resolves.toEqual([])
-      await expect(service.listAgentPlugins()).resolves.toEqual([])
-      await expect(service.listAgentMarketplaces()).resolves.toEqual([])
       await expect(service.listAgentWorkflows()).resolves.toEqual([])
-      await expect(service.removeAgentMarketplace({ name: 'nope' })).rejects.toThrow(
-        /Unknown marketplace/,
-      )
-      await expect(service.removeAgentPlugin({ id: 'p@nope' })).rejects.toThrow(
-        /Unknown installed plugin/,
-      )
     })
   })
 })

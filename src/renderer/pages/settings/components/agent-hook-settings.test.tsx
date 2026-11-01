@@ -44,7 +44,6 @@ beforeEach(async () => {
   await appI18n.changeLanguage('zh-CN')
   vi.clearAllMocks()
   mock.getAgentCapabilityToggles.mockResolvedValue({
-    disabledPlugins: [],
     disabledSkills: [],
     disabledMcpServers: [],
   })

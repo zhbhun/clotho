@@ -11,12 +11,10 @@ import {
   AlertDialogTitle,
 } from '@/shadcn/alert-dialog'
 import { Button } from '@/shadcn/button'
-import { toast } from '@/shadcn/toast'
 import { cn } from '@/shadcn/utils'
 
 import { AppAlertDialog, AppAlertDialogContent } from '../../../components/app-dialog'
 import { SettingsSection } from '../../../components/settings-section'
-import { requestFromDesktop } from '../../../services/desktop/client'
 
 /**
  * Shared list-section shell for the six agent capability domains: heading,
@@ -60,30 +58,6 @@ export function AgentEmpty() {
 /** UI label for a lowercase enum value; storage keeps the verbatim literal. */
 export function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1)
-}
-
-/**
- * Clotho-scoped enable toggle (design D1): flips the shared disabled list in
- * Clotho settings; CLI files are never touched. Failures roll the switch back.
- */
-export function useCapabilityToggle(kind: 'plugin' | 'skill') {
-  const { t } = useTranslation()
-  return async (name: string, enabled: boolean) => {
-    try {
-      return await requestToggle(kind, name, enabled)
-    } catch {
-      toast.add({
-        id: `agent-toggle-${kind}-${name}`,
-        title: t('settings.agent.saveError'),
-        type: 'error',
-      })
-      return !enabled
-    }
-  }
-}
-
-async function requestToggle(kind: 'plugin' | 'skill', name: string, enabled: boolean) {
-  return requestFromDesktop('agentSetCapabilityToggle', { kind, name, enabled })
 }
 
 /** Shared delete-confirmation dialog: title, copy, and confirm/cancel actions. */

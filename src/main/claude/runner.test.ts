@@ -759,21 +759,17 @@ describe('Claude SDK runner', () => {
     expect(vi.mocked(sdkQuery).mock.calls[0]?.[0].options?.skills).toEqual(['commit', 'deploy'])
   })
 
-  it('passes enabled plugins as local plugin paths at spawn (design D7)', async () => {
+  it('does not inject plugins via argv; the CLI mounts enabledPlugins itself (design D3)', async () => {
     const events = createEvents()
     vi.mocked(sdkQuery).mockReturnValue(createMockQuery([]) as never)
 
     startQuery(events, { streamId: 'stream-1', options: { cwd: '/tmp/app' } }, proxy, {
       promptQueue: parkedInput(),
-      capabilities: {
-        enabledPlugins: { 'formatter@acme': '/home/u/.claude/plugins/cache/acme/formatter/1.0.0' },
-      },
+      capabilities: {},
     })
     await flushEnvApply()
 
-    expect(vi.mocked(sdkQuery).mock.calls[0]?.[0].options?.plugins).toEqual([
-      { type: 'local', path: '/home/u/.claude/plugins/cache/acme/formatter/1.0.0' },
-    ])
+    expect(vi.mocked(sdkQuery).mock.calls[0]?.[0].options?.plugins).toBeUndefined()
   })
 
   it('leaves skills and plugins untouched without capability filters', async () => {

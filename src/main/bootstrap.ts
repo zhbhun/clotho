@@ -499,14 +499,14 @@ export async function bootstrap() {
           // Clotho-scoped toggle state lives in Clotho settings; persisted by the renderer store.
         },
         agentListPlugins: () => service.listAgentPlugins(),
+        agentListAvailablePlugins: () => service.listAgentAvailablePlugins(),
         agentListMarketplaces: () => service.listAgentMarketplaces(),
         agentAddMarketplace: (params) => service.addAgentMarketplace(params),
         agentRemoveMarketplace: (params) => service.removeAgentMarketplace(params),
+        agentRefreshMarketplace: (params) => service.refreshAgentMarketplace(params),
         agentInstallPlugin: (params) => service.installAgentPlugin(params),
         agentRemovePlugin: (params) => service.removeAgentPlugin(params),
-        agentSetPluginEnabled: () => {
-          // Clotho-scoped toggle state lives in Clotho settings; persisted by the renderer store.
-        },
+        agentSetPluginEnabled: (params) => service.setAgentPluginEnabled(params),
         agentListWorkflows: () => service.listAgentWorkflows(),
         agentReadWorkflow: (params) => service.readAgentWorkflow(params),
         agentSaveWorkflow: (params) => service.saveAgentWorkflow(params),

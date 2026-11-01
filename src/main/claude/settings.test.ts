@@ -42,7 +42,7 @@ function settings(overrides: Partial<ClaudeskSettings> = {}): ClaudeskSettings {
     providers: [],
     modelMappings: {},
     ...DEFAULT_APP_PREFERENCES,
-    agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
+    agentCapabilities: { disabledSkills: [], disabledMcpServers: [] },
     ...overrides,
   }
 }
@@ -199,7 +199,6 @@ describe('Clotho settings store', () => {
       JSON.stringify({
         providers: [],
         agentCapabilities: {
-          disabledPlugins: ['code-review@claude-plugins-official', '', '  ', 42],
           disabledSkills: ['cheatsheet', 'cheatsheet'],
         },
       }),
@@ -207,14 +206,13 @@ describe('Clotho settings store', () => {
 
     await expect(readSettings('/test/settings.json')).resolves.toMatchObject({
       agentCapabilities: {
-        disabledPlugins: ['code-review@claude-plugins-official'],
         disabledSkills: ['cheatsheet'],
       },
     })
 
     fsMock.readFile.mockResolvedValue(JSON.stringify({ providers: [] }))
     await expect(readSettings('/test/settings.json')).resolves.toMatchObject({
-      agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
+      agentCapabilities: { disabledSkills: [], disabledMcpServers: [] },
     })
   })
 
@@ -273,7 +271,7 @@ describe('Clotho settings store', () => {
       defaultModel: 'zhipu/glm-5.2/fast',
       modelMappings: {},
       ...DEFAULT_APP_PREFERENCES,
-      agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
+      agentCapabilities: { disabledSkills: [], disabledMcpServers: [] },
     })
     expect(persist).toHaveBeenCalledTimes(2)
     expect(persist).toHaveBeenLastCalledWith({
@@ -281,7 +279,7 @@ describe('Clotho settings store', () => {
       defaultModel: 'zhipu/glm-5.2/fast',
       modelMappings: {},
       ...DEFAULT_APP_PREFERENCES,
-      agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
+      agentCapabilities: { disabledSkills: [], disabledMcpServers: [] },
     })
   })
 
@@ -319,12 +317,12 @@ describe('Clotho settings store', () => {
     expect(persist).toHaveBeenCalledWith({
       ...recovered,
       language: 'fr',
-      agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
+      agentCapabilities: { disabledSkills: [], disabledMcpServers: [] },
     })
     expect(store.get()).toEqual({
       ...recovered,
       language: 'fr',
-      agentCapabilities: { disabledPlugins: [], disabledSkills: [], disabledMcpServers: [] },
+      agentCapabilities: { disabledSkills: [], disabledMcpServers: [] },
     })
   })
 })

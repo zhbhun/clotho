@@ -338,8 +338,6 @@ const TOOL_SEARCH_ENV = { ENABLE_TOOL_SEARCH: 'true' }
  */
 export interface AgentCapabilityFilters {
   disabledSkills?: string[]
-  /** id → installPath for every plugin not disabled in Clotho. */
-  enabledPlugins?: Record<string, string>
   /** name → config for every MCP server not disabled in Clotho. Present
    * only when at least one server is disabled (strict mode otherwise). */
   enabledMcpServers?: NonNullable<Options['mcpServers']>
@@ -363,13 +361,6 @@ function normalizeOptions(
     const disabled = new Set(capabilities.disabledSkills)
     const enabled = (options?.skills ?? []).filter((skill) => !disabled.has(skill))
     if (enabled.length || options?.skills) normalized.skills = enabled
-  }
-  if (capabilities?.enabledPlugins) {
-    const plugins = Object.values(capabilities.enabledPlugins).map((installPath) => ({
-      type: 'local' as const,
-      path: installPath,
-    }))
-    if (plugins.length) normalized.plugins = plugins
   }
   if (capabilities?.enabledMcpServers) {
     normalized.mcpServers = capabilities.enabledMcpServers

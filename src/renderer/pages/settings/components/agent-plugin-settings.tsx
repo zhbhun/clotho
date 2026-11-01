@@ -10,15 +10,17 @@ import { toast } from '@/shadcn/toast'
 
 import {
   type AgentMarketplaceInfo,
+  type AgentMarketplacePlugin,
   type AgentPluginInfo,
   addAgentMarketplace,
-  getAgentCapabilityToggles,
   installAgentPlugin,
+  listAgentAvailablePlugins,
   listAgentMarketplaces,
   listAgentPlugins,
+  refreshAgentMarketplace,
   removeAgentMarketplace,
   removeAgentPlugin,
-  setAgentCapabilityToggle,
+  setAgentPluginEnabled,
 } from '../../../services/claude/agent-config'
 import { AgentEmpty, AgentSection, DeleteButton } from './agent-shared'
 
@@ -26,21 +28,26 @@ export function AgentPluginSettings() {
   const { t } = useTranslation()
   const [plugins, setPlugins] = useState<AgentPluginInfo[]>([])
   const [marketplaces, setMarketplaces] = useState<AgentMarketplaceInfo[]>([])
-  const [disabledPlugins, setDisabledPlugins] = useState<string[]>([])
+  const [catalog, setCatalog] = useState<AgentMarketplacePlugin[] | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [gitUrl, setGitUrl] = useState('')
+  const [source, setSource] = useState('')
   const [isAddingMarketplace, setIsAddingMarketplace] = useState(false)
+
+  const notifyRestart = () =>
+    toast.add({
+      id: 'agent-plugin-restart',
+      title: t('settings.agent.plugins.restartHint'),
+      type: 'info',
+    })
 
   const reload = async () => {
     try {
-      const [installed, marketplaceList, toggles] = await Promise.all([
+      const [installed, marketplaceList] = await Promise.all([
         listAgentPlugins(),
         listAgentMarketplaces(),
-        getAgentCapabilityToggles(),
       ])
       setPlugins(installed)
       setMarketplaces(marketplaceList)
-      setDisabledPlugins(toggles.disabledPlugins)
     } catch {
       toast.add({ id: 'agent-plugins-load', title: t('settings.agent.loadError'), type: 'error' })
     } finally {
@@ -54,11 +61,19 @@ export function AgentPluginSettings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const handleToggle = async (id: string, enabled: boolean) => {
+  const handleToggle = async (plugin: AgentPluginInfo, enabled: boolean) => {
+    // Optimistic flip; the CLI call updates `enabledPlugins` in the CLI's
+    // settings, shared with every Claude Code surface.
+    setPlugins((current) =>
+      current.map((entry) => (entry.id === plugin.id ? { ...entry, enabled } : entry)),
+    )
     try {
-      const toggles = await setAgentCapabilityToggle('plugin', id, enabled)
-      setDisabledPlugins(toggles.disabledPlugins)
+      await setAgentPluginEnabled(plugin.id, enabled)
+      notifyRestart()
     } catch {
+      setPlugins((current) =>
+        current.map((entry) => (entry.id === plugin.id ? { ...entry, enabled: !enabled } : entry)),
+      )
       toast.add({ id: 'agent-plugin-toggle', title: t('settings.agent.saveError'), type: 'error' })
     }
   }
@@ -66,6 +81,7 @@ export function AgentPluginSettings() {
   const handleRemove = async (id: string) => {
     try {
       await removeAgentPlugin(id)
+      notifyRestart()
       await reload()
     } catch {
       toast.add({
@@ -77,11 +93,11 @@ export function AgentPluginSettings() {
   }
 
   const handleAddMarketplace = async () => {
-    if (!gitUrl.trim()) return
+    if (!source.trim()) return
     setIsAddingMarketplace(true)
     try {
-      await addAgentMarketplace(gitUrl.trim())
-      setGitUrl('')
+      await addAgentMarketplace(source.trim())
+      setSource('')
       await reload()
     } catch {
       toast.add({
@@ -107,9 +123,36 @@ export function AgentPluginSettings() {
     }
   }
 
-  const handleInstall = async (marketplace: string, plugin: string) => {
+  const handleRefreshMarketplace = async (name?: string) => {
     try {
-      await installAgentPlugin(marketplace, plugin)
+      await refreshAgentMarketplace(name)
+      await reload()
+      if (catalog) setCatalog(await listAgentAvailablePlugins())
+    } catch {
+      toast.add({
+        id: 'agent-marketplace-refresh',
+        title: t('settings.agent.plugins.refreshError'),
+        type: 'error',
+      })
+    }
+  }
+
+  const handleBrowseCatalog = async () => {
+    if (catalog) {
+      setCatalog(null)
+      return
+    }
+    try {
+      setCatalog(await listAgentAvailablePlugins())
+    } catch {
+      toast.add({ id: 'agent-catalog-load', title: t('settings.agent.loadError'), type: 'error' })
+    }
+  }
+
+  const handleInstall = async (pluginId: string) => {
+    try {
+      await installAgentPlugin(pluginId)
+      notifyRestart()
       await reload()
     } catch {
       toast.add({
@@ -119,6 +162,8 @@ export function AgentPluginSettings() {
       })
     }
   }
+
+  const installedIds = new Set(plugins.map((plugin) => plugin.id))
 
   return (
     <div className="flex flex-col gap-8">
@@ -133,16 +178,18 @@ export function AgentPluginSettings() {
               <div className="flex min-h-14 items-center gap-3 px-4 py-2" key={plugin.id}>
                 <Switch
                   aria-label={t('settings.agent.enabled')}
-                  checked={!disabledPlugins.includes(plugin.id)}
-                  onCheckedChange={(enabled) => void handleToggle(plugin.id, enabled)}
+                  checked={plugin.enabled}
+                  onCheckedChange={(enabled) => void handleToggle(plugin, enabled)}
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="truncate text-sm font-normal">{plugin.name}</span>
                     <Badge variant="secondary">{plugin.version}</Badge>
+                    <Badge variant="outline">{plugin.scope}</Badge>
                   </div>
                   <div className="truncate text-sm text-foreground-subtle">
                     {plugin.marketplace}
+                    {plugin.notes?.length ? ` · ${plugin.notes.join(' · ')}` : ''}
                   </div>
                 </div>
                 <DeleteButton label={plugin.id} onDelete={() => handleRemove(plugin.id)} />
@@ -157,67 +204,100 @@ export function AgentPluginSettings() {
           <div className="flex gap-2">
             <Input
               className="flex-1"
-              placeholder={t('settings.agent.plugins.gitUrl')}
-              value={gitUrl}
-              onChange={(event) => setGitUrl(event.target.value)}
+              placeholder={t('settings.agent.plugins.sourcePlaceholder')}
+              value={source}
+              onChange={(event) => setSource(event.target.value)}
             />
             <Button
-              disabled={isAddingMarketplace || !gitUrl.trim()}
+              disabled={isAddingMarketplace || !source.trim()}
               onClick={() => void handleAddMarketplace()}
             >
               {isAddingMarketplace ? <Spinner /> : null}
               {t('settings.agent.plugins.addMarketplace')}
             </Button>
+            <Button variant="outline" onClick={() => void handleBrowseCatalog()}>
+              {t('settings.agent.plugins.browseCatalog')}
+            </Button>
           </div>
+          {catalog && (
+            <div className="divide-y rounded-lg border">
+              {catalog.length === 0 ? (
+                <div className="px-4 py-3">
+                  <AgentEmpty />
+                </div>
+              ) : (
+                catalog.map((entry) => (
+                  <div className="flex min-h-14 items-center gap-3 px-4 py-2" key={entry.pluginId}>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate text-sm font-normal">{entry.name}</span>
+                        {typeof entry.installCount === 'number' && (
+                          <Badge variant="secondary">
+                            {t('settings.agent.plugins.installCount', {
+                              count: entry.installCount,
+                            })}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="truncate text-sm text-foreground-subtle">
+                        {entry.marketplaceName}
+                        {entry.description ? ` · ${entry.description}` : ''}
+                      </div>
+                    </div>
+                    {installedIds.has(entry.pluginId) ? (
+                      <Badge variant="secondary">{t('settings.agent.plugins.installed')}</Badge>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => void handleInstall(entry.pluginId)}
+                      >
+                        {t('settings.agent.plugins.install')}
+                      </Button>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          )}
           {marketplaces.length === 0 ? (
             <AgentEmpty />
           ) : (
             <div className="divide-y rounded-lg border">
-              {marketplaces.map((marketplace) => {
-                const installedNames = new Set(plugins.map((plugin) => plugin.name))
-                return (
-                  <div className="flex flex-col gap-2 px-4 py-3" key={marketplace.name}>
-                    <div className="flex items-center gap-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-sm font-normal">{marketplace.name}</div>
-                        <div className="truncate text-sm text-foreground-subtle">
-                          {marketplace.source.url ??
-                            marketplace.source.repo ??
-                            marketplace.source.source}
-                        </div>
-                      </div>
-                      <DeleteButton
-                        label={marketplace.name}
-                        onDelete={() => handleRemoveMarketplace(marketplace.name)}
-                      />
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {marketplace.plugins.map((plugin) => (
-                        <div
-                          className="flex items-center gap-2 rounded-md border px-3 py-1.5"
-                          key={plugin.name}
-                        >
-                          <span className="text-sm">{plugin.name}</span>
-                          {installedNames.has(plugin.name) ? (
-                            <Badge variant="secondary">
-                              {t('settings.agent.plugins.installed')}
-                            </Badge>
-                          ) : (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => void handleInstall(marketplace.name, plugin.name)}
-                            >
-                              {t('settings.agent.plugins.install')}
-                            </Button>
-                          )}
-                        </div>
-                      ))}
+              {marketplaces.map((marketplace) => (
+                <div className="flex min-h-14 items-center gap-3 px-4 py-2" key={marketplace.name}>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-normal">{marketplace.name}</div>
+                    <div className="truncate text-sm text-foreground-subtle">
+                      {marketplace.source.url ??
+                        marketplace.source.repo ??
+                        marketplace.source.source}
                     </div>
                   </div>
-                )
-              })}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void handleRefreshMarketplace(marketplace.name)}
+                  >
+                    {t('settings.agent.plugins.refresh')}
+                  </Button>
+                  <DeleteButton
+                    label={marketplace.name}
+                    onDelete={() => handleRemoveMarketplace(marketplace.name)}
+                  />
+                </div>
+              ))}
             </div>
+          )}
+          {marketplaces.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="self-start"
+              onClick={() => void handleRefreshMarketplace()}
+            >
+              {t('settings.agent.plugins.refreshAll')}
+            </Button>
           )}
         </div>
       </AgentSection>

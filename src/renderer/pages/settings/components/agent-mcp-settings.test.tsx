@@ -44,7 +44,6 @@ beforeEach(async () => {
   await appI18n.changeLanguage('zh-CN')
   vi.clearAllMocks()
   mock.getAgentCapabilityToggles.mockResolvedValue({
-    disabledPlugins: [],
     disabledSkills: [],
     disabledMcpServers: [],
   })
@@ -101,7 +100,6 @@ describe('AgentMcpSettings', () => {
       { name: 'docs', type: 'http', url: 'https://mcp.example' },
     ])
     mock.setAgentCapabilityToggle.mockResolvedValue({
-      disabledPlugins: [],
       disabledSkills: [],
       disabledMcpServers: ['docs'],
     })

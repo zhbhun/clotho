@@ -34,8 +34,10 @@ export interface ClaudeskSettings {
   modelMappings: ClaudeModelRoleMapping
   /**
    * Clotho-session-scoped enable state for user-level Claude Code
-   * capabilities. Absent entries mean enabled; the CLI's own enable state is
-   * never touched.
+   * capabilities. Absent entries mean enabled; the CLI's own files stay the
+   * source of content. Plugin enable state is NOT here: it lives in the
+   * CLI's `enabledPlugins` in `~/.claude/settings.json`, shared with every
+   * Claude Code surface.
    */
   agentCapabilities?: AgentCapabilityToggles
 }
@@ -46,8 +48,6 @@ export interface ClaudeskSettings {
  * sessions only.
  */
 export interface AgentCapabilityToggles {
-  /** Disabled plugin ids, keyed as `<plugin>@<marketplace>`. */
-  disabledPlugins?: string[]
   /** Disabled skill directory names under `~/.claude/skills/`. */
   disabledSkills?: string[]
   /** Disabled MCP server names from `~/.claude.json` `mcpServers`. */
@@ -169,7 +169,6 @@ export function sanitizeAgentCapabilityToggles(value: unknown): AgentCapabilityT
         )
       : []
   return {
-    disabledPlugins: stringList(candidate.disabledPlugins),
     disabledSkills: stringList(candidate.disabledSkills),
     disabledMcpServers: stringList(candidate.disabledMcpServers),
   }
@@ -342,7 +341,6 @@ function cloneSettings(settings: ClaudeskSettings): ClaudeskSettings {
     },
     modelMappings: { ...settings.modelMappings },
     agentCapabilities: {
-      disabledPlugins: [...(settings.agentCapabilities?.disabledPlugins ?? [])],
       disabledSkills: [...(settings.agentCapabilities?.disabledSkills ?? [])],
       disabledMcpServers: [...(settings.agentCapabilities?.disabledMcpServers ?? [])],
     },
