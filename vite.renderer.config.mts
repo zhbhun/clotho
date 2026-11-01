@@ -22,5 +22,10 @@ export default defineConfig({
   clearScreen: false,
   server: {
     port: 3366,
+    watch: {
+      // .config/claude symlinks ~/.claude into the project root; plugin CLI
+      // runs rewrite files there and must not trigger HMR reloads.
+      ignored: ['**/.config/**'],
+    },
   },
 })
