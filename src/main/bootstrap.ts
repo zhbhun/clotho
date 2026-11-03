@@ -507,6 +507,7 @@ export async function bootstrap() {
         agentInstallPlugin: (params) => service.installAgentPlugin(params),
         agentRemovePlugin: (params) => service.removeAgentPlugin(params),
         agentSetPluginEnabled: (params) => service.setAgentPluginEnabled(params),
+        agentGetPluginDetails: (params) => service.getAgentPluginDetails(params),
         agentListWorkflows: () => service.listAgentWorkflows(),
         agentReadWorkflow: (params) => service.readAgentWorkflow(params),
         agentSaveWorkflow: (params) => service.saveAgentWorkflow(params),

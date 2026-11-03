@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE: plugin settings pages</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #171717;
+    --muted: #737373;
+    --border: #e5e5e5;
+    --accent: #171717;
+    --card: #ffffff;
+    --subtle: #fafafa;
+    --danger: #dc2626;
+    --overlay: rgba(0,0,0,.35);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #282a36;
+      --fg: #f8f8f2;
+      --muted: #8b8fa3;
+      --border: #3a3d4d;
+      --accent: #ff79c6;
+      --card: #2e3041;
+      --subtle: #242634;
+      --danger: #ff5555;
+      --overlay: rgba(0,0,0,.55);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .app { display: flex; height: 100vh; }
+  .sidebar {
+    width: 208px; border-right: 1px solid var(--border);
+    padding: 12px 8px; flex-shrink: 0;
+    display: flex; flex-direction: column;
+  }
+  .sidebar .back-row {
+    display: flex; align-items: center; gap: 8px;
+    height: 32px; padding: 0 8px; margin-bottom: 12px;
+    color: var(--muted); font-size: 13px; border-radius: 6px;
+  }
+  .sidebar h2 { font-size: 11px; font-weight: 500; color: var(--muted); padding: 8px 8px 4px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px; border-radius: 6px; font-size: 13px;
+    color: var(--fg); cursor: default;
+  }
+  .nav-item.active { background: var(--subtle); font-weight: 500; }
+  .nav-item .icon { width: 14px; height: 14px; opacity: .6; flex-shrink: 0; }
+
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .topbar { flex-shrink: 0; padding: 18px 32px 0; }
+  .scroll { flex: 1; overflow-y: auto; padding: 16px 32px 32px; }
+  .content-inner { max-width: 672px; margin: 0 auto; }
+
+  .proto-banner {
+    background: var(--subtle); border: 1px dashed var(--border);
+    border-radius: 8px; padding: 8px 12px; font-size: 12px; color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  /* ===== breadcrumb ===== */
+  .bc {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 14px; min-height: 22px;
+  }
+  .bc .bc-link { color: var(--muted); cursor: pointer; }
+  .bc .bc-link:hover { color: var(--fg); text-decoration: underline; }
+  .bc .bc-sep { color: var(--muted); opacity: .7; font-size: 12px; }
+  .bc .bc-page { color: var(--fg); }
+
+  /* ===== page head ===== */
+  .head h1 { font-size: 17px; font-weight: 600; }
+  .page-desc { font-size: 12px; color: var(--muted); margin-top: 6px; max-width: 460px; }
+
+  /* ===== list header row: title left, actions right ===== */
+  .list-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 20px 0 12px; }
+  .list-head h2 { font-size: 14px; font-weight: 500; }
+  .list-head .count { color: var(--muted); font-weight: 400; }
+  .actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+  .card { border: 1px solid var(--border); border-radius: 10px; background: var(--card); }
+  .item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+  }
+  .item:last-child { border-bottom: none; }
+  .item .meta { min-width: 0; flex: 1; }
+  .item .name { font-size: 14px; font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item .desc { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .badge2 {
+    display: inline-block; padding: 1px 8px; border-radius: 999px;
+    font-size: 11px; color: var(--muted);
+    border: 1px solid var(--border); background: var(--subtle);
+    flex-shrink: 0;
+  }
+  .switch {
+    width: 30px; height: 17px; border-radius: 999px; background: var(--border);
+    position: relative; flex-shrink: 0; cursor: default;
+  }
+  .switch.on { background: var(--accent); }
+  .switch::after {
+    content: ""; position: absolute; top: 2px; left: 2px;
+    width: 13px; height: 13px; border-radius: 999px; background: var(--bg);
+  }
+  .switch.on::after { left: auto; right: 2px; }
+  .go {
+    border: none; background: none; color: var(--muted); font-size: 14px;
+    cursor: pointer; padding: 2px 6px; flex-shrink: 0;
+  }
+  .go:hover { color: var(--fg); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid var(--border); border-radius: 6px; background: var(--bg);
+    font: inherit; font-size: 13px; padding: 5px 14px; color: var(--fg); cursor: default;
+  }
+  .btn:hover { background: var(--subtle); }
+  .btn.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+  .btn.sm { font-size: 12px; padding: 3px 10px; }
+  .btn.icon { padding: 5px 8px; }
+
+  /* ===== dropdown menu (⋯) ===== */
+  .menu-wrap { position: relative; }
+  .menu {
+    display: none; position: absolute; right: 0; top: calc(100% + 4px);
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0,0,0,.15); min-width: 150px;
+    padding: 4px; z-index: 40;
+  }
+  .menu.open { display: block; }
+  .menu button {
+    display: block; width: 100%; text-align: left;
+    background: none; border: none; font: inherit; font-size: 13px;
+    padding: 6px 10px; border-radius: 5px; color: var(--fg); cursor: default;
+    white-space: nowrap;
+  }
+  .menu button:hover { background: var(--subtle); }
+  .menu button.danger { color: var(--danger); }
+
+  .empty { color: var(--muted); font-size: 13px; padding: 12px 2px; }
+
+  /* ===== install page: tabs + search + tile grid ===== */
+  .tabs-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 20px 0 12px; }
+  .tabs { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; padding: 2px; gap: 2px; background: var(--subtle); }
+  .tab {
+    border: none; background: none; font: inherit; font-size: 13px;
+    padding: 4px 14px; border-radius: 6px; color: var(--muted); cursor: default;
+  }
+  .tab.active { background: var(--card); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .search {
+    width: 260px;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 12px; font: inherit; font-size: 13px;
+    background: var(--bg); color: var(--fg);
+  }
+  .search::placeholder { color: var(--muted); opacity: .8; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 24px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+  .tile {
+    border: none; border-radius: 10px; background: transparent;
+    padding: 10px 12px; display: flex; align-items: center; gap: 12px;
+    cursor: default;
+  }
+  .tile:hover { background: var(--subtle); }
+  .tile .meta { min-width: 0; flex: 1; }
+  .tile .name { font-size: 14px; font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tile .desc { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .plus {
+    width: 28px; height: 28px; border: none; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; line-height: 1; color: var(--fg); background: transparent;
+    flex-shrink: 0; cursor: pointer;
+  }
+  .plus:hover { background: var(--subtle); }
+
+  /* ===== add form ===== */
+  .editor { border: 1px solid var(--border); border-radius: 10px; padding: 16px; background: var(--card); display: flex; flex-direction: column; gap: 14px; }
+  .label { font-size: 13px; font-weight: 500; display: block; margin-bottom: 5px; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .input {
+    width: 100%;
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 6px 10px; font: inherit; font-size: 13px;
+    background: var(--bg); color: var(--fg);
+  }
+  .input::placeholder { color: var(--muted); opacity: .8; }
+  .editor-foot { display: flex; justify-content: flex-end; gap: 8px; }
+
+  /* ===== detail pages ===== */
+  .detail-name { font-size: 17px; font-weight: 600; }
+  .detail-desc { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .detail-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+  .sec-title { font-size: 14px; font-weight: 500; margin: 24px 0 8px; display: flex; align-items: center; gap: 6px; }
+  .sec-title .count { color: var(--muted); font-weight: 400; }
+  .skill-badge {
+    display: flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border: 1px solid var(--border); border-radius: 6px;
+    flex-shrink: 0; color: var(--muted); font-size: 12px;
+  }
+  .kv { display: grid; grid-template-columns: 110px 1fr; gap: 8px 16px; font-size: 13px; }
+  .kv .k { color: var(--muted); }
+  .kv .v { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .kv .v.mono { font-family: ui-monospace, monospace; font-size: 12px; }
+
+  .view { display: none; }
+  .view.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- PROTOTYPE (throwaway) · rev 3 · plugin settings restructure.
+     Feedback applied vs rev 2:
+       1. plugins header: [Install] + [⋯] (menu: Refresh all, Marketplaces)
+       2. plugin rows: no delete; right side = switch + › detail
+       3. row line 2: scope · marketplace · version (plain muted text)
+       4. plugin detail top-right: [⋯] (Enable/Disable, Uninstall);
+          Advanced merged into Info (no fold)
+       5. marketplaces header: [Add] + [⋯] (menu: Refresh all)
+       6. marketplace rows: › detail; market detail page shows source info
+          + that marketplace's plugin list
+      10. install page: two-column tiles with a + button; tile click opens
+          install detail (same layout as plugin detail, Install button) -->
+
+<div class="app">
+  <nav class="sidebar">
+    <div class="back-row">‹ Back</div>
+    <div class="nav-item"><span class="icon">⚙</span>General</div>
+    <div class="nav-item"><span class="icon">📚</span>Models</div>
+    <div class="nav-item"><span class="icon">🎨</span>Appearance</div>
+    <h2>Agent capabilities</h2>
+    <div class="nav-item"><span class="icon">🤖</span>Subagents</div>
+    <div class="nav-item active"><span class="icon">🧩</span>Plugins</div>
+    <div class="nav-item"><span class="icon">🖥</span>MCP servers</div>
+    <div class="nav-item"><span class="icon">✨</span>Skills</div>
+  </nav>
+
+  <div class="main">
+    <div class="topbar" id="topbar" style="display:none">
+      <div class="bc" id="bc"></div>
+    </div>
+
+    <div class="scroll">
+      <div class="content-inner">
+
+        <!-- ================= PLUGINS (installed) ================= -->
+        <section class="view" id="view-plugins">
+          <div class="proto-banner">PROTOTYPE (throwaway) · view=plugins</div>
+          <div class="head">
+            <h1>Plugins</h1>
+            <div class="page-desc">Installed plugins apply to new sessions.</div>
+          </div>
+
+          <div class="list-head">
+            <h2>Installed <span class="count">5 items</span></h2>
+            <div class="actions">
+              <button class="btn" onclick="show('install')">Install</button>
+              <div class="menu-wrap">
+                <button class="btn icon" onclick="toggleMenu(event, 'm-plugins')" title="More">⋯</button>
+                <div class="menu" id="m-plugins">
+                  <button onclick="hideMenus()">⟳ Refresh all</button>
+                  <button onclick="hideMenus(); show('market')">Marketplaces</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="item">
+              <div class="meta">
+                <div class="name">planning-with-files</div>
+                <div class="desc">user · planning-with-files · 1.2.0</div>
+              </div>
+              <div class="switch on" onclick="this.classList.toggle('on')"></div>
+              <button class="go" title="Open details" onclick="openDetail('planning-with-files')">›</button>
+            </div>
+            <div class="item">
+              <div class="meta">
+                <div class="name">superpowers</div>
+                <div class="desc">user · superpowers-marketplace · 6.4.2</div>
+              </div>
+              <div class="switch on" onclick="this.classList.toggle('on')"></div>
+              <button class="go" title="Open details" onclick="openDetail('superpowers')">›</button>
+            </div>
+            <div class="item">
+              <div class="meta">
+                <div class="name">chrome-devtools-mcp</div>
+                <div class="desc">user · chrome-devtools-plugins · 0.9.1</div>
+              </div>
+              <div class="switch" onclick="this.classList.toggle('on')"></div>
+              <button class="go" title="Open details" onclick="openDetail('chrome-devtools-mcp')">›</button>
+            </div>
+            <div class="item">
+              <div class="meta">
+                <div class="name">frontend-design</div>
+                <div class="desc">user · claude-plugins-official · 1.0.3</div>
+              </div>
+              <div class="switch on" onclick="this.classList.toggle('on')"></div>
+              <button class="go" title="Open details" onclick="openDetail('frontend-design')">›</button>
+            </div>
+            <div class="item">
+              <div class="meta">
+                <div class="name">local-toolbox</div>
+                <div class="desc">user · zhbhun · 0.3.0</div>
+              </div>
+              <div class="switch on" onclick="this.classList.toggle('on')"></div>
+              <button class="go" title="Open details" onclick="openDetail('local-toolbox')">›</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= PLUGIN DETAIL (installed) ================= -->
+        <section class="view" id="view-detail">
+          <div class="proto-banner">PROTOTYPE (throwaway) · view=detail · needs a getPluginDetails RPC reading installPath manifests</div>
+          <div class="detail-head">
+            <div>
+              <div class="detail-name" id="d-name">browser-use</div>
+              <div class="detail-desc" id="d-desc">操作 ZCode 内置浏览器，检查网页并验证交互。</div>
+            </div>
+            <div class="actions menu-wrap">
+              <button class="btn icon" onclick="toggleMenu(event, 'm-detail')" title="More">⋯</button>
+              <div class="menu" id="m-detail">
+                <button onclick="hideMenus()">Disable</button>
+                <button class="danger" onclick="hideMenus()">Uninstall</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec-title">Skills <span class="count">2</span></div>
+          <div class="card">
+            <div class="item">
+              <span class="skill-badge">✦</span>
+              <div class="meta">
+                <div class="name">control-browser</div>
+                <div class="desc">Use when opening, navigating, inspecting, testing, clicking, typing, filling, screenshotting, or verifying web pages…</div>
+              </div>
+            </div>
+            <div class="item">
+              <span class="skill-badge">✦</span>
+              <div class="meta">
+                <div class="name">web-gui-tester</div>
+                <div class="desc">Use the browser automation tooling available in the session to test web frontends interactively…</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec-title">MCP servers <span class="count">1</span></div>
+          <div class="card">
+            <div class="item">
+              <div class="meta">
+                <div class="name">browser-bridge</div>
+                <div class="desc">node ${CLAUDE_PLUGIN_ROOT}/server.js</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec-title">Subagents <span class="count">1</span></div>
+          <div class="card">
+            <div class="item">
+              <div class="meta">
+                <div class="name">web-gui-tester</div>
+                <div class="desc">GUI-only frontend tester driven through the browser tooling</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec-title">Info</div>
+          <div class="kv">
+            <span class="k">Author</span><span class="v">Z.ai</span>
+            <span class="k">Category</span><span class="v">生产力</span>
+            <span class="k">Version</span><span class="v">0.5.1</span>
+            <span class="k">Marketplace</span><span class="v">zcode-plugins-official</span>
+            <span class="k">Root path</span><span class="v mono">~/.claude/plugins/cache/zcode-plugins-official/browser-use/0.5.1</span>
+            <span class="k">Installed at</span><span class="v">2026-10-30</span>
+          </div>
+        </section>
+
+        <!-- ================= MARKET (marketplace list) ================= -->
+        <section class="view" id="view-market">
+          <div class="proto-banner">PROTOTYPE (throwaway) · view=market · second level under Plugins</div>
+          <div class="head">
+            <h1>Marketplaces</h1>
+            <div class="page-desc">Plugin sources registered with the Claude Code CLI. Refresh pulls the latest catalog from every source.</div>
+          </div>
+
+          <div class="list-head">
+            <h2>Registered <span class="count">6 items</span></h2>
+            <div class="actions">
+              <button class="btn" onclick="show('add')">Add</button>
+              <div class="menu-wrap">
+                <button class="btn icon" onclick="toggleMenu(event, 'm-market')" title="More">⋯</button>
+                <div class="menu" id="m-market">
+                  <button onclick="hideMenus()">⟳ Refresh all</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="item">
+              <div class="meta">
+                <div class="name">claude-plugins-official</div>
+                <div class="desc">github · anthropics/claude-plugins-official</div>
+              </div>
+              <button class="go" title="Open details" onclick="openMarket('claude-plugins-official')">›</button>
+            </div>
+            <div class="item">
+              <div class="meta">
+                <div class="name">superpowers-marketplace</div>
+                <div class="desc">github · obra/superpowers-marketplace</div>
+              </div>
+              <button class="go" title="Open details" onclick="openMarket('superpowers-marketplace')">›</button>
+            </div>
+            <div class="item">
+              <div class="meta">
+                <div class="name">planning-with-files</div>
+                <div class="desc">git · https://github.com/othmanadi/planning-with-files.git</div>
+              </div>
+              <button class="go" title="Open details" onclick="openMarket('planning-with-files')">›</button>
+            </div>
+            <div class="item">
+              <div class="meta">
+                <div class="name">chrome-devtools-plugins</div>
+                <div class="desc">github · ChromeDevTools/chrome-devtools-mcp</div>
+              </div>
+              <button class="go" title="Open details" onclick="openMarket('chrome-devtools-plugins')">›</button>
+            </div>
+            <div class="item">
+              <div class="meta">
+                <div class="name">zhbhun</div>
+                <div class="desc">directory · ~/Projects/zhbhun/trading</div>
+              </div>
+              <button class="go" title="Open details" onclick="openMarket('zhbhun')">›</button>
+            </div>
+            <div class="item">
+              <div class="meta">
+                <div class="name">caveman</div>
+                <div class="desc">github · JuliusBrussee/caveman</div>
+              </div>
+              <button class="go" title="Open details" onclick="openMarket('caveman')">›</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= MARKET DETAIL ================= -->
+        <section class="view" id="view-market-detail">
+          <div class="proto-banner">PROTOTYPE (throwaway) · view=market-detail · third level · plugin list filters the shared catalog by marketplace</div>
+          <div class="detail-head">
+            <div>
+              <div class="detail-name" id="md-name">claude-plugins-official</div>
+              <div class="detail-desc" id="md-desc">github · anthropics/claude-plugins-official</div>
+            </div>
+            <div class="actions">
+              <button class="btn icon" title="Refresh this marketplace">⟳</button>
+              <div class="menu-wrap">
+                <button class="btn icon" onclick="toggleMenu(event, 'm-market-detail')" title="More">⋯</button>
+                <div class="menu" id="m-market-detail">
+                  <button class="danger" onclick="hideMenus()">Remove marketplace</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec-title">Info</div>
+          <div class="kv" id="md-info"></div>
+
+          <div class="sec-title">Plugins <span class="count" id="md-count"></span></div>
+          <div class="card" id="md-plugins"></div>
+        </section>
+
+        <!-- ================= ADD (source + conditional ref) ================= -->
+        <section class="view" id="view-add">
+          <div class="proto-banner">PROTOTYPE (throwaway) · view=add · third level under Marketplaces · Git ref only while Source looks like a repo</div>
+          <div class="head">
+            <h1>Add marketplace</h1>
+            <div class="page-desc">Add from a GitHub repo, Git URL, or local folder.</div>
+          </div>
+          <div style="height: 16px"></div>
+          <div class="editor">
+            <div>
+              <label class="label">Source</label>
+              <input class="input" id="fSource" placeholder="owner/repo or git@github.com:org/repo.git" oninput="onSourceInput()">
+              <div class="hint">GitHub <code>owner/repo</code>, a <code>git@</code> / <code>https://</code> URL, or a local folder path.</div>
+            </div>
+            <div id="ref-wrap" style="display:none">
+              <label class="label">Git ref <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+              <input class="input" id="fRef" placeholder="main">
+              <div class="hint">Branch or tag to pin; appended to the source as <code>#ref</code>.</div>
+            </div>
+            <div class="editor-foot">
+              <button class="btn" onclick="leaveAdd()">Cancel</button>
+              <button class="btn primary" onclick="saveAdd()">Add marketplace</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= INSTALL (tabs + search + tile grid) ================= -->
+        <section class="view" id="view-install">
+          <div class="proto-banner">PROTOTYPE (throwaway) · view=install · tabs: Public = anthropic-plugin-directory · Community = added marketplaces · Personal = local folders</div>
+          <div class="head">
+            <h1>Install plugin</h1>
+            <div class="page-desc">Browse plugins by source. Installing applies to new sessions.</div>
+          </div>
+
+          <div class="tabs-row">
+            <div class="tabs" id="tabs">
+              <button class="tab active" data-tab="public" onclick="setTab('public')">Public</button>
+              <button class="tab" data-tab="community" onclick="setTab('community')">Community</button>
+              <button class="tab" data-tab="personal" onclick="setTab('personal')">Personal</button>
+            </div>
+            <input class="search" id="fSearch" placeholder="Search plugins…" oninput="renderCatalog()">
+          </div>
+
+          <div class="grid" id="catalog-grid"></div>
+        </section>
+
+        <!-- ================= INSTALL DETAIL ================= -->
+        <section class="view" id="view-install-detail">
+          <div class="proto-banner">PROTOTYPE (throwaway) · view=install-detail · same layout as plugin detail; top-right is Install</div>
+          <div class="detail-head">
+            <div>
+              <div class="detail-name" id="id-name">42crunch-api-security-testing</div>
+              <div class="detail-desc" id="id-desc">Automate API security directly in Claude Code</div>
+            </div>
+            <div class="actions">
+              <button class="btn primary" id="id-install" onclick="hideMenus()">Install</button>
+            </div>
+          </div>
+
+          <div class="sec-title">Skills <span class="count">1</span></div>
+          <div class="card">
+            <div class="item">
+              <span class="skill-badge">✦</span>
+              <div class="meta">
+                <div class="name">42crunch-scan</div>
+                <div class="desc">Scan an OpenAPI definition and report security issues…</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec-title">Info</div>
+          <div class="kv">
+            <span class="k">Author</span><span class="v">42Crunch-AI</span>
+            <span class="k">Version</span><span class="v">1.5.5</span>
+            <span class="k">Marketplace</span><span class="v">anthropic-plugin-directory</span>
+            <span class="k">Installs</span><span class="v">3,474</span>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== fake data (read-only) =====
+  // tab split mirrors what the RPC layer can derive from marketplaceName /
+  // marketplace source types: directory = public, git/github = community,
+  // directory-source marketplaces = personal.
+  const CATALOG = [
+    { name: '42crunch-api-security-testing', tab: 'public', market: 'anthropic-plugin-directory', desc: 'Automate API security directly in Claude Code', installs: 3474 },
+    { name: 'code-review', tab: 'public', market: 'anthropic-plugin-directory', desc: 'Review changes along standards and spec axes', installs: 2210 },
+    { name: 'claude-docs', tab: 'public', market: 'anthropic-plugin-directory', desc: 'Search and read the Claude Code docs', installs: 4370 },
+    { name: 'boulder', tab: 'public', market: 'anthropic-plugin-directory', desc: 'Persistent work cycles across sessions', installs: 776 },
+    { name: 'frontend-design', tab: 'community', market: 'claude-plugins-official', desc: 'Design-quality frontend implementation', installs: 8901, installed: true },
+    { name: 'superpowers', tab: 'community', market: 'superpowers-marketplace', desc: 'Core skills library: TDD, debugging, collaboration', installs: 12053, installed: true },
+    { name: 'chrome-devtools-mcp', tab: 'community', market: 'chrome-devtools-plugins', desc: 'Drive Chrome via DevTools MCP', installs: 1502, installed: true },
+    { name: 'caveman', tab: 'community', market: 'caveman', desc: 'Session hygiene and cleanup sweeps', installs: 304, installed: true },
+    { name: 'planning-with-files', tab: 'community', market: 'planning-with-files', desc: 'Plan and track work with files', installs: null, installed: true },
+    { name: 'local-toolbox', tab: 'personal', market: 'zhbhun', desc: '~/Projects/zhbhun/trading', installs: null },
+    { name: 'trading-indicators', tab: 'personal', market: 'zhbhun', desc: '~/Projects/zhbhun/trading', installs: null },
+  ]
+
+  const MARKETS = {
+    'claude-plugins-official': { type: 'github', source: 'anthropics/claude-plugins-official' },
+    'superpowers-marketplace': { type: 'github', source: 'obra/superpowers-marketplace' },
+    'planning-with-files': { type: 'git', source: 'https://github.com/othmanadi/planning-with-files.git' },
+    'chrome-devtools-plugins': { type: 'github', source: 'ChromeDevTools/chrome-devtools-mcp' },
+    'zhbhun': { type: 'directory', source: '~/Projects/zhbhun/trading' },
+    'caveman': { type: 'github', source: 'JuliusBrussee/caveman' },
+  }
+
+  // ===== view switching =====
+  // plugins: level 1 · detail/market/install/install-detail: level 2 ·
+  // add / market-detail: level 3
+  const CRUMB = {
+    plugins: [],
+    detail: [['Plugins', 'plugins']],
+    market: [['Plugins', 'plugins']],
+    'market-detail': [['Plugins', 'plugins'], ['Marketplaces', 'market']],
+    install: [['Plugins', 'plugins']],
+    'install-detail': [['Plugins', 'plugins'], ['Install plugin', 'install']],
+    add: [['Plugins', 'plugins'], ['Marketplaces', 'market']],
+  }
+  const VIEW_TITLE = {
+    plugins: '', detail: '', market: 'Marketplaces', 'market-detail': '',
+    install: 'Install plugin', 'install-detail': '', add: 'Add marketplace',
+  }
+  let currentMarket = 'claude-plugins-official'
+
+  function leafFor(v) {
+    if (v === 'detail') return document.getElementById('d-name').textContent
+    if (v === 'market-detail') return currentMarket
+    if (v === 'install-detail') return document.getElementById('id-name').textContent
+    return VIEW_TITLE[v]
+  }
+
+  function show(v) {
+    for (const id of ['plugins', 'detail', 'market', 'market-detail', 'add', 'install', 'install-detail']) {
+      document.getElementById('view-' + id).classList.toggle('active', id === v)
+    }
+    const trail = CRUMB[v]
+    const topbar = document.getElementById('topbar')
+    if (trail.length === 0) {
+      topbar.style.display = 'none'
+    } else {
+      topbar.style.display = 'block'
+      document.getElementById('bc').innerHTML = trail
+        .map(([label, target]) => `<span class="bc-link" onclick="show('${target}')">${label}</span>`)
+        .concat([`<span class="bc-page">${leafFor(v)}</span>`])
+        .join('<span class="bc-sep">›</span>')
+    }
+    const url = new URL(location)
+    url.searchParams.set('view', v)
+    history.replaceState(null, '', url)
+    hideMenus()
+  }
+
+  // ===== dropdown menus =====
+  function toggleMenu(event, id) {
+    event.stopPropagation()
+    const menu = document.getElementById(id)
+    const wasOpen = menu.classList.contains('open')
+    hideMenus()
+    if (!wasOpen) menu.classList.add('open')
+  }
+  function hideMenus() {
+    document.querySelectorAll('.menu.open').forEach((el) => el.classList.remove('open'))
+  }
+  document.addEventListener('click', hideMenus)
+
+  function openDetail(name) {
+    // static sample stands in; real app loads per-plugin data
+    document.getElementById('d-name').textContent = 'browser-use'
+    show('detail')
+  }
+
+  function openMarket(name) {
+    currentMarket = name
+    const m = MARKETS[name]
+    document.getElementById('md-name').textContent = name
+    document.getElementById('md-desc').textContent = `${m.type} · ${m.source}`
+    document.getElementById('md-info').innerHTML = `
+      <span class="k">Type</span><span class="v">${m.type}</span>
+      <span class="k">Source</span><span class="v mono">${m.source}</span>`
+    const rows = CATALOG.filter((p) => p.market === name)
+    document.getElementById('md-count').textContent = rows.length + ' items'
+    document.getElementById('md-plugins').innerHTML = rows.length === 0
+      ? '<div class="item"><div class="empty">No plugins in this marketplace.</div></div>'
+      : rows.map((p) => `
+        <div class="item">
+          <div class="meta">
+            <div class="name">${p.name}</div>
+            <div class="desc">${p.desc || ''}</div>
+          </div>
+          ${p.installed
+            ? '<span class="badge2">Installed</span>'
+            : `<button class="btn sm" onclick="alert('PROTOTYPE: would run\\n  claude plugin install ${p.name}@${p.market}')">Install</button>`}
+        </div>`).join('')
+    show('market-detail')
+  }
+
+  // ===== add form: Git ref shows only for repo-looking sources =====
+  function looksLikeRepo(value) {
+    const v = value.trim()
+    if (!v) return false
+    // local folder: absolute path, home-relative, or ./relative
+    if (v.startsWith('/') || v.startsWith('~') || v.startsWith('./')) return false
+    return true
+  }
+  function onSourceInput() {
+    document.getElementById('ref-wrap').style.display = looksLikeRepo(fSource.value) ? 'block' : 'none'
+  }
+
+  let addDirty = false
+  function saveAdd() {
+    const src = document.getElementById('fSource').value.trim()
+    const ref = document.getElementById('fRef').value.trim()
+    const composed = ref && looksLikeRepo(src) ? `${src}#${ref}` : src
+    addDirty = false
+    alert(`PROTOTYPE: would run\n  claude plugin marketplace add ${composed}`)
+    show('market')
+  }
+  function leaveAdd() {
+    if (!addDirty) return show('market')
+    if (confirm('Discard the unsaved source?')) { addDirty = false; show('market') }
+  }
+
+  // ===== install catalog: tab + search + tile grid =====
+  function setTab(tab) {
+    document.querySelectorAll('#tabs .tab').forEach((el) =>
+      el.classList.toggle('active', el.dataset.tab === tab),
+    )
+    renderCatalog()
+  }
+  function currentTab() {
+    return document.querySelector('#tabs .tab.active').dataset.tab
+  }
+  function renderCatalog() {
+    const q = document.getElementById('fSearch').value.toLowerCase()
+    const tab = currentTab()
+    const rows = CATALOG.filter(
+      (p) =>
+        p.tab === tab &&
+        (!q || p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) || p.market.includes(q)),
+    )
+    document.getElementById('catalog-grid').innerHTML = rows.length === 0
+      ? '<div class="empty">No plugins match.</div>'
+      : rows.map((p) => `
+        <div class="tile" onclick="openInstallDetail('${p.name}')">
+          <div class="meta">
+            <div class="name">${p.name}</div>
+            <div class="desc">${p.installs != null ? p.installs.toLocaleString() + ' installs' : p.market}${p.desc ? ' · ' + p.desc : ''}</div>
+          </div>
+          ${p.installed
+            ? '<span class="badge2">Installed</span>'
+            : `<button class="plus" title="Install" onclick="event.stopPropagation(); alert('PROTOTYPE: would run\\n  claude plugin install ${p.name}@${p.market}')">+</button>`}
+        </div>`).join('')
+  }
+
+  function openInstallDetail(name) {
+    // static sample; real app loads catalog + manifest data
+    document.getElementById('id-name').textContent = name
+    show('install-detail')
+  }
+
+  const fromUrl = new URLSearchParams(location.search).get('view')
+  show(CRUMB[fromUrl] ? fromUrl : 'plugins')
+  renderCatalog()
+</script>
+</body>
+</html>

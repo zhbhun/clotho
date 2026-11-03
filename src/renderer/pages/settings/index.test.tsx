@@ -1,3 +1,5 @@
+import assert from 'node:assert'
+
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ComponentProps } from 'react'
@@ -177,7 +179,13 @@ describe('SettingsPage', () => {
   describe('subagent detail leave guard', () => {
     function renderSubagentsPage(detailFile: string | null) {
       useSettingsDetailStore.setState({
-        view: { kind: 'detail', categoryId: 'agent-subagents', file: detailFile },
+        view: {
+          kind: 'detail',
+          categoryId: 'agent-subagents',
+          file: detailFile,
+          page: 'entry',
+          sub: null,
+        },
         leaf: detailFile ?? '新建子智能体',
         isDirty: false,
       })
@@ -243,6 +251,98 @@ describe('SettingsPage', () => {
       // A clean breadcrumb-root leave goes straight back to the list header.
       expect(screen.getByRole('heading', { name: '子智能体' })).toBeInTheDocument()
       expect(useSettingsDetailStore.getState().view.kind).toBe('list')
+    })
+  })
+
+  describe('third-level detail navigation', () => {
+    it('walks one level up from a clean third-level page via requestLeave', () => {
+      useSettingsDetailStore.setState({
+        view: {
+          kind: 'detail',
+          categoryId: 'agent-plugins',
+          file: null,
+          page: 'marketplaces',
+          sub: { page: 'add', file: null },
+        },
+        leaf: '插件市场',
+        subLeaf: '添加市场',
+        isDirty: false,
+      })
+
+      useSettingsDetailStore.getState().requestLeave()
+
+      // One level up lands on the second-level page, not the list.
+      const view = useSettingsDetailStore.getState().view
+      expect(view.kind).toBe('detail')
+      if (view.kind === 'detail') expect(view.sub).toBeNull()
+      expect(useSettingsDetailStore.getState().subLeaf).toBe('')
+    })
+
+    it('gates the level-up behind the discard dialog when the subpage is dirty', () => {
+      useSettingsDetailStore.setState({
+        view: {
+          kind: 'detail',
+          categoryId: 'agent-plugins',
+          file: null,
+          page: 'marketplaces',
+          sub: { page: 'add', file: null },
+        },
+        leaf: '插件市场',
+        subLeaf: '添加市场',
+        isDirty: true,
+      })
+
+      useSettingsDetailStore.getState().requestLeave()
+      expect(useSettingsDetailStore.getState().isLeavePending).toBe(true)
+
+      useSettingsDetailStore.getState().confirmLeave()
+      const view = useSettingsDetailStore.getState().view
+      expect(view.kind).toBe('detail')
+      if (view.kind === 'detail') expect(view.sub).toBeNull()
+      expect(useSettingsDetailStore.getState().isDirty).toBe(false)
+    })
+
+    it('opens a subpage only within the matching open detail', () => {
+      useSettingsDetailStore.setState({
+        view: { kind: 'detail', categoryId: 'agent-plugins', file: null, page: 'entry', sub: null },
+        leaf: '插件',
+      })
+
+      useSettingsDetailStore.getState().openSub('agent-subagents', 'add', null, '添加')
+      const mismatched = useSettingsDetailStore.getState().view
+      expect(mismatched.kind).toBe('detail')
+      if (mismatched.kind === 'detail') expect(mismatched.sub).toBeNull()
+
+      useSettingsDetailStore.getState().openSub('agent-plugins', 'add', null, '添加市场')
+      const view = useSettingsDetailStore.getState().view
+      expect(view.kind).toBe('detail')
+      if (view.kind === 'detail') expect(view.sub).toEqual({ page: 'add', file: null })
+      expect(useSettingsDetailStore.getState().subLeaf).toBe('添加市场')
+    })
+
+    it('renders the three breadcrumb segments while a subpage is open', () => {
+      useSettingsDetailStore.setState({
+        view: {
+          kind: 'detail',
+          categoryId: 'agent-plugins',
+          file: null,
+          page: 'marketplaces',
+          sub: { page: 'add', file: null },
+        },
+        leaf: '插件市场',
+        subLeaf: '添加市场',
+      })
+      render(<TestSettingsPage open initialCategory="agent-plugins" onOpenChange={vi.fn()} />)
+
+      const bar = screen
+        .getByTestId('settings-breadcrumb-root')
+        .closest('[data-settings-breadcrumb-bar]')
+      assert(bar !== null)
+      expect(bar).toHaveTextContent('插件')
+      expect(bar).toHaveTextContent('插件市场')
+      expect(bar).toHaveTextContent('添加市场')
+      // The category and middle segments are links (level-up); the leaf is plain text.
+      expect(bar.querySelectorAll('a')).toHaveLength(2)
     })
   })
 })

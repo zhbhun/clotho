@@ -3,6 +3,7 @@ import type {
   AgentMarketplaceInfo,
   AgentMarketplacePlugin,
   AgentMcpServerConfig,
+  AgentPluginDetails,
   AgentPluginInfo,
   AgentSubagentConfig,
   AgentWorkflowInfo,
@@ -97,6 +98,10 @@ export function removeAgentPlugin(id: string) {
 
 export function setAgentPluginEnabled(id: string, enabled: boolean) {
   return requestFromDesktop('agentSetPluginEnabled', { id, enabled })
+}
+
+export function getAgentPluginDetails(pluginId: string): Promise<AgentPluginDetails> {
+  return requestFromDesktop('agentGetPluginDetails', { pluginId })
 }
 
 export function listAgentWorkflows(): Promise<AgentWorkflowInfo[]> {

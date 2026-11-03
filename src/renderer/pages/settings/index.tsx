@@ -294,6 +294,7 @@ function SettingsPageContent({
   const isDetailOpen = detail.view.kind === 'detail'
   const detailCategoryId = detail.view.kind === 'detail' ? detail.view.categoryId : null
   const detailLeaf = isDetailOpen ? detail.leaf : ''
+  const detailSubLeaf = isDetailOpen ? detail.subLeaf : ''
   const detailCategory = detailCategoryId
     ? (CATEGORIES.find((item) => item.id === detailCategoryId) ?? null)
     : null
@@ -440,15 +441,41 @@ function SettingsPageContent({
                         <BreadcrumbLink
                           className="cursor-pointer text-foreground-subtlest"
                           data-testid="settings-breadcrumb-root"
-                          onClick={detail.requestLeave}
+                          onClick={() => {
+                            // The root always returns to the category list;
+                            // the dirty guard still applies first.
+                            if (detail.isDirty) detail.requestLeave()
+                            else detail.backToList()
+                          }}
                         >
                           {detailCategory ? t(detailCategory.labelKey) : ''}
                         </BreadcrumbLink>
                       </BreadcrumbItem>
                       <BreadcrumbSeparator />
                       <BreadcrumbItem className="min-w-0">
-                        <BreadcrumbPage className="max-w-80 truncate">{detailLeaf}</BreadcrumbPage>
+                        {detail.view.kind === 'detail' && detail.view.sub ? (
+                          <BreadcrumbLink
+                            className="cursor-pointer text-foreground-subtlest"
+                            onClick={detail.requestLeave}
+                          >
+                            <span className="max-w-80 truncate">{detailLeaf}</span>
+                          </BreadcrumbLink>
+                        ) : (
+                          <BreadcrumbPage className="max-w-80 truncate">
+                            {detailLeaf}
+                          </BreadcrumbPage>
+                        )}
                       </BreadcrumbItem>
+                      {detail.view.kind === 'detail' && detail.view.sub ? (
+                        <>
+                          <BreadcrumbSeparator />
+                          <BreadcrumbItem className="min-w-0">
+                            <BreadcrumbPage className="max-w-80 truncate">
+                              {detailSubLeaf}
+                            </BreadcrumbPage>
+                          </BreadcrumbItem>
+                        </>
+                      ) : null}
                     </BreadcrumbList>
                   </Breadcrumb>
                 </div>
@@ -522,7 +549,7 @@ function SettingsPageContent({
       </Dialog>
       <DiscardChangesDialog
         open={detail.isLeavePending}
-        subject={detailLeaf}
+        subject={detail.view.kind === 'detail' && detail.view.sub ? detailSubLeaf : detailLeaf}
         onOpenChange={(next) => {
           if (!next) detail.cancelLeave()
         }}

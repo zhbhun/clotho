@@ -305,6 +305,45 @@ export interface AgentMarketplaceInfo {
   installLocation: string
 }
 
+export interface AgentPluginComponentInfo {
+  name: string
+  description?: string
+}
+
+export interface AgentPluginMcpInfo {
+  name: string
+  /** Command summary for stdio servers, or the URL for remote ones. */
+  summary?: string
+}
+
+/**
+ * Detail data for one plugin, assembled by the main process from the plugin's
+ * install-path manifests and the installed record. For a catalog entry with no
+ * local install, only the catalog fields are present and component lists are
+ * empty.
+ */
+export interface AgentPluginDetails {
+  /** `<plugin>@<marketplace>`; the id used to install it. */
+  pluginId: string
+  name: string
+  description?: string
+  author?: string
+  /** Plugin category, derived from the manifest's first keyword when known. */
+  category?: string
+  homepage?: string
+  version?: string
+  marketplace?: string
+  scope?: string
+  installPath?: string
+  installedAt?: string
+  enabled?: boolean
+  installed: boolean
+  installCount?: number
+  skills: AgentPluginComponentInfo[]
+  mcpServers: AgentPluginMcpInfo[]
+  subagents: AgentPluginComponentInfo[]
+}
+
 export interface AgentWorkflowInfo {
   name: string
   lastModifiedMs: number
@@ -1403,6 +1442,10 @@ export type DesktopRPC = {
       agentSetPluginEnabled: {
         params: { id: string; enabled: boolean }
         response: void
+      }
+      agentGetPluginDetails: {
+        params: { pluginId: string }
+        response: AgentPluginDetails
       }
       agentListWorkflows: {
         params: Record<string, never>

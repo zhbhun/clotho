@@ -25,6 +25,7 @@ import type { SessionListFlags } from '@/shared/session'
 
 import { deleteHookGroup, listHookGroups, saveHookGroup } from './claude/agent-config/hooks'
 import { deleteMcpServer, listMcpServers, saveMcpServer } from './claude/agent-config/mcp-servers'
+import { getPluginDetails } from './claude/agent-config/plugin-details'
 import {
   addMarketplace,
   installPlugin,
@@ -427,6 +428,13 @@ export function createClaudeDesktopService(
     removeAgentPlugin: ({ id }: { id: string }) => removeInstalledPlugin(id),
     setAgentPluginEnabled: ({ id, enabled }: { id: string; enabled: boolean }) =>
       setPluginEnabled(id, enabled),
+    getAgentPluginDetails: async ({ pluginId }: { pluginId: string }) => {
+      const [installed, catalog] = await Promise.all([
+        listInstalledPlugins(),
+        listMarketplacePlugins(),
+      ])
+      return getPluginDetails(pluginId, installed, catalog)
+    },
     listAgentWorkflows: () => listWorkflows(),
     readAgentWorkflow: ({ name }: { name: string }) =>
       readWorkflow(name).then((content) => ({ content })),
