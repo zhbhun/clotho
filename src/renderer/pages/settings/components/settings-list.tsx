@@ -9,8 +9,8 @@ import { cn } from '@/shadcn/utils'
  * Shared horizontal padding for settings rows. The list divider's inset
  * mirrors it, so dividers stay aligned with row content — keep both in sync.
  */
-const ROW_PADDING_X = 'px-5'
-const DIVIDER_INSET_X = 'mx-5'
+const ROW_PADDING_X = 'px-4'
+const DIVIDER_INSET_X = 'mx-4'
 
 const settingsRowVariants = cva(cn('group/settings-row', ROW_PADDING_X), {
   variants: {

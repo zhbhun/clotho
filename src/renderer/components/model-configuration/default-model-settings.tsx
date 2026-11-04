@@ -324,7 +324,7 @@ export function DefaultModelSettings({
           )
         })}
         {choices.length === 0 ? (
-          <p className="px-5 py-4 text-xs text-muted-foreground">
+          <p className="px-4 py-4 text-xs text-muted-foreground">
             {t('settings.defaultModel.noModels')}
           </p>
         ) : null}

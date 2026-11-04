@@ -163,7 +163,7 @@ const ColorControl = markAsRow(function ColorControl({
   }
 
   return (
-    <SettingsRow className="min-h-16 px-5 py-3.5">
+    <SettingsRow className="min-h-16 py-3.5">
       <FieldLabel className="font-normal" htmlFor={inputId}>
         {label}
       </FieldLabel>
