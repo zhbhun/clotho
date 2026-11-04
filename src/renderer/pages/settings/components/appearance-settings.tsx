@@ -2,15 +2,7 @@ import type { ReactNode } from 'react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shadcn/card'
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-  FieldTitle,
-} from '@/shadcn/field'
+import { FieldContent, FieldDescription, FieldLabel, FieldTitle } from '@/shadcn/field'
 import {
   Select,
   SelectContent,
@@ -19,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shadcn/select'
-import { Separator } from '@/shadcn/separator'
 import { Switch } from '@/shadcn/switch'
 
 import { SettingsSection } from '../../../components/settings-section'
@@ -28,6 +19,7 @@ import {
   REDUCED_MOTION_PREFERENCES,
   type ReducedMotionPreference,
 } from '../../../services/app-settings'
+import { SettingsList, SettingsRow, markAsRow } from './settings-list'
 import { ThemePaletteSettings } from './theme-palette-settings'
 import { ThemeSettings } from './theme-settings'
 
@@ -37,7 +29,7 @@ const REDUCED_MOTION_OPTIONS = [
   { labelKey: 'common.off', value: 'no-preference' },
 ] as const
 
-function PreferenceRow({
+const PreferenceRow = markAsRow(function PreferenceRow({
   children,
   controlId,
   description,
@@ -49,7 +41,7 @@ function PreferenceRow({
   title: string
 }) {
   return (
-    <Field className="min-h-20 px-5 py-4" orientation="horizontal">
+    <SettingsRow>
       <FieldContent>
         {controlId ? (
           <FieldLabel className="font-normal" htmlFor={controlId}>
@@ -61,9 +53,9 @@ function PreferenceRow({
         <FieldDescription>{description}</FieldDescription>
       </FieldContent>
       {children}
-    </Field>
+    </SettingsRow>
   )
-}
+})
 
 function ReducedMotionControl({
   onValueChange,
@@ -147,37 +139,28 @@ export function AppearanceSettings() {
       ) : null}
 
       <SettingsSection title={t('appearance.preferences')}>
-        <Card className="gap-0 overflow-hidden py-0">
-          <CardHeader className="sr-only">
-            <CardTitle>{t('appearance.preferences')}</CardTitle>
-            <CardDescription>{t('appearance.description')}</CardDescription>
-          </CardHeader>
-          <CardContent className="px-0">
-            <FieldGroup className="gap-0">
-              <PreferenceRow
-                controlId="settings-pointer-cursor"
-                description={t('appearance.pointer.description')}
-                title={t('appearance.pointer.title')}
-              >
-                <Switch
-                  aria-label={t('appearance.pointer.title')}
-                  checked={pointerCursor}
-                  className="self-center"
-                  id="settings-pointer-cursor"
-                  onCheckedChange={setPointerCursor}
-                />
-              </PreferenceRow>
-              <Separator className="bg-border-in-card" />
-              <PreferenceRow
-                controlId="settings-reduced-motion"
-                description={t('appearance.reducedMotion.description')}
-                title={t('appearance.reducedMotion.title')}
-              >
-                <ReducedMotionControl value={reducedMotion} onValueChange={setReducedMotion} />
-              </PreferenceRow>
-            </FieldGroup>
-          </CardContent>
-        </Card>
+        <SettingsList>
+          <PreferenceRow
+            controlId="settings-pointer-cursor"
+            description={t('appearance.pointer.description')}
+            title={t('appearance.pointer.title')}
+          >
+            <Switch
+              aria-label={t('appearance.pointer.title')}
+              checked={pointerCursor}
+              className="self-center"
+              id="settings-pointer-cursor"
+              onCheckedChange={setPointerCursor}
+            />
+          </PreferenceRow>
+          <PreferenceRow
+            controlId="settings-reduced-motion"
+            description={t('appearance.reducedMotion.description')}
+            title={t('appearance.reducedMotion.title')}
+          >
+            <ReducedMotionControl value={reducedMotion} onValueChange={setReducedMotion} />
+          </PreferenceRow>
+        </SettingsList>
       </SettingsSection>
     </div>
   )

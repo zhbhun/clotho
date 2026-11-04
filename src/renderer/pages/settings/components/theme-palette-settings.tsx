@@ -1,8 +1,7 @@
-import { Fragment, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shadcn/card'
-import { Field, FieldGroup, FieldLabel } from '@/shadcn/field'
+import { FieldLabel } from '@/shadcn/field'
 import {
   InputGroup,
   InputGroupAddon,
@@ -17,7 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shadcn/select'
-import { Separator } from '@/shadcn/separator'
 import { toast } from '@/shadcn/toast'
 import { cn } from '@/shadcn/utils'
 
@@ -30,6 +28,7 @@ import {
   type ThemeVariant,
   normalizeHexColor,
 } from '../../../services/theme-presets'
+import { SettingsList, SettingsRow, markAsRow } from './settings-list'
 
 const COLOR_ROWS = [
   { color: 'accent', labelKey: 'settings.appearance.theme.accent' },
@@ -120,7 +119,7 @@ function PresetControl({
   )
 }
 
-function ColorControl({
+const ColorControl = markAsRow(function ColorControl({
   color,
   label,
   onChange,
@@ -164,7 +163,7 @@ function ColorControl({
   }
 
   return (
-    <Field className="min-h-16 px-5 py-3.5" orientation="horizontal">
+    <SettingsRow className="min-h-16 px-5 py-3.5">
       <FieldLabel className="font-normal" htmlFor={inputId}>
         {label}
       </FieldLabel>
@@ -207,9 +206,9 @@ function ColorControl({
         value={value}
         onChange={(event) => onChange(event.target.value)}
       />
-    </Field>
+    </SettingsRow>
   )
-}
+})
 
 export function ThemePaletteSettings({
   onColorChange,
@@ -241,31 +240,21 @@ export function ThemePaletteSettings({
       }
       title={title}
     >
-      <Card className="gap-0 py-0">
-        <CardHeader className="sr-only">
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>{t('settings.appearance.theme.description')}</CardDescription>
-        </CardHeader>
-        <CardContent className="px-0">
-          <FieldGroup className="gap-0">
-            {COLOR_ROWS.map((row, index) => {
-              const label = t(row.labelKey)
-              return (
-                <Fragment key={row.color}>
-                  {index > 0 ? <Separator className="bg-border-in-card" /> : null}
-                  <ColorControl
-                    color={row.color}
-                    label={label}
-                    title={title}
-                    value={palette[row.color]}
-                    onChange={(value) => onColorChange(row.color, value)}
-                  />
-                </Fragment>
-              )
-            })}
-          </FieldGroup>
-        </CardContent>
-      </Card>
+      <SettingsList>
+        {COLOR_ROWS.map((row) => {
+          const label = t(row.labelKey)
+          return (
+            <ColorControl
+              key={row.color}
+              color={row.color}
+              label={label}
+              title={title}
+              value={palette[row.color]}
+              onChange={(value) => onColorChange(row.color, value)}
+            />
+          )
+        })}
+      </SettingsList>
     </SettingsSection>
   )
 }

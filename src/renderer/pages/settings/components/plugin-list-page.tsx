@@ -19,6 +19,7 @@ import {
   useRestartHint,
 } from './plugin-shared'
 import { useSettingsDetailStore } from './settings-detail-store'
+import { SettingsList, SettingsRow } from './settings-list'
 
 /**
  * Top-level Plugins page: the installed plugin list. Header actions are the
@@ -108,9 +109,9 @@ export function PluginListPage() {
       ) : plugins.length === 0 ? (
         <AgentEmpty />
       ) : (
-        <div className="divide-y rounded-lg border">
+        <SettingsList>
           {plugins.map((plugin) => (
-            <div className="flex min-h-14 items-center gap-3 px-4 py-2" key={plugin.id}>
+            <SettingsRow className="gap-3" key={plugin.id} variant="compact">
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-normal">{plugin.name}</div>
                 <div className="truncate text-sm text-foreground-subtle">
@@ -126,9 +127,9 @@ export function PluginListPage() {
                 label={plugin.id}
                 onOpen={() => openDetailAction('agent-plugins', plugin.id, plugin.name)}
               />
-            </div>
+            </SettingsRow>
           ))}
-        </div>
+        </SettingsList>
       )}
     </section>
   )

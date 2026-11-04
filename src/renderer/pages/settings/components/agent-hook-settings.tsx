@@ -18,6 +18,7 @@ import {
 import { AgentDetailPage } from './agent-detail-page'
 import { AgentEmpty, AgentSection, DeleteButton } from './agent-shared'
 import { useSettingsDetailStore } from './settings-detail-store'
+import { SettingsList, SettingsRow } from './settings-list'
 
 const HOOK_CATEGORY = 'agent-hooks' as const
 
@@ -242,11 +243,11 @@ export function AgentHookSettings() {
         ) : groups.length === 0 ? (
           <AgentEmpty />
         ) : (
-          <div className="divide-y rounded-lg border">
+          <SettingsList>
             {groups.map((group) => {
               const commandCount = group.entries.reduce((sum, entry) => sum + entry.hooks.length, 0)
               return (
-                <div className="flex min-h-14 items-center gap-3 px-4 py-2" key={group.event}>
+                <SettingsRow className="gap-3" key={group.event} variant="compact">
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-normal">{group.event}</div>
                     <div className="truncate text-sm text-foreground-subtle">
@@ -259,10 +260,10 @@ export function AgentHookSettings() {
                     </Button>
                     <DeleteButton label={group.event} onDelete={() => handleDelete(group.event)} />
                   </div>
-                </div>
+                </SettingsRow>
               )
             })}
-          </div>
+          </SettingsList>
         )}
       </div>
     </AgentSection>

@@ -3,13 +3,13 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
-import { Card, CardContent } from '@/shadcn/card'
-import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from '@/shadcn/field'
+import { FieldContent, FieldDescription, FieldLabel } from '@/shadcn/field'
 import { Spinner } from '@/shadcn/spinner'
 import { toast } from '@/shadcn/toast'
 import { cn } from '@/shadcn/utils'
 import type { ClaudeModelRoleMapping } from '@/shared/rpc'
 
+import { SettingsList, SettingsRow } from '../../pages/settings/components/settings-list'
 import type { ModelProvider } from '../../services/claude/claude'
 import {
   Menu,
@@ -281,61 +281,54 @@ export function DefaultModelSettings({
         </>
       }
     >
-      <Card className="gap-0 py-0">
-        <CardContent className="px-0">
-          <FieldGroup className="gap-0">
-            <Field className="grid min-h-16 items-center gap-3 border-b px-6 py-4 last:border-b-0 md:grid-cols-[minmax(120px,1fr)_250px]">
+      <SettingsList>
+        <SettingsRow className="gap-3">
+          <FieldContent className="min-w-0">
+            <FieldLabel className="font-normal" htmlFor="settings-default-model">
+              {t('settings.defaultModel.label')}
+            </FieldLabel>
+            <FieldDescription className="truncate">
+              {t('settings.defaultModel.description')}
+            </FieldDescription>
+          </FieldContent>
+          <ModelTargetPicker
+            id="settings-default-model"
+            value={draft ?? undefined}
+            providers={providers}
+            choices={choices}
+            disabled={isSaving}
+            onChange={(value) => void persist(value ?? null)}
+          />
+        </SettingsRow>
+        {MODEL_MAPPING_ROLES.map((role) => {
+          const pickerId = `settings-model-mapping-${role}`
+          return (
+            <SettingsRow className="gap-3" key={role}>
               <FieldContent className="min-w-0">
-                <FieldLabel className="font-normal" htmlFor="settings-default-model">
-                  {t('settings.defaultModel.label')}
+                <FieldLabel className="font-normal capitalize" htmlFor={pickerId}>
+                  {role}
                 </FieldLabel>
                 <FieldDescription className="truncate">
-                  {t('settings.defaultModel.description')}
+                  {t(`settings.modelMapping.role.${role}.description` as never)}
                 </FieldDescription>
               </FieldContent>
               <ModelTargetPicker
-                id="settings-default-model"
-                value={draft ?? undefined}
+                id={pickerId}
+                value={mappingsDraft[role]}
                 providers={providers}
                 choices={choices}
                 disabled={isSaving}
-                onChange={(value) => void persist(value ?? null)}
+                onChange={(value) => updateMapping(role, value)}
               />
-            </Field>
-            {MODEL_MAPPING_ROLES.map((role) => {
-              const pickerId = `settings-model-mapping-${role}`
-              return (
-                <Field
-                  className="grid min-h-16 items-center gap-3 border-b px-6 py-4 last:border-b-0 md:grid-cols-[minmax(120px,1fr)_250px]"
-                  key={role}
-                >
-                  <FieldContent className="min-w-0">
-                    <FieldLabel className="font-normal capitalize" htmlFor={pickerId}>
-                      {role}
-                    </FieldLabel>
-                    <FieldDescription className="truncate">
-                      {t(`settings.modelMapping.role.${role}.description` as never)}
-                    </FieldDescription>
-                  </FieldContent>
-                  <ModelTargetPicker
-                    id={pickerId}
-                    value={mappingsDraft[role]}
-                    providers={providers}
-                    choices={choices}
-                    disabled={isSaving}
-                    onChange={(value) => updateMapping(role, value)}
-                  />
-                </Field>
-              )
-            })}
-          </FieldGroup>
-          {choices.length === 0 ? (
-            <p className="border-t px-6 py-4 text-xs text-muted-foreground">
-              {t('settings.defaultModel.noModels')}
-            </p>
-          ) : null}
-        </CardContent>
-      </Card>
+            </SettingsRow>
+          )
+        })}
+        {choices.length === 0 ? (
+          <p className="px-5 py-4 text-xs text-muted-foreground">
+            {t('settings.defaultModel.noModels')}
+          </p>
+        ) : null}
+      </SettingsList>
     </SettingsSection>
   )
 }

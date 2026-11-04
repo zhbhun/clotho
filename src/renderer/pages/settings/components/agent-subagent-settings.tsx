@@ -16,6 +16,7 @@ import {
 } from '../../../services/claude/agent-config'
 import { AgentEmpty, DeleteButton, capitalize } from './agent-shared'
 import { useSettingsDetailStore } from './settings-detail-store'
+import { SettingsList, SettingsRow, markAsRow } from './settings-list'
 import { SubagentEditor } from './subagent-editor'
 
 const SOURCES = ['builtin', 'plugin', 'custom'] as const
@@ -41,7 +42,7 @@ function SourceBadge({ source }: { source: Source }) {
   )
 }
 
-function SubagentRow({
+const SubagentRow = markAsRow(function SubagentRow({
   subagent,
   onEdit,
   onDelete,
@@ -57,7 +58,7 @@ function SubagentRow({
     : t('settings.agent.subagent.option.default')
 
   return (
-    <div className="flex min-h-14 items-center gap-3 px-4 py-3">
+    <SettingsRow className="gap-3 py-3" variant="compact">
       {subagent.source ? <SourceBadge source={subagent.source} /> : null}
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-normal leading-snug">
@@ -86,9 +87,9 @@ function SubagentRow({
           </Button>
         )
       ) : null}
-    </div>
+    </SettingsRow>
   )
-}
+})
 
 function sourceOf(subagent: AgentSubagentConfig): Source {
   return subagent.source ?? 'custom'
@@ -120,7 +121,7 @@ function SourceCard({
       {rows.length === 0 ? (
         <AgentEmpty />
       ) : (
-        <div className="divide-y rounded-lg border">
+        <SettingsList>
           {rows.map((subagent) => (
             <SubagentRow
               key={`${sourceOf(subagent)}:${subagent.file}`}
@@ -129,7 +130,7 @@ function SourceCard({
               onDelete={() => onDelete(subagent.file)}
             />
           ))}
-        </div>
+        </SettingsList>
       )}
     </div>
   )

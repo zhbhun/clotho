@@ -1,15 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shadcn/card'
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-  FieldTitle,
-} from '@/shadcn/field'
+import { FieldContent, FieldDescription, FieldLabel, FieldTitle } from '@/shadcn/field'
 import {
   Select,
   SelectContent,
@@ -27,6 +19,7 @@ import {
   loadArchiveInactiveSessions,
   saveArchiveInactiveSessions,
 } from '../../../services/app-settings'
+import { SettingsList, SettingsRow } from './settings-list'
 
 const ARCHIVE_DAY_LABEL_KEYS = {
   0: 'settings.sessions.archive.never',
@@ -98,28 +91,20 @@ export function SessionSettings() {
 
   return (
     <SettingsSection title={t('settings.sessions.title')}>
-      <Card className="gap-0 overflow-hidden py-0">
-        <CardHeader className="sr-only">
-          <CardTitle>{t('settings.sessions.title')}</CardTitle>
-          <CardDescription>{t('settings.sessions.description')}</CardDescription>
-        </CardHeader>
-        <CardContent className="px-0">
-          <FieldGroup className="gap-0">
-            <Field className="min-h-20 px-5 py-4" orientation="horizontal">
-              <FieldContent>
-                <FieldLabel className="font-normal" htmlFor="settings-archive-inactive">
-                  <FieldTitle>{t('settings.sessions.archive.title')}</FieldTitle>
-                </FieldLabel>
-                <FieldDescription>{t('settings.sessions.archive.description')}</FieldDescription>
-              </FieldContent>
-              <ArchiveInactiveControl
-                value={archiveInactiveDays}
-                onValueChange={handleArchiveInactiveChange}
-              />
-            </Field>
-          </FieldGroup>
-        </CardContent>
-      </Card>
+      <SettingsList>
+        <SettingsRow>
+          <FieldContent>
+            <FieldLabel className="font-normal" htmlFor="settings-archive-inactive">
+              <FieldTitle>{t('settings.sessions.archive.title')}</FieldTitle>
+            </FieldLabel>
+            <FieldDescription>{t('settings.sessions.archive.description')}</FieldDescription>
+          </FieldContent>
+          <ArchiveInactiveControl
+            value={archiveInactiveDays}
+            onValueChange={handleArchiveInactiveChange}
+          />
+        </SettingsRow>
+      </SettingsList>
     </SettingsSection>
   )
 }

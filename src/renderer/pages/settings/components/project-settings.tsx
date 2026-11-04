@@ -11,7 +11,6 @@ import {
   AlertDialogTitle,
 } from '@/shadcn/alert-dialog'
 import { Button } from '@/shadcn/button'
-import { Card, CardDescription, CardHeader, CardTitle } from '@/shadcn/card'
 import {
   Empty,
   EmptyContent,
@@ -31,6 +30,7 @@ import { ProjectPath } from '../../../components/project-path'
 import type { ClaudeProject } from '../../../services/claude/claude'
 import { compareProjectsByName, isUserProject, projectDisplayName } from '../../../utils/project'
 import { useSettingsDetailStore } from './settings-detail-store'
+import { SettingsList, SettingsRow } from './settings-list'
 
 const PROJECT_CATEGORY = 'projects' as const
 
@@ -89,62 +89,56 @@ function ProjectRows({
 }) {
   const { t } = useTranslation()
   return (
-    <div className="flex flex-col gap-3">
+    <SettingsList>
       {projects.map((project) => {
         const name = projectDisplayName(project)
         return (
-          <Card key={project.id} className="group/project-row gap-0 py-0">
-            <CardHeader className="flex min-h-16 flex-row items-center gap-3 px-3 py-2">
-              <ProjectIcon plain icon={project.icon} />
-              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <CardTitle className="shrink-0 truncate leading-normal font-normal">
-                  {name}
-                </CardTitle>
-                <CardDescription className="min-w-0">
-                  <ProjectPath path={project.path} />
-                </CardDescription>
+          <SettingsRow className="min-h-16 gap-3 py-2" key={project.id} variant="compact">
+            <ProjectIcon plain icon={project.icon} />
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <div className="shrink-0 truncate text-sm leading-normal font-normal">{name}</div>
+              <div className="min-w-0 text-xs/relaxed text-muted-foreground">
+                <ProjectPath path={project.path} />
               </div>
-              <div className="flex shrink-0 items-center gap-1">
-                <Tooltip>
-                  <TooltipTrigger
-                    render={
-                      <Button
-                        aria-label={t('settings.provider.editProvider', { name })}
-                        className="invisible group-hover/project-row:visible"
-                        size="icon"
-                        type="button"
-                        variant="mute"
-                        onClick={() => onEditProject(project)}
-                      />
-                    }
-                  >
-                    <Pencil />
-                  </TooltipTrigger>
-                  <TooltipContent>{t('settings.common.edit')}</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger
-                    render={
-                      <Button
-                        aria-label={t('settings.project.removeNamed', { name })}
-                        className="invisible group-hover/project-row:visible"
-                        size="icon"
-                        type="button"
-                        variant="mute"
-                        onClick={() => onRemoveProject(project)}
-                      />
-                    }
-                  >
-                    <Trash2 />
-                  </TooltipTrigger>
-                  <TooltipContent>{t('settings.project.remove')}</TooltipContent>
-                </Tooltip>
-              </div>
-            </CardHeader>
-          </Card>
+            </div>
+            <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover/settings-row:opacity-100 group-focus-within/settings-row:opacity-100">
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      aria-label={t('settings.provider.editProvider', { name })}
+                      size="icon"
+                      type="button"
+                      variant="mute"
+                      onClick={() => onEditProject(project)}
+                    />
+                  }
+                >
+                  <Pencil />
+                </TooltipTrigger>
+                <TooltipContent>{t('settings.common.edit')}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      aria-label={t('settings.project.removeNamed', { name })}
+                      size="icon"
+                      type="button"
+                      variant="mute"
+                      onClick={() => onRemoveProject(project)}
+                    />
+                  }
+                >
+                  <Trash2 />
+                </TooltipTrigger>
+                <TooltipContent>{t('settings.project.remove')}</TooltipContent>
+              </Tooltip>
+            </div>
+          </SettingsRow>
         )
       })}
-    </div>
+    </SettingsList>
   )
 }
 

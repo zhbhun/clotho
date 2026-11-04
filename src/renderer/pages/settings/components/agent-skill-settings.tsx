@@ -12,6 +12,7 @@ import {
   setAgentCapabilityToggle,
 } from '../../../services/claude/agent-config'
 import { AgentEmpty, AgentSection, DeleteButton } from './agent-shared'
+import { SettingsList, SettingsRow } from './settings-list'
 
 export function AgentSkillSettings() {
   const { t } = useTranslation()
@@ -63,9 +64,9 @@ export function AgentSkillSettings() {
       ) : skills.length === 0 ? (
         <AgentEmpty />
       ) : (
-        <div className="divide-y rounded-lg border">
+        <SettingsList>
           {skills.map((skill) => (
-            <div className="flex min-h-14 items-center gap-3 px-4 py-2" key={skill.name}>
+            <SettingsRow className="gap-3" key={skill.name} variant="compact">
               <Switch
                 aria-label={t('settings.agent.enabled')}
                 checked={!disabledSkills.includes(skill.name)}
@@ -76,9 +77,9 @@ export function AgentSkillSettings() {
                 <div className="truncate text-sm text-foreground-subtle">{skill.description}</div>
               </div>
               <DeleteButton label={skill.name} onDelete={() => handleDelete(skill.name)} />
-            </div>
+            </SettingsRow>
           ))}
-        </div>
+        </SettingsList>
       )}
     </AgentSection>
   )

@@ -13,6 +13,7 @@ import {
 } from '../../../services/claude/agent-config'
 import { PluginOverflowMenu, useRestartHint } from './plugin-shared'
 import { useSettingsDetailStore } from './settings-detail-store'
+import { SettingsList, SettingsRow } from './settings-list'
 
 function DetailSection({
   count,
@@ -39,18 +40,18 @@ function DetailSection({
 function DetailRows({ rows }: { rows: { name: string; description?: string }[] }) {
   if (rows.length === 0) return null
   return (
-    <div className="divide-y rounded-lg border">
+    <SettingsList>
       {rows.map((row) => (
-        <div className="flex min-h-12 items-center gap-3 px-4 py-2" key={row.name}>
+        <SettingsRow className="min-h-12 gap-3" key={row.name} variant="compact">
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-normal">{row.name}</div>
             {row.description ? (
               <div className="truncate text-sm text-foreground-subtle">{row.description}</div>
             ) : null}
           </div>
-        </div>
+        </SettingsRow>
       ))}
-    </div>
+    </SettingsList>
   )
 }
 

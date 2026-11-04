@@ -36,6 +36,7 @@ import {
   useRestartHint,
 } from './plugin-shared'
 import { useSettingsDetailStore } from './settings-detail-store'
+import { SettingsList, SettingsRow } from './settings-list'
 import { useDetailDirty } from './use-detail-dirty'
 
 /**
@@ -142,9 +143,9 @@ export function MarketplaceListPage() {
       ) : marketplaces.length === 0 ? (
         <AgentEmpty />
       ) : (
-        <div className="divide-y rounded-lg border">
+        <SettingsList>
           {marketplaces.map((marketplace) => (
-            <div className="flex min-h-14 items-center gap-3 px-4 py-2" key={marketplace.name}>
+            <SettingsRow className="gap-3" key={marketplace.name} variant="compact">
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-normal">{marketplace.name}</div>
                 <div className="truncate text-sm text-foreground-subtle">
@@ -159,9 +160,9 @@ export function MarketplaceListPage() {
                   openSub('agent-plugins', 'market-detail', marketplace.name, marketplace.name)
                 }
               />
-            </div>
+            </SettingsRow>
           ))}
-        </div>
+        </SettingsList>
       )}
     </section>
   )
@@ -285,9 +286,9 @@ export function MarketplaceDetailPage({ marketplaceName }: { marketplaceName: st
         {entries.length === 0 ? (
           <AgentEmpty />
         ) : (
-          <div className="divide-y rounded-lg border">
+          <SettingsList>
             {entries.map((entry) => (
-              <div className="flex min-h-14 items-center gap-3 px-4 py-2" key={entry.pluginId}>
+              <SettingsRow className="gap-3" key={entry.pluginId} variant="compact">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="truncate text-sm font-normal">{entry.name}</span>
@@ -320,9 +321,9 @@ export function MarketplaceDetailPage({ marketplaceName }: { marketplaceName: st
                     {t('settings.agent.plugins.install')}
                   </Button>
                 )}
-              </div>
+              </SettingsRow>
             ))}
-          </div>
+          </SettingsList>
         )}
       </div>
       <AppAlertDialog onOpenChange={setIsRemoveConfirmOpen} open={isRemoveConfirmOpen}>

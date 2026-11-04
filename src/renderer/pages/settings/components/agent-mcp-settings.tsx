@@ -20,6 +20,7 @@ import {
 import { AgentDetailPage } from './agent-detail-page'
 import { AgentEmpty, AgentSection, DeleteButton } from './agent-shared'
 import { useSettingsDetailStore } from './settings-detail-store'
+import { SettingsList, SettingsRow, markAsRow } from './settings-list'
 
 const MCP_CATEGORY = 'agent-mcp' as const
 
@@ -166,7 +167,7 @@ function McpEditor({ draft, onClose }: { draft: AgentMcpServerConfig; onClose: (
   )
 }
 
-function McpRow({
+const McpRow = markAsRow(function McpRow({
   server,
   onEdit,
   onDelete,
@@ -182,7 +183,7 @@ function McpRow({
     server.type === 'stdio' ? [server.command, ...(server.args ?? [])].join(' ') : server.url
 
   return (
-    <div className="flex min-h-14 items-center gap-3 px-4 py-2">
+    <SettingsRow variant="compact">
       <Switch
         aria-label={t('settings.agent.enabled')}
         checked={!server.disabled}
@@ -201,9 +202,9 @@ function McpRow({
         </Button>
         <DeleteButton label={server.name} onDelete={onDelete} />
       </div>
-    </div>
+    </SettingsRow>
   )
-}
+})
 
 export function AgentMcpSettings() {
   const { t } = useTranslation()
@@ -279,7 +280,7 @@ export function AgentMcpSettings() {
         ) : servers.length === 0 ? (
           <AgentEmpty />
         ) : (
-          <div className="divide-y rounded-lg border">
+          <SettingsList>
             {servers.map((server) => (
               <McpRow
                 key={server.name}
@@ -289,7 +290,7 @@ export function AgentMcpSettings() {
                 onToggle={(enabled) => void handleToggle(server, enabled)}
               />
             ))}
-          </div>
+          </SettingsList>
         )}
       </div>
     </AgentSection>

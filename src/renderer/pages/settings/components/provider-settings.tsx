@@ -27,8 +27,9 @@ import { ProviderEditorForm } from '../../../components/model-configuration/prov
 import { SettingsSection } from '../../../components/settings-section'
 import { ShortcutAlertDialog } from '../../../components/shortcut-dialog'
 import { ProviderActions } from './provider-actions'
-import { ProviderListCard } from './provider-list-card'
+import { ProviderListRow } from './provider-list-card'
 import { useSettingsDetailStore } from './settings-detail-store'
+import { SettingsList } from './settings-list'
 import { useDetailDirty } from './use-detail-dirty'
 import { useProviderSettings } from './use-provider-settings'
 
@@ -147,9 +148,9 @@ export function ProviderSettings() {
           }
         >
           {settings.providers.length > 0 ? (
-            <div className="flex flex-col gap-3">
+            <SettingsList>
               {settings.providers.map((provider) => (
-                <ProviderListCard
+                <ProviderListRow
                   isDeleteDisabled={Boolean(settings.deletingProviderId)}
                   isDeleting={settings.deletingProviderId === provider.id}
                   isUsagePending={Boolean(settings.usagePendingIds[provider.id])}
@@ -161,7 +162,7 @@ export function ProviderSettings() {
                   onDelete={() => settings.setDeleteTarget(provider)}
                 />
               ))}
-            </div>
+            </SettingsList>
           ) : settings.isLoading ? (
             <Card className="gap-0 py-0">
               <Empty className="min-h-48">

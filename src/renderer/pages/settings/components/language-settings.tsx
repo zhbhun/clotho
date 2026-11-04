@@ -1,8 +1,7 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shadcn/card'
-import { Field, FieldContent, FieldDescription, FieldLabel } from '@/shadcn/field'
+import { FieldContent, FieldDescription, FieldLabel } from '@/shadcn/field'
 import {
   Select,
   SelectContent,
@@ -15,6 +14,7 @@ import {
 import { SettingsSection } from '../../../components/settings-section'
 import { useLanguage } from '../../../i18n/language-provider'
 import { LANGUAGE_PREFERENCES, type LanguagePreference } from '../../../i18n/languages'
+import { SettingsList, SettingsRow } from './settings-list'
 
 const LANGUAGE_NAMES: Record<Exclude<LanguagePreference, 'system'>, string> = {
   de: 'Deutsch',
@@ -47,48 +47,42 @@ export function LanguageSettings() {
 
   return (
     <SettingsSection title={t('settings.language.title')}>
-      <Card className="gap-0 overflow-hidden py-0">
-        <CardHeader className="sr-only">
-          <CardTitle>{t('settings.language.title')}</CardTitle>
-          <CardDescription>{t('settings.language.description')}</CardDescription>
-        </CardHeader>
-        <CardContent className="px-0">
-          <Field className="min-h-20 px-5 py-4" orientation="horizontal">
-            <FieldContent>
-              <FieldLabel className="font-normal" htmlFor="settings-language">
-                {t('settings.language.title')}
-              </FieldLabel>
-              <FieldDescription>{t('settings.language.description')}</FieldDescription>
-            </FieldContent>
-            <Select
-              items={items}
-              value={preference}
-              onValueChange={(value) => {
-                if (LANGUAGE_PREFERENCES.includes(value as LanguagePreference)) {
-                  setPreference(value as LanguagePreference)
-                }
-              }}
+      <SettingsList>
+        <SettingsRow>
+          <FieldContent>
+            <FieldLabel className="font-normal" htmlFor="settings-language">
+              {t('settings.language.title')}
+            </FieldLabel>
+            <FieldDescription>{t('settings.language.description')}</FieldDescription>
+          </FieldContent>
+          <Select
+            items={items}
+            value={preference}
+            onValueChange={(value) => {
+              if (LANGUAGE_PREFERENCES.includes(value as LanguagePreference)) {
+                setPreference(value as LanguagePreference)
+              }
+            }}
+          >
+            <SelectTrigger
+              aria-label={t('settings.language.title')}
+              className="w-48 self-center"
+              id="settings-language"
             >
-              <SelectTrigger
-                aria-label={t('settings.language.title')}
-                className="w-48 self-center"
-                id="settings-language"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent glass alignItemWithTrigger={false} align="end">
-                <SelectGroup>
-                  {items.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </Field>
-        </CardContent>
-      </Card>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent glass alignItemWithTrigger={false} align="end">
+              <SelectGroup>
+                {items.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </SettingsRow>
+      </SettingsList>
     </SettingsSection>
   )
 }

@@ -19,6 +19,7 @@ import {
 import { AgentDetailPage } from './agent-detail-page'
 import { AgentEmpty, AgentSection, DeleteButton } from './agent-shared'
 import { useSettingsDetailStore } from './settings-detail-store'
+import { SettingsList, SettingsRow } from './settings-list'
 
 function formatTime(ms: number) {
   return new Date(ms).toLocaleString()
@@ -166,9 +167,9 @@ export function AgentWorkflowSettings() {
         ) : workflows.length === 0 ? (
           <AgentEmpty />
         ) : (
-          <div className="divide-y rounded-lg border">
+          <SettingsList>
             {workflows.map((workflow) => (
-              <div className="flex min-h-14 items-center gap-3 px-4 py-2" key={workflow.name}>
+              <SettingsRow className="gap-3" key={workflow.name} variant="compact">
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-normal">{workflow.name}</div>
                   <div className="truncate text-sm text-foreground-subtle">
@@ -184,9 +185,9 @@ export function AgentWorkflowSettings() {
                     onDelete={() => handleDelete(workflow.name)}
                   />
                 </div>
-              </div>
+              </SettingsRow>
             ))}
-          </div>
+          </SettingsList>
         )}
       </div>
     </AgentSection>
