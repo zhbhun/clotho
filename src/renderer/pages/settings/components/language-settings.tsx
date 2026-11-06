@@ -66,7 +66,7 @@ export function LanguageSettings() {
           >
             <SelectTrigger
               aria-label={t('settings.language.title')}
-              className="w-48 self-center"
+              className="max-w-62.5 min-w-0 self-center"
               id="settings-language"
             >
               <SelectValue />

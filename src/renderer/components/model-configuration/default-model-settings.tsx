@@ -1,4 +1,4 @@
-import { ChevronDown, WandSparkles, X } from 'lucide-react'
+import { ChevronDown, WandSparkles } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -62,7 +62,7 @@ function ModelTargetPicker({
   const selectedChoice = choices.find((item) => item.value === value) ?? null
 
   return (
-    <div className="w-full max-w-62.5 min-w-0 justify-self-end">
+    <div className="max-w-62.5 min-w-0 justify-self-end self-center">
       <Menu modal>
         <MenuTrigger
           render={
@@ -70,34 +70,16 @@ function ModelTargetPicker({
               disabled={disabled || choices.length === 0}
               id={id}
               variant="outline"
-              className="w-full justify-between font-normal"
+              className="w-full min-w-0 justify-between font-normal"
             />
           }
         >
-          <span className={cn('truncate', !selectedChoice && 'text-muted-foreground')}>
+          <span className={cn('min-w-0 truncate', !selectedChoice && 'text-muted-foreground')}>
             {selectedChoice
               ? `${selectedChoice.providerName} · ${selectedChoice.modelName}`
               : t('settings.defaultModel.notConfigured')}
           </span>
-          {selectedChoice ? (
-            <span
-              className="-mr-0.75 hidden size-5 shrink-0 items-center justify-center rounded-full transition-colors group-hover/button:flex hover:bg-foreground/6"
-              data-icon="inline-end"
-              data-slot="mapping-clear"
-              onClick={(event) => {
-                event.stopPropagation()
-                onChange(undefined)
-              }}
-              onPointerDown={(event) => event.stopPropagation()}
-            >
-              <X className="size-3.5" strokeWidth={1} />
-            </span>
-          ) : null}
-          <ChevronDown
-            className={selectedChoice ? 'group-hover/button:hidden' : undefined}
-            data-icon="inline-end"
-            strokeWidth={1}
-          />
+          <ChevronDown data-icon="inline-end" strokeWidth={1} />
         </MenuTrigger>
         <MenuContent align="end" glass>
           <MenuSearch placeholder={t('settings.defaultModel.search')} />

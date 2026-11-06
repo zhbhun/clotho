@@ -94,7 +94,7 @@ function PresetControl({
       >
         <SelectTrigger
           aria-label={t('settings.appearance.theme.presetAria', { theme: title })}
-          className="w-40"
+          className="max-w-62.5 min-w-0"
         >
           <SelectValue />
         </SelectTrigger>
@@ -167,7 +167,7 @@ const ColorControl = markAsRow(function ColorControl({
       <FieldLabel className="font-normal" htmlFor={inputId}>
         {label}
       </FieldLabel>
-      <InputGroup className="w-40 shrink-0">
+      <InputGroup className="w-28 shrink-0">
         <InputGroupInput
           aria-label={ariaLabel}
           id={inputId}
@@ -187,6 +187,7 @@ const ColorControl = markAsRow(function ColorControl({
           <InputGroupButton
             aria-label={t('settings.appearance.theme.pickerAria', { color: label, theme: title })}
             size="icon-xs"
+            className="relative rounded-full"
             onClick={() => colorInputRef.current?.click()}
           >
             <span
@@ -194,18 +195,18 @@ const ColorControl = markAsRow(function ColorControl({
               className="size-3.5 rounded-full ring-1 ring-foreground/15"
               style={{ backgroundColor: value }}
             />
+            <input
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 opacity-0"
+              ref={colorInputRef}
+              tabIndex={-1}
+              type="color"
+              value={value}
+              onChange={(event) => onChange(event.target.value)}
+            />
           </InputGroupButton>
         </InputGroupAddon>
       </InputGroup>
-      <input
-        aria-hidden="true"
-        className="sr-only"
-        ref={colorInputRef}
-        tabIndex={-1}
-        type="color"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-      />
     </SettingsRow>
   )
 })

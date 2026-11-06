@@ -52,7 +52,7 @@ function ArchiveInactiveControl({
     >
       <SelectTrigger
         aria-label={t('settings.sessions.archive.title')}
-        className="w-32 self-center"
+        className="max-w-62.5 min-w-0 self-center"
         id="settings-archive-inactive"
       >
         <SelectValue />

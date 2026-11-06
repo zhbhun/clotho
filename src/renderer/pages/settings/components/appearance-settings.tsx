@@ -86,7 +86,7 @@ function ReducedMotionControl({
     >
       <SelectTrigger
         aria-label={t('appearance.reducedMotion.title')}
-        className="w-32 self-center"
+        className="max-w-62.5 min-w-0 self-center"
         id="settings-reduced-motion"
       >
         <SelectValue />
