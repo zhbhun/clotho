@@ -47,7 +47,7 @@ function ThemeBadge({
     <span
       aria-hidden="true"
       className={cn(
-        'flex size-7 shrink-0 items-center justify-center rounded-md text-xs font-semibold ring-1 ring-foreground/10',
+        'flex size-7 shrink-0 items-center justify-center rounded-md text-xs font-semibold ring-1 ring-border',
         className,
       )}
       style={{ backgroundColor: palette.background, color: palette.accent }}

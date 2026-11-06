@@ -237,7 +237,7 @@ export function ImagePreview({
               <ChevronDownIcon />
             </Button>
             {isZoomOpen ? (
-              <div className="absolute top-[calc(100%+6px)] right-0 min-w-36 rounded-lg bg-popover p-1 text-popover-foreground shadow-popover ring-1 ring-foreground/10">
+              <div className="absolute top-[calc(100%+6px)] right-0 min-w-36 rounded-lg bg-popover p-1 text-popover-foreground shadow-popover ring-1 ring-border">
                 {ZOOM_LEVELS.map((level) => (
                   <button
                     key={level}

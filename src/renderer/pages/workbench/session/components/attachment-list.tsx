@@ -120,7 +120,7 @@ function AttachmentCard({
           <AttachmentActions className="absolute -top-1.5 -right-1.5 opacity-0 transition-opacity group-focus-within/attachment:opacity-100 group-hover/attachment:opacity-100">
             <AttachmentAction
               aria-label={t('workbench.prompt.removeFile', { name: attachment.name })}
-              className="rounded-full bg-popover ring-1 ring-foreground/10"
+              className="rounded-full bg-popover ring-1 ring-border"
               disabled={disabled}
               variant="secondary"
               onClick={(event) => {
