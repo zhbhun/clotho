@@ -67,7 +67,7 @@
   --color-chat-input: var(--chat-input);
   --color-border-chat-tool: var(--border-chat-tool);
   --color-border-chat-input: var(--border-chat-input);
-  --color-border-in-card: var(--border-in-card);
+  --color-border-card-divider: var(--border-card-divider);
 
   --shadow-float: var(--float-shadow);
   --shadow-popover: var(--popover-shadow);
@@ -102,12 +102,10 @@
   --accent: var(--secondary);
   --accent-foreground: var(--foreground);
   --destructive: oklch(0.577 0.245 27.325);
-  /* Border ladders reproduce the shadcn neutral border gap (oklab L ≈ 0.0781
-     light / 0.1238 dark) above each surface anchor. Chat surfaces opt out
-     below: borders drawn on chat-message / chat-tool / chat-input use the
-     scaled "on-*" tiers (0.55× dark / 0.7× light) because the stock gap reads
-     too loud on the compressed dark chat canvas. */
-  --border: color-mix(in oklab, var(--background), var(--foreground) 9.8113%);
+  /* Border tiers converge on #ededed in light mode: each border token mixes
+     its surface anchor toward --foreground just far enough to land on that
+     value (6.7792% on the white canvas/card, 4.9865% on --chat-tool). */
+  --border: color-mix(in oklab, var(--background), var(--foreground) 6.7792%);
   --input: var(--border);
   /* Focus border and halo derive from primary, pulled toward the background so the
      default palette lands on the official ring gray instead of near-black. */
@@ -169,15 +167,17 @@
   --control-checked: var(--color-neutral-900);
   --control-checked-foreground: var(--color-white);
 
-  /* Inset dividers drawn inside cards (settings rows) sit at --border's gap
-     × 0.7 anchored to --card — lighter than the card edge, like list rows. */
-  --border-in-card: color-mix(in oklab, var(--card), var(--foreground) 6.8735%);
+  /* Inset dividers drawn inside cards (settings rows) use the same #ededed
+     tier as the outer border, anchored to --card. */
+  --border-card-divider: color-mix(in oklab, var(--card), var(--foreground) 6.7792%);
 
-  /* Chat-surface border tier: the stock --border gap (0.0781) reads loud on
-     chat bubbles and tool cards, so the conversation and composer areas opt
-     down to 0.7× (0.0547) with mixes anchored to each chat surface. */
-  --border-chat-tool: color-mix(in oklab, var(--chat-tool), var(--foreground) 7.0057%);
-  --border-chat-input: var(--input);
+  /* Chat tool-card borders land on #ededed too; --chat-tool (#fafafa) sits
+     closer to it, so the mix is proportionally smaller. */
+  --border-chat-tool: color-mix(in oklab, var(--chat-tool), var(--foreground) 4.9865%);
+  /* Anchored to the chat-input surface like dark mode; identical output today
+     (--chat-input is white in light). Light borders converge on #ededed, so
+     re-solve this ratio if the surface anchor ever changes. */
+  --border-chat-input: color-mix(in oklab, var(--chat-input), var(--foreground) 6.7792%);
 }
 
 .dark {
@@ -267,7 +267,7 @@
 
   /* Inset dividers drawn inside cards (settings rows) sit at --border's gap
      × 0.5 anchored to --card; the stock gap reads loud between rows. */
-  --border-in-card: color-mix(in oklab, var(--card), var(--foreground) 8.9813%);
+  --border-card-divider: color-mix(in oklab, var(--card), var(--foreground) 8.9813%);
 
   /* Chat-surface border tier: 0.1238 × 0.55 = 0.06809 oklab above each chat
      surface; the stock gap reads too loud on the compressed dark chat canvas. */
