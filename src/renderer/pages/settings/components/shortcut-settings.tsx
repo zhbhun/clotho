@@ -21,16 +21,16 @@ import {
 } from '@/shadcn/empty'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/shadcn/input-group'
 import { Spinner } from '@/shadcn/spinner'
-import { Table, TableBody, TableCell, TableRow } from '@/shadcn/table'
 import { toast } from '@/shadcn/toast'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip'
 import { cn } from '@/shadcn/utils'
-import type { CommandId } from '@/shared/shortcuts'
+import type { CommandDefinition, CommandId } from '@/shared/shortcuts'
 
 import { localizeCommand } from '../../../i18n/shortcut-command'
 import { formatShortcutBinding } from '../../../services/shortcuts/bindings'
 import { getEffectiveBindings } from '../../../services/shortcuts/keymap'
 import { useShortcutRuntime } from '../../../services/shortcuts/runtime'
+import { SettingsList, SettingsRow, markAsRow } from './settings-list'
 import { ShortcutRecorder } from './shortcut-recorder'
 
 function ShortcutAction({
@@ -50,7 +50,6 @@ function ShortcutAction({
         render={
           <Button
             aria-label={label}
-            className="invisible group-hover/keybinding:visible focus-visible:visible"
             disabled={disabled}
             size="icon-sm"
             type="button"
@@ -65,6 +64,57 @@ function ShortcutAction({
     </Tooltip>
   )
 }
+
+const ShortcutRow = markAsRow(function ShortcutRow({
+  definition,
+  binding,
+  deleteLabel,
+  editLabel,
+  hasBinding,
+  hasOverride,
+  resetLabel,
+  onDeleteBinding,
+  onEdit,
+  onReset,
+}: {
+  definition: CommandDefinition
+  binding?: string
+  deleteLabel: string
+  editLabel: string
+  hasBinding: boolean
+  hasOverride: boolean
+  resetLabel: string
+  onDeleteBinding: () => void
+  onEdit: () => void
+  onReset: () => void
+}) {
+  return (
+    <SettingsRow className="gap-2 py-2.5" variant="compact">
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="font-normal">{definition.title}</span>
+        {definition.description ? (
+          <span className="text-xs text-muted-foreground">{definition.description}</span>
+        ) : null}
+      </div>
+      {hasBinding ? <span className="text-muted-foreground">{binding}</span> : null}
+      <div className="pointer-events-none flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover/settings-row:pointer-events-auto group-hover/settings-row:opacity-100 group-focus-within/settings-row:pointer-events-auto group-focus-within/settings-row:opacity-100">
+        <ShortcutAction icon={<Pencil />} label={editLabel} onClick={onEdit} />
+        <ShortcutAction
+          disabled={!hasOverride}
+          icon={<RotateCcw />}
+          label={resetLabel}
+          onClick={onReset}
+        />
+        <ShortcutAction
+          disabled={!hasBinding}
+          icon={<Trash2 />}
+          label={deleteLabel}
+          onClick={onDeleteBinding}
+        />
+      </div>
+    </SettingsRow>
+  )
+})
 
 export function ShortcutSettings({ isActive = true }: { isActive?: boolean } = {}) {
   const { t } = useTranslation()
@@ -199,15 +249,9 @@ export function ShortcutSettings({ isActive = true }: { isActive?: boolean } = {
 
   return (
     <section className="flex flex-col gap-6">
-      <div
-        className={cn(
-          'sticky top-0 z-10 -mt-3 bg-background pt-3',
-          isToolbarStuck && 'shadow-[0_12px_20px_-14px_rgb(0_0_0_/_0.5)]',
-        )}
-        ref={toolbarRef}
-      >
+      <div className="sticky top-0 z-10 -mx-px -mt-3 bg-background px-px pt-3" ref={toolbarRef}>
         <div className="flex items-center gap-2">
-          <InputGroup className="rounded-full has-[[data-slot=input-group-control]:focus-visible]:ring-0">
+          <InputGroup className="rounded-full">
             <InputGroupInput
               aria-label={t('settings.shortcut.search')}
               placeholder={t('settings.shortcut.search')}
@@ -218,109 +262,85 @@ export function ShortcutSettings({ isActive = true }: { isActive?: boolean } = {
               <Search />
             </InputGroupAddon>
           </InputGroup>
-          <Button
-            disabled={!hasOverrides || isResetting}
-            type="button"
-            variant="outline"
-            onClick={() => void handleResetAll()}
-          >
-            {t('settings.shortcut.resetAll')}
-          </Button>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  aria-label={t('settings.shortcut.resetAll')}
+                  className="rounded-full disabled:pointer-events-auto disabled:cursor-not-allowed"
+                  disabled={!hasOverrides || isResetting}
+                  size="icon"
+                  type="button"
+                  variant="outline"
+                  onClick={() => void handleResetAll()}
+                >
+                  {isResetting ? <Spinner /> : <RotateCcw />}
+                </Button>
+              }
+            />
+            <TooltipContent>{t('settings.shortcut.resetAll')}</TooltipContent>
+          </Tooltip>
         </div>
-        {isToolbarStuck ? (
-          <div className="pointer-events-none absolute inset-x-0 top-full h-5 bg-linear-to-b from-background to-transparent" />
-        ) : null}
+        <div
+          className={cn(
+            'pointer-events-none absolute -inset-x-px top-full h-10 bg-linear-to-b from-background to-transparent transition-opacity',
+            isToolbarStuck ? 'opacity-100' : 'opacity-0',
+          )}
+        />
       </div>
 
-      <div className="overflow-hidden rounded-lg border">
-        <Table>
-          <TableBody>
-            {commands.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={2} className="h-40">
-                  <Empty className="border-0">
-                    <EmptyHeader>
-                      <EmptyTitle>{t('settings.shortcut.emptyTitle')}</EmptyTitle>
-                      <EmptyDescription>{t('settings.shortcut.emptyDescription')}</EmptyDescription>
-                    </EmptyHeader>
-                  </Empty>
-                </TableCell>
-              </TableRow>
-            ) : (
-              commands.map(([commandId, definition]) => {
-                const bindings = getEffectiveBindings(
-                  commandId,
-                  runtime.catalog,
-                  snapshot.overrides,
-                )
-                const firstBinding = bindings[0]
-                const hasOverride = Object.hasOwn(snapshot.overrides, commandId)
+      <SettingsList>
+        {commands.length === 0 ? (
+          <Empty className="rounded-lg border border-solid">
+            <EmptyHeader>
+              <EmptyTitle>{t('settings.shortcut.emptyTitle')}</EmptyTitle>
+              <EmptyDescription>{t('settings.shortcut.emptyDescription')}</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        ) : (
+          commands.map(([commandId, definition]) => {
+            const bindings = getEffectiveBindings(commandId, runtime.catalog, snapshot.overrides)
+            const firstBinding = bindings[0]
+            const hasOverride = Object.hasOwn(snapshot.overrides, commandId)
 
-                return (
-                  <TableRow key={commandId}>
-                    <TableCell className="w-1/2 whitespace-normal">
-                      <div className="flex flex-col gap-0.5">
-                        <span>{definition.title}</span>
-                        {definition.description ? (
-                          <span className="text-xs text-muted-foreground">
-                            {definition.description}
-                          </span>
-                        ) : null}
-                      </div>
-                    </TableCell>
-                    <TableCell className="group/keybinding w-[30%]">
-                      <div className="flex min-h-7 items-center gap-1">
-                        {firstBinding ? (
-                          <span className="text-muted-foreground">
-                            {formatShortcutBinding(firstBinding, runtime.platform)}
-                          </span>
-                        ) : null}
-                        <div className="ml-auto flex items-center gap-0.5">
-                          <ShortcutAction
-                            icon={<Pencil />}
-                            label={t('settings.shortcut.edit', { command: definition.title })}
-                            onClick={() => setEditingCommandId(commandId)}
-                          />
-                          <ShortcutAction
-                            disabled={!hasOverride}
-                            icon={<RotateCcw />}
-                            label={t('settings.shortcut.reset', { command: definition.title })}
-                            onClick={() => {
-                              void runtime.overrides.reset(commandId).catch(() => {
-                                toast.add({
-                                  id: 'settings-shortcut-reset-error',
-                                  title: t('common.toast.resetFailed'),
-                                  description: t('settings.shortcut.resetError'),
-                                  type: 'error',
-                                })
-                              })
-                            }}
-                          />
-                          <ShortcutAction
-                            disabled={!firstBinding}
-                            icon={<Trash2 />}
-                            label={t('settings.shortcut.delete', { command: definition.title })}
-                            onClick={() => {
-                              void runtime.overrides.set(commandId, []).catch(() => {
-                                toast.add({
-                                  id: 'settings-shortcut-delete-error',
-                                  title: t('common.toast.deleteFailed'),
-                                  description: t('settings.shortcut.deleteError'),
-                                  type: 'error',
-                                })
-                              })
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
+            return (
+              <ShortcutRow
+                binding={
+                  firstBinding ? formatShortcutBinding(firstBinding, runtime.platform) : undefined
+                }
+                deleteLabel={t('settings.shortcut.delete', { command: definition.title })}
+                definition={definition}
+                hasBinding={firstBinding !== undefined}
+                hasOverride={hasOverride}
+                key={commandId}
+                resetLabel={t('settings.shortcut.reset', { command: definition.title })}
+                editLabel={t('settings.shortcut.edit', { command: definition.title })}
+                onDeleteBinding={() => {
+                  void runtime.overrides.set(commandId, []).catch(() => {
+                    toast.add({
+                      id: 'settings-shortcut-delete-error',
+                      title: t('common.toast.deleteFailed'),
+                      description: t('settings.shortcut.deleteError'),
+                      type: 'error',
+                    })
+                  })
+                }}
+                onEdit={() => setEditingCommandId(commandId)}
+                onReset={() => {
+                  void runtime.overrides.reset(commandId).catch(() => {
+                    toast.add({
+                      id: 'settings-shortcut-reset-error',
+                      title: t('common.toast.resetFailed'),
+                      description: t('settings.shortcut.resetError'),
+                      type: 'error',
+                    })
+                  })
+                }}
+              />
+            )
+          })
+        )}
+      </SettingsList>
 
       <ShortcutRecorder
         commandId={editingCommandId}

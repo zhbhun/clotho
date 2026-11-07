@@ -122,18 +122,21 @@ describe('ShortcutSettings', () => {
         { modifiers: ['primary'], key: 'k' },
       ]),
     )
-    expect(screen.getByRole('row', { name: /New session/ })).toHaveTextContent('⌘K')
+    expect(screen.getByText('New session').closest('[data-slot="settings-row"]')).toHaveTextContent(
+      '⌘K',
+    )
 
     await user.click(screen.getByRole('button', { name: '删除 New session 快捷键' }))
     await waitFor(() => expect(memory.getPersisted()['workbench.new']).toEqual([]))
-    const deletedRow = screen.getByRole('row', { name: /New session/ })
-    expect(within(deletedRow).getAllByRole('cell')[1].querySelector('[data-slot="kbd"]')).toBeNull()
+    const deletedRow = screen.getByText('New session').closest('[data-slot="settings-row"]')
+    expect(deletedRow).not.toBeNull()
+    expect(deletedRow!.querySelector('[data-slot="kbd"]')).toBeNull()
 
     await user.click(screen.getByRole('button', { name: '重置 New session 快捷键' }))
     await waitFor(() => expect(memory.getPersisted()).not.toHaveProperty('workbench.new'))
-    const resetRow = screen.getByRole('row', { name: /New session/ })
-    expect(within(resetRow).getByText('⌘N')).toBeInTheDocument()
-    expect(within(resetRow).queryByText('⇧⌘N')).not.toBeInTheDocument()
+    const resetRow = screen.getByText('New session').closest('[data-slot="settings-row"]')
+    expect(within(resetRow as HTMLElement).getByText('⌘N')).toBeInTheDocument()
+    expect(within(resetRow as HTMLElement).queryByText('⇧⌘N')).not.toBeInTheDocument()
   })
 
   test('resets every customized command to its default binding', async () => {
