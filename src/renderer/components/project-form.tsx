@@ -263,7 +263,7 @@ export function ProjectForm({
           type="submit"
         >
           {isSaving || isProcessingIcon ? <Spinner data-icon="inline-start" /> : null}
-          {isEditing ? t('common.save') : t('project.add')}
+          {t('common.save')}
         </Button>
       </div>
     </form>
