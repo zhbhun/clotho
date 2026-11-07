@@ -602,9 +602,9 @@ export const settingsCatalog = {
   'settings.agent.subagent.advanced': setting('Advanced options', '高级选项', '高級選項'),
   'settings.agent.subagent.setCount_one': setting('{{count}} set', '已设 {{count}} 项'),
   'settings.agent.subagent.setCount_other': setting('{{count}} set', '已设 {{count}} 项'),
-  // Enum values stay verbatim lowercase literals; they are written to the file.
-  'settings.agent.subagent.inherit': setting('inherit', 'inherit', 'inherit'),
-  'settings.agent.subagent.none': setting('none', 'none', 'none'),
+  // Display labels for the "unset" enum option; stored values stay lowercase literals.
+  'settings.agent.subagent.inherit': setting('Inherit', 'Inherit', 'Inherit'),
+  'settings.agent.subagent.none': setting('None', 'None', 'None'),
   'settings.agent.subagent.unlimited': setting('Unlimited', '不限', '不限'),
   // UI-only labels for enum options; stored values remain the lowercase keys.
   'settings.agent.subagent.option.default': setting('Default', '默认', '預設'),
@@ -636,8 +636,8 @@ export const settingsCatalog = {
   'settings.agent.subagent.permissionMode': setting('Permission mode', '权限模式', '權限模式'),
   'settings.agent.subagent.effort': setting('Reasoning effort', '推理力度', '推理力度'),
   'settings.agent.subagent.maxTurns': setting('Max turns', '最大轮数', '最大輪數'),
-  'settings.agent.subagent.toolsAll': setting('all tools', '所有工具', '所有工具'),
-  'settings.agent.subagent.toolsCustom': setting('custom', '自定义', '自訂'),
+  'settings.agent.subagent.toolsAll': setting('All tools', '所有工具', '所有工具'),
+  'settings.agent.subagent.toolsCustom': setting('Custom', '自定义', '自訂'),
   'settings.agent.subagent.disallowedTools': setting('Disallowed tools', '禁用工具', '禁用工具'),
   'settings.agent.subagent.disallowedHint': setting(
     'Removed from the available tools entirely, even when listed under Tools.',
