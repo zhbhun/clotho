@@ -1,3 +1,4 @@
+import { LucideProvider } from 'lucide-react'
 import ReactDOM from 'react-dom/client'
 
 import App from './app'
@@ -66,7 +67,9 @@ async function renderApp() {
     <ErrorBoundary fallback={<StartupFailure />}>
       <LanguageProvider initialPreference={preference} instance={appI18n}>
         <ThemeProvider>
-          <App />
+          <LucideProvider strokeWidth={1.5}>
+            <App />
+          </LucideProvider>
         </ThemeProvider>
       </LanguageProvider>
     </ErrorBoundary>,
