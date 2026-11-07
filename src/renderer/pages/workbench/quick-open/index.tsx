@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { cn } from '@/shadcn/utils'
 
 import { ProjectIcon } from '../../../components/project-icon'
+import { ShortcutKeys } from '../../../components/shortcut-keys'
 import { getEffectiveBindings } from '../../../services/shortcuts/keymap'
 import { useShortcutRuntime } from '../../../services/shortcuts/runtime'
 import {
@@ -13,7 +14,6 @@ import {
   projectDisplayName,
   projectNameFromPath,
 } from '../../../utils/project'
-import { ShortcutKeys } from '../components/shortcut-keys'
 import { SessionStatus } from '../session-status'
 import { PROJECT_PATH_MAX } from '../session/project-switcher'
 import { ProjectWindowAction } from '../session/project-window-action'

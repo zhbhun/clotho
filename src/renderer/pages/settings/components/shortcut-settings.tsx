@@ -24,10 +24,15 @@ import { Spinner } from '@/shadcn/spinner'
 import { toast } from '@/shadcn/toast'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip'
 import { cn } from '@/shadcn/utils'
-import type { CommandDefinition, CommandId } from '@/shared/shortcuts'
+import type {
+  CommandDefinition,
+  CommandId,
+  ShortcutBinding,
+  ShortcutPlatform,
+} from '@/shared/shortcuts'
 
+import { ShortcutKeys } from '../../../components/shortcut-keys'
 import { localizeCommand } from '../../../i18n/shortcut-command'
-import { formatShortcutBinding } from '../../../services/shortcuts/bindings'
 import { getEffectiveBindings } from '../../../services/shortcuts/keymap'
 import { useShortcutRuntime } from '../../../services/shortcuts/runtime'
 import { SettingsList, SettingsRow, markAsRow } from './settings-list'
@@ -66,23 +71,25 @@ function ShortcutAction({
 }
 
 const ShortcutRow = markAsRow(function ShortcutRow({
-  definition,
   binding,
+  definition,
   deleteLabel,
   editLabel,
   hasBinding,
   hasOverride,
+  platform,
   resetLabel,
   onDeleteBinding,
   onEdit,
   onReset,
 }: {
+  binding?: ShortcutBinding
   definition: CommandDefinition
-  binding?: string
   deleteLabel: string
   editLabel: string
   hasBinding: boolean
   hasOverride: boolean
+  platform: ShortcutPlatform
   resetLabel: string
   onDeleteBinding: () => void
   onEdit: () => void
@@ -96,7 +103,7 @@ const ShortcutRow = markAsRow(function ShortcutRow({
           <span className="text-xs text-muted-foreground">{definition.description}</span>
         ) : null}
       </div>
-      {hasBinding ? <span className="text-muted-foreground">{binding}</span> : null}
+      {hasBinding && binding ? <ShortcutKeys binding={binding} platform={platform} /> : null}
       <div className="pointer-events-none flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover/settings-row:pointer-events-auto group-hover/settings-row:opacity-100 group-focus-within/settings-row:pointer-events-auto group-focus-within/settings-row:opacity-100">
         <ShortcutAction icon={<Pencil />} label={editLabel} onClick={onEdit} />
         <ShortcutAction
@@ -305,14 +312,13 @@ export function ShortcutSettings({ isActive = true }: { isActive?: boolean } = {
 
             return (
               <ShortcutRow
-                binding={
-                  firstBinding ? formatShortcutBinding(firstBinding, runtime.platform) : undefined
-                }
+                binding={firstBinding}
                 deleteLabel={t('settings.shortcut.delete', { command: definition.title })}
                 definition={definition}
                 hasBinding={firstBinding !== undefined}
                 hasOverride={hasOverride}
                 key={commandId}
+                platform={runtime.platform}
                 resetLabel={t('settings.shortcut.reset', { command: definition.title })}
                 editLabel={t('settings.shortcut.edit', { command: definition.title })}
                 onDeleteBinding={() => {

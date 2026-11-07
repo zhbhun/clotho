@@ -135,8 +135,9 @@ describe('ShortcutSettings', () => {
     await user.click(screen.getByRole('button', { name: '重置 New session 快捷键' }))
     await waitFor(() => expect(memory.getPersisted()).not.toHaveProperty('workbench.new'))
     const resetRow = screen.getByText('New session').closest('[data-slot="settings-row"]')
-    expect(within(resetRow as HTMLElement).getByText('⌘N')).toBeInTheDocument()
-    expect(within(resetRow as HTMLElement).queryByText('⇧⌘N')).not.toBeInTheDocument()
+    expect(within(resetRow as HTMLElement).getByText('⌘')).toBeInTheDocument()
+    expect(within(resetRow as HTMLElement).getByText('N')).toBeInTheDocument()
+    expect(within(resetRow as HTMLElement).queryByText('⇧')).not.toBeInTheDocument()
   })
 
   test('resets every customized command to its default binding', async () => {
@@ -147,14 +148,14 @@ describe('ShortcutSettings', () => {
       'workbench.new': [{ modifiers: ['primary'], key: 'k' }],
     })
 
-    expect(await screen.findByText('⌘K')).toBeInTheDocument()
-    expect(screen.getByText('⌘H')).toBeInTheDocument()
+    expect(await screen.findByText('K')).toBeInTheDocument()
+    expect(screen.getByText('H')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: '全部重置为默认值' }))
 
     await waitFor(() => expect(memory.getPersisted()).toEqual({}))
-    expect(screen.getByText('⌘N')).toBeInTheDocument()
-    expect(screen.queryByText('⌘H')).not.toBeInTheDocument()
+    expect(screen.getByText('N')).toBeInTheDocument()
+    expect(screen.queryByText('H')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '全部重置为默认值' })).toBeDisabled()
   })
 
@@ -169,7 +170,7 @@ describe('ShortcutSettings', () => {
       'application.help',
     )
 
-    await screen.findByText('⌘K')
+    await screen.findByText('K')
     const resetAll = screen.getByRole('button', { name: '全部重置为默认值' })
     await user.click(resetAll)
 
