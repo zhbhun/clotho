@@ -125,7 +125,8 @@ describe('ShortcutSettings', () => {
       key: 'K',
       metaKey: true,
     })
-    expect(within(recorder).getByText('⌘K')).toBeInTheDocument()
+    expect(within(recorder).getByText('⌘')).toBeInTheDocument()
+    expect(within(recorder).getByText('K')).toBeInTheDocument()
     await user.click(within(recorder).getByRole('button', { name: '保存' }))
 
     await waitFor(() =>

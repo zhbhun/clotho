@@ -3,13 +3,12 @@ import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
 import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shadcn/dialog'
-import { Kbd } from '@/shadcn/kbd'
 import { toast } from '@/shadcn/toast'
 import type { CommandId, ShortcutBinding } from '@/shared/shortcuts'
 
 import { AppDialog, AppDialogContent } from '../../../components/app-dialog'
+import { ShortcutKeys } from '../../../components/shortcut-keys'
 import { localizeCommand } from '../../../i18n/shortcut-command'
-import { formatShortcutBinding } from '../../../services/shortcuts/bindings'
 import { interpretShortcutCapture } from '../../../services/shortcuts/recorder'
 import { type ShortcutConflict, findShortcutConflicts } from '../../../services/shortcuts/resolver'
 import { useShortcutRuntime } from '../../../services/shortcuts/runtime'
@@ -157,7 +156,7 @@ export function ShortcutRecorder({
           onKeyDown={handleKeyDown}
         >
           {binding ? (
-            <Kbd>{formatShortcutBinding(binding, runtime.platform)}</Kbd>
+            <ShortcutKeys binding={binding} platform={runtime.platform} />
           ) : (
             <span className="text-xs text-muted-foreground">{t('settings.shortcut.capture')}</span>
           )}
