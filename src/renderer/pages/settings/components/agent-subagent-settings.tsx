@@ -33,10 +33,7 @@ function SourceBadge({ source }: { source: Source }) {
   const Icon = SOURCE_ICON[source]
   const label = t(`settings.agent.subagent.badge.${source}`)
   return (
-    <span
-      className="flex shrink-0 items-center rounded border p-1 text-foreground-subtle"
-      title={label}
-    >
+    <span className="flex shrink-0 items-center text-foreground-subtle" title={label}>
       <Icon className="size-3.5" variant="mono" aria-hidden />
     </span>
   )
