@@ -88,8 +88,9 @@ describe('AgentPluginSettings list page', () => {
     expect(await screen.findByText('formatter')).toBeInTheDocument()
     expect(screen.getByText('acme · 1.0.0')).toBeInTheDocument()
     expect(screen.getByRole('switch', { name: '在 Clotho 会话中启用' })).toBeChecked()
-    // Rows carry no delete action: the only button naming the plugin is the chevron.
-    expect(screen.getAllByRole('button', { name: 'formatter@acme' })).toHaveLength(1)
+    // The chevron is decorative: the row div is the click target, so no button
+    // names the plugin.
+    expect(screen.queryByRole('button', { name: 'formatter@acme' })).toBeNull()
   })
 
   it('hides local-scope plugins until unified local handling lands', async () => {
@@ -132,7 +133,7 @@ describe('AgentPluginSettings list page', () => {
     await waitFor(() => expect(toggle).toBeChecked())
   })
 
-  it('opens the plugin detail page from the row chevron', async () => {
+  it('opens the plugin detail page from the row click', async () => {
     mock.listAgentPlugins.mockResolvedValue([installedPlugin()])
     mock.getAgentPluginDetails.mockResolvedValue({
       pluginId: 'formatter@acme',
@@ -151,7 +152,7 @@ describe('AgentPluginSettings list page', () => {
     const user = userEvent.setup()
     renderWithProviders(<AgentPluginSettings />)
 
-    await user.click(await screen.findByRole('button', { name: 'formatter@acme' }))
+    await user.click(await screen.findByText('formatter'))
 
     expect(useSettingsDetailStore.getState().view.kind).toBe('detail')
     const view = useSettingsDetailStore.getState().view

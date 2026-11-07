@@ -126,17 +126,16 @@ export function PluginListPage() {
                   {[plugin.marketplace, plugin.version].filter(Boolean).join(' · ')}
                 </div>
               </div>
-              {/* The switch must not trigger the row-open navigation. */}
+              {/* The switch must not trigger the row-open navigation. The
+                  switch pulls 4px toward the chevron (row gap is 12px). */}
               <Switch
                 aria-label={t('settings.agent.enabled')}
                 checked={plugin.enabled}
+                className="mr-[-4px]"
                 onClick={(event) => event.stopPropagation()}
                 onCheckedChange={(enabled) => void handleToggle(plugin, enabled)}
               />
-              <RowChevron
-                label={plugin.id}
-                onOpen={() => openDetailAction('agent-plugins', plugin.id, plugin.name)}
-              />
+              <RowChevron />
             </SettingsRow>
           ))}
         </SettingsList>

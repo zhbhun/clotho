@@ -161,12 +161,7 @@ export function MarketplaceListPage() {
                     .join(' · ')}
                 </div>
               </div>
-              <RowChevron
-                label={marketplace.name}
-                onOpen={() =>
-                  openSub('agent-plugins', 'market-detail', marketplace.name, marketplace.name)
-                }
-              />
+              <RowChevron />
             </SettingsRow>
           ))}
         </SettingsList>
