@@ -115,7 +115,7 @@ function SelectField({
         value={value ?? ''}
         onValueChange={(next: string | null) => onChange(next ? next : undefined)}
       >
-        <SelectTrigger id={id} aria-label={label}>
+        <SelectTrigger id={id} aria-label={label} className="w-full">
           <SelectValue />
         </SelectTrigger>
         <SelectContent alignItemWithTrigger={false} align="end">
