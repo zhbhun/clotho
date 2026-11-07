@@ -332,11 +332,6 @@ export const settingsCatalog = {
     '与“{{command}}”冲突',
     '與「{{command}}」衝突',
   ),
-  'settings.shortcut.delete': setting(
-    'Delete {{command}} shortcut',
-    '删除 {{command}} 快捷键',
-    '刪除 {{command}} 快速鍵',
-  ),
   'settings.shortcut.edit': setting(
     'Edit {{command}} shortcut',
     '编辑 {{command}} 快捷键',
@@ -364,11 +359,8 @@ export const settingsCatalog = {
     '将根据作用域覆盖“{{command}}”',
     '將依範圍覆寫「{{command}}」',
   ),
-  'settings.shortcut.reset': setting(
-    'Reset {{command}} shortcut',
-    '重置 {{command}} 快捷键',
-    '重設 {{command}} 快速鍵',
-  ),
+  'settings.shortcut.resetAction': setting('Reset', '重置', '重設'),
+  'settings.shortcut.deleteAction': setting('Delete', '删除', '刪除'),
   'settings.shortcut.resetAll': setting(
     'Reset all to defaults',
     '全部重置为默认值',

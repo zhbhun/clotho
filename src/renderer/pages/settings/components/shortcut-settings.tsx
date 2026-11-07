@@ -1,4 +1,4 @@
-import { Keyboard, Pencil, RotateCcw, Search, Trash2 } from 'lucide-react'
+import { Keyboard, Pencil, RotateCcw, Search } from 'lucide-react'
 import {
   useDeferredValue,
   useEffect,
@@ -38,62 +38,37 @@ import { useShortcutRuntime } from '../../../services/shortcuts/runtime'
 import { SettingsList, SettingsRow, markAsRow } from './settings-list'
 import { ShortcutRecorder } from './shortcut-recorder'
 
-function ShortcutAction({
-  disabled = false,
-  icon,
-  label,
-  onClick,
-}: {
-  disabled?: boolean
-  icon: React.ReactNode
-  label: string
-  onClick: () => void
-}) {
+function ShortcutRowEditButton({ editLabel, onEdit }: { editLabel: string; onEdit: () => void }) {
   return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <Button
-            aria-label={label}
-            disabled={disabled}
-            size="icon-sm"
-            type="button"
-            variant="mute"
-            onClick={onClick}
-          />
-        }
+    <div className="flex shrink-0 items-center">
+      <Button
+        aria-label={editLabel}
+        className="m-px size-[26px] border"
+        size="icon-sm"
+        type="button"
+        variant="mute"
+        onClick={onEdit}
       >
-        {icon}
-      </TooltipTrigger>
-      <TooltipContent>{label.split(' ')[0]}</TooltipContent>
-    </Tooltip>
+        <Pencil className="size-3.5" strokeWidth={1.5} />
+      </Button>
+    </div>
   )
 }
 
 const ShortcutRow = markAsRow(function ShortcutRow({
   binding,
   definition,
-  deleteLabel,
   editLabel,
   hasBinding,
-  hasOverride,
   platform,
-  resetLabel,
-  onDeleteBinding,
   onEdit,
-  onReset,
 }: {
   binding?: ShortcutBinding
   definition: CommandDefinition
-  deleteLabel: string
   editLabel: string
   hasBinding: boolean
-  hasOverride: boolean
   platform: ShortcutPlatform
-  resetLabel: string
-  onDeleteBinding: () => void
   onEdit: () => void
-  onReset: () => void
 }) {
   return (
     <SettingsRow className="gap-2 py-2.5" variant="compact">
@@ -104,21 +79,7 @@ const ShortcutRow = markAsRow(function ShortcutRow({
         ) : null}
       </div>
       {hasBinding && binding ? <ShortcutKeys binding={binding} platform={platform} /> : null}
-      <div className="pointer-events-none flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover/settings-row:pointer-events-auto group-hover/settings-row:opacity-100 group-focus-within/settings-row:pointer-events-auto group-focus-within/settings-row:opacity-100">
-        <ShortcutAction icon={<Pencil />} label={editLabel} onClick={onEdit} />
-        <ShortcutAction
-          disabled={!hasOverride}
-          icon={<RotateCcw />}
-          label={resetLabel}
-          onClick={onReset}
-        />
-        <ShortcutAction
-          disabled={!hasBinding}
-          icon={<Trash2 />}
-          label={deleteLabel}
-          onClick={onDeleteBinding}
-        />
-      </div>
+      <ShortcutRowEditButton editLabel={editLabel} onEdit={onEdit} />
     </SettingsRow>
   )
 })
@@ -308,40 +269,16 @@ export function ShortcutSettings({ isActive = true }: { isActive?: boolean } = {
           commands.map(([commandId, definition]) => {
             const bindings = getEffectiveBindings(commandId, runtime.catalog, snapshot.overrides)
             const firstBinding = bindings[0]
-            const hasOverride = Object.hasOwn(snapshot.overrides, commandId)
 
             return (
               <ShortcutRow
                 binding={firstBinding}
-                deleteLabel={t('settings.shortcut.delete', { command: definition.title })}
                 definition={definition}
                 hasBinding={firstBinding !== undefined}
-                hasOverride={hasOverride}
                 key={commandId}
                 platform={runtime.platform}
-                resetLabel={t('settings.shortcut.reset', { command: definition.title })}
                 editLabel={t('settings.shortcut.edit', { command: definition.title })}
-                onDeleteBinding={() => {
-                  void runtime.overrides.set(commandId, []).catch(() => {
-                    toast.add({
-                      id: 'settings-shortcut-delete-error',
-                      title: t('common.toast.deleteFailed'),
-                      description: t('settings.shortcut.deleteError'),
-                      type: 'error',
-                    })
-                  })
-                }}
                 onEdit={() => setEditingCommandId(commandId)}
-                onReset={() => {
-                  void runtime.overrides.reset(commandId).catch(() => {
-                    toast.add({
-                      id: 'settings-shortcut-reset-error',
-                      title: t('common.toast.resetFailed'),
-                      description: t('settings.shortcut.resetError'),
-                      type: 'error',
-                    })
-                  })
-                }}
               />
             )
           })

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import userEvent, { type UserEvent } from '@testing-library/user-event'
 import { beforeEach, describe, expect, test } from 'vitest'
 
 import { Toaster } from '@/shadcn/toast'
@@ -83,6 +83,19 @@ function renderShortcutSettings(initial: ShortcutOverrides = {}, failResetOnce?:
   }
 }
 
+/** Open the editor dialog of the row whose title matches, via its hover-revealed
+    edit button. Must be called while the dialog is closed. */
+async function openRowEditor(user: UserEvent, rowTitle: string) {
+  const row = screen.getByText(rowTitle).closest('[data-slot="settings-row"]')
+  expect(row).not.toBeNull()
+  const editButton = within(row as HTMLElement).getByRole('button', {
+    name: `编辑 ${rowTitle} 快捷键`,
+  })
+  await user.hover(editButton)
+  await user.click(editButton)
+  return screen.getByRole('dialog', { name: '编辑快捷键' })
+}
+
 describe('ShortcutSettings', () => {
   test('filters commands by title and description', async () => {
     const user = userEvent.setup()
@@ -100,11 +113,9 @@ describe('ShortcutSettings', () => {
     const { memory } = renderShortcutSettings()
     await screen.findByText('New session')
 
-    const edit = screen.getByRole('button', { name: '编辑 New session 快捷键' })
-    await user.hover(edit)
-    await user.click(edit)
-
-    const recorder = screen.getByRole('dialog', { name: '编辑快捷键' })
+    // Row actions: a hover-revealed edit button opens the recorder dialog;
+    // reset/delete live in the dialog footer.
+    const recorder = await openRowEditor(user, 'New session')
     const cancel = within(recorder).getByRole('button', { name: '取消' })
     cancel.focus()
     fireEvent.keyDown(cancel, { key: 'Enter' })
@@ -126,13 +137,17 @@ describe('ShortcutSettings', () => {
       '⌘K',
     )
 
-    await user.click(screen.getByRole('button', { name: '删除 New session 快捷键' }))
+    // Delete: reopen the editor; the footer shows Delete when a binding exists.
+    const deleteDialog = await openRowEditor(user, 'New session')
+    await user.click(within(deleteDialog).getByRole('button', { name: '删除' }))
     await waitFor(() => expect(memory.getPersisted()['workbench.new']).toEqual([]))
     const deletedRow = screen.getByText('New session').closest('[data-slot="settings-row"]')
     expect(deletedRow).not.toBeNull()
     expect(deletedRow!.querySelector('[data-slot="kbd"]')).toBeNull()
 
-    await user.click(screen.getByRole('button', { name: '重置 New session 快捷键' }))
+    // Reset: the footer shows Reset only while an override exists.
+    const resetDialog = await openRowEditor(user, 'New session')
+    await user.click(within(resetDialog).getByRole('button', { name: '重置' }))
     await waitFor(() => expect(memory.getPersisted()).not.toHaveProperty('workbench.new'))
     const resetRow = screen.getByText('New session').closest('[data-slot="settings-row"]')
     expect(within(resetRow as HTMLElement).getByText('⌘')).toBeInTheDocument()

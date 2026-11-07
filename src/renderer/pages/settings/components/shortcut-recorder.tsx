@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
@@ -27,6 +27,11 @@ export function ShortcutRecorder({
 }) {
   const { t } = useTranslation()
   const runtime = useShortcutRuntime()
+  const overrides = useSyncExternalStore(
+    runtime.overrides.subscribe,
+    runtime.overrides.getSnapshot,
+    runtime.overrides.getSnapshot,
+  ).overrides
   const captureRef = useRef<HTMLDivElement>(null)
   const [binding, setBinding] = useState<ShortcutBinding | null>(currentBinding ?? null)
   const [conflicts, setConflicts] = useState<ShortcutConflict[]>([])
@@ -51,6 +56,35 @@ export function ShortcutRecorder({
   const definition = localizeCommand(currentCommandId, runtime.catalog[currentCommandId], t)
   const hardConflict = conflicts.find((conflict) => conflict.type === 'hard')
   const shadowConflict = conflicts.find((conflict) => conflict.type === 'shadow')
+  const hasOverride = Object.hasOwn(overrides, currentCommandId)
+
+  function handleReset() {
+    void runtime.overrides.reset(currentCommandId).then(
+      () => onOpenChange(false),
+      () => {
+        toast.add({
+          id: 'settings-shortcut-reset-error',
+          title: t('common.toast.resetFailed'),
+          description: t('settings.shortcut.resetError'),
+          type: 'error',
+        })
+      },
+    )
+  }
+
+  function handleDelete() {
+    void runtime.overrides.set(currentCommandId, []).then(
+      () => onOpenChange(false),
+      () => {
+        toast.add({
+          id: 'settings-shortcut-delete-error',
+          title: t('common.toast.deleteFailed'),
+          description: t('settings.shortcut.deleteError'),
+          type: 'error',
+        })
+      },
+    )
+  }
 
   function handleKeyDown(event: React.KeyboardEvent) {
     const result = interpretShortcutCapture(event.nativeEvent, runtime.platform)
@@ -158,6 +192,18 @@ export function ShortcutRecorder({
         {error ? <p className="text-xs text-destructive">{error}</p> : null}
 
         <DialogFooter>
+          <div className="mr-auto flex items-center gap-1">
+            {hasOverride ? (
+              <Button type="button" variant="ghost" onClick={handleReset}>
+                {t('settings.shortcut.resetAction')}
+              </Button>
+            ) : null}
+            {currentBinding ? (
+              <Button type="button" variant="ghost" onClick={handleDelete}>
+                {t('settings.shortcut.deleteAction')}
+              </Button>
+            ) : null}
+          </div>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             {t('settings.common.cancel')}
           </Button>

@@ -15,7 +15,10 @@ export function ShortcutKeys({
   return (
     <KbdGroup className="gap-0.5">
       {shortcutBindingKeyLabels(binding, platform).map((label, index) => (
-        <Kbd key={`${label}-${index}`} className="rounded-sm border border-border">
+        <Kbd
+          key={`${label}-${index}`}
+          className="h-6 min-w-6 rounded-sm border border-border text-xs"
+        >
           {label}
         </Kbd>
       ))}
