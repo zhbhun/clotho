@@ -145,7 +145,14 @@ export function MarketplaceListPage() {
       ) : (
         <SettingsList>
           {marketplaces.map((marketplace) => (
-            <SettingsRow className="gap-3" key={marketplace.name} variant="compact">
+            <SettingsRow
+              className="gap-3 cursor-pointer transition-colors hover:bg-muted"
+              key={marketplace.name}
+              variant="compact"
+              onClick={() =>
+                openSub('agent-plugins', 'market-detail', marketplace.name, marketplace.name)
+              }
+            >
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-normal">{marketplace.name}</div>
                 <div className="truncate text-sm text-foreground-subtle">

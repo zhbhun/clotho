@@ -80,13 +80,16 @@ export function PluginOverflowMenu({
   )
 }
 
-/** Row-end chevron opening a detail page. */
+/** Row-end chevron opening a detail page; stops bubbling so the row click fires once. */
 export function RowChevron({ label, onOpen }: { label: string; onOpen: () => void }) {
   return (
     <Button
       aria-label={label}
       className="text-foreground-subtlest"
-      onClick={onOpen}
+      onClick={(event) => {
+        event.stopPropagation()
+        onOpen()
+      }}
       size="icon-sm"
       variant="ghost"
     >

@@ -114,16 +114,23 @@ export function PluginListPage() {
       ) : (
         <SettingsList>
           {plugins.map((plugin) => (
-            <SettingsRow className="gap-3" key={plugin.id} variant="compact">
+            <SettingsRow
+              className="gap-3 cursor-pointer transition-colors hover:bg-muted"
+              key={plugin.id}
+              variant="compact"
+              onClick={() => openDetailAction('agent-plugins', plugin.id, plugin.name)}
+            >
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-normal">{plugin.name}</div>
                 <div className="truncate text-sm text-foreground-subtle">
                   {[plugin.marketplace, plugin.version].filter(Boolean).join(' · ')}
                 </div>
               </div>
+              {/* The switch must not trigger the row-open navigation. */}
               <Switch
                 aria-label={t('settings.agent.enabled')}
                 checked={plugin.enabled}
+                onClick={(event) => event.stopPropagation()}
                 onCheckedChange={(enabled) => void handleToggle(plugin, enabled)}
               />
               <RowChevron
