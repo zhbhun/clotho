@@ -122,7 +122,7 @@ export function PluginListPage() {
             >
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-normal">{plugin.name}</div>
-                <div className="truncate text-sm text-foreground-subtle">
+                <div className="truncate text-sm text-foreground-subtlest">
                   {[plugin.marketplace, plugin.version].filter(Boolean).join(' · ')}
                 </div>
               </div>

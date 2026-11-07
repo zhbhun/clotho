@@ -155,7 +155,7 @@ export function MarketplaceListPage() {
             >
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-normal">{marketplace.name}</div>
-                <div className="truncate text-sm text-foreground-subtle">
+                <div className="truncate text-sm text-foreground-subtlest">
                   {[marketplace.source.source, marketplace.source.repo ?? marketplace.source.url]
                     .filter(Boolean)
                     .join(' · ')}
