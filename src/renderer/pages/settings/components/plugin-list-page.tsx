@@ -24,6 +24,8 @@ import { SettingsList, SettingsRow } from './settings-list'
 /**
  * Top-level Plugins page: the installed plugin list. Header actions are the
  * Install entry (second level) and a `⋯` menu (refresh all, marketplaces).
+ * Only user-scope plugins are listed for now; local (project) scope plugins
+ * are deferred until a unified handling lands.
  */
 export function PluginListPage() {
   const { t } = useTranslation()
@@ -34,7 +36,8 @@ export function PluginListPage() {
 
   const reload = async () => {
     try {
-      setPlugins(await listAgentPlugins())
+      const installed = await listAgentPlugins()
+      setPlugins(installed.filter((plugin) => plugin.scope === 'user'))
     } catch {
       toast.add({ id: 'agent-plugins-load', title: t('settings.agent.loadError'), type: 'error' })
     } finally {
@@ -115,7 +118,7 @@ export function PluginListPage() {
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-normal">{plugin.name}</div>
                 <div className="truncate text-sm text-foreground-subtle">
-                  {[plugin.scope, plugin.marketplace, plugin.version].filter(Boolean).join(' · ')}
+                  {[plugin.marketplace, plugin.version].filter(Boolean).join(' · ')}
                 </div>
               </div>
               <Switch

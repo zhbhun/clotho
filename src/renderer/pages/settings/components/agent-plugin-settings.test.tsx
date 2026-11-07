@@ -81,15 +81,26 @@ function installedPlugin(overrides: Partial<agentConfig.AgentPluginInfo> = {}) {
 }
 
 describe('AgentPluginSettings list page', () => {
-  it('lists installed plugins with scope, marketplace, and version on the second line', async () => {
+  it('lists installed plugins with marketplace, and version on the second line', async () => {
     mock.listAgentPlugins.mockResolvedValue([installedPlugin()])
     renderWithProviders(<AgentPluginSettings />)
 
     expect(await screen.findByText('formatter')).toBeInTheDocument()
-    expect(screen.getByText('user · acme · 1.0.0')).toBeInTheDocument()
+    expect(screen.getByText('acme · 1.0.0')).toBeInTheDocument()
     expect(screen.getByRole('switch', { name: '在 Clotho 会话中启用' })).toBeChecked()
     // Rows carry no delete action: the only button naming the plugin is the chevron.
     expect(screen.getAllByRole('button', { name: 'formatter@acme' })).toHaveLength(1)
+  })
+
+  it('hides local-scope plugins until unified local handling lands', async () => {
+    mock.listAgentPlugins.mockResolvedValue([
+      installedPlugin(),
+      installedPlugin({ id: 'trading@zhbhun', name: 'trading', scope: 'local' }),
+    ])
+    renderWithProviders(<AgentPluginSettings />)
+
+    expect(await screen.findByText('formatter')).toBeInTheDocument()
+    expect(screen.queryByText('trading')).toBeNull()
   })
 
   it('toggles a plugin through the CLI enable state RPC', async () => {
