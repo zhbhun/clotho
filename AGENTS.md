@@ -1,18 +1,15 @@
 # AGENTS.md
 
-**clotho** is a cross-platform Electron desktop application: a Node.js/TypeScript main process and a React frontend connected through Electron IPC (preload `contextBridge`).
+**clotho** is a cross-platform Electron desktop application.
 
 ## Technology stack
 
-| Layer           | Technology                                                                           |
-| --------------- | ------------------------------------------------------------------------------------ |
-| Frontend        | React 19, TypeScript 6, Vite 8                                                       |
-| Styling / UI    | Tailwind CSS 4, shadcn/ui (`base-mira`, Base UI), Lucide React                       |
-| Backend         | Node.js (Electron main process), Electron Forge                                      |
-| Bridge          | Electron IPC (`ipcMain.handle` / `webContents.send` via the preload `contextBridge`) |
-| Testing         | Vitest, React Testing Library                                                        |
-| Quality         | ESLint 9, Prettier 3                                                                 |
-| Package manager | **npm**                                                                              |
+- **Frontend**: React 19, TypeScript 6, Vite 8
+- **Styling / UI**: Tailwind CSS 4, shadcn/ui (`base-mira`, Base UI), Lucide React
+- **Backend**: Node.js (Electron main process), Electron Forge
+- **Testing**: Vitest, React Testing Library
+- **Quality**: ESLint 9, Prettier 3
+- **Package manager**: npm
 
 ## Project structure
 
@@ -21,41 +18,36 @@ clotho/
 ├── src/
 │   ├── shared/      # Shared contracts
 │   ├── main/        # Main process (backend)
+│   ├── preload/     # Preload IPC bridge
 │   ├── renderer/    # Frontend (renderer)
 │   └── shadcn/      # Base UI components
-├── src/main/index.ts     # Electron entry point
-├── src/preload/index.ts  # Preload IPC bridge
 ├── icons/           # Packaging icons
-└── Configuration files
+└── ...
 ```
 
 ### Shared
+
+`src/shared/` holds shared contracts only (no frontend/backend implementations); update both ends whenever the RPC contract changes.
 
 ```
 src/shared/
 └── rpc.ts    # Shared types and the desktop IPC contract
 ```
 
-- Store shared contracts only; do not put frontend or backend implementations here.
-- Update both ends whenever the RPC contract changes.
-
 ### Backend
+
+`src/main/` is the Electron main process (backend): it may depend on `src/shared` but must not depend on the frontend or shadcn. `src/preload/index.ts` exposes the typed IPC bridge (`window.clotho`) consumed by `src/renderer/services/desktop/client.ts`.
 
 ```
 src/main/
 ├── index.ts              # Main-process bootstrap and IPC implementation
 ├── claude-service.ts     # Claude SDK lifecycle
 └── claude/               # Project, session, file-search, and related modules
-
-src/preload/index.ts exposes the typed IPC bridge (`window.clotho`) consumed by
-`src/renderer/services/desktop/client.ts`.
 ```
-
-- The main process may depend on `src/shared`, but must not depend on the frontend or shadcn.
 
 ### Frontend
 
-`src/renderer` uses shared root modules plus self-contained `pages`.
+`src/renderer` uses shared root modules plus self-contained `pages`; keep page-private code in `pages/<page>/` and promote code to a root-level shared directory only after it is reused by multiple pages.
 
 ```
 src/renderer/
@@ -78,10 +70,9 @@ src/renderer/
         └── utils/
 ```
 
-- Keep page-private code in `pages/<page>/`.
-- Promote code to a root-level shared directory only after it is reused by multiple pages.
-
 ### shadcn
+
+`src/shadcn/` holds shadcn registry code only — no business modules (those go in `src/renderer`); see `components.json` for configuration, add components with `npx shadcn@latest add <component>`, and import them through `@/shadcn/<component>`.
 
 ```
 src/shadcn/
@@ -90,10 +81,7 @@ src/shadcn/
 └── utils.ts           # cn()
 ```
 
-- Store shadcn registry code only; do not depend on business modules. Put business components in `src/renderer`.
-- See `components.json` for configuration. Add components with `npx shadcn@latest add <component>` and import them through `@/shadcn/<component>`.
-
-## Development guidelines
+## Development standards
 
 ### Naming conventions
 
@@ -140,11 +128,6 @@ Keep names short while preserving meaning. Split and refine names as responsibil
 - Write commit messages in English.
 - No AI-attribution trailers (e.g. `AI-Co-Authored-By`), even if a skill suggests one.
 
-### OpenSpec workflow
-
-- New features and functional changes MUST go through the OpenSpec spec-driven workflow: explore (think through ideas) → propose (create the change with proposal/specs/design/tasks) → apply (implement the tasks) → archive (sync specs and move the change to `openspec/changes/archive/`).
-- When explore involves UI or interaction adjustments, build a prototype demo with the `prototype` skill in a temporary directory, move it to `openspec/changes/<change-name>/prototype.html` at propose, and archive it together with the change.
-
 <!-- OPENWIKI:START -->
 
 ## OpenWiki
@@ -161,3 +144,71 @@ This repository has a generated `openwiki/` evidence index. It is optional just-
 Do not hand-edit generated OpenWiki pages unless explicitly asked; prefer updating source code/docs and letting OpenWiki regenerate. When generating or updating the wiki, write all page content in English.
 
 <!-- OPENWIKI:END -->
+
+## Develop Guidelines
+
+Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
+
+**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+
+### 1. Think Before Coding
+
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
+
+Before implementing:
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
+### 2. Simplicity First
+
+**Minimum code that solves the problem. Nothing speculative.**
+
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
+
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+### 3. Surgical Changes
+
+**Touch only what you must. Clean up only your own mess.**
+
+When editing existing code:
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
+
+When your changes create orphans:
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove pre-existing dead code unless asked.
+
+The test: Every changed line should trace directly to the user's request.
+
+### 4. Goal-Driven Execution
+
+**Define success criteria. Loop until verified.**
+
+Transform tasks into verifiable goals:
+- "Add validation" → "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" → "Write a test that reproduces it, then make it pass"
+- "Refactor X" → "Ensure tests pass before and after"
+
+For multi-step tasks, state a brief plan:
+```
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
+```
+
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
+### 5. OpenSpec workflow
+
+- New features and functional changes MUST go through the OpenSpec spec-driven workflow: explore (think through ideas) → propose (create the change with proposal/specs/design/tasks) → apply (implement the tasks) → archive (sync specs and move the change to `openspec/changes/archive/`).
+- When explore involves UI or interaction adjustments, build a prototype demo with the `prototype` skill in a temporary directory, move it to `openspec/changes/<change-name>/prototype.html` at propose, and archive it together with the change.
+
