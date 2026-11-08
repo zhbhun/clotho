@@ -378,7 +378,7 @@ function SettingsPageContent({
                 <SidebarMenu className="h-10 justify-center px-2">
                   <SidebarMenuItem>
                     <SidebarMenuButton
-                      className="h-[30px] px-2 text-sm font-normal text-foreground-subtlest"
+                      className="h-[30px] px-2 text-sm font-normal text-foreground-subtlest [&_svg]:size-3.5"
                       onClick={() => onOpenChange(false)}
                       tabIndex={0}
                     >
@@ -407,7 +407,7 @@ function SettingsPageContent({
                             <SidebarMenuItem key={item.id}>
                               <SidebarMenuButton
                                 aria-current={item.id === categoryId ? 'page' : undefined}
-                                className="h-[30px] px-2 text-sm font-normal"
+                                className="h-[30px] px-2 text-sm font-normal [&_svg]:size-3.5"
                                 isActive={item.id === categoryId}
                                 onClick={() => selectCategory(item.id)}
                                 onKeyDown={(event) => handleCategoryKeyDown(event, index)}
