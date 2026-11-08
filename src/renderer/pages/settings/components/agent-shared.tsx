@@ -26,7 +26,7 @@ export function AgentSection({
   onAdd,
   children,
 }: {
-  titleKey: 'subagents' | 'plugins' | 'mcp' | 'skills' | 'hooks' | 'workflows'
+  titleKey: 'subagents' | 'plugins' | 'mcp' | 'skills'
   addLabel?: string
   onAdd?: () => void
   children: ReactNode

@@ -9,8 +9,6 @@ import {
   Server,
   Settings2,
   Sparkles,
-  Webhook,
-  Workflow,
 } from 'lucide-react'
 import {
   type CSSProperties,
@@ -70,12 +68,10 @@ import { ShortcutDialog } from '../../components/shortcut-dialog'
 import { ShortcutScope } from '../../components/shortcut-scope'
 import { TransientScrollArea } from '../../components/transient-scroll-area'
 import type { ClaudeProject } from '../../services/claude/claude'
-import { AgentHookSettings } from './components/agent-hook-settings'
 import { AgentMcpSettings } from './components/agent-mcp-settings'
 import { AgentPluginSettings } from './components/agent-plugin-settings'
 import { AgentSkillSettings } from './components/agent-skill-settings'
 import { AgentSubagentSettings } from './components/agent-subagent-settings'
-import { AgentWorkflowSettings } from './components/agent-workflow-settings'
 import { AppearanceSettings } from './components/appearance-settings'
 import { LanguageSettings } from './components/language-settings'
 import { PermissionSettings } from './components/permission-settings'
@@ -94,12 +90,10 @@ const BASE_CATEGORIES = [
 ] as const
 
 const AGENT_CATEGORIES = [
-  { id: 'agent-subagents', labelKey: 'settings.categories.agentSubagents', icon: Bot },
   { id: 'agent-plugins', labelKey: 'settings.categories.agentPlugins', icon: Puzzle },
+  { id: 'agent-subagents', labelKey: 'settings.categories.agentSubagents', icon: Bot },
   { id: 'agent-mcp', labelKey: 'settings.categories.agentMcp', icon: Server },
   { id: 'agent-skills', labelKey: 'settings.categories.agentSkills', icon: Sparkles },
-  { id: 'agent-hooks', labelKey: 'settings.categories.agentHooks', icon: Webhook },
-  { id: 'agent-workflows', labelKey: 'settings.categories.agentWorkflows', icon: Workflow },
 ] as const
 
 /**
@@ -522,23 +516,17 @@ function SettingsPageContent({
                         onRemoveProject={onRemoveProject}
                       />
                     </SettingsCategory>
-                    <SettingsCategory isActive={category.id === 'agent-subagents'}>
-                      <AgentSubagentSettings />
-                    </SettingsCategory>
                     <SettingsCategory isActive={category.id === 'agent-plugins'}>
                       <AgentPluginSettings />
+                    </SettingsCategory>
+                    <SettingsCategory isActive={category.id === 'agent-subagents'}>
+                      <AgentSubagentSettings />
                     </SettingsCategory>
                     <SettingsCategory isActive={category.id === 'agent-mcp'}>
                       <AgentMcpSettings />
                     </SettingsCategory>
                     <SettingsCategory isActive={category.id === 'agent-skills'}>
                       <AgentSkillSettings />
-                    </SettingsCategory>
-                    <SettingsCategory isActive={category.id === 'agent-hooks'}>
-                      <AgentHookSettings />
-                    </SettingsCategory>
-                    <SettingsCategory isActive={category.id === 'agent-workflows'}>
-                      <AgentWorkflowSettings />
                     </SettingsCategory>
                   </div>
                 </div>

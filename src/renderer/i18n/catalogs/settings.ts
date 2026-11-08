@@ -491,18 +491,14 @@ export const settingsCatalog = {
   'settings.groups.agent': setting('Agent capabilities', 'Agent 能力', 'Agent 能力'),
   'settings.categories.agentSubagents': setting('Subagents', '子智能体', '子智慧體'),
   'settings.categories.agentPlugins': setting('Plugins', '插件', '外掛'),
-  'settings.categories.agentMcp': setting('MCP servers', 'MCP 服务器', 'MCP 伺服器'),
+  'settings.categories.agentMcp': setting('MCP', 'MCP', 'MCP'),
   'settings.categories.agentSkills': setting('Skills', '技能', '技能'),
-  'settings.categories.agentHooks': setting('Hooks', '钩子', '鉤子'),
-  'settings.categories.agentWorkflows': setting('Workflows', '工作流', '工作流'),
 
   // Agent capability shared copy.
   'settings.agent.title.subagents': setting('Subagents', '子智能体', '子智慧體'),
   'settings.agent.title.plugins': setting('Plugins', '插件', '外掛'),
-  'settings.agent.title.mcp': setting('MCP servers', 'MCP 服务器', 'MCP 伺服器'),
+  'settings.agent.title.mcp': setting('MCP', 'MCP', 'MCP'),
   'settings.agent.title.skills': setting('Skills', '技能', '技能'),
-  'settings.agent.title.hooks': setting('Hooks', '钩子', '鉤子'),
-  'settings.agent.title.workflows': setting('Workflows', '工作流', '工作流'),
   'settings.agent.description.subagents': setting(
     'Create and edit user-level subagents (~/.claude/agents).',
     '创建和编辑用户级子智能体（~/.claude/agents）。',
@@ -522,16 +518,6 @@ export const settingsCatalog = {
     'Manage user-level skills (~/.claude/skills).',
     '管理用户级技能（~/.claude/skills）。',
     '管理使用者層級技能（~/.claude/skills）。',
-  ),
-  'settings.agent.description.hooks': setting(
-    'Manage command hooks in ~/.claude/settings.json.',
-    '管理 ~/.claude/settings.json 中的命令钩子。',
-    '管理 ~/.claude/settings.json 中的命令鉤子。',
-  ),
-  'settings.agent.description.workflows': setting(
-    'Manage workflow files under ~/.claude/workflows.',
-    '管理 ~/.claude/workflows 下的工作流文件。',
-    '管理 ~/.claude/workflows 下的工作流檔案。',
   ),
   'settings.agent.loadError': setting('Failed to load the list', '加载列表失败', '載入清單失敗'),
   'settings.agent.saveError': setting('Failed to save', '保存失败', '儲存失敗'),
@@ -711,29 +697,6 @@ export const settingsCatalog = {
   ),
   'settings.agent.mcp.sseHint': setting('Server-sent events endpoint', 'SSE 端点', 'SSE 端點'),
 
-  // Hooks.
-  'settings.agent.hooks.add': setting('Add hook', '添加钩子', '新增鉤子'),
-  'settings.agent.hooks.detailDescription': setting(
-    'Choose the event, an optional matcher, and the commands to run. Saving returns you to the list.',
-    '选择事件、可选的匹配器和要运行的命令，保存后返回列表。',
-    '選擇事件、可選的匹配器和要執行的命令，儲存後返回列表。',
-  ),
-  'settings.agent.hooks.event': setting('Event', '事件', '事件'),
-  'settings.agent.hooks.eventHint': setting(
-    'e.g. Stop, PreToolUse',
-    '例如 Stop、PreToolUse',
-    '例如 Stop、PreToolUse',
-  ),
-  'settings.agent.hooks.matcher': setting('Matcher', '匹配器', '匹配器'),
-  'settings.agent.hooks.matcherHint': setting(
-    'Tool-name pattern; empty matches all',
-    '工具名模式；留空匹配全部',
-    '工具名模式；留空匹配全部',
-  ),
-  'settings.agent.hooks.command': setting('Command', '命令', '命令'),
-  'settings.agent.hooks.timeout': setting('Timeout (s)', '超时（秒）', '逾時（秒）'),
-  'settings.agent.hooks.addCommand': setting('Add command', '添加命令', '新增命令'),
-
   // Skills.
   'settings.agent.skills.addHint': setting(
     'Create skill directories under ~/.claude/skills',
@@ -840,15 +803,4 @@ export const settingsCatalog = {
     '无法获取插件详情',
     '無法取得外掛詳情',
   ),
-
-  // Workflows.
-  'settings.agent.workflows.add': setting('New workflow', '新建工作流', '新建工作流'),
-  'settings.agent.workflows.detailDescription': setting(
-    'Set the workflow name and body. Saving returns you to the list.',
-    '设置工作流的名称和内容，保存后返回列表。',
-    '設定工作流的名稱和內容，儲存後返回列表。',
-  ),
-  'settings.agent.workflows.rename': setting('Rename', '重命名', '重新命名'),
-  'settings.agent.workflows.content': setting('Content', '内容', '內容'),
-  'settings.agent.workflows.modified': setting('Last modified', '修改时间', '修改時間'),
 } satisfies Record<string, TranslationRow>

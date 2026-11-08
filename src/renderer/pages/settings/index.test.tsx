@@ -167,11 +167,11 @@ describe('SettingsPage', () => {
     expect(screen.getByRole('textbox', { name: '搜索快捷键' })).toHaveValue('对话')
   })
 
-  it('renders the six agent capability categories under the group label', async () => {
+  it('renders the agent capability categories under the group label', async () => {
     render(<TestSettingsPage open onOpenChange={vi.fn()} />)
 
     expect(screen.getByText('Agent 能力')).toBeInTheDocument()
-    for (const name of ['子智能体', '插件', 'MCP 服务器', '技能', '钩子', '工作流']) {
+    for (const name of ['插件', '子智能体', 'MCP', '技能']) {
       expect(screen.getByRole('button', { name })).toBeInTheDocument()
     }
   })
