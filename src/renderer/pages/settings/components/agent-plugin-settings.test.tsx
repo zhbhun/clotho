@@ -161,29 +161,14 @@ describe('AgentPluginSettings list page', () => {
     expect(screen.getByText('format')).toBeInTheDocument()
   })
 
-  it('refreshes all marketplaces from the overflow menu', async () => {
+  it('refreshes all marketplaces from the header refresh button', async () => {
     mock.refreshAgentMarketplace.mockResolvedValue(undefined)
     const user = userEvent.setup()
     renderWithProviders(<AgentPluginSettings />)
 
-    await user.click(await screen.findByRole('button', { name: '更多操作' }))
-    const menu = await screen.findByRole('menu', { name: '更多操作' })
-    await user.click(within(menu).getByRole('menuitem', { name: '全部刷新' }))
+    await user.click(await screen.findByRole('button', { name: '刷新' }))
 
     await waitFor(() => expect(mock.refreshAgentMarketplace).toHaveBeenCalledWith())
-  })
-
-  it('opens the marketplaces page from the overflow menu', async () => {
-    const user = userEvent.setup()
-    renderWithProviders(<AgentPluginSettings />)
-
-    await user.click(await screen.findByRole('button', { name: '更多操作' }))
-    const menu = await screen.findByRole('menu', { name: '更多操作' })
-    await user.click(within(menu).getByRole('menuitem', { name: '插件市场' }))
-
-    const view = useSettingsDetailStore.getState().view
-    expect(view.kind).toBe('detail')
-    if (view.kind === 'detail') expect(view.page).toBe('marketplaces')
   })
 })
 

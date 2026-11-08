@@ -1,3 +1,4 @@
+import { PackagePlus, RotateCw } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -12,18 +13,13 @@ import {
   setAgentPluginEnabled,
 } from '../../../services/claude/agent-config'
 import { AgentEmpty } from './agent-shared'
-import {
-  PluginOverflowMenu,
-  RowChevron,
-  refreshAllMarketplaces,
-  useRestartHint,
-} from './plugin-shared'
+import { RowChevron, refreshAllMarketplaces, useRestartHint } from './plugin-shared'
 import { useSettingsDetailStore } from './settings-detail-store'
 import { SettingsList, SettingsRow } from './settings-list'
 
 /**
  * Top-level Plugins page: the installed plugin list. Header actions are the
- * Install entry (second level) and a `⋯` menu (refresh all, marketplaces).
+ * refresh-all and install icon buttons.
  * Only user-scope plugins are listed for now; local (project) scope plugins
  * are deferred until a unified handling lands.
  */
@@ -73,13 +69,6 @@ export function PluginListPage() {
 
   const showInstallPage = () =>
     openDetailAction('agent-plugins', null, t('settings.agent.plugins.installPlugin'), 'install')
-  const showMarketplacesPage = () =>
-    openDetailAction(
-      'agent-plugins',
-      null,
-      t('settings.agent.plugins.marketplaces'),
-      'marketplaces',
-    )
 
   return (
     <section className="flex flex-col gap-3" data-plugin-list-page>
@@ -91,19 +80,17 @@ export function PluginListPage() {
           </span>
         </h2>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={showInstallPage}>
-            {t('settings.agent.plugins.installPlugin')}
+          <Button
+            aria-label={t('settings.agent.plugins.refresh')}
+            size="icon"
+            variant="outline"
+            onClick={() => void handleRefreshAll()}
+          >
+            <RotateCw className="size-4" />
           </Button>
-          <PluginOverflowMenu
-            items={[
-              {
-                label: t('settings.agent.plugins.refreshAll'),
-                onSelect: () => void handleRefreshAll(),
-              },
-              { label: t('settings.agent.plugins.marketplaces'), onSelect: showMarketplacesPage },
-            ]}
-            label={t('settings.agent.plugins.more')}
-          />
+          <Button aria-label={t('settings.agent.plugins.installPlugin')} onClick={showInstallPage}>
+            <PackagePlus data-icon="inline-start" />
+          </Button>
         </div>
       </div>
 
