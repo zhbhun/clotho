@@ -123,7 +123,7 @@ export function InstallPluginPage() {
     <section className="flex flex-col gap-4" data-install-page>
       <div>
         <h1 className="text-xl font-medium tracking-tight">
-          {t('settings.agent.plugins.installPlugin')}
+          {t('settings.agent.plugins.installPageTitle')}
         </h1>
         <p className="mt-1 text-sm text-foreground-subtlest">
           {t('settings.agent.plugins.installPageDescription')}

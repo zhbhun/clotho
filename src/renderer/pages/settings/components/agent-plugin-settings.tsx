@@ -34,7 +34,7 @@ export function AgentPluginSettings() {
     } else if (detail.page === 'marketplaces') {
       setLeaf(t('settings.agent.plugins.marketplaces'))
     } else if (detail.page === 'install') {
-      setLeaf(t('settings.agent.plugins.installPlugin'))
+      setLeaf(t('settings.agent.plugins.installPageTitle'))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOwnDetail, view])

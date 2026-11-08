@@ -782,6 +782,7 @@ export const settingsCatalog = {
     '按来源浏览插件，安装将在新会话中生效。',
     '按來源瀏覽外掛，安裝將在新工作階段中生效。',
   ),
+  'settings.agent.plugins.installPageTitle': setting('Marketplace', '插件市场', '外掛市場'),
   'settings.agent.plugins.registered': setting('Registered', '已注册', '已註冊'),
   'settings.agent.plugins.addPageDescription': setting(
     'Add from a GitHub repo, Git URL, or local folder.',
