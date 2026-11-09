@@ -124,7 +124,7 @@ describe('orderCatalog', () => {
 })
 
 describe('catalogSources', () => {
-  it('lists registered marketplaces sorted with directory last', () => {
+  it('lists distinct sources in plain alphabetical order', () => {
     const entries = dedupeCatalog(
       [
         entry('a', DIR),
@@ -136,9 +136,9 @@ describe('catalogSources', () => {
     )
     expect(catalogSources(entries)).toEqual([
       'aaa-market',
+      DIR,
       'claude-plugins-official',
       'zhbhun',
-      DIR,
     ])
   })
 })

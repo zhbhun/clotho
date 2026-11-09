@@ -108,15 +108,11 @@ export function orderCatalog(entries: CatalogEntry[]): CatalogEntry[] {
 }
 
 /**
- * Distinct sources in the deduplicated catalog for the filter dropdown:
- * registered marketplaces sorted alphabetically, the built-in directory last.
+ * Distinct sources in the deduplicated catalog for the filter dropdown,
+ * plain alphabetical — the built-in directory sorts in like any marketplace.
  */
 export function catalogSources(entries: CatalogEntry[]): string[] {
-  return [...new Set(entries.map((e) => e.marketplaceName))].sort((a, b) => {
-    if (a === DIRECTORY_MARKETPLACE) return 1
-    if (b === DIRECTORY_MARKETPLACE) return -1
-    return a < b ? -1 : 1
-  })
+  return [...new Set(entries.map((e) => e.marketplaceName))].sort((a, b) => (a < b ? -1 : 1))
 }
 
 /** Extract the plugin name from an installed `name@marketplace` id. */

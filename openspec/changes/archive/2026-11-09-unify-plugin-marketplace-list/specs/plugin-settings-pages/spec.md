@@ -86,7 +86,7 @@ The page SHALL render a source filter dropdown next to the search input, listing
 #### Scenario: Source filter narrows the list
 
 - **WHEN** the user opens the source filter dropdown
-- **THEN** it lists `All`, `anthropic-plugin-directory`, and every distinct registered marketplace name present in the catalog; selecting `zhbhun` shows only entries whose source label is `zhbhun`, and selecting `All` restores the full list
+- **THEN** it lists `All` followed by every distinct marketplace name present in the catalog in alphabetical order (the built-in directory `anthropic-plugin-directory` sorts in like any marketplace); selecting `zhbhun` shows only entries whose source label is `zhbhun`, and selecting `All` restores the full list
 
 #### Scenario: Search applies on top of the source filter
 
