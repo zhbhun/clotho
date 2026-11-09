@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE: unified plugin marketplace</title>
+<!--
+  PROTOTYPE (throwaway) · change: unify-plugin-marketplace-list
+  WINNER: variant A (user pick) — variants B/C removed from this file.
+  Review adjustments (final):
+    1. single-column rows (no two-column grid)
+    2. source filter label: keep as-is; plugin/source names are slugs —
+       the CLI exposes no display names (see design D6)
+    3. three-line rows: name / description / source · installs
+    4. installed rows: ⋮ dropdown (Enable/Disable, Open, Uninstall)
+    5. ordering: install count desc (unknown last), then name —
+       no installed-first tier
+    6. no "installed from …" segment on line 3
+    7. no result-count line under the filter
+    8. filter default option is "All"; install count shows a
+       download icon instead of the word "installs"
+    9. data padded to real scale (~3600 directory entries); rendering is
+       incremental — first 100 rows, next page appended on scroll-near-bottom
+       (IntersectionObserver sentinel), paging resets on filter/search change.
+       No virtual scrolling (user decision: plain paging suffices)
+-->
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #171717;
+    --muted: #737373;
+    --border: #e5e5e5;
+    --accent: #171717;
+    --card: #ffffff;
+    --subtle: #fafafa;
+    --danger: #dc2626;
+    --pill-bg: #f4f4f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #282a36;
+      --fg: #f8f8f2;
+      --muted: #8b8fa3;
+      --border: #3a3d4d;
+      --accent: #ff79c6;
+      --card: #2e3041;
+      --subtle: #242634;
+      --danger: #ff5555;
+      --pill-bg: #34374a;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .app { display: flex; height: 100vh; }
+  .sidebar {
+    width: 208px; border-right: 1px solid var(--border);
+    padding: 12px 8px; flex-shrink: 0;
+    display: flex; flex-direction: column;
+  }
+  .sidebar .back-row {
+    display: flex; align-items: center; gap: 8px;
+    height: 32px; padding: 0 8px; margin-bottom: 12px;
+    color: var(--muted); font-size: 13px; border-radius: 6px;
+  }
+  .sidebar h2 { font-size: 11px; font-weight: 500; color: var(--muted); padding: 8px 8px 4px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px; border-radius: 6px; font-size: 13px;
+    color: var(--fg);
+  }
+  .nav-item.active { background: var(--subtle); font-weight: 500; }
+  .nav-item .icon { width: 14px; text-align: center; opacity: .6; flex-shrink: 0; }
+
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .topbar { flex-shrink: 0; padding: 18px 32px 0; }
+  .scroll { flex: 1; overflow-y: auto; padding: 16px 32px 96px; }
+  .content-inner { max-width: 672px; margin: 0 auto; }
+
+  .proto-banner {
+    background: var(--subtle); border: 1px dashed var(--border);
+    border-radius: 8px; padding: 8px 12px; font-size: 12px; color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .proto-banner b { color: var(--fg); font-weight: 500; }
+
+  .bc { display: flex; align-items: center; gap: 6px; font-size: 14px; min-height: 22px; }
+  .bc .bc-link { color: var(--muted); }
+  .bc .bc-sep { color: var(--muted); opacity: .7; font-size: 12px; }
+  .bc .bc-page { color: var(--fg); }
+
+  .head h1 { font-size: 20px; font-weight: 500; letter-spacing: -0.01em; }
+  .page-desc { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  /* ===== toolbar: filter + search ===== */
+  .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 20px 0 4px; }
+  .select-wrap { position: relative; flex-shrink: 0; }
+  .select {
+    appearance: none; -webkit-appearance: none;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 30px 6px 12px; font: inherit; font-size: 13px;
+    background: var(--bg); color: var(--fg); cursor: default;
+  }
+  .select-wrap::after {
+    content: "▾"; position: absolute; right: 10px; top: 50%;
+    transform: translateY(-50%); color: var(--muted); pointer-events: none; font-size: 11px;
+  }
+  .search {
+    width: 240px;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 12px; font: inherit; font-size: 13px;
+    background: var(--bg); color: var(--fg);
+  }
+  .search::placeholder { color: var(--muted); opacity: .8; }
+
+  /* ===== rows ===== */
+  .list { display: flex; flex-direction: column; }
+  .tile {
+    border: none; border-radius: 10px;
+    padding: 9px 12px; display: flex; align-items: center; gap: 12px;
+  }
+  .tile:hover { background: var(--subtle); }
+  .tile .meta { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 1px; }
+  .tile .name-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .tile .name { font-size: 14px; font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tile .desc { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tile .src-line { font-size: 11px; color: var(--muted); opacity: .85; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tile .src-line .seg { color: var(--muted); }
+  .tile .src-line .seg + .seg::before { content: " · "; opacity: .6; }
+  .dl-icon { width: 11px; height: 11px; vertical-align: -1px; margin-right: 3px; }
+  .plus {
+    width: 28px; height: 28px; border: none; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; line-height: 1; color: var(--fg); background: transparent;
+    flex-shrink: 0; cursor: pointer;
+  }
+  .plus:hover { background: var(--pill-bg); }
+  .more {
+    width: 28px; height: 28px; border: none; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; line-height: 1; color: var(--muted); background: transparent;
+    flex-shrink: 0; cursor: pointer; letter-spacing: 1px;
+  }
+  .more:hover { background: var(--pill-bg); color: var(--fg); }
+
+  /* ===== dropdown menu (⋮) ===== */
+  .menu-wrap { position: relative; flex-shrink: 0; }
+  .menu {
+    display: none; position: absolute; right: 0; top: calc(100% + 4px);
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0,0,0,.15); min-width: 140px;
+    padding: 4px; z-index: 40;
+  }
+  .menu.open { display: block; }
+  .menu button {
+    display: block; width: 100%; text-align: left;
+    background: none; border: none; font: inherit; font-size: 13px;
+    padding: 6px 10px; border-radius: 5px; color: var(--fg); cursor: default;
+    white-space: nowrap;
+  }
+  .menu button:hover { background: var(--subtle); }
+  .menu button.danger { color: var(--danger); }
+
+  .empty { color: var(--muted); font-size: 13px; padding: 16px 2px; }
+  .load-more { color: var(--muted); font-size: 12px; text-align: center; padding: 12px 0 24px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <nav class="sidebar">
+    <div class="back-row">‹ Back to app</div>
+    <div class="nav-item"><span class="icon">⚙</span>General</div>
+    <div class="nav-item"><span class="icon">📊</span>Models</div>
+    <div class="nav-item"><span class="icon">🎨</span>Appearance</div>
+    <h2>Agent capabilities</h2>
+    <div class="nav-item active"><span class="icon">🧩</span>Plugins</div>
+    <div class="nav-item"><span class="icon">🤖</span>Subagents</div>
+    <div class="nav-item"><span class="icon">🖥</span>MCP</div>
+    <div class="nav-item"><span class="icon">✨</span>Skills</div>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="bc">
+        <span class="bc-link">Plugins</span><span class="bc-sep">›</span><span class="bc-page">Marketplace</span>
+      </div>
+    </div>
+
+    <div class="scroll">
+      <div class="content-inner">
+        <div class="proto-banner">
+          <b>PROTOTYPE</b> (throwaway) · tabs removed → one deduplicated list.
+          Duplicates in the sample: <b>superpowers</b> (installed from superpowers-marketplace; directory also lists it),
+          <b>frontend-design</b>, <b>caveman</b>, <b>chrome-devtools-mcp</b>, <b>planning-with-files</b> — each collapses to one row.
+          Directory padded to real scale (~3600 entries). Installing applies to new sessions.
+        </div>
+
+        <div class="head">
+          <h1>Marketplace</h1>
+          <div class="page-desc">Browse plugins by source. Installing applies to new sessions.</div>
+        </div>
+
+        <div id="mount"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== sample data (mirrors the real machine state; counts approximate) =====
+  const DIR = 'anthropic-plugin-directory'
+  // installed: name -> marketplace it was installed from (real: claude plugin list)
+  const INSTALLED = {
+    'code-simplifier': 'claude-plugins-official',
+    'context7': 'claude-plugins-official',
+    'humanizer': 'skills-dir',
+    'superpowers': 'superpowers-marketplace',
+    'trading': 'zhbhun',
+  }
+  // enabled state for installed plugins (real: CLI enabledPlugins; one disabled sample)
+  const ENABLED = Object.fromEntries(Object.keys(INSTALLED).map((n) => [n, n !== 'context7']))
+  // src: 'mkt' = user-registered marketplace, 'dir' = built-in directory.
+  // Deliberate duplicates exercise the dedup rules.
+  const CATALOG = [
+    // installed entries
+    { name: 'code-simplifier', market: 'claude-plugins-official', src: 'mkt', installs: 2100, desc: 'Simplifies and refines code for clarity and consistency' },
+    { name: 'context7', market: 'claude-plugins-official', src: 'mkt', installs: 6420, desc: 'Up-to-date documentation lookup via Context7 MCP' },
+    { name: 'humanizer', market: 'skills-dir', src: 'mkt', installs: null, desc: 'Rewrites AI-flavored prose into natural writing' },
+    { name: 'superpowers', market: 'superpowers-marketplace', src: 'mkt', installs: 12053, desc: 'Core skills library: TDD, debugging, collaboration' },
+    { name: 'trading', market: 'zhbhun', src: 'mkt', installs: null, desc: 'Personal trading toolbox from ~/Projects/zhbhun/trading' },
+    // duplicates: directory copy + registered-marketplace copy
+    { name: 'superpowers', market: DIR, src: 'dir', installs: null, desc: 'Core skills library (directory copy, older 6.4.2)' },
+    { name: 'frontend-design', market: 'claude-plugins-official', src: 'mkt', installs: 8901, desc: 'Design-quality frontend implementation' },
+    { name: 'frontend-design', market: DIR, src: 'dir', installs: 883, desc: 'Design-quality frontend implementation' },
+    { name: 'caveman', market: 'caveman', src: 'mkt', installs: 304, desc: 'Session hygiene and cleanup sweeps' },
+    { name: 'caveman', market: DIR, src: 'dir', installs: 210, desc: 'Session hygiene and cleanup sweeps' },
+    { name: 'chrome-devtools-mcp', market: 'chrome-devtools-plugins', src: 'mkt', installs: 1502, desc: 'Drive Chrome via DevTools MCP' },
+    { name: 'chrome-devtools-mcp', market: DIR, src: 'dir', installs: 1480, desc: 'Drive Chrome via DevTools MCP' },
+    { name: 'planning-with-files', market: 'planning-with-files', src: 'mkt', installs: null, desc: 'Plan and track work with files' },
+    { name: 'planning-with-files', market: DIR, src: 'dir', installs: 990, desc: 'Plan and track work with files' },
+    // official marketplace entries the directory does NOT list
+    { name: 'azure', market: 'claude-plugins-official', src: 'mkt', installs: 4210, desc: 'Azure expert: resources, deployments, cost optimization' },
+    { name: 'atlassian', market: 'claude-plugins-official', src: 'mkt', installs: 2980, desc: 'Connect to Jira and Confluence' },
+    { name: 'semgrep', market: 'claude-plugins-official', src: 'mkt', installs: 1120, desc: 'Security scanning with Semgrep' },
+    { name: 'mongodb', market: 'claude-plugins-official', src: 'mkt', installs: 1650, desc: 'Work with MongoDB databases and Atlas' },
+    // superpowers-marketplace extras (directory does not list them)
+    { name: 'elements-of-style', market: 'superpowers-marketplace', src: 'mkt', installs: null, desc: 'Writing style guidance for docs and prose' },
+    { name: 'episodic-memory', market: 'superpowers-marketplace', src: 'mkt', installs: null, desc: 'Remember decisions across sessions' },
+    { name: 'private-journal-mcp', market: 'superpowers-marketplace', src: 'mkt', installs: null, desc: 'Private session journal via MCP' },
+    { name: 'double-shot-latte', market: 'superpowers-marketplace', src: 'mkt', installs: null, desc: 'Extra-thorough review passes' },
+    // directory-only popular entries
+    { name: 'github', market: DIR, src: 'dir', installs: 9970, desc: 'Official GitHub MCP server for repository management' },
+    { name: 'notion', market: DIR, src: 'dir', installs: 6892, desc: 'Notion workspace integration via MCP' },
+    { name: 'supabase', market: DIR, src: 'dir', installs: 5840, desc: 'Supabase projects, databases, and edge functions' },
+    { name: 'figma', market: DIR, src: 'dir', installs: 5321, desc: 'Figma design platform integration' },
+    { name: 'slack', market: DIR, src: 'dir', installs: 4530, desc: 'Slack messaging integration' },
+    { name: '42crunch-api-security-testing', market: DIR, src: 'dir', installs: 3474, desc: 'Automate API security directly in Claude Code' },
+    { name: 'vercel', market: DIR, src: 'dir', installs: 3305, desc: 'Deploy and manage Vercel projects' },
+    { name: 'stripe', market: DIR, src: 'dir', installs: 3120, desc: 'Stripe payment integrations' },
+    { name: 'code-review', market: DIR, src: 'dir', installs: 2210, desc: 'Review changes along standards and spec axes' },
+    { name: 'firebase', market: DIR, src: 'dir', installs: 2204, desc: 'Firebase backend development' },
+    { name: 'playwright', market: DIR, src: 'dir', installs: 2715, desc: 'Browser automation with Playwright' },
+    { name: 'linear', market: DIR, src: 'dir', installs: 2650, desc: 'Linear issue tracking integration' },
+    { name: 'datadog', market: DIR, src: 'dir', installs: 1876, desc: 'Query logs, metrics, traces via Datadog MCP' },
+    { name: 'mongodb-atlas', market: DIR, src: 'dir', installs: 1650, desc: 'Manage MongoDB Atlas clusters' },
+    { name: 'expo', market: DIR, src: 'dir', installs: 1732, desc: 'React Native development with Expo' },
+    { name: 'sentry', market: DIR, src: 'dir', installs: 1998, desc: 'Error monitoring with Sentry' },
+  ]
+
+  // ===== scale simulation: pad the directory to real-world size (~3600) =====
+  // The real CLI catalog has 3599 directory entries; this pads with generated
+  // slugs so the list can be judged at true scale (scroll feel, icon load).
+  {
+    const bases = ['toolkit', 'assistant', 'agent', 'bridge', 'sync', 'monitor', 'formatter', 'generator', 'analyzer', 'connector']
+    const vendors = ['acme', 'globex', 'initech', 'umbrella', 'hooli', 'vandelay', 'stark', 'wayne', 'cyberdyne', 'tyrell']
+    let i = 0
+    while (CATALOG.filter((e) => e.market === DIR).length < 3599) {
+      const v = vendors[i % vendors.length]
+      const b = bases[Math.floor(i / vendors.length) % bases.length]
+      const n = Math.floor(i / (vendors.length * bases.length)) + 1
+      CATALOG.push({
+        name: `${v}-${b}-${n}`,
+        market: DIR, src: 'dir',
+        installs: Math.max(0, 3000 - i * 3) > 0 ? 3000 - i * 3 : null,
+        desc: `Sample generated entry ${i + 1} standing in for the real directory tail`,
+      })
+      i++
+    }
+  }
+
+  // ===== dedup by plugin name: installed > registered marketplace > directory =====
+  function dedupe(entries) {
+    const byName = new Map()
+    for (const e of entries) {
+      const cur = byName.get(e.name)
+      if (!cur) { byName.set(e.name, e); continue }
+      byName.set(e.name, better(e, cur))
+    }
+    return [...byName.values()]
+  }
+  function rank(e) {
+    if (INSTALLED[e.name] === e.market) return 3   // the installed copy
+    if (e.src === 'mkt') return 2                  // user-registered marketplace
+    return 1                                       // built-in directory
+  }
+  function better(a, b) {
+    if (rank(a) !== rank(b)) return rank(a) > rank(b) ? a : b
+    return a.market <= b.market ? a : b            // stable tiebreak
+  }
+
+  // ===== ordering: install count desc (unknown last), then name =====
+  function order(entries) {
+    return entries.sort((a, b) => {
+      const ca = a.installs ?? -1, cb = b.installs ?? -1
+      if (ca !== cb) return cb - ca
+      if (a.name !== b.name) return a.name < b.name ? -1 : 1
+      return a.market < b.market ? -1 : 1
+    })
+  }
+
+  function label(market) { return market === DIR ? 'directory' : market }
+  function isInstalled(e) { return e.name in INSTALLED }
+
+  // ===== state =====
+  const PAGE_SIZE = 100            // incremental render page size
+  let source = ''                  // '' = all sources
+  let query = ''
+  let renderLimit = PAGE_SIZE      // how many filtered rows are rendered so far
+
+  function deduped() { return order(dedupe(CATALOG)) }
+  function visibleSources() {
+    return [...new Set(deduped().map((e) => e.market))].sort((a, b) => {
+      if (a === DIR) return 1; if (b === DIR) return -1
+      return a < b ? -1 : 1
+    })
+  }
+  function filtered() {
+    const q = query.trim().toLowerCase()
+    return deduped().filter((e) => {
+      if (source && e.market !== source) return false
+      if (!q) return true
+      return e.name.toLowerCase().includes(q) || e.desc.toLowerCase().includes(q) || e.market.toLowerCase().includes(q)
+    })
+  }
+
+  // ===== row markup: three lines — name / description / source · installs =====
+  function row(e) {
+    const segs = [
+      `<span class="seg">${label(e.market)}</span>`,
+      e.installs != null ? `<span class="seg"><svg class="dl-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>${e.installs.toLocaleString('en-US')}</span>` : null,
+    ].filter(Boolean).join('')
+    const right = isInstalled(e)
+      ? `<div class="menu-wrap" onclick="event.stopPropagation()">
+           <button class="more" title="More" onclick="toggleMenu(event, 'm-row-${e.name}')">⋮</button>
+           <div class="menu" id="m-row-${e.name}">
+             <button onclick="hideMenus(); toggleEnabled('${e.name}')">${ENABLED[e.name] ? 'Disable' : 'Enable'}</button>
+             <button onclick="hideMenus(); alert('PROTOTYPE: opens the plugin homepage\\n  ${e.name}.example.dev (when the manifest declares one)')">Open</button>
+             <button class="danger" onclick="hideMenus(); alert('PROTOTYPE: would run\\n  claude plugin uninstall ${e.name}@${e.market}')">Uninstall</button>
+           </div>
+         </div>`
+      : `<button class="plus" title="Install" onclick="event.stopPropagation(); alert('PROTOTYPE: would run\\n  claude plugin install ${e.name}@${e.market}')">+</button>`
+    return `
+      <div class="tile" onclick="alert('PROTOTYPE: opens install detail for ${e.name}@${e.market}')">
+        <div class="meta">
+          <div class="name-row"><span class="name">${e.name}</span></div>
+          <div class="desc">${e.desc}</div>
+          <div class="src-line">${segs}</div>
+        </div>
+        ${right}
+      </div>`
+  }
+
+  // ===== render (variant A only; incremental paging) =====
+  // Full dataset lives in memory from the start; only the first PAGE_SIZE
+  // filtered rows render. Scrolling near the bottom appends the next page.
+  function render() {
+    const mount = document.getElementById('mount')
+    const rows = filtered()
+    const shown = rows.slice(0, renderLimit)
+    const hasMore = rows.length > renderLimit
+    const options = ['<option value="">All</option>']
+      .concat(visibleSources().map((m) => `<option value="${m}" ${m === source ? 'selected' : ''}>${label(m)}</option>`))
+      .join('')
+    mount.innerHTML = `
+      <div class="toolbar">
+        <div class="select-wrap"><select class="select" onchange="setSource(this.value)">${options}</select></div>
+        <input class="search" placeholder="Search plugins…" value="${query}" oninput="setQuery(this.value)">
+      </div>
+      <div class="list" id="the-list">${shown.map((e) => row(e)).join('') || '<div class="empty">No plugins match.</div>'}</div>
+      ${hasMore ? '<div class="load-more" id="sentinel">Loading more…</div>' : ''}`
+    if (hasMore) {
+      const sentinel = document.getElementById('sentinel')
+      new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          renderLimit += PAGE_SIZE
+          render()
+        }
+      }).observe(sentinel)
+    }
+  }
+
+  function setSource(v) {
+    source = v
+    renderLimit = PAGE_SIZE      // reset paging on filter change
+    render()
+  }
+  function setQuery(v) {
+    query = v
+    renderLimit = PAGE_SIZE      // reset paging on search change
+    render()
+  }
+  function toggleEnabled(name) {
+    ENABLED[name] = !ENABLED[name]
+    render()
+  }
+
+  // ===== row ⋮ dropdown =====
+  function toggleMenu(event, id) {
+    event.stopPropagation()
+    const menu = document.getElementById(id)
+    const wasOpen = menu.classList.contains('open')
+    hideMenus()
+    if (!wasOpen) menu.classList.add('open')
+  }
+  function hideMenus() {
+    document.querySelectorAll('.menu.open').forEach((el) => el.classList.remove('open'))
+  }
+  document.addEventListener('click', hideMenus)
+
+  render()
+</script>
+</body>
+</html>

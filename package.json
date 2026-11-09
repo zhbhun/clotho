@@ -23,7 +23,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@anthropic-ai/claude-agent-sdk": "^0.3.284",
+    "@anthropic-ai/claude-agent-sdk": "^0.3.319",
     "@base-ui/react": "^1",
     "@ff-labs/fff-node": "^0.10",
     "@fontsource-variable/inter": "^5",

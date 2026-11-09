@@ -45,6 +45,11 @@ vi.mock('../../../services/claude/agent-config', () => ({
   deleteAgentWorkflow: vi.fn(),
 }))
 
+vi.mock('../../../services/desktop/client', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../../services/desktop/client')>()),
+  requestFromDesktop: vi.fn(),
+}))
+
 const mock = vi.mocked(agentConfig, true)
 
 beforeEach(async () => {
@@ -443,6 +448,15 @@ describe('MarketplaceDetailPage remove confirmation', () => {
 })
 
 describe('InstallPluginPage', () => {
+  const emptyDetails = {
+    pluginId: '',
+    name: '',
+    installed: true,
+    skills: [],
+    mcpServers: [],
+    subagents: [],
+  }
+
   function catalogEntry(overrides: Partial<agentConfig.AgentMarketplacePlugin> = {}) {
     return {
       pluginId: 'formatter@acme',
@@ -454,77 +468,206 @@ describe('InstallPluginPage', () => {
     }
   }
 
-  it('classifies catalog entries into Public/Community/Personal tabs', async () => {
+  /** The rendered row list, after waiting for the catalog to load. */
+  async function findInstallList() {
+    await waitFor(() => {
+      const element = document.querySelector('[data-install-list]')
+      assert(element instanceof HTMLElement, 'install list rendered')
+    })
+    const element = document.querySelector('[data-install-list]')
+    assert(element instanceof HTMLElement)
+    return within(element)
+  }
+
+  it('renders one unified list without tabs or a result count', async () => {
     mock.listAgentAvailablePlugins.mockResolvedValue([
       catalogEntry(),
       catalogEntry({
         pluginId: 'docs@anthropic-plugin-directory',
         name: 'docs',
         marketplaceName: 'anthropic-plugin-directory',
+        installCount: 1200,
       }),
-      catalogEntry({
-        pluginId: 'local@zhbhun',
-        name: 'local-tool',
-        marketplaceName: 'zhbhun',
-        installCount: undefined,
-      }),
-    ])
-    mock.listAgentMarketplaces.mockResolvedValue([
-      {
-        name: 'acme',
-        source: { source: 'github', repo: 'acme/plugins' },
-        installLocation: '/mp/acme',
-      },
-      {
-        name: 'zhbhun',
-        source: { source: 'directory', url: '/tmp/z' },
-        installLocation: '/mp/z',
-      },
     ])
     renderWithProviders(<InstallPluginPage />)
 
-    // Public tab (default): only the directory entry.
-    expect(await screen.findByText('docs')).toBeInTheDocument()
-    expect(screen.queryByText('formatter')).toBeNull()
-
-    // Community tab: the github marketplace entry with install count.
-    await userEvent.setup().click(screen.getByRole('tab', { name: '社区' }))
-    expect(await screen.findByText('formatter')).toBeInTheDocument()
-    expect(screen.getByText('42 次安装 · Formats things')).toBeInTheDocument()
-    expect(screen.queryByText('docs')).toBeNull()
-
-    // Personal tab: the local-directory entry falls back to the marketplace name.
-    await userEvent.setup().click(screen.getByRole('tab', { name: '个人' }))
-    expect(await screen.findByText('local-tool')).toBeInTheDocument()
-    expect(screen.getByText(/zhbhun/)).toBeInTheDocument()
+    // Directory and marketplace entries share one list.
+    const list = await findInstallList()
+    expect(list.getByText('docs')).toBeInTheDocument()
+    expect(list.getByText('formatter')).toBeInTheDocument()
+    expect(list.getByText('anthropic-plugin-directory')).toBeInTheDocument()
+    // No Public/Community/Personal control anywhere.
+    expect(screen.queryByRole('tablist')).toBeNull()
+    // Counts render as icon + number only, no unit word, no summary line.
+    expect(list.queryByText(/次安装/)).toBeNull()
+    expect(screen.queryByText(/3 条|共 3/)).toBeNull()
   })
 
-  it('filters entries by search text within the active tab', async () => {
+  it('dedupes same-name entries to one installed entry', async () => {
     mock.listAgentAvailablePlugins.mockResolvedValue([
-      catalogEntry({ pluginId: 'a@acme', name: 'alpha' }),
-      catalogEntry({ pluginId: 'b@acme', name: 'beta' }),
+      catalogEntry({
+        pluginId: 'superpowers@anthropic-plugin-directory',
+        name: 'superpowers',
+        marketplaceName: 'anthropic-plugin-directory',
+        installCount: 3000,
+      }),
+      catalogEntry({
+        pluginId: 'superpowers@superpowers-marketplace',
+        name: 'superpowers',
+        marketplaceName: 'superpowers-marketplace',
+      }),
+    ])
+    mock.listAgentPlugins.mockResolvedValue([
+      installedPlugin({
+        id: 'superpowers@superpowers-marketplace',
+        name: 'superpowers',
+        marketplace: 'superpowers-marketplace',
+      }),
+    ])
+    renderWithProviders(<InstallPluginPage />)
+
+    const list = await findInstallList()
+    // Exactly one superpowers row, shown as installed (⋮ menu instead of +).
+    expect(list.getAllByText('superpowers')).toHaveLength(1)
+    expect(list.getByRole('button', { name: '更多操作' })).toBeInTheDocument()
+    expect(list.queryByRole('button', { name: '安装' })).toBeNull()
+    // The registered marketplace wins as the source label; no directory copy.
+    expect(list.getByText('superpowers-marketplace')).toBeInTheDocument()
+    expect(list.queryByText('anthropic-plugin-directory')).toBeNull()
+  })
+
+  it('narrows the list through the source filter and restores All', async () => {
+    mock.listAgentAvailablePlugins.mockResolvedValue([
+      catalogEntry(),
+      catalogEntry({
+        pluginId: 'docs@anthropic-plugin-directory',
+        name: 'docs',
+        marketplaceName: 'anthropic-plugin-directory',
+        installCount: 1200,
+      }),
     ])
     const user = userEvent.setup()
     renderWithProviders(<InstallPluginPage />)
 
-    await user.click(await screen.findByRole('tab', { name: '社区' }))
-    await user.type(screen.getByPlaceholderText('搜索插件…'), 'alp')
+    const list = await findInstallList()
+    expect(list.getByText('docs')).toBeInTheDocument()
+    expect(list.getByText('formatter')).toBeInTheDocument()
 
-    expect(await screen.findByText('alpha')).toBeInTheDocument()
-    expect(screen.queryByText('beta')).toBeNull()
+    await user.click(screen.getByRole('combobox', { name: '来源' }))
+    await user.click(await screen.findByRole('option', { name: 'acme' }))
+    expect(list.getByText('formatter')).toBeInTheDocument()
+    expect(list.queryByText('docs')).toBeNull()
+
+    await user.click(screen.getByRole('combobox', { name: '来源' }))
+    await user.click(await screen.findByRole('option', { name: '全部' }))
+    expect(list.getByText('docs')).toBeInTheDocument()
   })
 
-  it('installs from the grid plus button and flips the entry to installed', async () => {
+  it('applies search on top of the source filter', async () => {
+    mock.listAgentAvailablePlugins.mockResolvedValue([
+      catalogEntry({ pluginId: 'alpha@acme', name: 'alpha', description: 'Alpha formats' }),
+      catalogEntry({ pluginId: 'beta@acme', name: 'beta', description: 'Beta formats' }),
+      catalogEntry({
+        pluginId: 'gamma@anthropic-plugin-directory',
+        name: 'gamma',
+        marketplaceName: 'anthropic-plugin-directory',
+        installCount: 1200,
+        description: 'Gamma formats',
+      }),
+    ])
+    const user = userEvent.setup()
+    renderWithProviders(<InstallPluginPage />)
+
+    const list = await findInstallList()
+
+    await user.click(screen.getByRole('combobox', { name: '来源' }))
+    await user.click(await screen.findByRole('option', { name: 'acme' }))
+    await user.type(screen.getByPlaceholderText('搜索插件…'), 'alp')
+
+    expect(list.getByText('alpha')).toBeInTheDocument()
+    expect(list.queryByText('beta')).toBeNull()
+    expect(list.queryByText('gamma')).toBeNull()
+  })
+
+  it('toggles enable state from the installed menu', async () => {
+    mock.listAgentAvailablePlugins.mockResolvedValue([catalogEntry()])
+    mock.listAgentPlugins.mockResolvedValue([installedPlugin()])
+    mock.getAgentPluginDetails.mockResolvedValue({
+      ...emptyDetails,
+      pluginId: 'formatter@acme',
+      name: 'formatter',
+      homepage: 'https://example.com/formatter',
+    })
+    mock.setAgentPluginEnabled.mockResolvedValue(undefined)
+    const user = userEvent.setup()
+    renderWithProviders(<InstallPluginPage />)
+
+    await user.click(await (await findInstallList()).findByRole('button', { name: '更多操作' }))
+    const menu = await screen.findByRole('menu', { name: '更多操作' })
+    // Open is offered because the manifest declares a homepage.
+    expect(await within(menu).findByRole('menuitem', { name: '打开' })).toBeInTheDocument()
+    await user.click(within(menu).getByRole('menuitem', { name: '停用' }))
+
+    await waitFor(() =>
+      expect(mock.setAgentPluginEnabled).toHaveBeenCalledWith('formatter@acme', false),
+    )
+    expect(await screen.findByText('插件变更将在新会话中生效')).toBeInTheDocument()
+
+    // Reopening the menu offers Enable after the optimistic flip.
+    await user.click(await (await findInstallList()).findByRole('button', { name: '更多操作' }))
+    const reopened = await screen.findByRole('menu', { name: '更多操作' })
+    expect(within(reopened).getByRole('menuitem', { name: '启用' })).toBeInTheDocument()
+  })
+
+  it('omits Open from the installed menu without a homepage', async () => {
+    mock.listAgentAvailablePlugins.mockResolvedValue([catalogEntry()])
+    mock.listAgentPlugins.mockResolvedValue([installedPlugin()])
+    mock.getAgentPluginDetails.mockResolvedValue({
+      ...emptyDetails,
+      pluginId: 'formatter@acme',
+      name: 'formatter',
+    })
+    const user = userEvent.setup()
+    renderWithProviders(<InstallPluginPage />)
+
+    await user.click(await (await findInstallList()).findByRole('button', { name: '更多操作' }))
+    const menu = await screen.findByRole('menu', { name: '更多操作' })
+    expect(within(menu).getByRole('menuitem', { name: '停用' })).toBeInTheDocument()
+    expect(within(menu).getByRole('menuitem', { name: '卸载' })).toBeInTheDocument()
+    // No homepage declared: no Open item.
+    expect(within(menu).queryByRole('menuitem', { name: '打开' })).toBeNull()
+  })
+
+  it('uninstalls from the installed menu and flips back to plus', async () => {
+    mock.listAgentAvailablePlugins.mockResolvedValue([catalogEntry()])
+    mock.listAgentPlugins.mockResolvedValue([installedPlugin()])
+    mock.removeAgentPlugin.mockResolvedValue(undefined)
+    const user = userEvent.setup()
+    renderWithProviders(<InstallPluginPage />)
+
+    await user.click(await (await findInstallList()).findByRole('button', { name: '更多操作' }))
+    const menu = await screen.findByRole('menu', { name: '更多操作' })
+    await user.click(within(menu).getByRole('menuitem', { name: '卸载' }))
+
+    await waitFor(() => expect(mock.removeAgentPlugin).toHaveBeenCalledWith('formatter@acme'))
+    expect(await screen.findByText('插件变更将在新会话中生效')).toBeInTheDocument()
+    const list = await findInstallList()
+    expect(list.getByRole('button', { name: '安装' })).toBeInTheDocument()
+    expect(list.queryByRole('button', { name: '更多操作' })).toBeNull()
+  })
+
+  it('installs from the plus button and flips the entry to the menu', async () => {
     mock.listAgentAvailablePlugins.mockResolvedValue([catalogEntry()])
     mock.installAgentPlugin.mockResolvedValue(undefined)
     const user = userEvent.setup()
     renderWithProviders(<InstallPluginPage />)
 
-    await user.click(await screen.findByRole('tab', { name: '社区' }))
-    await user.click(await screen.findByRole('button', { name: '安装' }))
+    await user.click(await (await findInstallList()).findByRole('button', { name: '安装' }))
 
     await waitFor(() => expect(mock.installAgentPlugin).toHaveBeenCalledWith('formatter@acme'))
-    expect(await screen.findByText('已安装')).toBeInTheDocument()
     expect(await screen.findByText('插件变更将在新会话中生效')).toBeInTheDocument()
+    const list = await findInstallList()
+    expect(list.getByRole('button', { name: '更多操作' })).toBeInTheDocument()
+    expect(list.queryByRole('button', { name: '安装' })).toBeNull()
   })
 })

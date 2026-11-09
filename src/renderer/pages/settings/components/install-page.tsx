@@ -1,71 +1,107 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Download, EllipsisVertical, Plus } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Badge } from '@/shadcn/badge'
 import { Button } from '@/shadcn/button'
 import { Input } from '@/shadcn/input'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shadcn/select'
 import { Spinner } from '@/shadcn/spinner'
-import { Tabs, TabsList, TabsTrigger } from '@/shadcn/tabs'
 import { toast } from '@/shadcn/toast'
 
 import {
-  type AgentMarketplaceInfo,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../../../components/dropdown-menu'
+import {
   type AgentMarketplacePlugin,
   getAgentPluginDetails,
   listAgentAvailablePlugins,
-  listAgentMarketplaces,
   listAgentPlugins,
+  removeAgentPlugin,
+  setAgentPluginEnabled,
 } from '../../../services/claude/agent-config'
+import { requestFromDesktop } from '../../../services/desktop/client'
 import { AgentEmpty } from './agent-shared'
+import {
+  type CatalogEntry,
+  catalogSources,
+  dedupeCatalog,
+  installedName,
+  orderCatalog,
+} from './install-catalog'
 import { PluginDetailSections, PluginInfoRows } from './plugin-detail-page'
 import { installPluginWithToast, useRestartHint } from './plugin-shared'
 import { useSettingsDetailStore } from './settings-detail-store'
+import { usePluginHomepages } from './use-plugin-homepages'
 
-async function listInstalledOnce(): Promise<Set<string>> {
+const INSTALL_PAGE_SIZE = 100
+
+/** Install records from the CLI plus per-name enabled state. */
+interface InstalledRecords {
+  names: Set<string>
+  /** Verbatim `<name>@<marketplace>` install records. */
+  ids: Set<string>
+  enabled: Map<string, boolean>
+}
+
+const NO_INSTALLS: InstalledRecords = {
+  names: new Set(),
+  ids: new Set(),
+  enabled: new Map(),
+}
+
+async function listInstalledOnce(): Promise<InstalledRecords> {
   try {
     const plugins = await listAgentPlugins()
-    return new Set(plugins.map((plugin) => plugin.id))
+    const names = new Set<string>()
+    const ids = new Set<string>()
+    const enabled = new Map<string, boolean>()
+    for (const plugin of plugins) {
+      const name = installedName(plugin.id)
+      names.add(name)
+      ids.add(plugin.id)
+      enabled.set(name, plugin.enabled)
+    }
+    return { names, ids, enabled }
   } catch {
-    return new Set()
+    return NO_INSTALLS
   }
 }
 
-type CatalogTab = 'public' | 'community' | 'personal'
-
-const DIRECTORY_MARKETPLACE = 'anthropic-plugin-directory'
-
-function tabForMarketplace(sourceType: string | undefined, name: string): CatalogTab {
-  if (name === DIRECTORY_MARKETPLACE) return 'public'
-  if (sourceType === 'directory') return 'personal'
-  return 'community'
-}
-
 /**
- * Second-level Install page: Public/Community/Personal tabs over the catalog,
- * search at the row's right end, borderless two-column grid.
+ * Second-level Install page (Marketplace): one deduplicated list over the whole
+ * catalog, `All` source filter + search at the toolbar, three-line rows rendered
+ * incrementally (a sentinel appends the next page near the viewport end).
  */
 export function InstallPluginPage() {
   const { t } = useTranslation()
   const [catalog, setCatalog] = useState<AgentMarketplacePlugin[]>([])
-  const [sources, setSources] = useState<Map<string, string | undefined>>(new Map())
   const [isLoading, setIsLoading] = useState(true)
-  const [tab, setTab] = useState<CatalogTab>('public')
+  const [sourceFilter, setSourceFilter] = useState('')
   const [search, setSearch] = useState('')
-  const [installedIds, setInstalledIds] = useState<Set<string>>(new Set())
+  const [installed, setInstalled] = useState<InstalledRecords>(NO_INSTALLS)
+  const [enabledById, setEnabledById] = useState<Map<string, boolean>>(new Map())
+  const [renderLimit, setRenderLimit] = useState(INSTALL_PAGE_SIZE)
   const openSub = useSettingsDetailStore((state) => state.openSub)
   const notifyRestart = useRestartHint()
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     let cancelled = false
-    Promise.all([listAgentAvailablePlugins(), listAgentMarketplaces()])
-      .then(([available, marketplaces]) => {
+    listAgentAvailablePlugins()
+      .then((available) => {
         if (cancelled) return
         setCatalog(available)
-        setSources(
-          new Map(
-            marketplaces.map((entry: AgentMarketplaceInfo) => [entry.name, entry.source.source]),
-          ),
-        )
       })
       .catch(() => {
         if (!cancelled) {
@@ -87,20 +123,25 @@ export function InstallPluginPage() {
 
   useEffect(() => {
     let cancelled = false
-    listInstalledOnce().then((ids) => {
-      if (!cancelled) setInstalledIds(ids)
+    listInstalledOnce().then((state) => {
+      if (cancelled) return
+      setInstalled(state)
     })
     return () => {
       cancelled = true
     }
   }, [])
 
+  const entries = useMemo(
+    () => orderCatalog(dedupeCatalog(catalog, installed)),
+    [catalog, installed],
+  )
+  const homepagesById = usePluginHomepages(entries, installed.names)
+
   const rows = useMemo(() => {
     const query = search.trim().toLowerCase()
-    return catalog.filter((entry) => {
-      if (tabForMarketplace(sources.get(entry.marketplaceName), entry.marketplaceName) !== tab) {
-        return false
-      }
+    return entries.filter((entry) => {
+      if (sourceFilter && entry.marketplaceName !== sourceFilter) return false
       if (!query) return true
       return (
         entry.name.toLowerCase().includes(query) ||
@@ -108,7 +149,34 @@ export function InstallPluginPage() {
         entry.marketplaceName.toLowerCase().includes(query)
       )
     })
-  }, [catalog, sources, tab, search])
+  }, [entries, sourceFilter, search])
+
+  const visibleSources = useMemo(() => catalogSources(entries), [entries])
+  const sourceItems = useMemo(
+    () => [
+      { value: '', label: t('settings.agent.plugins.allSources') },
+      ...visibleSources.map((market) => ({ value: market, label: market })),
+    ],
+    [visibleSources, t],
+  )
+  // Optimistic menu state wins, then the CLI's install record, then enabled.
+  const isEntryEnabled = (entry: CatalogEntry) =>
+    enabledById.get(entry.pluginId) ?? installed.enabled.get(entry.name) ?? true
+  const shown = rows.slice(0, renderLimit)
+  const hasMore = rows.length > renderLimit
+
+  // Append the next page when the sentinel scrolls near the viewport end.
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!hasMore || !sentinel) return
+    const observer = new IntersectionObserver((observerEntries) => {
+      if (observerEntries.some((entry) => entry.isIntersecting)) {
+        setRenderLimit((current) => current + INSTALL_PAGE_SIZE)
+      }
+    })
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasMore])
 
   const handleInstall = async (pluginId: string) => {
     const ok = await installPluginWithToast(
@@ -116,7 +184,64 @@ export function InstallPluginPage() {
       notifyRestart,
       t('settings.agent.plugins.installError'),
     )
-    if (ok) setInstalledIds((current) => new Set(current).add(pluginId))
+    if (ok) {
+      const name = installedName(pluginId)
+      setInstalled((current) => ({
+        names: new Set(current.names).add(name),
+        ids: new Set(current.ids).add(pluginId),
+        enabled: new Map(current.enabled).set(name, true),
+      }))
+    }
+  }
+
+  const handleToggle = async (entry: CatalogEntry) => {
+    const enabled = !isEntryEnabled(entry)
+    setEnabledById((current) => new Map(current).set(entry.pluginId, enabled))
+    try {
+      await setAgentPluginEnabled(entry.pluginId, enabled)
+      notifyRestart()
+      setInstalled((current) => ({
+        ...current,
+        enabled: new Map(current.enabled).set(entry.name, enabled),
+      }))
+    } catch {
+      setEnabledById((current) => {
+        const next = new Map(current)
+        next.delete(entry.pluginId)
+        return next
+      })
+      toast.add({ id: 'agent-plugin-toggle', title: t('settings.agent.saveError'), type: 'error' })
+    }
+  }
+
+  const handleUninstall = async (pluginId: string) => {
+    try {
+      await removeAgentPlugin(pluginId)
+      notifyRestart()
+      const name = installedName(pluginId)
+      setInstalled((current) => {
+        const names = new Set(current.names)
+        names.delete(name)
+        const ids = new Set(current.ids)
+        ids.delete(pluginId)
+        const enabled = new Map(current.enabled)
+        enabled.delete(name)
+        return { names, ids, enabled }
+      })
+    } catch {
+      toast.add({
+        id: 'agent-plugin-remove',
+        title: t('settings.agent.deleteError'),
+        type: 'error',
+      })
+    }
+  }
+
+  const handleOpen = (entry: CatalogEntry) => {
+    const homepage = homepagesById.get(entry.pluginId)
+    if (homepage) {
+      void requestFromDesktop('appOpenLink', { href: homepage, projectPath: '' })
+    }
   }
 
   return (
@@ -131,65 +256,133 @@ export function InstallPluginPage() {
       </div>
 
       <div className="flex items-center justify-between gap-4">
-        <Tabs onValueChange={(value) => setTab(value as CatalogTab)} value={tab}>
-          <TabsList>
-            <TabsTrigger value="public">{t('settings.agent.plugins.tabPublic')}</TabsTrigger>
-            <TabsTrigger value="community">{t('settings.agent.plugins.tabCommunity')}</TabsTrigger>
-            <TabsTrigger value="personal">{t('settings.agent.plugins.tabPersonal')}</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <Select
+          items={sourceItems}
+          value={sourceFilter}
+          onValueChange={(value) => {
+            setSourceFilter(typeof value === 'string' ? value : '')
+            setRenderLimit(INSTALL_PAGE_SIZE)
+          }}
+        >
+          <SelectTrigger aria-label={t('settings.agent.plugins.source')} className="min-w-40">
+            <SelectValue />
+          </SelectTrigger>
+          {/* Widen past the anchor width so long marketplace slugs don't clip. */}
+          <SelectContent
+            align="start"
+            alignItemWithTrigger={false}
+            className="w-fit min-w-(--anchor-width)"
+          >
+            <SelectGroup>
+              {sourceItems.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
         <Input
           className="w-60"
           placeholder={t('settings.agent.plugins.searchPlaceholder')}
           value={search}
-          onChange={(event) => setSearch(event.target.value)}
+          onChange={(event) => {
+            setSearch(event.target.value)
+            setRenderLimit(INSTALL_PAGE_SIZE)
+          }}
         />
       </div>
 
       {isLoading ? (
         <Spinner className="self-center" />
-      ) : rows.length === 0 ? (
+      ) : shown.length === 0 ? (
         <AgentEmpty />
       ) : (
-        <div className="grid grid-cols-1 gap-x-6 gap-y-0.5 md:grid-cols-2" data-install-grid>
-          {rows.map((entry) => (
-            <div
-              className="flex min-h-12 items-center gap-2 rounded-lg px-2 hover:bg-muted/50"
-              data-install-tile
-              key={entry.pluginId}
-              onClick={() => openSub('agent-plugins', 'install-detail', entry.pluginId, entry.name)}
-            >
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-normal">{entry.name}</div>
-                <div className="truncate text-sm text-foreground-subtle">
-                  {[
-                    typeof entry.installCount === 'number'
-                      ? t('settings.agent.plugins.installCount', { count: entry.installCount })
-                      : entry.marketplaceName,
-                    entry.description,
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')}
+        <div className="flex flex-col" data-install-list>
+          {shown.map((entry) => {
+            const isInstalled = installed.names.has(entry.name)
+            const isEnabled = isEntryEnabled(entry)
+            return (
+              <div
+                className="flex min-h-14 items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/50"
+                data-install-tile
+                key={entry.pluginId}
+                onClick={() =>
+                  openSub('agent-plugins', 'install-detail', entry.pluginId, entry.name)
+                }
+              >
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                  <div className="truncate text-sm font-normal">{entry.name}</div>
+                  {entry.description ? (
+                    <div className="truncate text-xs text-foreground-subtlest">
+                      {entry.description}
+                    </div>
+                  ) : null}
+                  <div className="flex items-center gap-2 text-[11px] tabular-nums text-foreground-subtlest">
+                    <span>{entry.marketplaceName}</span>
+                    {typeof entry.installCount === 'number' ? (
+                      <>
+                        <span aria-hidden className="text-foreground-subtlest/50">
+                          |
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Download className="size-3" aria-hidden />
+                          {entry.installCount.toLocaleString()}
+                        </span>
+                      </>
+                    ) : null}
+                  </div>
                 </div>
+                {isInstalled ? (
+                  <div className="shrink-0" onClick={(event) => event.stopPropagation()}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        aria-label={t('settings.agent.plugins.more')}
+                        render={<Button size="icon" variant="ghost" />}
+                      >
+                        <EllipsisVertical className="size-4 text-foreground-subtlest" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="end"
+                        aria-label={t('settings.agent.plugins.more')}
+                      >
+                        <DropdownMenuItem onClick={() => void handleToggle(entry)}>
+                          {isEnabled
+                            ? t('settings.agent.plugins.disable')
+                            : t('settings.agent.plugins.enable')}
+                        </DropdownMenuItem>
+                        {homepagesById.get(entry.pluginId) ? (
+                          <DropdownMenuItem onClick={() => handleOpen(entry)}>
+                            {t('settings.agent.plugins.open')}
+                          </DropdownMenuItem>
+                        ) : null}
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onClick={() => void handleUninstall(entry.pluginId)}
+                        >
+                          {t('settings.agent.plugins.uninstall')}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                ) : (
+                  <Button
+                    aria-label={t('settings.agent.plugins.install')}
+                    className="text-foreground-subtlest"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      void handleInstall(entry.pluginId)
+                    }}
+                    size="icon"
+                    variant="ghost"
+                  >
+                    <Plus />
+                  </Button>
+                )}
               </div>
-              {installedIds.has(entry.pluginId) ? (
-                <Badge variant="secondary">{t('settings.agent.plugins.installed')}</Badge>
-              ) : (
-                <Button
-                  aria-label={t('settings.agent.plugins.install')}
-                  className="text-foreground-subtlest"
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    void handleInstall(entry.pluginId)
-                  }}
-                  size="icon-sm"
-                  variant="ghost"
-                >
-                  +
-                </Button>
-              )}
-            </div>
-          ))}
+            )
+          })}
+          {hasMore ? <div data-install-sentinel ref={sentinelRef} /> : null}
         </div>
       )}
     </section>
