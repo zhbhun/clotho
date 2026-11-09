@@ -9,6 +9,7 @@ import {
   Server,
   Settings2,
   Sparkles,
+  Store,
 } from 'lucide-react'
 import {
   type CSSProperties,
@@ -74,6 +75,7 @@ import { AgentSkillSettings } from './components/agent-skill-settings'
 import { AgentSubagentSettings } from './components/agent-subagent-settings'
 import { AppearanceSettings } from './components/appearance-settings'
 import { LanguageSettings } from './components/language-settings'
+import { MarketplaceSettings } from './components/marketplace-settings'
 import { PermissionSettings } from './components/permission-settings'
 import { ProjectSettings } from './components/project-settings'
 import { ProviderSettings } from './components/provider-settings'
@@ -90,6 +92,7 @@ const BASE_CATEGORIES = [
 ] as const
 
 const AGENT_CATEGORIES = [
+  { id: 'agent-marketplace', labelKey: 'settings.categories.agentMarketplace', icon: Store },
   { id: 'agent-plugins', labelKey: 'settings.categories.agentPlugins', icon: Puzzle },
   { id: 'agent-subagents', labelKey: 'settings.categories.agentSubagents', icon: Bot },
   { id: 'agent-mcp', labelKey: 'settings.categories.agentMcp', icon: Server },
@@ -278,6 +281,7 @@ function SettingsPageContent({
 }: SettingsPageProps) {
   const { t } = useTranslation()
   const [categoryId, setCategoryId] = useState<SettingsCategoryId>(initialCategory)
+  const [marketplaceVisit, setMarketplaceVisit] = useState(0)
   const [focusedCategoryId, setFocusedCategoryId] = useState<SettingsCategoryId>(initialCategory)
   const categoryRefs = useRef<Array<HTMLButtonElement | null>>([])
   const dialogRef = useRef<HTMLDivElement>(null)
@@ -306,6 +310,7 @@ function SettingsPageContent({
       }
       detail.backToList()
     }
+    if (id === 'agent-marketplace') setMarketplaceVisit((visit) => visit + 1)
     setCategoryId(id)
     setFocusedCategoryId(id)
   }
@@ -483,7 +488,7 @@ function SettingsPageContent({
                     {/* A detail page renders its own h1 (entry name or create
                         label); the category header would duplicate the
                         breadcrumb root above it. */}
-                    {!isDetailOpen ? (
+                    {!isDetailOpen && category.id !== 'agent-marketplace' ? (
                       <header>
                         <h1 className="text-xl font-medium tracking-tight">
                           {t(category.labelKey)}
@@ -516,8 +521,15 @@ function SettingsPageContent({
                         onRemoveProject={onRemoveProject}
                       />
                     </SettingsCategory>
+                    <SettingsCategory isActive={category.id === 'agent-marketplace'}>
+                      {category.id === 'agent-marketplace' ? (
+                        <MarketplaceSettings key={marketplaceVisit} />
+                      ) : null}
+                    </SettingsCategory>
                     <SettingsCategory isActive={category.id === 'agent-plugins'}>
-                      <AgentPluginSettings />
+                      <AgentPluginSettings
+                        onOpenMarketplace={() => selectCategory('agent-marketplace')}
+                      />
                     </SettingsCategory>
                     <SettingsCategory isActive={category.id === 'agent-subagents'}>
                       <AgentSubagentSettings />

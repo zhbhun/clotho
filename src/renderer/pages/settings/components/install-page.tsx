@@ -92,7 +92,7 @@ export function InstallPluginPage() {
   const [installed, setInstalled] = useState<InstalledRecords>(NO_INSTALLS)
   const [enabledById, setEnabledById] = useState<Map<string, boolean>>(new Map())
   const [renderLimit, setRenderLimit] = useState(INSTALL_PAGE_SIZE)
-  const openSub = useSettingsDetailStore((state) => state.openSub)
+  const openDetail = useSettingsDetailStore((state) => state.openDetail)
   const notifyRestart = useRestartHint()
   const sentinelRef = useRef<HTMLDivElement | null>(null)
 
@@ -246,15 +246,6 @@ export function InstallPluginPage() {
 
   return (
     <section className="flex flex-col gap-4" data-install-page>
-      <div>
-        <h1 className="text-xl font-medium tracking-tight">
-          {t('settings.agent.plugins.installPageTitle')}
-        </h1>
-        <p className="mt-1 text-sm text-foreground-subtlest">
-          {t('settings.agent.plugins.installPageDescription')}
-        </p>
-      </div>
-
       <div className="flex items-center justify-between gap-4">
         <Select
           items={sourceItems}
@@ -308,7 +299,7 @@ export function InstallPluginPage() {
                 data-install-tile
                 key={entry.pluginId}
                 onClick={() =>
-                  openSub('agent-plugins', 'install-detail', entry.pluginId, entry.name)
+                  openDetail('agent-marketplace', entry.pluginId, entry.name, 'install')
                 }
               >
                 <div className="flex min-w-0 flex-1 flex-col gap-1">

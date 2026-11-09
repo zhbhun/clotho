@@ -13,7 +13,7 @@ import { useSettingsDetailStore } from './settings-detail-store'
  * marketplaces / install pages (second level), and the add-marketplace and
  * marketplace-detail subpages (third level).
  */
-export function AgentPluginSettings() {
+export function AgentPluginSettings({ onOpenMarketplace }: { onOpenMarketplace?: () => void }) {
   const { t } = useTranslation()
   const view = useSettingsDetailStore((state) => state.view)
   const setLeaf = useSettingsDetailStore((state) => state.setLeaf)
@@ -39,7 +39,7 @@ export function AgentPluginSettings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOwnDetail, view])
 
-  if (!isOwnDetail) return <PluginListPage />
+  if (!isOwnDetail) return <PluginListPage onOpenMarketplace={onOpenMarketplace} />
 
   const detail = view as Extract<typeof view, { kind: 'detail' }>
 
@@ -62,5 +62,5 @@ export function AgentPluginSettings() {
   if (detail.file) {
     return <PluginDetailPage pluginId={detail.file} />
   }
-  return <PluginListPage />
+  return <PluginListPage onOpenMarketplace={onOpenMarketplace} />
 }

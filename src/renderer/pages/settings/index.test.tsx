@@ -15,6 +15,7 @@ import {
   flushAppSettings,
   initializeAppSettings,
 } from '../../services/app-settings'
+import * as agentConfig from '../../services/claude/agent-config'
 import { ShortcutRuntimeProvider, shortcutRuntime } from '../../services/shortcuts/runtime'
 import { ModelConfigurationProvider } from '../../stores/model-configuration-context'
 import { ProviderUsageProvider } from '../../stores/provider-usage-context'
@@ -68,6 +69,7 @@ describe('SettingsPage', () => {
   })
 
   afterEach(() => {
+    vi.restoreAllMocks()
     vi.unstubAllGlobals()
   })
 
@@ -174,6 +176,95 @@ describe('SettingsPage', () => {
     for (const name of ['插件', '子智能体', 'MCP', '技能']) {
       expect(screen.getByRole('button', { name })).toBeInTheDocument()
     }
+  })
+
+  it('opens Marketplace from Plugins and switches between the catalog and sources', async () => {
+    vi.spyOn(agentConfig, 'listAgentPlugins').mockResolvedValue([])
+    vi.spyOn(agentConfig, 'listAgentAvailablePlugins').mockResolvedValue([
+      { pluginId: 'formatter@acme', name: 'formatter', marketplaceName: 'acme' },
+    ])
+    vi.spyOn(agentConfig, 'listAgentMarketplaces').mockResolvedValue([
+      {
+        name: 'acme',
+        source: { source: 'github', repo: 'acme/plugins' },
+        installLocation: '/acme',
+      },
+    ])
+    const user = userEvent.setup()
+    render(<TestSettingsPage open initialCategory="agent-plugins" onOpenChange={vi.fn()} />)
+
+    const marketplace = screen.getAllByRole('button', { name: '插件广场' })[0]
+    const plugins = screen.getByRole('button', { name: '插件' })
+    expect(
+      marketplace.compareDocumentPosition(plugins) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    await user.click(screen.getAllByRole('button', { name: '插件广场' })[1])
+    expect(screen.getByRole('button', { name: '插件广场', current: 'page' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '插件' })).toHaveAttribute('aria-selected', 'true')
+    expect(await screen.findByText('formatter')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { level: 1, name: '插件广场' })).toBeNull()
+
+    await user.click(screen.getByRole('tab', { name: '插件市场' }))
+    expect(await screen.findByText('github · acme/plugins')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '插件广场', current: 'page' })).toBeInTheDocument()
+  })
+
+  it('returns to the originating Marketplace tab and guards unsaved source changes', async () => {
+    vi.spyOn(agentConfig, 'listAgentPlugins').mockResolvedValue([])
+    vi.spyOn(agentConfig, 'listAgentAvailablePlugins').mockResolvedValue([
+      { pluginId: 'formatter@acme', name: 'formatter', marketplaceName: 'acme' },
+    ])
+    vi.spyOn(agentConfig, 'listAgentMarketplaces').mockResolvedValue([
+      {
+        name: 'acme',
+        source: { source: 'github', repo: 'acme/plugins' },
+        installLocation: '/acme',
+      },
+    ])
+    vi.spyOn(agentConfig, 'getAgentPluginDetails').mockResolvedValue({
+      pluginId: 'formatter@acme',
+      name: 'formatter',
+      description: 'Formatter details',
+      installed: false,
+      skills: [],
+      mcpServers: [],
+      subagents: [],
+    })
+    const addMarketplace = vi.spyOn(agentConfig, 'addAgentMarketplace').mockResolvedValue(undefined)
+    const user = userEvent.setup()
+    render(<TestSettingsPage open initialCategory="agent-marketplace" onOpenChange={vi.fn()} />)
+
+    await user.click(await screen.findByText('formatter'))
+    expect(await screen.findByText('Formatter details')).toBeInTheDocument()
+    expect(screen.getByTestId('settings-breadcrumb-root')).toHaveTextContent('插件广场')
+    await user.click(screen.getByTestId('settings-breadcrumb-root'))
+    expect(screen.getByRole('tab', { name: '插件' })).toHaveAttribute('aria-selected', 'true')
+
+    await user.click(screen.getByRole('tab', { name: '插件市场' }))
+    await user.click(await screen.findByText('github · acme/plugins'))
+    expect(await screen.findByRole('heading', { name: 'acme' })).toBeInTheDocument()
+    await user.click(screen.getByTestId('settings-breadcrumb-root'))
+    expect(screen.getByRole('tab', { name: '插件市场' })).toHaveAttribute('aria-selected', 'true')
+
+    await user.click(await screen.findByRole('button', { name: '添加市场' }))
+    await user.type(screen.getByLabelText('来源'), 'acme/new-market')
+    await user.click(screen.getByTestId('settings-breadcrumb-root'))
+    expect(await screen.findByRole('alertdialog', { name: '放弃更改？' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '放弃' }))
+    expect(screen.getByRole('tab', { name: '插件市场' })).toHaveAttribute('aria-selected', 'true')
+
+    await user.click(await screen.findByRole('button', { name: '添加市场' }))
+    await user.type(screen.getByLabelText('来源'), 'acme/other')
+    await user.click(screen.getByRole('button', { name: '添加市场' }))
+    await waitFor(() => expect(addMarketplace).toHaveBeenCalledWith('acme/other'))
+    expect(await screen.findByRole('tab', { name: '插件市场' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    expect(screen.queryByRole('alertdialog', { name: '放弃更改？' })).toBeNull()
+
+    await user.click(screen.getByRole('button', { name: '插件广场', current: 'page' }))
+    expect(screen.getByRole('tab', { name: '插件' })).toHaveAttribute('aria-selected', 'true')
   })
 
   describe('subagent detail leave guard', () => {

@@ -99,7 +99,7 @@ function useInstalledPluginIds() {
 export function MarketplaceListPage() {
   const { t } = useTranslation()
   const { marketplaces, isLoading, reload } = useMarketplaces()
-  const openSub = useSettingsDetailStore((state) => state.openSub)
+  const openDetail = useSettingsDetailStore((state) => state.openDetail)
 
   useEffect(() => {
     void reload()
@@ -111,7 +111,12 @@ export function MarketplaceListPage() {
     refreshAllMarketplaces(reload, t('settings.agent.plugins.refreshError'))
 
   const openAdd = () =>
-    openSub('agent-plugins', 'add', null, t('settings.agent.plugins.addMarketplace'))
+    openDetail(
+      'agent-marketplace',
+      null,
+      t('settings.agent.plugins.addMarketplace'),
+      'marketplaces',
+    )
 
   return (
     <section className="flex flex-col gap-3" data-marketplace-list-page>
@@ -150,7 +155,7 @@ export function MarketplaceListPage() {
               key={marketplace.name}
               variant="compact"
               onClick={() =>
-                openSub('agent-plugins', 'market-detail', marketplace.name, marketplace.name)
+                openDetail('agent-marketplace', marketplace.name, marketplace.name, 'marketplaces')
               }
             >
               <div className="min-w-0 flex-1">
@@ -375,6 +380,7 @@ export function MarketplaceAddPage() {
     setIsAdding(true)
     try {
       await addAgentMarketplace(composed)
+      useSettingsDetailStore.getState().setDirty(false)
       requestLeave()
     } catch {
       toast.add({

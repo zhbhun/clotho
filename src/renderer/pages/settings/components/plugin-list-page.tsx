@@ -23,7 +23,7 @@ import { SettingsList, SettingsRow } from './settings-list'
  * Only user-scope plugins are listed for now; local (project) scope plugins
  * are deferred until a unified handling lands.
  */
-export function PluginListPage() {
+export function PluginListPage({ onOpenMarketplace }: { onOpenMarketplace?: () => void }) {
   const { t } = useTranslation()
   const [plugins, setPlugins] = useState<AgentPluginInfo[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -67,9 +67,6 @@ export function PluginListPage() {
   const handleRefreshAll = () =>
     refreshAllMarketplaces(reload, t('settings.agent.plugins.refreshError'))
 
-  const showInstallPage = () =>
-    openDetailAction('agent-plugins', null, t('settings.agent.plugins.installPlugin'), 'install')
-
   return (
     <section className="flex flex-col gap-3" data-plugin-list-page>
       <div className="flex min-h-7 items-center justify-between gap-4">
@@ -88,7 +85,10 @@ export function PluginListPage() {
           >
             <RotateCw className="size-4" />
           </Button>
-          <Button aria-label={t('settings.agent.plugins.installPlugin')} onClick={showInstallPage}>
+          <Button
+            aria-label={t('settings.categories.agentMarketplace')}
+            onClick={onOpenMarketplace}
+          >
             <PackagePlus data-icon="inline-start" />
           </Button>
         </div>
