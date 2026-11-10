@@ -394,7 +394,7 @@ function SettingsPageContent({
                     <SidebarGroupLabel className="h-7 px-2 text-sm text-foreground-subtlest">
                       {t(group.labelKey)}
                     </SidebarGroupLabel>
-                    <SidebarGroupContent>
+                    <SidebarGroupContent className="mt-1.5">
                       <SidebarMenu className="app-region-no-drag gap-0.5">
                         {group.categories.map((item) => {
                           const index = CATEGORIES.findIndex(
