@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '../../../components/dropdown-menu'
 import { installAgentPlugin, refreshAgentMarketplace } from '../../../services/claude/agent-config'
+import { updateInstalled, updateMarketplaces } from './catalog-cache'
 
 /** Shared "changes apply to new sessions" hint after a plugin/marketplace change. */
 export function useRestartHint() {
@@ -31,6 +32,7 @@ export async function installPluginWithToast(
 ): Promise<boolean> {
   try {
     await installAgentPlugin(pluginId)
+    updateInstalled(pluginId, 'install')
     notifyRestart()
     return true
   } catch {
@@ -46,6 +48,7 @@ export async function refreshAllMarketplaces(
 ): Promise<void> {
   try {
     await refreshAgentMarketplace()
+    updateMarketplaces()
     await reload()
   } catch {
     toast.add({ id: 'agent-marketplace-refresh', title: refreshError, type: 'error' })

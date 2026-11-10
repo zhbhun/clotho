@@ -12,6 +12,7 @@ import { appI18n } from '../../../i18n/runtime'
 import * as agentConfig from '../../../services/claude/agent-config'
 import { ShortcutRuntimeProvider, shortcutRuntime } from '../../../services/shortcuts/runtime'
 import { AgentPluginSettings } from './agent-plugin-settings'
+import { useCatalogCache } from './catalog-cache'
 import { InstallPluginPage } from './install-page'
 import { MarketplaceAddPage } from './marketplace-pages'
 import { useSettingsDetailStore } from './settings-detail-store'
@@ -55,6 +56,14 @@ const mock = vi.mocked(agentConfig, true)
 beforeEach(async () => {
   await appI18n.changeLanguage('zh-CN')
   vi.clearAllMocks()
+  useCatalogCache.setState({
+    catalog: null,
+    installed: null,
+    installedChanges: new Map(),
+    catalogLoading: false,
+    catalogError: false,
+    installedError: false,
+  })
   useSettingsDetailStore.setState({ view: { kind: 'list' }, leaf: '', subLeaf: '', isDirty: false })
   mock.listAgentPlugins.mockResolvedValue([])
   mock.listAgentMarketplaces.mockResolvedValue([])
@@ -253,6 +262,7 @@ describe('PluginDetailPage', () => {
     await screen.findByText('Formats things')
     await user.click(await screen.findByRole('button', { name: '更多操作' }))
     const menu = await screen.findByRole('menu', { name: '更多操作' })
+    mock.listAgentPlugins.mockResolvedValue([])
     await user.click(within(menu).getByRole('menuitem', { name: '卸载' }))
 
     await waitFor(() => expect(mock.removeAgentPlugin).toHaveBeenCalledWith('formatter@acme'))
@@ -479,6 +489,45 @@ describe('InstallPluginPage', () => {
     return within(element)
   }
 
+  it('shows cached results on return, retains them after a failure, and retries', async () => {
+    mock.listAgentAvailablePlugins.mockResolvedValueOnce([catalogEntry()])
+    const first = renderWithProviders(<InstallPluginPage />)
+    expect((await findInstallList()).getByText('formatter')).toBeInTheDocument()
+    first.unmount()
+
+    let rejectRefresh!: (reason: Error) => void
+    mock.listAgentAvailablePlugins.mockReturnValueOnce(
+      new Promise((_, reject) => {
+        rejectRefresh = reject
+      }),
+    )
+    const second = renderWithProviders(<InstallPluginPage />)
+    expect(screen.getByText('formatter')).toBeInTheDocument()
+    rejectRefresh(new Error('offline'))
+    await waitFor(() => expect(useCatalogCache.getState().catalogError).toBe(true))
+    expect(screen.getByText('formatter')).toBeInTheDocument()
+    second.unmount()
+
+    mock.listAgentAvailablePlugins.mockResolvedValueOnce([catalogEntry({ name: 'updated' })])
+    renderWithProviders(<InstallPluginPage />)
+    expect(await screen.findByText('updated')).toBeInTheDocument()
+  })
+
+  it('keeps a successful install visible when installed records have not loaded and refresh fails', async () => {
+    mock.listAgentAvailablePlugins.mockResolvedValue([catalogEntry()])
+    mock.listAgentPlugins.mockRejectedValue(new Error('unavailable'))
+    mock.getAgentPluginDetails.mockResolvedValue(emptyDetails)
+    mock.installAgentPlugin.mockResolvedValue(undefined)
+    const user = userEvent.setup()
+    renderWithProviders(<InstallPluginPage />)
+
+    await user.click(await (await findInstallList()).findByRole('button', { name: '安装' }))
+    expect(
+      await (await findInstallList()).findByRole('button', { name: '更多操作' }),
+    ).toBeInTheDocument()
+    expect(useCatalogCache.getState().installed).toBeNull()
+  })
+
   it('renders one unified list without tabs or a result count', async () => {
     mock.listAgentAvailablePlugins.mockResolvedValue([
       catalogEntry(),
@@ -606,6 +655,7 @@ describe('InstallPluginPage', () => {
     const menu = await screen.findByRole('menu', { name: '更多操作' })
     // Open is offered because the manifest declares a homepage.
     expect(await within(menu).findByRole('menuitem', { name: '打开' })).toBeInTheDocument()
+    mock.listAgentPlugins.mockResolvedValue([installedPlugin({ enabled: false })])
     await user.click(within(menu).getByRole('menuitem', { name: '停用' }))
 
     await waitFor(() =>
@@ -647,6 +697,7 @@ describe('InstallPluginPage', () => {
 
     await user.click(await (await findInstallList()).findByRole('button', { name: '更多操作' }))
     const menu = await screen.findByRole('menu', { name: '更多操作' })
+    mock.listAgentPlugins.mockResolvedValue([])
     await user.click(within(menu).getByRole('menuitem', { name: '卸载' }))
 
     await waitFor(() => expect(mock.removeAgentPlugin).toHaveBeenCalledWith('formatter@acme'))
@@ -662,7 +713,9 @@ describe('InstallPluginPage', () => {
     const user = userEvent.setup()
     renderWithProviders(<InstallPluginPage />)
 
-    await user.click(await (await findInstallList()).findByRole('button', { name: '安装' }))
+    const installButton = await (await findInstallList()).findByRole('button', { name: '安装' })
+    mock.listAgentPlugins.mockResolvedValue([installedPlugin()])
+    await user.click(installButton)
 
     await waitFor(() => expect(mock.installAgentPlugin).toHaveBeenCalledWith('formatter@acme'))
     expect(await screen.findByText('插件变更将在新会话中生效')).toBeInTheDocument()

@@ -11,6 +11,7 @@ import {
   removeAgentPlugin,
   setAgentPluginEnabled,
 } from '../../../services/claude/agent-config'
+import { updateInstalled } from './catalog-cache'
 import { PluginOverflowMenu, useRestartHint } from './plugin-shared'
 import { useSettingsDetailStore } from './settings-detail-store'
 import { SettingsList, SettingsRow } from './settings-list'
@@ -138,6 +139,7 @@ export function PluginDetailPage({ pluginId }: { pluginId: string }) {
     setDetails((current) => (current ? { ...current, enabled } : current))
     try {
       await setAgentPluginEnabled(details.pluginId, enabled)
+      updateInstalled(details.pluginId, enabled)
       notifyRestart()
     } catch {
       setDetails((current) => (current ? { ...current, enabled: !enabled } : current))
@@ -149,6 +151,7 @@ export function PluginDetailPage({ pluginId }: { pluginId: string }) {
     if (!details) return
     try {
       await removeAgentPlugin(details.pluginId)
+      updateInstalled(details.pluginId, 'remove')
       notifyRestart()
       backToList()
     } catch {

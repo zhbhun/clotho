@@ -13,6 +13,7 @@ import {
   setAgentPluginEnabled,
 } from '../../../services/claude/agent-config'
 import { AgentEmpty } from './agent-shared'
+import { updateInstalled } from './catalog-cache'
 import { RowChevron, refreshAllMarketplaces, useRestartHint } from './plugin-shared'
 import { useSettingsDetailStore } from './settings-detail-store'
 import { SettingsList, SettingsRow } from './settings-list'
@@ -55,6 +56,7 @@ export function PluginListPage({ onOpenMarketplace }: { onOpenMarketplace?: () =
     )
     try {
       await setAgentPluginEnabled(plugin.id, enabled)
+      updateInstalled(plugin.id, enabled)
       notifyRestart()
     } catch {
       setPlugins((current) =>

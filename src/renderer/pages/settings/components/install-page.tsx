@@ -23,15 +23,13 @@ import {
   DropdownMenuTrigger,
 } from '../../../components/dropdown-menu'
 import {
-  type AgentMarketplacePlugin,
   getAgentPluginDetails,
-  listAgentAvailablePlugins,
-  listAgentPlugins,
   removeAgentPlugin,
   setAgentPluginEnabled,
 } from '../../../services/claude/agent-config'
 import { requestFromDesktop } from '../../../services/desktop/client'
 import { AgentEmpty } from './agent-shared'
+import { refreshCatalog, refreshInstalled, updateInstalled, useCatalogCache } from './catalog-cache'
 import {
   type CatalogEntry,
   catalogSources,
@@ -60,24 +58,6 @@ const NO_INSTALLS: InstalledRecords = {
   enabled: new Map(),
 }
 
-async function listInstalledOnce(): Promise<InstalledRecords> {
-  try {
-    const plugins = await listAgentPlugins()
-    const names = new Set<string>()
-    const ids = new Set<string>()
-    const enabled = new Map<string, boolean>()
-    for (const plugin of plugins) {
-      const name = installedName(plugin.id)
-      names.add(name)
-      ids.add(plugin.id)
-      enabled.set(name, plugin.enabled)
-    }
-    return { names, ids, enabled }
-  } catch {
-    return NO_INSTALLS
-  }
-}
-
 /**
  * Second-level Install page (Marketplace): one deduplicated list over the whole
  * catalog, `All` source filter + search at the toolbar, three-line rows rendered
@@ -85,11 +65,13 @@ async function listInstalledOnce(): Promise<InstalledRecords> {
  */
 export function InstallPluginPage() {
   const { t } = useTranslation()
-  const [catalog, setCatalog] = useState<AgentMarketplacePlugin[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const catalog = useCatalogCache((state) => state.catalog)
+  const installedPlugins = useCatalogCache((state) => state.installed)
+  const installedChanges = useCatalogCache((state) => state.installedChanges)
+  const catalogLoading = useCatalogCache((state) => state.catalogLoading)
+  const catalogError = useCatalogCache((state) => state.catalogError)
   const [sourceFilter, setSourceFilter] = useState('')
   const [search, setSearch] = useState('')
-  const [installed, setInstalled] = useState<InstalledRecords>(NO_INSTALLS)
   const [enabledById, setEnabledById] = useState<Map<string, boolean>>(new Map())
   const [renderLimit, setRenderLimit] = useState(INSTALL_PAGE_SIZE)
   const openDetail = useSettingsDetailStore((state) => state.openDetail)
@@ -97,43 +79,40 @@ export function InstallPluginPage() {
   const sentinelRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    let cancelled = false
-    listAgentAvailablePlugins()
-      .then((available) => {
-        if (cancelled) return
-        setCatalog(available)
-      })
-      .catch(() => {
-        if (!cancelled) {
-          toast.add({
-            id: 'agent-catalog-load',
-            title: t('settings.agent.loadError'),
-            type: 'error',
-          })
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void refreshCatalog()
+    void refreshInstalled()
   }, [])
 
-  useEffect(() => {
-    let cancelled = false
-    listInstalledOnce().then((state) => {
-      if (cancelled) return
-      setInstalled(state)
-    })
-    return () => {
-      cancelled = true
+  const installed = useMemo<InstalledRecords>(() => {
+    if (!installedPlugins && installedChanges.size === 0) return NO_INSTALLS
+    const names = new Set<string>()
+    const ids = new Set<string>()
+    const enabled = new Map<string, boolean>()
+    for (const plugin of installedPlugins ?? []) {
+      const name = installedName(plugin.id)
+      names.add(name)
+      ids.add(plugin.id)
+      enabled.set(name, plugin.enabled)
     }
-  }, [])
+    for (const [id, change] of installedChanges) {
+      const name = installedName(id)
+      if (change === 'remove') {
+        ids.delete(id)
+        if (![...ids].some((installedId) => installedName(installedId) === name)) {
+          names.delete(name)
+          enabled.delete(name)
+        }
+      } else {
+        ids.add(id)
+        names.add(name)
+        enabled.set(name, typeof change === 'boolean' ? change : true)
+      }
+    }
+    return { names, ids, enabled }
+  }, [installedPlugins, installedChanges])
 
   const entries = useMemo(
-    () => orderCatalog(dedupeCatalog(catalog, installed)),
+    () => orderCatalog(dedupeCatalog(catalog ?? [], installed)),
     [catalog, installed],
   )
   const homepagesById = usePluginHomepages(entries, installed.names)
@@ -179,19 +158,7 @@ export function InstallPluginPage() {
   }, [hasMore])
 
   const handleInstall = async (pluginId: string) => {
-    const ok = await installPluginWithToast(
-      pluginId,
-      notifyRestart,
-      t('settings.agent.plugins.installError'),
-    )
-    if (ok) {
-      const name = installedName(pluginId)
-      setInstalled((current) => ({
-        names: new Set(current.names).add(name),
-        ids: new Set(current.ids).add(pluginId),
-        enabled: new Map(current.enabled).set(name, true),
-      }))
-    }
+    await installPluginWithToast(pluginId, notifyRestart, t('settings.agent.plugins.installError'))
   }
 
   const handleToggle = async (entry: CatalogEntry) => {
@@ -200,10 +167,12 @@ export function InstallPluginPage() {
     try {
       await setAgentPluginEnabled(entry.pluginId, enabled)
       notifyRestart()
-      setInstalled((current) => ({
-        ...current,
-        enabled: new Map(current.enabled).set(entry.name, enabled),
-      }))
+      updateInstalled(entry.pluginId, enabled)
+      setEnabledById((current) => {
+        const next = new Map(current)
+        next.delete(entry.pluginId)
+        return next
+      })
     } catch {
       setEnabledById((current) => {
         const next = new Map(current)
@@ -218,16 +187,7 @@ export function InstallPluginPage() {
     try {
       await removeAgentPlugin(pluginId)
       notifyRestart()
-      const name = installedName(pluginId)
-      setInstalled((current) => {
-        const names = new Set(current.names)
-        names.delete(name)
-        const ids = new Set(current.ids)
-        ids.delete(pluginId)
-        const enabled = new Map(current.enabled)
-        enabled.delete(name)
-        return { names, ids, enabled }
-      })
+      updateInstalled(pluginId, 'remove')
     } catch {
       toast.add({
         id: 'agent-plugin-remove',
@@ -284,7 +244,7 @@ export function InstallPluginPage() {
         />
       </div>
 
-      {isLoading ? (
+      {catalog === null && (catalogLoading || !catalogError) ? (
         <Spinner className="self-center" />
       ) : shown.length === 0 ? (
         <AgentEmpty />

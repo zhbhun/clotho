@@ -28,6 +28,7 @@ import {
   removeAgentMarketplace,
 } from '../../../services/claude/agent-config'
 import { AgentEmpty } from './agent-shared'
+import { updateMarketplaces } from './catalog-cache'
 import {
   PluginOverflowMenu,
   RowChevron,
@@ -193,6 +194,7 @@ export function MarketplaceDetailPage({ marketplaceName }: { marketplaceName: st
   const handleRefresh = async () => {
     try {
       await refreshAgentMarketplace(marketplaceName)
+      updateMarketplaces()
       await reload()
     } catch {
       toast.add({
@@ -208,6 +210,7 @@ export function MarketplaceDetailPage({ marketplaceName }: { marketplaceName: st
   const handleRemove = async () => {
     try {
       await removeAgentMarketplace(marketplaceName)
+      updateMarketplaces()
       // Leave first: the Marketplaces page remounts and fetches its own data.
       useSettingsDetailStore.getState().requestLeave()
     } catch {
@@ -380,6 +383,7 @@ export function MarketplaceAddPage() {
     setIsAdding(true)
     try {
       await addAgentMarketplace(composed)
+      updateMarketplaces()
       useSettingsDetailStore.getState().setDirty(false)
       requestLeave()
     } catch {
