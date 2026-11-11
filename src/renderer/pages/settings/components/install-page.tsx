@@ -37,6 +37,7 @@ import {
   installedName,
   orderCatalog,
 } from './install-catalog'
+import { PluginAvatar } from './plugin-avatar'
 import { PluginDetailSections, PluginInfoRows } from './plugin-detail-page'
 import { installPluginWithToast, useRestartHint } from './plugin-shared'
 import { useSettingsDetailStore } from './settings-detail-store'
@@ -249,19 +250,23 @@ export function InstallPluginPage() {
       ) : shown.length === 0 ? (
         <AgentEmpty />
       ) : (
-        <div className="flex flex-col" data-install-list>
+        <div
+          className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] max-lg:grid-cols-1 gap-x-6"
+          data-install-list
+        >
           {shown.map((entry) => {
             const isInstalled = installed.names.has(entry.name)
             const isEnabled = isEntryEnabled(entry)
             return (
               <div
-                className="flex min-h-14 items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/50"
+                className="flex min-w-0 items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/50"
                 data-install-tile
                 key={entry.pluginId}
                 onClick={() =>
                   openDetail('agent-marketplace', entry.pluginId, entry.name, 'install')
                 }
               >
+                <PluginAvatar name={entry.name} />
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                   <div className="truncate text-sm font-normal">{entry.name}</div>
                   {entry.description ? (

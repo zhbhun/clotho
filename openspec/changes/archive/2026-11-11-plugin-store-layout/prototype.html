@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clotho plugin store prototype</title>
+<style>
+:root{font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#242424;background:#e8e8e7}
+*{box-sizing:border-box}body{margin:0}
+.window{display:flex;min-height:100vh;background:white}
+.sidebar{width:236px;flex:none;background:#ededec;padding:22px 10px;color:#484848}
+.traffic{display:flex;gap:8px;margin:0 0 26px 4px}
+.traffic i{height:12px;width:12px;border-radius:50%;background:#fa5f57}
+.traffic i:nth-child(2){background:#fdbc2e}.traffic i:nth-child(3){background:#28c840}
+.back{padding:9px 8px 18px;color:#777}
+.group{padding:14px 8px 6px;color:#8a8a8a;font-size:12px}
+.nav{padding:8px;border-radius:7px;cursor:pointer;display:flex;gap:10px;align-items:center}
+.nav.active{background:#fff;color:#191919;font-weight:600}
+.nav span{width:16px;text-align:center;color:#777}
+.main{flex:1;min-width:0}
+.top{height:40px;display:flex;align-items:center;border-bottom:1px solid #f2f2f2;padding:0 26px;color:#777;font-size:13px}
+.content{max-width:800px;margin:44px auto;padding:0 24px 110px}
+.market-header{display:flex;justify-content:center;margin-bottom:22px}
+.market-tabs{display:flex;gap:2px;background:#f1f1f0;padding:3px;border-radius:8px}
+.market-tabs .tab{padding:5px 12px;border-radius:6px;color:#777}
+.market-tabs .tab.active{background:white;color:#242424;box-shadow:0 1px 3px #0002}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:4px 0 16px}
+button,select,input{font:inherit}
+.toolbar select{height:34px;border:1px solid #e1e1e1;background:#fff;border-radius:7px;color:#555;padding:0 10px;width:220px}
+.toolbar input{height:34px;border:1px solid #e1e1e1;background:#fff;border-radius:7px;color:#555;padding:0 10px;width:220px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:28px}
+.row{display:flex;gap:12px;align-items:center;padding:10px 10px;border-radius:10px;cursor:pointer}
+.row:hover{background:#f6f6f5}
+.avatar{width:36px;height:36px;border-radius:9px;flex:none;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;user-select:none}
+.body{min-width:0;flex:1}
+.name{font-size:14px;font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.desc{font-size:12px;color:#8a8a8a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:3px}
+.meta{font-size:11px;color:#9a9a9a;margin-top:3px;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:7px;overflow:hidden;white-space:nowrap}
+.meta .mk{overflow:hidden;text-overflow:ellipsis}
+.meta .sep{color:#c4c4c4}
+.dl{display:flex;align-items:center;gap:4px;flex:none}
+.iconbutton{border:0;background:none;color:#8a8a8a;font-size:20px;line-height:1;padding:4px 8px;border-radius:7px;cursor:pointer;flex:none}
+.iconbutton:hover{background:#ececeb;color:#444}
+.pill{border:0;background:#f1f1f0;color:#242424;font-size:12px;font-weight:500;padding:5px 16px;border-radius:999px;cursor:pointer;flex:none}
+.pill:hover{background:#e4e4e3}
+/* B: App-Store 榜单 — hairline dividers, bigger gradient avatar, Install pill, name 500 */
+.v-b .grid{column-gap:24px}
+.v-b .row{border-radius:0;border-bottom:1px solid #ececec;padding:12px 6px}
+.v-b .row:hover{background:#fafafa}
+.v-b .avatar{width:40px;height:40px;border-radius:10px}
+.v-b .name{font-weight:500}
+.v-b .desc{margin-top:4px}
+/* C: 两行紧凑 — meta 内联在名称右侧 */
+.v-c .line1{display:flex;align-items:baseline;gap:12px}
+.v-c .line1 .name{flex:0 1 auto;min-width:0}
+.v-c .line1 .meta{margin-top:0;margin-left:auto;flex:0 1 auto;min-width:0;justify-content:flex-end}
+.empty{padding:30px;color:#999;text-align:center}
+.proto{position:fixed;bottom:15px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;background:#242424;color:white;padding:7px 12px;border-radius:22px;box-shadow:0 3px 16px #0003;font-size:12px}
+.proto b{font-weight:600}
+.proto button{background:transparent;color:white;border:0;font-size:16px;cursor:pointer;padding:0 2px}
+.proto .state{color:#bbb;min-width:110px;text-align:center}
+@media(max-width:760px){.sidebar{display:none}.grid{grid-template-columns:1fr}.content{margin-top:24px}}
+</style>
+</head>
+<body><div id="app"></div>
+<script>
+// Throwaway UI prototype (clotho): three takes on the Plugins marketplace list,
+// all inside the agreed direction — double-column icon rows with letter avatars,
+// marketplace · install-count kept. Switchable via ?variant= + floating bar.
+//   A 三行留白  — converged baseline: name / desc / meta stack, ghost + / ⋯
+//   B 榜单分隔  — App-Store style: hairline dividers, gradient avatar, Install pill, name 500
+//   C 两行紧凑  — meta inlined beside the name, two text lines
+// Sample data mirrors the real catalog (names + install counts from the
+// official directory; two local-marketplace entries without counts).
+const VARIANTS=['A','B','C']
+const LABELS={A:'三行留白',B:'榜单分隔',C:'两行紧凑'}
+let variant=(new URLSearchParams(location.search).get('variant')||'A').toUpperCase()
+if(!VARIANTS.includes(variant))variant='A'
+let search=''
+let source=''
+const installed=new Set(['superpowers','github'])
+const sources=['claude-plugins-official','zhbhun']
+const PLUGINS=[
+{name:'frontend-design',desc:'Create distinctive, production-grade frontend interfaces with high design quality.',market:'claude-plugins-official',count:1266133},
+{name:'superpowers',desc:'Brainstorming, subagent driven development with built-in code review, systematic debugging.',market:'claude-plugins-official',count:1123984},
+{name:'code-review',desc:'Automated code review for pull requests using multiple specialized agents with confidence-based scoring.',market:'claude-plugins-official',count:477558},
+{name:'skill-creator',desc:'Create new skills, improve existing skills, and measure skill performance.',market:'claude-plugins-official',count:428976},
+{name:'playwright',desc:'Browser automation and end-to-end testing MCP server by Microsoft.',market:'claude-plugins-official',count:358117},
+{name:'github',desc:'Official GitHub MCP server for repository management, issues, PRs and code search.',market:'claude-plugins-official',count:345391},
+{name:'claude-md-management',desc:'Audit CLAUDE.md quality, capture session learnings, keep project memory current.',market:'claude-plugins-official',count:314007},
+{name:'vercel',desc:'Vercel deployment platform integration. Manage deployments, check builds, access logs.',market:'claude-plugins-official',count:292985},
+{name:'feature-dev',desc:'Comprehensive feature development workflow with specialized agents for exploration.',market:'claude-plugins-official',count:269187},
+{name:'security-guidance',desc:'Security review guidance and automated checks for risky changes.',market:'claude-plugins-official',count:198452},
+{name:'trading-tools',desc:'Personal trading toolbox from the local ~/Projects/zhbhun/trading market.',market:'zhbhun'},
+{name:'commit-helper',desc:'Draft conventional commits from staged diffs.',market:'zhbhun'},
+]
+const escapeHTML=s=>s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;')
+// Deterministic pleasant hue: string hash stepped by the golden angle.
+function hue(name){let h=0;for(const c of name)h=(h*31+c.charCodeAt(0))>>>0;return Math.round((h*137.508)%360)}
+function avatar(name,v){
+  const H=hue(name),letter=escapeHTML(name[0].toUpperCase())
+  if(v==='B'){
+    const H2=(H+42)%360
+    return `<span class="avatar" style="background:linear-gradient(135deg,hsl(${H} 78% 88%),hsl(${H2} 72% 78%));color:hsl(${H} 48% 32%)">${letter}</span>`
+  }
+  return `<span class="avatar" style="background:hsl(${H} 70% 90%);color:hsl(${H} 46% 34%)">${letter}</span>`
+}
+function metaHTML(e){
+  const count=typeof e.count==='number'
+    ? `<span class="sep">|</span><span class="dl">⇩ ${e.count.toLocaleString('en-US')}</span>` : ''
+  return `<span class="mk">${escapeHTML(e.market)}</span>${count}`
+}
+function actionHTML(e,v){
+  if(installed.has(e.name))return `<button class="iconbutton" data-menu="${escapeHTML(e.name)}" title="Installed — enable / disable / uninstall">⋮</button>`
+  return v==='B'
+    ? `<button class="pill" data-install="${escapeHTML(e.name)}">Install</button>`
+    : `<button class="iconbutton" data-install="${escapeHTML(e.name)}" title="Install">+</button>`
+}
+function rowHTML(e,v){
+  const body=v==='C'
+    ? `<div class="body"><div class="line1"><span class="name">${escapeHTML(e.name)}</span><span class="meta">${metaHTML(e)}</span></div><div class="desc">${escapeHTML(e.desc)}</div></div>`
+    : `<div class="body"><div class="name">${escapeHTML(e.name)}</div><div class="desc">${escapeHTML(e.desc)}</div><div class="meta">${metaHTML(e)}</div></div>`
+  return `<div class="row" title="Detail page stays as-is (out of prototype scope)">${avatar(e.name,v)}${body}${actionHTML(e,v)}</div>`
+}
+function entries(){
+  const q=search.trim().toLowerCase()
+  return PLUGINS.filter(p=>(!source||p.market===source)&&`${p.name} ${p.desc} ${p.market}`.toLowerCase().includes(q))
+}
+function render(){
+  const es=entries()
+  const list=es.length
+    ? `<div class="grid">${es.map(e=>rowHTML(e,variant)).join('')}</div>`
+    : '<div class="empty">No plugins found</div>'
+  const nav=(label,icon,key,active)=>`<div class="nav ${active?'active':''}"><span>${icon}</span>${label}</div>`
+  document.getElementById('app').innerHTML=`
+  <div class="window v-${variant.toLowerCase()}">
+    <aside class="sidebar">
+      <div class="traffic"><i></i><i></i><i></i></div>
+      <div class="back">← &nbsp; Back to app</div>
+      <div class="group">Settings</div>
+      ${nav('General','☷')}${nav('Models','▥')}${nav('Appearance','◉')}${nav('Shortcuts','⌨')}${nav('Projects','▣')}
+      <div class="group">Agent capabilities</div>
+      ${nav('Marketplace','◇',1)}${nav('Plugins','♧')}${nav('Subagents','♙')}${nav('MCP','▤')}${nav('Skills','✧')}
+    </aside>
+    <main class="main">
+      <div class="top">Marketplace</div>
+      <div class="content">
+        <div class="market-header"><div class="market-tabs"><span class="tab active">Plugins</span><span class="tab">Marketplaces</span></div></div>
+        <div class="toolbar">
+          <select id="source"><option value="">All</option>${sources.map(s=>`<option ${s===source?'selected':''}>${escapeHTML(s)}</option>`).join('')}</select>
+          <input id="search" placeholder="Search plugins..." value="${escapeHTML(search)}">
+        </div>
+        ${list}
+      </div>
+    </main>
+  </div>
+  <div class="proto"><b>Prototype</b><button data-cyc="-1" title="Previous variant">←</button><span class="state">${variant} · ${LABELS[variant]}</span><button data-cyc="1" title="Next variant">→</button></div>`
+  document.querySelectorAll('[data-cyc]').forEach(el=>el.onclick=()=>cycle(Number(el.dataset.cyc)))
+  document.querySelectorAll('[data-install]').forEach(el=>el.onclick=()=>{installed.add(el.dataset.install);render()})
+  document.querySelectorAll('[data-menu]').forEach(el=>el.onclick=()=>alert('已装菜单(启用/禁用/打开/卸载)与现版一致,原型不展开。'))
+  const s=document.getElementById('source');if(s)s.onchange=()=>{source=s.value;render()}
+  const q=document.getElementById('search');if(q)q.oninput=()=>{search=q.value;const pos=q.selectionStart;render();const n=document.getElementById('search');n.focus();n.setSelectionRange(pos,pos)}
+}
+function cycle(n){
+  variant=VARIANTS[(VARIANTS.indexOf(variant)+n+VARIANTS.length)%VARIANTS.length]
+  const url=new URL(location.href);url.searchParams.set('variant',variant);history.replaceState({},'',url)
+  render()
+}
+document.addEventListener('keydown',e=>{
+  if(/input|select|textarea/i.test(e.target.tagName)||e.target.isContentEditable)return
+  if(e.key==='ArrowLeft')cycle(-1)
+  if(e.key==='ArrowRight')cycle(1)
+})
+render()
+</script></body></html>
