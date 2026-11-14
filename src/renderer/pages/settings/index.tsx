@@ -431,7 +431,7 @@ function SettingsPageContent({
             <SidebarInset className="min-w-0 overflow-hidden">
               {isDetailOpen ? (
                 <div
-                  className="app-region-drag flex h-10 shrink-0 items-center px-6"
+                  className="app-region-drag flex h-10 shrink-0 items-center px-4"
                   data-settings-breadcrumb-bar
                 >
                   <Breadcrumb className="app-region-no-drag">
