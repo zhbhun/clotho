@@ -13,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shadcn/select'
-import { Spinner } from '@/shadcn/spinner'
 import { toast } from '@/shadcn/toast'
 
 import {
@@ -45,6 +44,7 @@ import {
   PluginInfoRows,
 } from './plugin-detail-page'
 import { installPluginWithToast, useRestartHint } from './plugin-shared'
+import { InstallPageSkeleton, PluginDetailSkeleton } from './plugin-skeletons'
 import { useSettingsDetailStore } from './settings-detail-store'
 import { usePluginHomepages } from './use-plugin-homepages'
 
@@ -251,7 +251,7 @@ export function InstallPluginPage() {
       </div>
 
       {catalog === null && (catalogLoading || !catalogError) ? (
-        <Spinner className="self-center" />
+        <InstallPageSkeleton />
       ) : shown.length === 0 ? (
         <AgentEmpty />
       ) : (
@@ -400,7 +400,7 @@ export function InstallPluginDetailPage({ pluginId }: { pluginId: string }) {
   if (!details) {
     return (
       <section className="flex flex-col gap-4" data-install-detail-page>
-        <Spinner className="self-center" />
+        <PluginDetailSkeleton />
       </section>
     )
   }

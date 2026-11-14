@@ -36,6 +36,7 @@ import {
   refreshAllMarketplaces,
   useRestartHint,
 } from './plugin-shared'
+import { MarketplaceDetailSkeleton, PluginRowsSkeleton } from './plugin-skeletons'
 import { useSettingsDetailStore } from './settings-detail-store'
 import { SettingsList, SettingsRow } from './settings-list'
 import { useDetailDirty } from './use-detail-dirty'
@@ -124,9 +125,11 @@ export function MarketplaceListPage() {
       <div className="flex min-h-7 items-center justify-between gap-4">
         <h2 className="text-sm font-medium">
           {t('settings.agent.plugins.registered')}{' '}
-          <span className="text-foreground-subtlest">
-            {t('settings.agent.subagent.itemCount', { count: marketplaces.length })}
-          </span>
+          {!isLoading && (
+            <span className="text-foreground-subtlest">
+              {t('settings.agent.subagent.itemCount', { count: marketplaces.length })}
+            </span>
+          )}
         </h2>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={openAdd}>
@@ -145,7 +148,7 @@ export function MarketplaceListPage() {
       </div>
 
       {isLoading ? (
-        <Spinner className="self-center" />
+        <PluginRowsSkeleton />
       ) : marketplaces.length === 0 ? (
         <AgentEmpty />
       ) : (
@@ -225,7 +228,7 @@ export function MarketplaceDetailPage({ marketplaceName }: { marketplaceName: st
   if (isLoading) {
     return (
       <section className="flex flex-col gap-4" data-marketplace-detail-page>
-        <Spinner className="self-center" />
+        <MarketplaceDetailSkeleton />
       </section>
     )
   }

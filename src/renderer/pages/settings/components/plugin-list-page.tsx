@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
-import { Spinner } from '@/shadcn/spinner'
 import { Switch } from '@/shadcn/switch'
 import { toast } from '@/shadcn/toast'
 
@@ -15,6 +14,7 @@ import {
 import { AgentEmpty } from './agent-shared'
 import { updateInstalled } from './catalog-cache'
 import { RowChevron, refreshAllMarketplaces, useRestartHint } from './plugin-shared'
+import { PluginRowsSkeleton } from './plugin-skeletons'
 import { useSettingsDetailStore } from './settings-detail-store'
 import { SettingsList, SettingsRow } from './settings-list'
 
@@ -74,9 +74,11 @@ export function PluginListPage({ onOpenMarketplace }: { onOpenMarketplace?: () =
       <div className="flex min-h-7 items-center justify-between gap-4">
         <h2 className="text-sm font-medium">
           {t('settings.agent.plugins.installed')}{' '}
-          <span className="text-foreground-subtlest">
-            {t('settings.agent.subagent.itemCount', { count: plugins.length })}
-          </span>
+          {!isLoading && (
+            <span className="text-foreground-subtlest">
+              {t('settings.agent.subagent.itemCount', { count: plugins.length })}
+            </span>
+          )}
         </h2>
         <div className="flex items-center gap-2">
           <Button
@@ -97,7 +99,7 @@ export function PluginListPage({ onOpenMarketplace }: { onOpenMarketplace?: () =
       </div>
 
       {isLoading ? (
-        <Spinner className="self-center" />
+        <PluginRowsSkeleton withSwitch />
       ) : plugins.length === 0 ? (
         <AgentEmpty />
       ) : (

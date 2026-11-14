@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Badge } from '@/shadcn/badge'
-import { Spinner } from '@/shadcn/spinner'
 import { toast } from '@/shadcn/toast'
 import type { AgentPluginDetails } from '@/shared/rpc'
 
@@ -16,6 +15,7 @@ import { requestFromDesktop } from '../../../services/desktop/client'
 import { updateInstalled } from './catalog-cache'
 import { PluginAvatar } from './plugin-avatar'
 import { PluginOverflowMenu, useRestartHint } from './plugin-shared'
+import { PluginDetailSkeleton } from './plugin-skeletons'
 import { useSettingsDetailStore } from './settings-detail-store'
 
 /**
@@ -257,7 +257,7 @@ export function PluginDetailPage({ pluginId }: { pluginId: string }) {
   if (isLoading || !details) {
     return (
       <section className="flex flex-col gap-4" data-plugin-detail-page>
-        <Spinner className="self-center" />
+        <PluginDetailSkeleton />
       </section>
     )
   }
