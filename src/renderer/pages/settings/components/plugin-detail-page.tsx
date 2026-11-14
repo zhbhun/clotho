@@ -1,3 +1,4 @@
+import { Blocks, type LucideIcon, Sparkles, SquareTerminal, Waypoints, Webhook } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -11,12 +12,44 @@ import {
   removeAgentPlugin,
   setAgentPluginEnabled,
 } from '../../../services/claude/agent-config'
+import { requestFromDesktop } from '../../../services/desktop/client'
 import { updateInstalled } from './catalog-cache'
+import { PluginAvatar } from './plugin-avatar'
 import { PluginOverflowMenu, useRestartHint } from './plugin-shared'
 import { useSettingsDetailStore } from './settings-detail-store'
-import { SettingsList, SettingsRow } from './settings-list'
 
-function DetailSection({
+/**
+ * Identity line of the store-style header: neutral avatar, large title, and
+ * an "author • category" subtitle spanning exactly the avatar's height.
+ * Page actions (install button, overflow menu) align against this row.
+ */
+export function PluginDetailIdentity({
+  displayName,
+  name,
+  author,
+  category,
+}: Pick<AgentPluginDetails, 'displayName' | 'name'> & {
+  author?: string
+  category?: string
+}) {
+  const { t } = useTranslation()
+  const subtitle = [author ? t('settings.agent.plugins.byAuthor', { author }) : undefined, category]
+    .filter(Boolean)
+    .join(' • ')
+  return (
+    <div className="flex items-center gap-5">
+      <PluginAvatar className="size-14 rounded-2xl text-xl" name={name} variant="neutral" />
+      <div className="min-w-0">
+        <h1 className="truncate text-2xl font-semibold tracking-tight">{displayName ?? name}</h1>
+        {subtitle ? (
+          <p className="mt-1 truncate text-base text-foreground-subtle">{subtitle}</p>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+export function DetailSection({
   count,
   title,
   children,
@@ -26,33 +59,64 @@ function DetailSection({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex flex-col gap-2">
-      <h3 className="flex items-center gap-1.5 text-sm font-medium">
+    <div className="flex flex-col">
+      <h3 className="flex items-baseline gap-2 border-b pb-3 text-lg font-semibold">
         {title}
         {typeof count === 'number' ? (
-          <span className="text-foreground-subtlest">{count}</span>
+          <span className="text-sm font-normal text-foreground-subtlest">{count}</span>
         ) : null}
       </h3>
-      {children}
+      <div className="pt-2">{children}</div>
     </div>
   )
 }
 
-function DetailRows({ rows }: { rows: { name: string; description?: string }[] }) {
+/** Icon chip shown at the start of each component row (prototype `.comp-icon`). */
+const SECTION_ICONS: Record<string, LucideIcon> = {
+  skills: Sparkles,
+  commands: SquareTerminal,
+  mcpServers: Blocks,
+  subagents: Waypoints,
+  hooks: Webhook,
+}
+
+/** `subagent-driven-development` → `Subagent-driven Development` for display. */
+function componentDisplayName(name: string): string {
+  return name
+    .split('-')
+    .filter(Boolean)
+    .map((word) => word[0].toUpperCase() + word.slice(1))
+    .join(' ')
+}
+
+function DetailRows({
+  kind,
+  rows,
+}: {
+  kind: keyof typeof SECTION_ICONS
+  rows: { name: string; description?: string }[]
+}) {
   if (rows.length === 0) return null
+  const Icon = SECTION_ICONS[kind]
   return (
-    <SettingsList>
+    <div className="flex flex-col pt-1">
       {rows.map((row) => (
-        <SettingsRow className="min-h-12 gap-3" key={row.name} variant="compact">
+        <div className="flex items-center gap-4 py-3" key={row.name}>
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-muted opacity-80">
+            <Icon className="size-3.5" />
+          </div>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-normal">{row.name}</div>
+            <div className="truncate">
+              {/* Event names (SessionStart) are proper nouns — no title-casing. */}
+              {kind === 'hooks' ? row.name : componentDisplayName(row.name)}
+            </div>
             {row.description ? (
-              <div className="truncate text-sm text-foreground-subtle">{row.description}</div>
+              <div className="truncate text-foreground-subtlest">{row.description}</div>
             ) : null}
           </div>
-        </SettingsRow>
+        </div>
       ))}
-    </SettingsList>
+    </div>
   )
 }
 
@@ -60,37 +124,62 @@ function DetailRows({ rows }: { rows: { name: string; description?: string }[] }
 export function PluginDetailSections({
   details,
 }: {
-  details: Pick<AgentPluginDetails, 'skills' | 'mcpServers' | 'subagents'>
+  details: Pick<AgentPluginDetails, 'skills' | 'commands' | 'mcpServers' | 'subagents' | 'hooks'>
 }) {
   const { t } = useTranslation()
+  const sections = [
+    { key: 'skills', title: t('settings.agent.plugins.skills'), rows: details.skills },
+    { key: 'commands', title: t('settings.agent.plugins.commands'), rows: details.commands },
+    {
+      key: 'mcpServers',
+      title: t('settings.agent.plugins.mcpServers'),
+      rows: details.mcpServers,
+    },
+    { key: 'subagents', title: t('settings.agent.plugins.subagents'), rows: details.subagents },
+    { key: 'hooks', title: t('settings.agent.plugins.hooks'), rows: details.hooks },
+  ] as const
   return (
     <>
-      <DetailSection count={details.skills.length} title={t('settings.agent.plugins.skills')}>
-        <DetailRows rows={details.skills} />
-      </DetailSection>
-      <DetailSection
-        count={details.mcpServers.length}
-        title={t('settings.agent.plugins.mcpServers')}
-      >
-        <DetailRows rows={details.mcpServers} />
-      </DetailSection>
-      <DetailSection count={details.subagents.length} title={t('settings.agent.plugins.subagents')}>
-        <DetailRows rows={details.subagents} />
-      </DetailSection>
+      {sections
+        .filter((section) => section.rows.length > 0)
+        .map((section) => (
+          <DetailSection key={section.key} count={section.rows.length} title={section.title}>
+            <DetailRows kind={section.key} rows={[...section.rows]} />
+          </DetailSection>
+        ))}
     </>
   )
 }
 
-/** Key/value rows of the detail Info block. */
-export function PluginInfoRows({ rows }: { rows: { key: string; value?: string | number }[] }) {
-  const visible = rows.filter((row) => Boolean(row.value))
+/** Key/value rows of the detail Info block; unknown values are omitted per row. */
+export function PluginInfoRows({
+  rows,
+  onOpenLink,
+}: {
+  rows: { key: string; value?: string | number; link?: string }[]
+  /** Opens `link` values via the app link opener; omitted rows render as text. */
+  onOpenLink?: (href: string) => void
+}) {
+  // Unknown is `undefined`; `0` (e.g. install count) is a known value and stays.
+  const visible = rows.filter((row) => row.value !== undefined)
   if (visible.length === 0) return null
   return (
-    <div className="flex flex-col gap-2 rounded-lg border px-4 py-3">
+    <div className="flex flex-col gap-4 pt-1">
       {visible.map((row) => (
-        <div className="grid grid-cols-[110px_1fr] gap-4 text-sm" key={row.key}>
+        <div className="grid grid-cols-[110px_1fr] gap-4" key={row.key}>
           <span className="text-foreground-subtlest">{row.key}</span>
-          <span className="min-w-0 truncate text-sm font-normal">{row.value}</span>
+          {row.link && onOpenLink ? (
+            <button
+              type="button"
+              title={row.link}
+              className="min-w-0 cursor-pointer truncate text-start text-foreground transition-colors hover:text-brand"
+              onClick={() => onOpenLink(row.link as string)}
+            >
+              {row.value}
+            </button>
+          ) : (
+            <span className="min-w-0 truncate">{row.value}</span>
+          )}
         </div>
       ))}
     </div>
@@ -104,6 +193,8 @@ export function PluginInfoRows({ rows }: { rows: { key: string; value?: string |
 export function PluginDetailPage({ pluginId }: { pluginId: string }) {
   const { t } = useTranslation()
   const [details, setDetails] = useState<AgentPluginDetails | null>(null)
+  const openLink = (href: string) =>
+    void requestFromDesktop('appOpenLink', { href, projectPath: '' })
   const [isLoading, setIsLoading] = useState(true)
   const backToList = useSettingsDetailStore((state) => state.backToList)
   const notifyRestart = useRestartHint()
@@ -171,10 +262,15 @@ export function PluginDetailPage({ pluginId }: { pluginId: string }) {
     )
   }
 
-  const info: { key: string; value?: string }[] = [
+  const info: { key: string; value?: string; link?: string }[] = [
     { key: t('settings.agent.plugins.author'), value: details.author },
     { key: t('settings.agent.plugins.category'), value: details.category },
     { key: t('settings.agent.plugins.version'), value: details.version },
+    {
+      key: t('settings.agent.plugins.homepage'),
+      value: details.homepage,
+      link: details.homepage,
+    },
     { key: t('settings.agent.plugins.marketplace'), value: details.marketplace },
     { key: t('settings.agent.plugins.rootPath'), value: details.installPath },
     {
@@ -193,13 +289,13 @@ export function PluginDetailPage({ pluginId }: { pluginId: string }) {
 
   return (
     <section className="flex flex-col gap-5" data-plugin-detail-page>
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="truncate text-xl font-medium tracking-tight">{details.name}</h1>
-          {details.description ? (
-            <p className="mt-1 text-sm text-foreground-subtlest">{details.description}</p>
-          ) : null}
-        </div>
+      <div className="flex items-center justify-between gap-4">
+        <PluginDetailIdentity
+          author={details.author}
+          category={details.category}
+          displayName={details.displayName}
+          name={details.name}
+        />
         <div className="flex shrink-0 items-center gap-2">
           {details.installed ? (
             <PluginOverflowMenu
@@ -221,26 +317,27 @@ export function PluginDetailPage({ pluginId }: { pluginId: string }) {
           ) : null}
         </div>
       </div>
+      {details.description ? (
+        <p className="text-sm text-foreground-subtlest">{details.description}</p>
+      ) : null}
 
       <PluginDetailSections details={details} />
 
       <DetailSection title={t('settings.agent.plugins.info')}>
-        <PluginInfoRows rows={info} />
-        <div className="flex flex-col gap-2 rounded-lg border px-4 py-3">
-          <div className="grid grid-cols-[110px_1fr] gap-4 text-sm">
-            <span className="text-foreground-subtlest">{t('settings.agent.enabled')}</span>
-            <span>
-              {details.installed ? (
-                <Badge variant="secondary">
-                  {details.enabled
-                    ? t('settings.agent.plugins.enable')
-                    : t('settings.agent.plugins.disable')}
-                </Badge>
-              ) : (
-                <Badge variant="secondary">{t('settings.agent.plugins.installed')}</Badge>
-              )}
-            </span>
-          </div>
+        <PluginInfoRows rows={info} onOpenLink={openLink} />
+        <div className="grid grid-cols-[110px_1fr] gap-4 pt-4">
+          <span className="text-foreground-subtlest">{t('settings.agent.enabled')}</span>
+          <span>
+            {details.installed ? (
+              <Badge variant="secondary">
+                {details.enabled
+                  ? t('settings.agent.plugins.enable')
+                  : t('settings.agent.plugins.disable')}
+              </Badge>
+            ) : (
+              <Badge variant="secondary">{t('settings.agent.plugins.installed')}</Badge>
+            )}
+          </span>
         </div>
       </DetailSection>
     </section>

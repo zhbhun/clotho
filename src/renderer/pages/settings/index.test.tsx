@@ -227,8 +227,10 @@ describe('SettingsPage', () => {
       description: 'Formatter details',
       installed: false,
       skills: [],
+      commands: [],
       mcpServers: [],
       subagents: [],
+      hooks: [],
     })
     const addMarketplace = vi.spyOn(agentConfig, 'addAgentMarketplace').mockResolvedValue(undefined)
     const user = userEvent.setup()

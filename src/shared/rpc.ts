@@ -297,6 +297,7 @@ export interface AgentMarketplacePlugin {
   description?: string
   marketplaceName: string
   installCount?: number
+  version?: string
 }
 
 export interface AgentMarketplaceInfo {
@@ -317,18 +318,24 @@ export interface AgentPluginMcpInfo {
 }
 
 /**
- * Detail data for one plugin, assembled by the main process from the plugin's
- * install-path manifests and the installed record. For a catalog entry with no
- * local install, only the catalog fields are present and component lists are
- * empty.
+ * Detail data for one plugin, assembled by the main process from local sources
+ * in increasing precedence — the marketplace snapshot manifest, the CLI catalog
+ * cache, the plugin's download-cache revision (while uninstalled), the
+ * install-path manifests, and the installed record: local sources fill fields
+ * and component lists the installed data lacks (author, category, homepage,
+ * displayName, version, components for uninstalled plugins). For a catalog
+ * entry with no local install, only the catalog/snapshot/cache fields are
+ * present.
  */
 export interface AgentPluginDetails {
   /** `<plugin>@<marketplace>`; the id used to install it. */
   pluginId: string
   name: string
+  /** Store display name from a marketplace snapshot when known. */
+  displayName?: string
   description?: string
   author?: string
-  /** Plugin category, derived from the manifest's first keyword when known. */
+  /** Plugin category (snapshot/manifest keyword or category slug) when known. */
   category?: string
   homepage?: string
   version?: string
@@ -340,8 +347,10 @@ export interface AgentPluginDetails {
   installed: boolean
   installCount?: number
   skills: AgentPluginComponentInfo[]
+  commands: AgentPluginComponentInfo[]
   mcpServers: AgentPluginMcpInfo[]
   subagents: AgentPluginComponentInfo[]
+  hooks: AgentPluginComponentInfo[]
 }
 
 export interface AgentWorkflowInfo {

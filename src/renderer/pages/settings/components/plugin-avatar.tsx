@@ -11,16 +11,29 @@ export function pluginNameHue(name: string): number {
   return Math.round((hash * 137.508) % 360) % 360
 }
 
-export function PluginAvatar({ name }: { name: string }) {
+export function PluginAvatar({
+  name,
+  className,
+  variant = 'accent',
+}: {
+  name: string
+  className?: string
+  /** `accent`: name-hue tile (store list). `neutral`: muted tile (detail header). */
+  variant?: 'accent' | 'neutral'
+}) {
   const hue = pluginNameHue(name)
   const letter = (Array.from(name)[0] ?? '?').toUpperCase()
+  const palette =
+    variant === 'neutral'
+      ? 'bg-muted text-foreground-subtle ring-1 ring-inset ring-border'
+      : 'bg-[hsl(var(--avatar-hue)_70%_90%)] text-[hsl(var(--avatar-hue)_46%_34%)] dark:bg-[hsl(var(--avatar-hue)_45%_22%)] dark:text-[hsl(var(--avatar-hue)_65%_78%)]'
   // Pastel-on-light and deep-on-dark: one hue variable, inverted lightness
   // split per theme so the tile never glows on dark surfaces.
   const style = { '--avatar-hue': hue } as CSSProperties
   return (
     <div
       aria-hidden
-      className="flex size-9 shrink-0 select-none items-center justify-center rounded-lg bg-[hsl(var(--avatar-hue)_70%_90%)] text-[15px] font-semibold text-[hsl(var(--avatar-hue)_46%_34%)] dark:bg-[hsl(var(--avatar-hue)_45%_22%)] dark:text-[hsl(var(--avatar-hue)_65%_78%)]"
+      className={`flex size-9 shrink-0 select-none items-center justify-center rounded-lg ${palette} ${className ?? ''}`}
       style={style}
     >
       {letter}

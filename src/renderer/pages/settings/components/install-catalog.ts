@@ -20,6 +20,7 @@ export interface CatalogEntry {
   description?: string
   marketplaceName: string
   installCount?: number
+  version?: string
   source: CatalogSource
 }
 
@@ -60,6 +61,7 @@ export function dedupeCatalog(
       description: entry.description,
       marketplaceName: entry.marketplaceName,
       installCount: entry.installCount,
+      ...(entry.version ? { version: entry.version } : {}),
       source: isDirectoryMarketplace(entry.marketplaceName) ? 'directory' : 'marketplace',
     }
     const current = byName.get(entry.name)

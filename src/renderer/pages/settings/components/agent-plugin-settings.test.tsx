@@ -13,7 +13,7 @@ import * as agentConfig from '../../../services/claude/agent-config'
 import { ShortcutRuntimeProvider, shortcutRuntime } from '../../../services/shortcuts/runtime'
 import { AgentPluginSettings } from './agent-plugin-settings'
 import { useCatalogCache } from './catalog-cache'
-import { InstallPluginPage } from './install-page'
+import { InstallPluginDetailPage, InstallPluginPage } from './install-page'
 import { MarketplaceAddPage } from './marketplace-pages'
 import { useSettingsDetailStore } from './settings-detail-store'
 
@@ -160,8 +160,10 @@ describe('AgentPluginSettings list page', () => {
       enabled: true,
       installed: true,
       skills: [{ name: 'format', description: 'Format a file' }],
+      commands: [],
       mcpServers: [],
       subagents: [],
+      hooks: [],
     })
     const user = userEvent.setup()
     renderWithProviders(<AgentPluginSettings />)
@@ -172,7 +174,7 @@ describe('AgentPluginSettings list page', () => {
     const view = useSettingsDetailStore.getState().view
     if (view.kind === 'detail') expect(view.file).toBe('formatter@acme')
     expect(await screen.findByText('Formats things')).toBeInTheDocument()
-    expect(screen.getByText('format')).toBeInTheDocument()
+    expect(screen.getByText('Format')).toBeInTheDocument()
   })
 
   it('refreshes all marketplaces from the header refresh button', async () => {
@@ -198,8 +200,10 @@ describe('PluginDetailPage', () => {
     enabled: true,
     installed: true,
     skills: [{ name: 'format', description: 'Format a file' }],
+    commands: [] as { name: string; description?: string }[],
     mcpServers: [{ name: 'fmt-server', summary: 'stdio' }],
-    subagents: [],
+    subagents: [] as { name: string; description?: string }[],
+    hooks: [] as { name: string; description?: string }[],
   }
 
   function openDetail() {
@@ -223,8 +227,8 @@ describe('PluginDetailPage', () => {
     renderWithProviders(<AgentPluginSettings />)
 
     expect(await screen.findByText('Formats things')).toBeInTheDocument()
-    expect(screen.getByText('format')).toBeInTheDocument()
-    expect(screen.getByText('fmt-server')).toBeInTheDocument()
+    expect(screen.getByText('Format')).toBeInTheDocument()
+    expect(screen.getByText('Fmt Server')).toBeInTheDocument()
     expect(screen.getByText('/tmp/formatter')).toBeInTheDocument()
     // Installed entries show their enable state in the info block.
     expect(screen.getByText('启用')).toBeInTheDocument()
@@ -463,8 +467,10 @@ describe('InstallPluginPage', () => {
     name: '',
     installed: true,
     skills: [],
+    commands: [],
     mcpServers: [],
     subagents: [],
+    hooks: [],
   }
 
   function catalogEntry(overrides: Partial<agentConfig.AgentMarketplacePlugin> = {}) {
@@ -521,7 +527,7 @@ describe('InstallPluginPage', () => {
     const user = userEvent.setup()
     renderWithProviders(<InstallPluginPage />)
 
-    await user.click(await (await findInstallList()).findByRole('button', { name: '安装' }))
+    await user.click(await (await findInstallList()).findByRole('button', { name: '安装插件' }))
     expect(
       await (await findInstallList()).findByRole('button', { name: '更多操作' }),
     ).toBeInTheDocument()
@@ -579,7 +585,7 @@ describe('InstallPluginPage', () => {
     // Exactly one superpowers row, shown as installed (⋮ menu instead of +).
     expect(list.getAllByText('superpowers')).toHaveLength(1)
     expect(list.getByRole('button', { name: '更多操作' })).toBeInTheDocument()
-    expect(list.queryByRole('button', { name: '安装' })).toBeNull()
+    expect(list.queryByRole('button', { name: '安装插件' })).toBeNull()
     // The registered marketplace wins as the source label; no directory copy.
     expect(list.getByText('superpowers-marketplace')).toBeInTheDocument()
     expect(list.queryByText('anthropic-plugin-directory')).toBeNull()
@@ -703,7 +709,7 @@ describe('InstallPluginPage', () => {
     await waitFor(() => expect(mock.removeAgentPlugin).toHaveBeenCalledWith('formatter@acme'))
     expect(await screen.findByText('插件变更将在新会话中生效')).toBeInTheDocument()
     const list = await findInstallList()
-    expect(list.getByRole('button', { name: '安装' })).toBeInTheDocument()
+    expect(list.getByRole('button', { name: '安装插件' })).toBeInTheDocument()
     expect(list.queryByRole('button', { name: '更多操作' })).toBeNull()
   })
 
@@ -713,7 +719,7 @@ describe('InstallPluginPage', () => {
     const user = userEvent.setup()
     renderWithProviders(<InstallPluginPage />)
 
-    const installButton = await (await findInstallList()).findByRole('button', { name: '安装' })
+    const installButton = await (await findInstallList()).findByRole('button', { name: '安装插件' })
     mock.listAgentPlugins.mockResolvedValue([installedPlugin()])
     await user.click(installButton)
 
@@ -721,6 +727,120 @@ describe('InstallPluginPage', () => {
     expect(await screen.findByText('插件变更将在新会话中生效')).toBeInTheDocument()
     const list = await findInstallList()
     expect(list.getByRole('button', { name: '更多操作' })).toBeInTheDocument()
-    expect(list.queryByRole('button', { name: '安装' })).toBeNull()
+    expect(list.queryByRole('button', { name: '安装插件' })).toBeNull()
+  })
+})
+
+describe('InstallPluginDetailPage', () => {
+  it('renders catalog-cache component sections for an uninstalled entry', async () => {
+    mock.getAgentPluginDetails.mockResolvedValue({
+      pluginId: 'stripe@claude-plugins-official',
+      name: 'stripe',
+      displayName: 'Stripe',
+      description: 'Stripe development plugin',
+      category: 'development',
+      version: '1.5.5',
+      marketplace: 'claude-plugins-official',
+      installCount: 87174,
+      installed: false,
+      skills: [{ name: 'stripe-pay', description: 'Payment flows' }],
+      commands: [{ name: 'test-cards' }],
+      mcpServers: [{ name: 'stripe' }],
+      subagents: [{ name: 'researcher' }],
+      hooks: [],
+    })
+    renderWithProviders(<InstallPluginDetailPage pluginId="stripe@claude-plugins-official" />)
+
+    // Section titles with counts (skills count scoped to its heading).
+    expect(await screen.findByText('技能')).toBeInTheDocument()
+    const skillsHeading = screen.getByText('技能').closest('h3')
+    assert(skillsHeading instanceof HTMLHeadingElement)
+    expect(within(skillsHeading).getByText('1')).toBeInTheDocument()
+    expect(screen.getByText('命令')).toBeInTheDocument()
+    expect(screen.getByText('MCP 服务器')).toBeInTheDocument()
+    expect(screen.getByText('子智能体')).toBeInTheDocument()
+    // Empty sections are omitted (hooks).
+    expect(screen.queryByText('Hooks')).toBeNull()
+    // Component rows render.
+    expect(screen.getByText('Stripe Pay')).toBeInTheDocument()
+    expect(screen.getByText('Test Cards')).toBeInTheDocument()
+    // Info block rows: version + installs, no author.
+    expect(screen.getByText('1.5.5')).toBeInTheDocument()
+    expect(screen.getByText('87,174')).toBeInTheDocument()
+    expect(screen.queryByText('开发者')).toBeNull()
+    // Install action for uninstalled entries.
+    expect(screen.getByRole('button', { name: '安装插件' })).toBeInTheDocument()
+  })
+
+  it('shows a thin detail for a directory-only entry with no component data', async () => {
+    mock.getAgentPluginDetails.mockResolvedValue({
+      pluginId: 'docs@anthropic-plugin-directory',
+      name: 'docs',
+      description: 'Docs workflows',
+      version: '1.2.0',
+      marketplace: 'anthropic-plugin-directory',
+      installed: false,
+      skills: [],
+      commands: [],
+      mcpServers: [],
+      subagents: [],
+      hooks: [],
+    })
+    renderWithProviders(<InstallPluginDetailPage pluginId="docs@anthropic-plugin-directory" />)
+
+    expect(await screen.findByText('Docs workflows')).toBeInTheDocument()
+    expect(screen.getByText('信息')).toBeInTheDocument()
+    expect(screen.getByText('1.2.0')).toBeInTheDocument()
+    expect(screen.queryByText('技能')).toBeNull()
+    expect(screen.queryByText('命令')).toBeNull()
+    expect(screen.queryByText('MCP 服务器')).toBeNull()
+    expect(screen.queryByText('子智能体')).toBeNull()
+  })
+
+  it('renders the homepage as a clickable row value', async () => {
+    mock.getAgentPluginDetails.mockResolvedValue({
+      pluginId: 'fmt@acme',
+      name: 'fmt',
+      description: 'Formats things',
+      homepage: 'https://example.com/fmt',
+      installed: false,
+      skills: [],
+      commands: [],
+      mcpServers: [],
+      subagents: [],
+      hooks: [],
+    })
+    const user = userEvent.setup()
+    renderWithProviders(<InstallPluginDetailPage pluginId="fmt@acme" />)
+
+    const link = await screen.findByRole('button', { name: 'https://example.com/fmt' })
+    await user.click(link)
+    const { requestFromDesktop } = await import('../../../services/desktop/client')
+    expect(requestFromDesktop).toHaveBeenCalledWith('appOpenLink', {
+      href: 'https://example.com/fmt',
+      projectPath: '',
+    })
+  })
+
+  it('installs from the detail page and flips to the Installed badge', async () => {
+    mock.getAgentPluginDetails.mockResolvedValue({
+      pluginId: 'fmt@acme',
+      name: 'fmt',
+      description: 'Formats things',
+      installed: false,
+      skills: [],
+      commands: [],
+      mcpServers: [],
+      subagents: [],
+      hooks: [],
+    })
+    mock.installAgentPlugin.mockResolvedValue(undefined)
+    const user = userEvent.setup()
+    renderWithProviders(<InstallPluginDetailPage pluginId="fmt@acme" />)
+
+    await user.click(await screen.findByRole('button', { name: '安装插件' }))
+    await waitFor(() => expect(mock.installAgentPlugin).toHaveBeenCalledWith('fmt@acme'))
+    expect(await screen.findByText('已安装')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '安装插件' })).toBeNull()
   })
 })

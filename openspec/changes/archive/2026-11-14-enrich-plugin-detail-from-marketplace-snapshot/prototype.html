@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE: 插件详情富信息</title>
+<!--
+  PROTOTYPE (throwaway) · 问题：clotho 插件详情页改读本地 marketplace.json 快照后长什么样？
+  三个变体（?variant= 切换，←/→ 键循环）：
+    A 分区详情页 —— ZCode 式：组件分区(Skills/Commands/Agents/MCP) + Information 表
+    B 单页混排   —— 头部大图标 + 徽章行 + 两栏（左组件右信息），密度更高
+    C 瘦目录现状 —— directory 插件 today 的样子（对照组），外加"本地数据天花板"注记
+  数据全部取自本机真实缓存（claude-plugins-official marketplace.json / catalog cache /
+  directory cache / superpowers cache 的 SKILL.md frontmatter），非虚构。
+-->
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #171717;
+    --muted: #737373;
+    --faint: #a3a3a3;
+    --border: #e5e5e5;
+    --card: #ffffff;
+    --subtle: #f7f7f7;
+    --pill-bg: #f4f4f4;
+    --accent: #171717;
+    --link: #2563eb;
+    --warn-bg: #fffbeb;
+    --warn-border: #fde68a;
+    --warn-fg: #92400e;
+    --icon-bg: #f0f0f0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #282a36;
+      --fg: #f8f8f2;
+      --muted: #8b8fa3;
+      --faint: #5b6078;
+      --border: #3a3d4d;
+      --card: #2e3041;
+      --subtle: #242634;
+      --pill-bg: #34374a;
+      --accent: #ff79c6;
+      --link: #7aa2f7;
+      --warn-bg: #3a3223;
+      --warn-border: #5a4d2a;
+      --warn-fg: #e5c07b;
+      --icon-bg: #34374a;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+    background: var(--bg); color: var(--fg);
+    font-size: 14px; line-height: 1.5;
+  }
+  .app { display: flex; height: 100vh; }
+
+  /* ── sidebar (mimics clotho settings shell) ── */
+  .sidebar {
+    width: 220px; border-right: 1px solid var(--border);
+    padding: 14px 10px; flex-shrink: 0; overflow-y: auto;
+  }
+  .crumb { font-size: 12px; color: var(--muted); padding: 0 8px 14px; }
+  .crumb b { color: var(--fg); font-weight: 500; }
+  .side-title { font-size: 11px; font-weight: 500; color: var(--muted); padding: 4px 8px 6px; letter-spacing: .02em; }
+  .nav-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 8px; border-radius: 6px; font-size: 13px; color: var(--fg);
+  }
+  .nav-item.dim { color: var(--muted); }
+  .nav-item.active { background: var(--subtle); font-weight: 500; }
+  .nav-item .icon { width: 15px; text-align: center; opacity: .55; flex-shrink: 0; font-size: 12px; }
+
+  /* ── content pane ── */
+  .content { flex: 1; overflow-y: auto; padding: 28px 36px 120px; }
+  .content-inner { max-width: 760px; margin: 0 auto; }
+  .back { font-size: 13px; color: var(--muted); margin-bottom: 20px; cursor: pointer; }
+  .back:hover { color: var(--fg); }
+
+  /* ── hero ── */
+  .avatar {
+    width: 64px; height: 64px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 600; background: var(--icon-bg); margin-bottom: 14px;
+  }
+  .titlebar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  h1 { font-size: 21px; font-weight: 600; letter-spacing: -.01em; }
+  .badge {
+    font-size: 11px; padding: 2px 8px; border-radius: 999px;
+    background: var(--pill-bg); color: var(--muted); font-weight: 500;
+  }
+  .badge.ok { color: #16a34a; }
+  .desc { margin-top: 10px; color: var(--muted); font-size: 14px; max-width: 640px; }
+  .meta-line { margin-top: 8px; font-size: 12.5px; color: var(--faint); display: flex; gap: 14px; flex-wrap: wrap; }
+  .meta-line .u { color: var(--link); text-decoration: none; cursor: pointer; }
+  .meta-line .u:hover { text-decoration: underline; }
+
+  /* ── install button ── */
+  .btn {
+    margin-left: auto; padding: 7px 18px; border-radius: 8px; border: none;
+    background: var(--accent); color: var(--bg); font-size: 13.5px; font-weight: 500; cursor: pointer;
+  }
+
+  /* ── sections ── */
+  .section { margin-top: 34px; }
+  .section-head {
+    display: flex; align-items: baseline; gap: 8px;
+    border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 4px;
+  }
+  .section-head h2 { font-size: 15px; font-weight: 600; }
+  .section-head .n { font-size: 13px; color: var(--faint); }
+  .comp-row { display: flex; gap: 12px; padding: 10px 2px; border-bottom: 1px solid var(--border); align-items: flex-start; }
+  .comp-row:last-child { border-bottom: none; }
+  .comp-icon {
+    width: 28px; height: 28px; border-radius: 8px; background: var(--icon-bg);
+    display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; opacity: .8;
+  }
+  .comp-name { font-size: 13.5px; font-weight: 500; }
+  .comp-desc {
+    font-size: 12.5px; color: var(--muted);
+    display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .comp-row.open .comp-desc { -webkit-line-clamp: 3; }
+
+  /* ── info table ── */
+  .info-grid { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .info-row { display: grid; grid-template-columns: 110px 1fr; gap: 12px; font-size: 13.5px; }
+  .info-row .k { color: var(--faint); }
+  .info-row .v { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .info-row .v a { color: var(--link); text-decoration: none; }
+  .info-row .v a:hover { text-decoration: underline; }
+
+  .note {
+    margin-top: 26px; padding: 10px 14px; border-radius: 10px; font-size: 12.5px;
+    background: var(--warn-bg); border: 1px solid var(--warn-border); color: var(--warn-fg);
+    line-height: 1.6;
+  }
+
+  /* ── variant C (thin) ── */
+  .thin-info { margin-top: 10px; border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+
+  /* ── prototype switcher ── */
+  .switcher {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 4px;
+    background: var(--fg); color: var(--bg);
+    border-radius: 999px; padding: 6px 10px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.35);
+    z-index: 99; user-select: none;
+  }
+  .switcher button {
+    all: unset; cursor: pointer; padding: 2px 10px; font-size: 15px; color: var(--bg); border-radius: 6px;
+  }
+  .switcher button:hover { background: rgba(255,255,255,.15); }
+  .switcher .label { font-size: 12.5px; min-width: 240px; text-align: center; color: var(--bg); }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="crumb">设置 / <b>插件市场</b></div>
+    <div class="side-title">插件</div>
+    <div class="nav-item dim"><span class="icon">⧉</span>已安装</div>
+    <div class="nav-item active"><span class="icon">✦</span>市场</div>
+    <div class="nav-item dim"><span class="icon">⌂</span>市场源</div>
+  </aside>
+
+  <main class="content"><div class="content-inner" id="content"></div></main>
+</div>
+
+<div class="switcher" id="switcher">
+  <button id="prev" title="上一个变体">←</button>
+  <div class="label" id="varLabel"></div>
+  <button id="next" title="下一个变体">→</button>
+</div>
+
+<script>
+/* ── 真实数据：取自本机 ~/.claude/plugins 各缓存（2026-11-11） ── */
+const DATA = {
+  // stripe@claude-plugins-official：官方 marketplace.json 条目 + catalog cache 组件清单
+  stripe: {
+    id: 'stripe@claude-plugins-official',
+    name: 'stripe',
+    displayName: 'Stripe',
+    description: 'Stripe development plugin for Claude',
+    longDesc: 'Access Stripe docs, manage projects, and follow Stripe best practices directly in Claude Code. Includes payment flow guidance, test cards, and MCP access to your Stripe account.',
+    author: null, // marketplace.json 里 stripe 无 author → 用目录回退演示「author 缺失时的行省略」
+    category: 'development',
+    categoryZh: '开发工具',
+    homepage: 'https://github.com/stripe/ai/tree/main/providers/claude/plugin',
+    version: null,
+    installCount: 87174,
+    lastUpdated: '2026-10-21',
+    components: {
+      skills: [
+        ['stripe-pay', 'Integrate Stripe payment flows: checkout, payment links, subscriptions, and refunds following current API best practices.'],
+        ['stripe-best-practices', 'Stripe integration patterns and anti-patterns: idempotency keys, webhook signature checks, and error handling.'],
+        ['stripe-projects', 'Inspect and manage Stripe projects: list keys, environments, and linked resources.'],
+        ['stripe-docs', 'Search and cite the current Stripe documentation for any API, SDK, or product area.'],
+        ['stripe-apps', 'Build Stripe Apps: embed UI extensions inside the Stripe Dashboard.'],
+      ],
+      commands: [
+        ['explain-error', 'Explain a Stripe API error code and how to resolve it.'],
+        ['test-cards', 'List Stripe test card numbers by scenario: declines, 3DS, disputes.'],
+      ],
+      agents: [
+        ['company-researcher', 'Research a company\'s Stripe usage and integration surface before making changes.'],
+      ],
+      mcp: [['stripe', 'Stripe MCP server — remote, account-scoped tools for balances, charges, and refunds.']],
+      hooks: [['SessionStart · PostToolUse · UserPromptSubmit …', '5 hook events declared in plugin manifest.']],
+    },
+    installed: false,
+  },
+  // honeycomb：官方条目，author/category/homepage 全齐
+  honeycomb: {
+    id: 'honeycomb@claude-plugins-official',
+    name: 'honeycomb',
+    displayName: 'Honeycomb',
+    description: 'Skills, agents, and workflows for Honeycomb observability — query patterns, production investigations, SLOs, OpenTelemetry instrumentation, and Beeline migration. Designed to complement the Honeycomb MCP server.',
+    author: 'Honeycomb',
+    category: 'monitoring',
+    categoryZh: '可观测性',
+    homepage: 'https://www.honeycomb.io',
+    version: null,
+    installCount: null,
+    lastUpdated: null,
+    components: { skills: [['query-patterns', 'Honeycomb query patterns: BubbleUp,heatmaps, and high-cardinality exploration.']] },
+    installed: false,
+  },
+  // superpowers@anthropic-plugin-directory：directory 条目（瘦）+ 本机 cache 残留源码的 SKILL.md
+  superpowers: {
+    id: 'superpowers@anthropic-plugin-directory',
+    name: 'superpowers',
+    displayName: 'Superpowers',
+    directorySummary: 'Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques',
+    description: 'Core skills library for Claude Code: TDD, debugging, collaboration patterns, and proven techniques',
+    author: null,
+    repo: 'https://github.com/obra/superpowers',
+    version: '6.4.2',
+    installCount: null,
+    category: null,
+    fromCache: {
+      author: 'Jesse Vincent',
+      homepage: 'https://github.com/obra/superpowers',
+      keywords: ['skills', 'tdd', 'debugging', 'collaboration', 'best-practices', 'workflows'],
+      skills: [
+        ['brainstorming', 'You MUST use this before any creative work — creating features, building components, adding functionality.'],
+        ['test-driven-development', 'Red-green-refactor discipline: never write implementation code before a failing test exists.'],
+        ['systematic-debugging', 'Four-phase root-cause debugging: reproduce, isolate, fix, verify.'],
+        ['dispatching-parallel-agents', 'Use when facing 2+ independent tasks that can be worked on without shared state.'],
+        ['executing-plans', 'Use when executing an implementation plan in the current session as the implementer.'],
+        ['using-git-worktrees', 'Use when starting feature work that needs isolation from the current workspace.'],
+      ],
+    },
+    installed: false,
+  },
+};
+
+/* ── 渲染辅助 ── */
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const icon = k => ({skills:'✦',commands:'⌘',agents:'◉',mcp:'={} ',hooks:'⚓'}[k] || '·');
+
+function hero(d) {
+  return `
+    <div class="avatar">${esc(d.displayName[0])}</div>
+    <div class="titlebar">
+      <h1>${esc(d.displayName)}</h1>
+      ${d.category ? `<span class="badge">${esc(d.categoryZh || d.category)}</span>` : ''}
+      ${d.installed ? '<span class="badge ok">已安装</span>' : `<button class="btn">安装</button>`}
+    </div>
+    <p class="desc">${esc(d.longDesc || d.description)}</p>
+    <div class="meta-line">
+      ${d.version ? `<span>v${esc(d.version)}</span>` : ''}
+      ${d.author ? `<span>${esc(d.author)}</span>` : ''}
+      ${typeof d.installCount === 'number' ? `<span>⭳ ${d.installCount.toLocaleString()} 次安装</span>` : ''}
+      ${d.homepage ? `<a class="u" href="#">${esc(shortUrl(d.homepage))} ↗</a>` : (d.repo ? `<a class="u" href="#">${esc(shortUrl(d.repo))} ↗</a>` : '')}
+    </div>`;
+}
+const shortUrl = u => u.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+const initials = s => s[0].toUpperCase();
+
+function section(title, rows, kind) {
+  if (!rows || rows.length === 0) return '';
+  return `
+    <div class="section">
+      <div class="section-head"><h2>${esc(title)}</h2><span class="n">${rows.length}</span></div>
+      ${rows.map(([name, desc]) => `
+        <div class="comp-row" onclick="this.classList.toggle('open')">
+          <div class="comp-icon">${icon(kind)}</div>
+          <div style="min-width:0;flex:1">
+            <div class="comp-name">${esc(name)}</div>
+            ${desc ? `<div class="comp-desc">${esc(desc)}</div>` : ''}
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+function infoRows(pairs) {
+  const rows = pairs.filter(p => p[1]);
+  if (rows.length === 0) return '';
+  return `<div class="section">
+    <div class="section-head"><h2>信息</h2></div>
+    <div class="info-grid">
+      ${rows.map(([k, v, link]) => `
+        <div class="info-row"><span class="k">${esc(k)}</span>
+        <span class="v">${link ? `<a href="#">${esc(v)}</a>` : esc(v)}</span></div>`).join('')}
+    </div>
+  </div>`;
+}
+
+/* ── Variant A：ZCode 式分区详情 ── */
+function VariantA(d) {
+  const c = d.components || {};
+  return `
+    <div class="back">‹ 返回市场列表</div>
+    ${hero(d)}
+    ${section('Skills', c.skills, 'skills')}
+    ${section('Commands', c.commands, 'commands')}
+    ${section('Subagents', c.agents, 'agents')}
+    ${section('MCP 服务器', c.mcp, 'mcp')}
+    ${section('Hooks', c.hooks, 'hooks')}
+    ${infoRows([
+      ['开发者', d.author || '(缺失时整行省略)'],
+      ['分类', d.categoryZh || d.category],
+      ['版本', d.version ? 'v' + d.version : null],
+      ['主页', d.homepage ? shortUrl(d.homepage) : null, true],
+      ['安装量', typeof d.installCount === 'number' ? d.installCount.toLocaleString() : null],
+      ['市场源', d.id.split('@')[1]],
+    ])}`;
+}
+
+/* ── Variant B：单页混排（徽章行 + 左组件右信息两栏） ── */
+function VariantB(d) {
+  const c = d.components || {};
+  const total = Object.values(c).reduce((n, r) => n + (r ? r.length : 0), 0);
+  const badges = [];
+  if (d.author) badges.push(d.author);
+  if (d.category) badges.push(d.categoryZh || d.category);
+  if (d.version) badges.push('v' + d.version);
+  if (typeof d.installCount === 'number') badges.push(`⭳ ${d.installCount.toLocaleString()}`);
+  return `
+    <div class="back">‹ 返回市场列表</div>
+    <div style="display:flex;gap:18px;align-items:flex-start">
+      <div class="avatar" style="margin:0">${esc(d.displayName[0])}</div>
+      <div style="flex:1;min-width:0">
+        <div class="titlebar">
+          <h1 style="font-size:18px">${esc(d.displayName)}</h1>
+          ${d.installed ? '<span class="badge ok">已安装</span>' : `<button class="btn" style="padding:5px 16px">安装</button>`}
+        </div>
+        <p class="desc" style="margin-top:6px">${esc(d.longDesc || d.description)}</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+          ${badges.map(b => `<span class="badge">${esc(b)}</span>`).join('')}
+          ${d.homepage ? `<span class="badge"><a style="color:var(--link);text-decoration:none" href="#">${esc(shortUrl(d.homepage))} ↗</a></span>` : ''}
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 250px;gap:28px;margin-top:10px">
+      <div>
+        ${total === 0 ? `<div class="note">该插件没有本地组件数据。<br>组件清单需要已安装，或来自官方 catalog 缓存。</div>` : ''}
+        ${section(`组件（${total}）`, [].concat(c.skills || [], c.commands || [], c.agents || [], c.mcp || []), 'skills')}
+      </div>
+      <div>
+        ${infoRows([
+          ['市场源', d.id.split('@')[1]],
+          ['开发者', d.author],
+          ['分类', d.categoryZh || d.category],
+          ['版本', d.version ? 'v' + d.version : null],
+          ['主页', d.homepage ? shortUrl(d.homepage) : null, true],
+          ['安装量', typeof d.installCount === 'number' ? d.installCount.toLocaleString() : null],
+        ])}
+      </div>
+    </div>`;
+}
+
+/* ── Variant C：现状对照（directory 瘦详情 + 天花板注记） ── */
+function VariantC(d) {
+  return `
+    <div class="back">‹ 返回市场列表</div>
+    ${hero(d)}
+    <div class="section">
+      <div class="section-head"><h2>信息</h2></div>
+      <div class="thin-info">
+        <div class="info-row"><span class="k">版本</span><span class="v">${d.version ? 'v' + esc(d.version) : '—'}</span></div>
+        <div class="info-row"><span class="k">市场源</span><span class="v">${esc(d.id.split('@')[1])}</span></div>
+      </div>
+    </div>
+    <div class="note">
+      <b>现状（瘦详情）：</b>directory 市场插件没有作者 / 分类 / 主页 / 组件分区 ——
+      CLI 目录索引只带简介 + 版本 + 仓库地址。Variant A/B 的富信息只在
+      「已添加市场」的插件上可得（读本地 marketplace.json 快照）。
+      ${d.fromCache ? '<br><b>补充：</b>本机插件缓存里有该插件的历史下载源码，若点开时读取缓存（或按需下载），directory 插件也能补全 —— 见备注讨论。' : ''}
+    </div>`;
+}
+
+/* ── 场景定义 ── */
+const SCENES = [
+  { key: 'A', name: '分区详情页（ZCode 式）', render: VariantA },
+  { key: 'B', name: '单页混排（两栏高密度）', render: VariantB },
+  { key: 'C', name: '现状对照（directory 瘦详情）', render: VariantC },
+];
+const SUBJECTS = ['stripe', 'honeycomb', 'superpowers'];
+
+/* ── 状态：variant + 当前插件 ── */
+let state = { variant: 'A', subject: 'stripe' };
+
+function render() {
+  const v = SCENES.find(s => s.key === state.variant);
+  const d = DATA[state.subject];
+  document.getElementById('content').innerHTML = v.render(d);
+  document.getElementById('varLabel').textContent =
+    `${v.key} (${v.name}) · ${d.displayName}`;
+}
+
+function cycle(dir) {
+  const i = SCENES.findIndex(s => s.key === state.variant);
+  state.variant = SCENES[(i + dir + SCENES.length) % SCENES.length].key;
+  const url = new URL(location);
+  url.searchParams.set('variant', state.variant);
+  history.replaceState(null, '', url);
+  render();
+}
+
+document.getElementById('prev').onclick = () => cycle(-1);
+document.getElementById('next').onclick = () => cycle(1);
+document.addEventListener('keydown', e => {
+  if (document.activeElement && /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
+  if (e.key === 'ArrowLeft') cycle(-1);
+  if (e.key === 'ArrowRight') cycle(1);
+});
+
+/* 插件选择器（顶部小 pill，方便对比同一个插件在不同变体下的形态） */
+const picker = document.createElement('div');
+picker.style.cssText = 'position:fixed;bottom:18px;left:24px;display:flex;gap:6px;z-index:99';
+picker.innerHTML = SUBJECTS.map((s, i) =>
+  `<button data-s="${s}" style="all:unset;cursor:pointer;font-size:12px;padding:4px 12px;border-radius:999px;background:var(--pill-bg);color:var(--muted)">${['Stripe（官方·全字段）','Honeycomb（官方·部分字段）','Superpowers（directory·cache 残留）'][i]}</button>`
+).join('');
+picker.querySelectorAll('button').forEach(b => {
+  b.onclick = () => { state.subject = b.dataset.s; render(); };
+});
+document.body.appendChild(picker);
+
+const urlVar = new URLSearchParams(location.search).get('variant');
+if (urlVar && SCENES.some(s => s.key === urlVar)) state.variant = urlVar;
+render();
+</script>
+</body>
+</html>

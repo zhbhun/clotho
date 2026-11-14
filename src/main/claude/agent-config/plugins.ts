@@ -32,6 +32,7 @@ export interface MarketplacePlugin {
   description?: string
   marketplaceName: string
   installCount?: number
+  version?: string
 }
 
 export interface MarketplaceInfo {
@@ -58,6 +59,7 @@ interface CliAvailablePlugin {
   description?: string
   marketplaceName: string
   installCount?: number
+  version?: string
   [extra: string]: unknown
 }
 
@@ -149,6 +151,7 @@ export async function listMarketplacePlugins(): Promise<MarketplacePlugin[]> {
     description: entry.description,
     marketplaceName: entry.marketplaceName,
     installCount: entry.installCount,
+    ...(entry.version ? { version: entry.version } : {}),
   }))
 }
 

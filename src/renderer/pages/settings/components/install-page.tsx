@@ -38,7 +38,12 @@ import {
   orderCatalog,
 } from './install-catalog'
 import { PluginAvatar } from './plugin-avatar'
-import { PluginDetailSections, PluginInfoRows } from './plugin-detail-page'
+import {
+  DetailSection,
+  PluginDetailIdentity,
+  PluginDetailSections,
+  PluginInfoRows,
+} from './plugin-detail-page'
 import { installPluginWithToast, useRestartHint } from './plugin-shared'
 import { useSettingsDetailStore } from './settings-detail-store'
 import { usePluginHomepages } from './use-plugin-homepages'
@@ -345,7 +350,7 @@ export function InstallPluginPage() {
   )
 }
 
-/** Third-level install detail: same layout as plugin detail with an Install action. */
+/** Third-level install detail: sectioned layout (variant A) with an Install action. */
 export function InstallPluginDetailPage({ pluginId }: { pluginId: string }) {
   const { t } = useTranslation()
   const requestLeave = useSettingsDetailStore((state) => state.requestLeave)
@@ -389,6 +394,9 @@ export function InstallPluginDetailPage({ pluginId }: { pluginId: string }) {
     if (ok) setInstalled(true)
   }
 
+  const openLink = (href: string) =>
+    void requestFromDesktop('appOpenLink', { href, projectPath: '' })
+
   if (!details) {
     return (
       <section className="flex flex-col gap-4" data-install-detail-page>
@@ -397,22 +405,28 @@ export function InstallPluginDetailPage({ pluginId }: { pluginId: string }) {
     )
   }
 
-  const info: { key: string; value?: string | number }[] = [
+  const info: { key: string; value?: string | number; link?: string }[] = [
     { key: t('settings.agent.plugins.author'), value: details.author },
+    { key: t('settings.agent.plugins.category'), value: details.category },
     { key: t('settings.agent.plugins.version'), value: details.version },
+    {
+      key: t('settings.agent.plugins.homepage'),
+      value: details.homepage,
+      link: details.homepage,
+    },
     { key: t('settings.agent.plugins.marketplace'), value: details.marketplace },
-    { key: t('settings.agent.plugins.installs'), value: details.installCount },
+    { key: t('settings.agent.plugins.installs'), value: details.installCount?.toLocaleString() },
   ]
 
   return (
     <section className="flex flex-col gap-5" data-install-detail-page>
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="truncate text-xl font-medium tracking-tight">{details.name}</h1>
-          {details.description ? (
-            <p className="mt-1 text-sm text-foreground-subtlest">{details.description}</p>
-          ) : null}
-        </div>
+      <div className="flex items-center justify-between gap-4">
+        <PluginDetailIdentity
+          author={details.author}
+          category={details.category}
+          displayName={details.displayName}
+          name={details.name}
+        />
         <div className="shrink-0">
           {installed ? (
             <Badge variant="secondary">{t('settings.agent.plugins.installed')}</Badge>
@@ -423,13 +437,15 @@ export function InstallPluginDetailPage({ pluginId }: { pluginId: string }) {
           )}
         </div>
       </div>
+      {details.description ? (
+        <p className="text-sm text-foreground-subtlest">{details.description}</p>
+      ) : null}
 
       <PluginDetailSections details={details} />
 
-      <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-medium">{t('settings.agent.plugins.info')}</h3>
-        <PluginInfoRows rows={info} />
-      </div>
+      <DetailSection title={t('settings.agent.plugins.info')}>
+        <PluginInfoRows rows={info} onOpenLink={openLink} />
+      </DetailSection>
     </section>
   )
 }
