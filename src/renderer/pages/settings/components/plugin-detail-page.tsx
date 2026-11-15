@@ -60,7 +60,7 @@ export function DetailSection({
 }) {
   return (
     <div className="flex flex-col">
-      <h3 className="flex items-baseline gap-2 border-b pb-3 text-lg font-semibold">
+      <h3 className="flex items-baseline gap-2 border-b border-divider pb-3 text-lg font-semibold">
         {title}
         {typeof count === 'number' ? (
           <span className="text-sm font-normal text-foreground-subtlest">{count}</span>
