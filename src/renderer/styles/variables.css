@@ -102,10 +102,7 @@
   --accent: var(--secondary);
   --accent-foreground: var(--foreground);
   --destructive: oklch(0.577 0.245 27.325);
-  /* Border tiers converge on #ededed in light mode: each border token mixes
-     its surface anchor toward --foreground just far enough to land on that
-     value (6.7792% on the white canvas/card, 4.9865% on --chat-reply). */
-  --border: color-mix(in oklab, var(--background), var(--foreground) 6.7792%);
+  --border: oklch(0.922 0 0);
   --input: var(--border);
   /* Focus border and halo derive from primary, pulled toward the background so the
      default palette lands on the official ring gray instead of near-black. */
@@ -166,8 +163,8 @@
   --control-checked: var(--color-neutral-900);
   --control-checked-foreground: var(--color-white);
 
-  /* Divider tier drawn on the canvas (--background). Light converges on
-     #ededed like the other border tokens; dark lands on #32333e (4.9%).
+  /* Divider tier drawn on the canvas (--background). Light lands on
+     #ededed; dark lands on #32333e (4.9%).
      Card-interior dividers use --card-divider instead, which re-anchors the
      same perceived step to the card surface. */
   --divider: color-mix(in oklab, var(--background), var(--foreground) 6.7792%);
@@ -176,9 +173,8 @@
   /* Chat tool-card borders land on #ededed too; --chat-reply (#fafafa) sits
      closer to it, so the mix is proportionally smaller. */
   --border-chat-reply: color-mix(in oklab, var(--chat-reply), var(--foreground) 4.9865%);
-  /* Anchored to the chat-input surface like dark mode; identical output today
-     (--chat-input is white in light). Light borders converge on #ededed, so
-     re-solve this ratio if the surface anchor ever changes. */
+  /* Anchored to the chat-input surface like dark mode; it lands on #ededed
+     in the default light theme, like the chat tool-card border. */
   --border-chat-input: color-mix(in oklab, var(--chat-input), var(--foreground) 6.7792%);
 }
 
@@ -206,11 +202,9 @@
   --accent: var(--secondary);
   --accent-foreground: var(--foreground);
   --destructive: oklch(0.704 0.191 22.216);
-  /* Same shadcn gap rule in dark (0.1238); the chat surfaces override the
-     base tokens with scaled "on-*" tiers (0.1238 × 0.55 = 0.06809) because
-     the stock gap reads too loud on the compressed dark chat canvas. */
-  --border: color-mix(in oklab, var(--background), var(--foreground) 16.6506%);
-  --input: color-mix(in oklab, var(--chat-input), var(--foreground) 16%);
+  /* Translucent borders adapt to the surface behind each control. */
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
   --ring: color-mix(in oklab, var(--primary) 44%, var(--background));
   --chart-1: color-mix(in oklab, var(--background), var(--foreground) 87.8788%);
   --chart-2: color-mix(in oklab, var(--background), var(--foreground) 49.8182%);
