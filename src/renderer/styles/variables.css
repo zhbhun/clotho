@@ -41,8 +41,7 @@
   --color-foreground-disabled: var(--foreground-disabled);
   --color-status-confirm: var(--status-confirm);
   --color-status-unread: var(--status-unread);
-  --color-code-surface: var(--code-surface);
-  --color-chat-tool: var(--chat-tool);
+  --color-chat-reply: var(--chat-reply);
   --color-code-added: var(--code-added);
   --color-code-keyword: var(--code-keyword);
   --color-code-number: var(--code-number);
@@ -65,7 +64,7 @@
   --color-control-checked-foreground: var(--control-checked-foreground);
   --color-chat-message: var(--chat-message);
   --color-chat-input: var(--chat-input);
-  --color-border-chat-tool: var(--border-chat-tool);
+  --color-border-chat-reply: var(--border-chat-reply);
   --color-border-chat-input: var(--border-chat-input);
   --color-border-card-divider: var(--border-card-divider);
 
@@ -104,7 +103,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   /* Border tiers converge on #ededed in light mode: each border token mixes
      its surface anchor toward --foreground just far enough to land on that
-     value (6.7792% on the white canvas/card, 4.9865% on --chat-tool). */
+     value (6.7792% on the white canvas/card, 4.9865% on --chat-reply). */
   --border: color-mix(in oklab, var(--background), var(--foreground) 6.7792%);
   --input: var(--border);
   /* Focus border and halo derive from primary, pulled toward the background so the
@@ -140,8 +139,7 @@
     0 0 28px -12px color-mix(in oklab, var(--color-neutral-950) 26%, transparent);
   --status-confirm: oklch(0.68 0.17 65);
   --status-unread: oklch(0.58 0.19 255);
-  --code-surface: var(--chat-tool);
-  --chat-tool: color-mix(in oklab, var(--background), var(--foreground) 1.8868%);
+  --chat-reply: color-mix(in oklab, var(--background), var(--foreground) 2.75%);
   --code-added: var(--color-green-600);
   --code-keyword: var(--color-violet-600);
   --code-number: var(--color-blue-600);
@@ -171,9 +169,9 @@
      tier as the outer border, anchored to --card. */
   --border-card-divider: color-mix(in oklab, var(--card), var(--foreground) 6.7792%);
 
-  /* Chat tool-card borders land on #ededed too; --chat-tool (#fafafa) sits
+  /* Chat tool-card borders land on #ededed too; --chat-reply (#fafafa) sits
      closer to it, so the mix is proportionally smaller. */
-  --border-chat-tool: color-mix(in oklab, var(--chat-tool), var(--foreground) 4.9865%);
+  --border-chat-reply: color-mix(in oklab, var(--chat-reply), var(--foreground) 4.9865%);
   /* Anchored to the chat-input surface like dark mode; identical output today
      (--chat-input is white in light). Light borders converge on #ededed, so
      re-solve this ratio if the surface anchor ever changes. */
@@ -191,7 +189,7 @@
      (canvas → card → secondary) stays legible on the compressed dark range;
      like light, both mix toward the foreground anchor so tints follow each
      palette's text color. */
-  --card: color-mix(in oklab, var(--background), var(--foreground) 7.14%);
+  --card: color-mix(in oklab, var(--background), var(--foreground) 5.5%);
   --card-foreground: var(--foreground);
   --popover: var(--card);
   --popover-foreground: var(--foreground);
@@ -239,8 +237,7 @@
     0 0 30px -12px color-mix(in oklab, var(--color-neutral-950) 56%, transparent);
   --status-confirm: oklch(0.78 0.15 75);
   --status-unread: oklch(0.72 0.16 255);
-  --code-surface: var(--chat-tool);
-  --chat-tool: color-mix(in oklab, var(--background), var(--foreground) 1.8868%);
+  --chat-reply: color-mix(in oklab, var(--background), var(--foreground) 2.75%);
   --code-added: var(--color-green-400);
   --code-keyword: var(--color-fuchsia-400);
   --code-number: var(--color-violet-400);
@@ -259,7 +256,7 @@
   --project-icon-cyan: var(--color-cyan-400);
   --project-switcher-surface: color-mix(in oklab, var(--card), var(--color-white) 4.99%);
   --session-tab-surface: var(--secondary);
-  --chat-message: color-mix(in oklab, var(--background), var(--foreground) 6%);
+  --chat-message: var(--card);
   --chat-input: color-mix(in oklab, var(--background), var(--color-white) 12.74%);
   --sidebar-active: var(--sidebar-accent);
   --control-checked: var(--color-neutral-100);
@@ -271,6 +268,6 @@
 
   /* Chat-surface border tier: 0.1238 × 0.55 = 0.06809 oklab above each chat
      surface; the stock gap reads too loud on the compressed dark chat canvas. */
-  --border-chat-tool: color-mix(in oklab, var(--chat-tool), var(--foreground) 9.3316%);
+  --border-chat-reply: color-mix(in oklab, var(--chat-reply), var(--foreground) 9.3316%);
   --border-chat-input: color-mix(in oklab, var(--chat-input), var(--foreground) 10.5541%);
 }

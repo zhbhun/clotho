@@ -35,11 +35,11 @@
     }
 
     pre {
-      @apply rounded-lg border border-border bg-code-surface px-3 py-2 overflow-x-auto;
+      @apply rounded-lg border border-border bg-chat-reply px-3 py-2 overflow-x-auto;
     }
 
     pre.shiki {
-      background-color: var(--color-code-surface);
+      background-color: var(--color-chat-reply);
     }
 
     pre code {
@@ -47,7 +47,7 @@
     }
 
     code:not(pre code) {
-      @apply rounded bg-code-surface px-1.5 py-0.5 text-xs font-normal;
+      @apply rounded bg-chat-reply px-1.5 py-0.5 text-xs font-normal;
     }
 
     a {
@@ -65,7 +65,7 @@
     }
 
     th {
-      @apply border border-border bg-muted/50 px-3 py-2 text-left font-medium;
+      @apply border border-border bg-chat-reply px-3 py-2 text-left font-medium;
     }
 
     td {
