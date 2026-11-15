@@ -59,7 +59,7 @@ function markAsRow<P>(component: (props: P) => ReactNode): (props: P) => ReactNo
 
 /**
  * Card container for settings rows. Owns row dividers: an inset hairline
- * (`DIVIDER_INSET_X`, colored `card-divider`) between consecutive rows, so
+ * (`DIVIDER_INSET_X`, colored `divider`) between consecutive rows, so
  * pages never hand-write separators. Non-row children render untouched and
  * never gain dividers.
  */
@@ -86,7 +86,7 @@ function SettingsList({ className, children, ...props }: ComponentProps<typeof C
       rendered.push(
         <div
           aria-hidden="true"
-          className={cn(DIVIDER_INSET_X, 'h-px bg-card-divider')}
+          className={cn(DIVIDER_INSET_X, 'h-px bg-divider')}
           key={`divider-${index}`}
         />,
       )

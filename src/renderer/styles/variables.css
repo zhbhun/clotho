@@ -67,7 +67,6 @@
   --color-border-chat-reply: var(--border-chat-reply);
   --color-border-chat-input: var(--border-chat-input);
   --color-divider: var(--divider);
-  --color-card-divider: var(--card-divider);
 
   --shadow-float: var(--float-shadow);
   --shadow-popover: var(--popover-shadow);
@@ -163,12 +162,8 @@
   --control-checked: var(--color-neutral-900);
   --control-checked-foreground: var(--color-white);
 
-  /* Divider tier drawn on the canvas (--background). Light lands on
-     #ededed; dark lands on #32333e (4.9%).
-     Card-interior dividers use --card-divider instead, which re-anchors the
-     same perceived step to the card surface. */
-  --divider: color-mix(in oklab, var(--background), var(--foreground) 6.7792%);
-  --card-divider: color-mix(in oklab, var(--card), var(--foreground) 6.7792%);
+  /* A translucent divider adapts to the surface behind it. */
+  --divider: oklch(0 0 0 / 7%);
 
   /* Chat tool-card borders land on #ededed too; --chat-reply (#fafafa) sits
      closer to it, so the mix is proportionally smaller. */
@@ -260,12 +255,7 @@
   --control-checked: var(--color-neutral-100);
   --control-checked-foreground: var(--color-neutral-900);
 
-  /* Card-interior divider: the canvas divider's perceived step re-anchored
-     to --card (4.9% bg→fg toward #32333e lifts from card at 5.6%). */
-  --card-divider: color-mix(in oklab, var(--card), var(--foreground) 5.6%);
-
-  /* Dark canvas divider: lands on #32333e (4.9% bg→fg in oklab). */
-  --divider: color-mix(in oklab, var(--background), var(--foreground) 4.9%);
+  --divider: oklch(1 0 0 / 5%);
   /* Chat-surface border tier: 0.1238 × 0.55 = 0.06809 oklab above each chat
      surface; the stock gap reads too loud on the compressed dark chat canvas. */
   --border-chat-reply: color-mix(in oklab, var(--chat-reply), var(--foreground) 9.3316%);

@@ -42,9 +42,7 @@ export function AdditionalDirectoriesField({
           const name = projectNameFromPath(directory)
           return (
             <Fragment key={directory}>
-              {index > 0 ? (
-                <div aria-hidden="true" className="mx-2.5 h-px bg-card-divider" />
-              ) : null}
+              {index > 0 ? <div aria-hidden="true" className="mx-2.5 h-px bg-divider" /> : null}
               <li className="flex h-8 items-center gap-3.5 px-2.5">
                 <Folder className="size-4 shrink-0 text-foreground-subtlest" strokeWidth={1.5} />
                 <ProjectPath
