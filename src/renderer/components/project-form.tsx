@@ -218,7 +218,7 @@ export function ProjectForm({
             <Button
               aria-label={t('project.selectFolder')}
               aria-invalid={Boolean(pathError)}
-              className="h-7 w-full justify-start gap-3.5 border-input bg-input/20 px-2 hover:bg-input dark:hover:bg-input"
+              className="h-7 w-full justify-start gap-3.5 border-input bg-input/20 px-2 hover:bg-input dark:bg-transparent dark:hover:bg-input"
               disabled={isSaving}
               type="button"
               variant="outline"
