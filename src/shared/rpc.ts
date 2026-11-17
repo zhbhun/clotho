@@ -302,6 +302,7 @@ export interface AgentMarketplacePlugin {
 
 export interface AgentMarketplaceInfo {
   name: string
+  description?: string
   source: { source: string; repo?: string; url?: string; path?: string }
   installLocation: string
 }

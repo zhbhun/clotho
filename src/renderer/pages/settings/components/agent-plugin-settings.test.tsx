@@ -97,6 +97,35 @@ function installedPlugin(overrides: Partial<agentConfig.AgentPluginInfo> = {}) {
 }
 
 describe('MarketplaceListPage cache', () => {
+  it('shows descriptions in borderless tiles and opens a marketplace without a description', async () => {
+    mock.listAgentMarketplaces.mockResolvedValue([
+      {
+        name: 'acme',
+        description: 'Development tools',
+        source: { source: 'github', repo: 'acme/plugins' },
+        installLocation: '/acme',
+      },
+      {
+        name: 'local',
+        source: { source: 'directory', path: '/opt/local' },
+        installLocation: '/opt/local',
+      },
+    ])
+    const user = userEvent.setup()
+    const view = renderWithProviders(<MarketplaceListPage />)
+    expect(await screen.findByText('Development tools')).toBeInTheDocument()
+    const tiles = view.container.querySelectorAll('[data-marketplace-tile]')
+    expect(tiles).toHaveLength(2)
+    expect(within(tiles[0] as HTMLElement).getByText('github · acme/plugins')).toBeInTheDocument()
+    expect(within(tiles[1] as HTMLElement).getByText('directory · /opt/local')).toBeInTheDocument()
+    await user.click(within(tiles[1] as HTMLElement).getByText('local'))
+    expect(useSettingsDetailStore.getState().view).toMatchObject({
+      kind: 'detail',
+      file: 'local',
+      page: 'marketplaces',
+    })
+  })
+
   it('shows a directory marketplace source in the list and detail', async () => {
     mock.listAgentMarketplaces.mockResolvedValue([
       {
@@ -116,6 +145,7 @@ describe('MarketplaceListPage cache', () => {
   it('shows cached results on return while revalidating without requesting the catalog', async () => {
     const marketplace = {
       name: 'acme',
+      description: 'Development tools',
       source: { source: 'github', repo: 'acme/plugins' },
       installLocation: '/acme',
     }
@@ -127,6 +157,8 @@ describe('MarketplaceListPage cache', () => {
     view.unmount()
     renderWithProviders(<MarketplaceListPage />)
     expect(screen.getByText('github · acme/plugins')).toBeInTheDocument()
+    expect(screen.getByText('Development tools')).toBeInTheDocument()
+    expect(document.querySelector('[data-install-skeleton]')).toBeNull()
     expect(mock.listAgentMarketplaces).toHaveBeenCalledTimes(2)
     expect(mock.listAgentAvailablePlugins).not.toHaveBeenCalled()
   })
@@ -135,7 +167,27 @@ describe('MarketplaceListPage cache', () => {
     useCatalogCache.setState({ marketplaces: [] })
     mock.listAgentMarketplaces.mockReturnValue(new Promise(() => {}))
     const view = renderWithProviders(<MarketplaceListPage />)
-    expect(view.container.querySelector('[data-plugin-rows-skeleton]')).toBeNull()
+    expect(view.container.querySelector('[data-install-skeleton]')).toBeNull()
+  })
+
+  it('shows the tile skeleton on the first visit while the marketplace list loads', () => {
+    mock.listAgentMarketplaces.mockReturnValue(new Promise(() => {}))
+    const view = renderWithProviders(<MarketplaceListPage />)
+    expect(view.container.querySelector('[data-install-skeleton]')).not.toBeNull()
+  })
+
+  it('updates descriptions after refreshing marketplaces', async () => {
+    const marketplace = { name: 'acme', source: { source: 'github' }, installLocation: '/acme' }
+    mock.listAgentMarketplaces
+      .mockResolvedValueOnce([{ ...marketplace, description: 'Before refresh' }])
+      .mockResolvedValueOnce([{ ...marketplace, description: 'After refresh' }])
+    mock.refreshAgentMarketplace.mockResolvedValue(undefined)
+    const user = userEvent.setup()
+    renderWithProviders(<MarketplaceListPage />)
+    expect(await screen.findByText('Before refresh')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '更多操作' }))
+    await user.click(await screen.findByRole('menuitem', { name: '全部刷新' }))
+    expect(await screen.findByText('After refresh')).toBeInTheDocument()
   })
 })
 

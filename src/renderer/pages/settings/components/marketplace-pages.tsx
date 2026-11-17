@@ -30,6 +30,7 @@ import {
 import { tildePath } from '../../../utils/path-display'
 import { AgentEmpty } from './agent-shared'
 import { refreshMarketplaces, updateMarketplaces, useCatalogCache } from './catalog-cache'
+import { PluginAvatar } from './plugin-avatar'
 import {
   PluginOverflowMenu,
   RowChevron,
@@ -37,7 +38,7 @@ import {
   refreshAllMarketplaces,
   useRestartHint,
 } from './plugin-shared'
-import { MarketplaceDetailSkeleton, PluginRowsSkeleton } from './plugin-skeletons'
+import { InstallPageSkeleton, MarketplaceDetailSkeleton } from './plugin-skeletons'
 import { useSettingsDetailStore } from './settings-detail-store'
 import { SettingsList, SettingsRow } from './settings-list'
 import { useDetailDirty } from './use-detail-dirty'
@@ -153,32 +154,41 @@ export function MarketplaceListPage() {
       </div>
 
       {marketplaces === null && !marketplacesError ? (
-        <PluginRowsSkeleton />
+        <InstallPageSkeleton />
       ) : !marketplaces || marketplaces.length === 0 ? (
         <AgentEmpty />
       ) : (
-        <SettingsList>
+        <div
+          className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] max-lg:grid-cols-1 gap-x-6"
+          data-marketplace-tiles
+        >
           {marketplaces.map((marketplace) => (
-            <SettingsRow
-              className="gap-3 cursor-pointer transition-colors hover:bg-muted"
+            <div
+              className="flex min-w-0 cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/50"
+              data-marketplace-tile
               key={marketplace.name}
-              variant="compact"
               onClick={() =>
                 openDetail('agent-marketplace', marketplace.name, marketplace.name, 'marketplaces')
               }
             >
-              <div className="min-w-0 flex-1">
+              <PluginAvatar name={marketplace.name} />
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <div className="truncate text-sm font-normal">{marketplace.name}</div>
-                <div className="truncate text-sm text-foreground-subtlest">
+                {marketplace.description ? (
+                  <div className="truncate text-xs text-foreground-subtlest">
+                    {marketplace.description}
+                  </div>
+                ) : null}
+                <div className="truncate text-[11px] text-foreground-subtlest">
                   {[marketplace.source.source, marketplaceSource(marketplace)]
                     .filter(Boolean)
                     .join(' · ')}
                 </div>
               </div>
               <RowChevron />
-            </SettingsRow>
+            </div>
           ))}
-        </SettingsList>
+        </div>
       )}
     </section>
   )

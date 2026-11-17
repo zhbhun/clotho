@@ -1,4 +1,8 @@
 // @vitest-environment node
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
+
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { resolveClaudeCodeBinary } from '../sdk-binary'
@@ -181,6 +185,41 @@ describe('list operations', () => {
         installLocation: '/projects/local',
       },
     ])
+  })
+
+  it('reads each marketplace description independently from its local manifest', async () => {
+    const root = await mkdtemp(path.join(tmpdir(), 'clotho-marketplaces-'))
+    try {
+      const manifests = [
+        JSON.stringify({ description: 'Primary', metadata: { description: 'Secondary' } }),
+        JSON.stringify({ description: ' ', metadata: { description: 'Metadata' } }),
+        '{invalid',
+        JSON.stringify({ description: 17, metadata: { description: '' } }),
+      ]
+      for (const [index, manifest] of manifests.entries()) {
+        const dir = path.join(root, String(index), '.claude-plugin')
+        await mkdir(dir, { recursive: true })
+        await writeFile(path.join(dir, 'marketplace.json'), manifest)
+      }
+      const entries = Array.from({ length: 5 }, (_, index) => ({
+        name: String(index),
+        source: 'directory',
+        installLocation: path.join(root, String(index)),
+      }))
+      execFileMock.mockImplementation((_file, _args, _options, callback) => {
+        callback(null, JSON.stringify(entries), '')
+      })
+      const marketplaces = await listMarketplaces()
+      expect(marketplaces.map(({ name, description }) => ({ name, description }))).toEqual([
+        { name: '0', description: 'Primary' },
+        { name: '1', description: 'Metadata' },
+        { name: '2', description: undefined },
+        { name: '3', description: undefined },
+        { name: '4', description: undefined },
+      ])
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
   })
 })
 

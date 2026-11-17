@@ -1,4 +1,6 @@
 import { execFile } from 'node:child_process'
+import { promises as fs } from 'node:fs'
+import path from 'node:path'
 
 import { resolveClaudeCodeBinary } from '../sdk-binary'
 
@@ -37,6 +39,7 @@ export interface MarketplacePlugin {
 
 export interface MarketplaceInfo {
   name: string
+  description?: string
   source: { source: string; repo?: string; url?: string; path?: string }
   installLocation: string
 }
@@ -155,13 +158,39 @@ export async function listMarketplacePlugins(): Promise<MarketplacePlugin[]> {
   }))
 }
 
+async function readMarketplaceDescription(installLocation: string): Promise<string | undefined> {
+  if (!installLocation) return undefined
+  try {
+    const raw = await fs.readFile(
+      path.join(installLocation, '.claude-plugin', 'marketplace.json'),
+      'utf8',
+    )
+    const manifest = JSON.parse(raw) as {
+      description?: unknown
+      metadata?: { description?: unknown }
+    }
+    const description = [manifest?.description, manifest?.metadata?.description].find(
+      (value): value is string => typeof value === 'string' && value.trim().length > 0,
+    )
+    return description
+  } catch {
+    return undefined
+  }
+}
+
 export async function listMarketplaces(): Promise<MarketplaceInfo[]> {
   const marketplaces = await runPluginCommandJson<CliMarketplace[]>(['marketplace', 'list'])
-  return marketplaces.map((entry) => ({
-    name: entry.name,
-    source: { source: entry.source, repo: entry.repo, url: entry.url, path: entry.path },
-    installLocation: entry.installLocation,
-  }))
+  return Promise.all(
+    marketplaces.map(async (entry) => {
+      const description = await readMarketplaceDescription(entry.installLocation)
+      return {
+        name: entry.name,
+        ...(description ? { description } : {}),
+        source: { source: entry.source, repo: entry.repo, url: entry.url, path: entry.path },
+        installLocation: entry.installLocation,
+      }
+    }),
+  )
 }
 
 export async function installPlugin(pluginId: string): Promise<void> {
