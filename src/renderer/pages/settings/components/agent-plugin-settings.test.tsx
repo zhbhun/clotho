@@ -14,7 +14,7 @@ import { ShortcutRuntimeProvider, shortcutRuntime } from '../../../services/shor
 import { AgentPluginSettings } from './agent-plugin-settings'
 import { useCatalogCache } from './catalog-cache'
 import { InstallPluginDetailPage, InstallPluginPage } from './install-page'
-import { MarketplaceAddPage } from './marketplace-pages'
+import { MarketplaceAddPage, MarketplaceListPage } from './marketplace-pages'
 import { useSettingsDetailStore } from './settings-detail-store'
 
 vi.mock('../../../services/claude/agent-config', () => ({
@@ -63,6 +63,8 @@ beforeEach(async () => {
     catalogLoading: false,
     catalogError: false,
     installedError: false,
+    marketplaces: null,
+    marketplacesError: false,
   })
   useSettingsDetailStore.setState({ view: { kind: 'list' }, leaf: '', subLeaf: '', isDirty: false })
   mock.listAgentPlugins.mockResolvedValue([])
@@ -93,6 +95,33 @@ function installedPlugin(overrides: Partial<agentConfig.AgentPluginInfo> = {}) {
     ...overrides,
   }
 }
+
+describe('MarketplaceListPage cache', () => {
+  it('shows cached results on return while revalidating without requesting the catalog', async () => {
+    const marketplace = {
+      name: 'acme',
+      source: { source: 'github', repo: 'acme/plugins' },
+      installLocation: '/acme',
+    }
+    mock.listAgentMarketplaces
+      .mockResolvedValueOnce([marketplace])
+      .mockReturnValueOnce(new Promise(() => {}))
+    const view = renderWithProviders(<MarketplaceListPage />)
+    expect(await screen.findByText('github · acme/plugins')).toBeInTheDocument()
+    view.unmount()
+    renderWithProviders(<MarketplaceListPage />)
+    expect(screen.getByText('github · acme/plugins')).toBeInTheDocument()
+    expect(mock.listAgentMarketplaces).toHaveBeenCalledTimes(2)
+    expect(mock.listAgentAvailablePlugins).not.toHaveBeenCalled()
+  })
+
+  it('shows a cached empty list without a loading skeleton', () => {
+    useCatalogCache.setState({ marketplaces: [] })
+    mock.listAgentMarketplaces.mockReturnValue(new Promise(() => {}))
+    const view = renderWithProviders(<MarketplaceListPage />)
+    expect(view.container.querySelector('[data-plugin-rows-skeleton]')).toBeNull()
+  })
+})
 
 describe('AgentPluginSettings list page', () => {
   it('lists installed plugins with marketplace, and version on the second line', async () => {

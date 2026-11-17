@@ -1,9 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { listAgentAvailablePlugins, listAgentPlugins } from '../../../services/claude/agent-config'
+import {
+  listAgentAvailablePlugins,
+  listAgentMarketplaces,
+  listAgentPlugins,
+} from '../../../services/claude/agent-config'
 import {
   refreshCatalog,
   refreshInstalled,
+  refreshMarketplaces,
   updateInstalled,
   updateMarketplaces,
   useCatalogCache,
@@ -11,6 +16,7 @@ import {
 
 vi.mock('../../../services/claude/agent-config', () => ({
   listAgentAvailablePlugins: vi.fn(),
+  listAgentMarketplaces: vi.fn(),
   listAgentPlugins: vi.fn(),
 }))
 
@@ -25,10 +31,43 @@ beforeEach(() => {
     catalogLoading: false,
     catalogError: false,
     installedError: false,
+    marketplaces: null,
+    marketplacesError: false,
   })
+  vi.mocked(listAgentMarketplaces).mockResolvedValue([])
 })
 
 describe('catalog cache', () => {
+  it('preserves marketplace results on failure and ignores older responses after removal', async () => {
+    const entry = { name: 'acme', source: { source: 'github' }, installLocation: '/acme' }
+    vi.mocked(listAgentMarketplaces)
+      .mockResolvedValueOnce([entry])
+      .mockRejectedValueOnce(new Error())
+    await refreshMarketplaces()
+    await refreshMarketplaces()
+    expect(useCatalogCache.getState()).toMatchObject({
+      marketplaces: [entry],
+      marketplacesError: true,
+    })
+
+    let resolveOld!: (value: (typeof entry)[]) => void
+    vi.mocked(listAgentMarketplaces)
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveOld = resolve
+        }),
+      )
+      .mockResolvedValueOnce([])
+    vi.mocked(listAgentAvailablePlugins).mockResolvedValue([])
+    vi.mocked(listAgentPlugins).mockResolvedValue([])
+    const old = refreshMarketplaces()
+    updateMarketplaces('acme')
+    expect(useCatalogCache.getState().marketplaces).toEqual([])
+    await vi.waitFor(() => expect(useCatalogCache.getState().marketplacesError).toBe(false))
+    resolveOld([entry])
+    await old
+    expect(useCatalogCache.getState().marketplaces).toEqual([])
+  })
   it('retains separate successful and failed snapshots including empty results', async () => {
     vi.mocked(listAgentAvailablePlugins)
       .mockResolvedValueOnce([])

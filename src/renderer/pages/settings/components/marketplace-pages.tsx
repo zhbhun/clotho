@@ -28,7 +28,7 @@ import {
   removeAgentMarketplace,
 } from '../../../services/claude/agent-config'
 import { AgentEmpty } from './agent-shared'
-import { updateMarketplaces } from './catalog-cache'
+import { refreshMarketplaces, updateMarketplaces, useCatalogCache } from './catalog-cache'
 import {
   PluginOverflowMenu,
   RowChevron,
@@ -100,17 +100,16 @@ function useInstalledPluginIds() {
 /** Second-level Marketplaces page: registered sources with Add and a `⋯` menu. */
 export function MarketplaceListPage() {
   const { t } = useTranslation()
-  const { marketplaces, isLoading, reload } = useMarketplaces()
+  const marketplaces = useCatalogCache((state) => state.marketplaces)
+  const marketplacesError = useCatalogCache((state) => state.marketplacesError)
   const openDetail = useSettingsDetailStore((state) => state.openDetail)
 
   useEffect(() => {
-    void reload()
-    // Mount-only load; reload reads fresh state on every call.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void refreshMarketplaces()
   }, [])
 
   const handleRefreshAll = () =>
-    refreshAllMarketplaces(reload, t('settings.agent.plugins.refreshError'))
+    refreshAllMarketplaces(async () => {}, t('settings.agent.plugins.refreshError'))
 
   const openAdd = () =>
     openDetail(
@@ -125,7 +124,7 @@ export function MarketplaceListPage() {
       <div className="flex min-h-7 items-center justify-between gap-4">
         <h2 className="text-sm font-medium">
           {t('settings.agent.plugins.registered')}{' '}
-          {!isLoading && (
+          {marketplaces && (
             <span className="text-foreground-subtlest">
               {t('settings.agent.subagent.itemCount', { count: marketplaces.length })}
             </span>
@@ -147,9 +146,9 @@ export function MarketplaceListPage() {
         </div>
       </div>
 
-      {isLoading ? (
+      {marketplaces === null && !marketplacesError ? (
         <PluginRowsSkeleton />
-      ) : marketplaces.length === 0 ? (
+      ) : !marketplaces || marketplaces.length === 0 ? (
         <AgentEmpty />
       ) : (
         <SettingsList>
@@ -213,7 +212,7 @@ export function MarketplaceDetailPage({ marketplaceName }: { marketplaceName: st
   const handleRemove = async () => {
     try {
       await removeAgentMarketplace(marketplaceName)
-      updateMarketplaces()
+      updateMarketplaces(marketplaceName)
       // Leave first: the Marketplaces page remounts and fetches its own data.
       useSettingsDetailStore.getState().requestLeave()
     } catch {

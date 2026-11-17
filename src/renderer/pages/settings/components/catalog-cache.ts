@@ -4,9 +4,11 @@ import { toast } from '@/shadcn/toast'
 
 import { appI18n } from '../../../i18n/runtime'
 import {
+  type AgentMarketplaceInfo,
   type AgentMarketplacePlugin,
   type AgentPluginInfo,
   listAgentAvailablePlugins,
+  listAgentMarketplaces,
   listAgentPlugins,
 } from '../../../services/claude/agent-config'
 
@@ -19,6 +21,8 @@ interface CatalogCache {
   catalogLoading: boolean
   catalogError: boolean
   installedError: boolean
+  marketplaces: AgentMarketplaceInfo[] | null
+  marketplacesError: boolean
 }
 
 export const useCatalogCache = create<CatalogCache>(() => ({
@@ -28,10 +32,13 @@ export const useCatalogCache = create<CatalogCache>(() => ({
   catalogLoading: false,
   catalogError: false,
   installedError: false,
+  marketplaces: null,
+  marketplacesError: false,
 }))
 
 let catalogGeneration = 0
 let installedGeneration = 0
+let marketplacesGeneration = 0
 
 function reportLoadError() {
   toast.add({
@@ -72,6 +79,21 @@ export async function refreshInstalled() {
   }
 }
 
+export async function refreshMarketplaces() {
+  const generation = ++marketplacesGeneration
+  useCatalogCache.setState({ marketplacesError: false })
+  try {
+    const marketplaces = await listAgentMarketplaces()
+    if (generation === marketplacesGeneration)
+      useCatalogCache.setState({ marketplaces, marketplacesError: false })
+  } catch {
+    if (generation === marketplacesGeneration) {
+      useCatalogCache.setState({ marketplacesError: true })
+      reportLoadError()
+    }
+  }
+}
+
 export function updateInstalled(id: string, change: InstalledChange) {
   installedGeneration++
   const current = useCatalogCache.getState().installed
@@ -103,9 +125,16 @@ export function updateInstalled(id: string, change: InstalledChange) {
   void refreshInstalled()
 }
 
-export function updateMarketplaces() {
+export function updateMarketplaces(removedName?: string) {
   catalogGeneration++
   installedGeneration++
+  marketplacesGeneration++
+  const marketplaces = useCatalogCache.getState().marketplaces
+  if (removedName && marketplaces)
+    useCatalogCache.setState({
+      marketplaces: marketplaces.filter((entry) => entry.name !== removedName),
+    })
   void refreshCatalog()
   void refreshInstalled()
+  void refreshMarketplaces()
 }
