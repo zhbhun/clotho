@@ -209,6 +209,6 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ### 5. OpenSpec workflow
 
-- New features and functional changes MUST go through the OpenSpec spec-driven workflow: explore (think through ideas) → propose (create the change with proposal/specs/design/tasks) → apply (implement the tasks) → archive (sync specs and move the change to `openspec/changes/archive/`).
+- New features and functional changes follow the OpenSpec skill instructions.
 - When explore involves UI or interaction adjustments, build a prototype demo with the `prototype` skill in a temporary directory, move it to `openspec/changes/<change-name>/prototype.html` at propose, and archive it together with the change.
 
