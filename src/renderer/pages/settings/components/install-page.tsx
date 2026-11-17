@@ -29,13 +29,7 @@ import {
 import { requestFromDesktop } from '../../../services/desktop/client'
 import { AgentEmpty } from './agent-shared'
 import { refreshCatalog, refreshInstalled, updateInstalled, useCatalogCache } from './catalog-cache'
-import {
-  type CatalogEntry,
-  catalogSources,
-  dedupeCatalog,
-  installedName,
-  orderCatalog,
-} from './install-catalog'
+import { type CatalogEntry, catalogSources, orderCatalog, searchCatalog } from './install-catalog'
 import { PluginAvatar } from './plugin-avatar'
 import {
   DetailSection,
@@ -50,23 +44,9 @@ import { usePluginHomepages } from './use-plugin-homepages'
 
 const INSTALL_PAGE_SIZE = 100
 
-/** Install records from the CLI plus per-name enabled state. */
-interface InstalledRecords {
-  names: Set<string>
-  /** Verbatim `<name>@<marketplace>` install records. */
-  ids: Set<string>
-  enabled: Map<string, boolean>
-}
-
-const NO_INSTALLS: InstalledRecords = {
-  names: new Set(),
-  ids: new Set(),
-  enabled: new Map(),
-}
-
 /**
- * Second-level Install page (Marketplace): one deduplicated list over the whole
- * catalog, `All` source filter + search at the toolbar, three-line rows rendered
+ * Second-level Install page (Marketplace): catalog with a source
+ * filter and search at the toolbar, three-line rows rendered
  * incrementally (a sentinel appends the next page near the viewport end).
  */
 export function InstallPluginPage() {
@@ -89,54 +69,36 @@ export function InstallPluginPage() {
     void refreshInstalled()
   }, [])
 
-  const installed = useMemo<InstalledRecords>(() => {
-    if (!installedPlugins && installedChanges.size === 0) return NO_INSTALLS
-    const names = new Set<string>()
+  const installed = useMemo(() => {
     const ids = new Set<string>()
     const enabled = new Map<string, boolean>()
     for (const plugin of installedPlugins ?? []) {
-      const name = installedName(plugin.id)
-      names.add(name)
       ids.add(plugin.id)
-      enabled.set(name, plugin.enabled)
+      enabled.set(plugin.id, plugin.enabled)
     }
     for (const [id, change] of installedChanges) {
-      const name = installedName(id)
       if (change === 'remove') {
         ids.delete(id)
-        if (![...ids].some((installedId) => installedName(installedId) === name)) {
-          names.delete(name)
-          enabled.delete(name)
-        }
+        enabled.delete(id)
       } else {
         ids.add(id)
-        names.add(name)
-        enabled.set(name, typeof change === 'boolean' ? change : true)
+        enabled.set(id, typeof change === 'boolean' ? change : true)
       }
     }
-    return { names, ids, enabled }
+    return { ids, enabled }
   }, [installedPlugins, installedChanges])
 
-  const entries = useMemo(
-    () => orderCatalog(dedupeCatalog(catalog ?? [], installed)),
-    [catalog, installed],
-  )
-  const homepagesById = usePluginHomepages(entries, installed.names)
+  const entries = useMemo(() => {
+    const unique = [...new Map((catalog ?? []).map((entry) => [entry.pluginId, entry])).values()]
+    return orderCatalog(
+      sourceFilter ? unique.filter((entry) => entry.marketplaceName === sourceFilter) : unique,
+    )
+  }, [catalog, sourceFilter])
+  const homepagesById = usePluginHomepages(entries, installed.ids)
 
-  const rows = useMemo(() => {
-    const query = search.trim().toLowerCase()
-    return entries.filter((entry) => {
-      if (sourceFilter && entry.marketplaceName !== sourceFilter) return false
-      if (!query) return true
-      return (
-        entry.name.toLowerCase().includes(query) ||
-        (entry.description ?? '').toLowerCase().includes(query) ||
-        entry.marketplaceName.toLowerCase().includes(query)
-      )
-    })
-  }, [entries, sourceFilter, search])
+  const rows = useMemo(() => searchCatalog(entries, search), [entries, search])
 
-  const visibleSources = useMemo(() => catalogSources(entries), [entries])
+  const visibleSources = useMemo(() => catalogSources(catalog ?? []), [catalog])
   const sourceItems = useMemo(
     () => [
       { value: '', label: t('settings.agent.plugins.allSources') },
@@ -146,7 +108,7 @@ export function InstallPluginPage() {
   )
   // Optimistic menu state wins, then the CLI's install record, then enabled.
   const isEntryEnabled = (entry: CatalogEntry) =>
-    enabledById.get(entry.pluginId) ?? installed.enabled.get(entry.name) ?? true
+    enabledById.get(entry.pluginId) ?? installed.enabled.get(entry.pluginId) ?? true
   const shown = rows.slice(0, renderLimit)
   const hasMore = rows.length > renderLimit
 
@@ -260,7 +222,7 @@ export function InstallPluginPage() {
           data-install-list
         >
           {shown.map((entry) => {
-            const isInstalled = installed.names.has(entry.name)
+            const isInstalled = installed.ids.has(entry.pluginId)
             const isEnabled = isEntryEnabled(entry)
             return (
               <div

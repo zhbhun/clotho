@@ -1,11 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import type { AgentMarketplacePlugin } from '../../../services/claude/agent-config'
-import { catalogSources, dedupeCatalog, installedName, orderCatalog } from './install-catalog'
+import { catalogSources, orderCatalog, searchCatalog } from './install-catalog'
 
 const DIR = 'anthropic-plugin-directory'
-
-const EMPTY_INSTALLED = { names: new Set<string>(), ids: new Set<string>() }
 
 function entry(
   name: string,
@@ -21,61 +19,12 @@ function entry(
   }
 }
 
-describe('dedupeCatalog', () => {
-  it('collapses same-name entries from multiple sources into one', () => {
-    const entries = dedupeCatalog(
-      [entry('superpowers', DIR), entry('superpowers', 'superpowers-marketplace')],
-      { names: new Set(['superpowers']), ids: new Set(['superpowers@superpowers-marketplace']) },
-    )
-    expect(entries).toHaveLength(1)
-    expect(entries[0].marketplaceName).toBe('superpowers-marketplace')
-  })
-
-  it('prefers the installed entry over uninstalled ones', () => {
-    const entries = dedupeCatalog([entry('x', DIR, 9999), entry('x', 'zhbhun')], {
-      names: new Set(['x']),
-      ids: new Set(['x@zhbhun']),
-    })
-    expect(entries[0].marketplaceName).toBe('zhbhun')
-  })
-
-  it('prefers the installed directory entry over an uninstalled marketplace one', () => {
-    const entries = dedupeCatalog([entry('x', DIR), entry('x', 'zhbhun', 9999)], {
-      names: new Set(['x']),
-      ids: new Set(['x@anthropic-plugin-directory']),
-    })
-    expect(entries[0].marketplaceName).toBe(DIR)
-  })
-
-  it('prefers a registered marketplace over the directory when neither is installed', () => {
-    const entries = dedupeCatalog(
-      [entry('frontend-design', DIR), entry('frontend-design', 'claude-plugins-official')],
-      EMPTY_INSTALLED,
-    )
-    expect(entries).toHaveLength(1)
-    expect(entries[0].marketplaceName).toBe('claude-plugins-official')
-  })
-
-  it('breaks ties deterministically by marketplace name', () => {
-    const entries = dedupeCatalog(
-      [entry('dup', 'zzz-market'), entry('dup', 'aaa-market')],
-      EMPTY_INSTALLED,
-    )
-    expect(entries[0].marketplaceName).toBe('aaa-market')
-  })
-
-  it('marks directory entries with the directory source', () => {
-    const entries = dedupeCatalog([entry('solo', DIR)], EMPTY_INSTALLED)
-    expect(entries[0].source).toBe('directory')
-  })
-})
-
 describe('orderCatalog', () => {
   it('sorts by install count descending with unknown counts last', () => {
     const ordered = orderCatalog([
-      { pluginId: 'a@d', name: 'a', marketplaceName: 'd', source: 'directory' },
-      { pluginId: 'b@d', name: 'b', marketplaceName: 'd', installCount: 500, source: 'directory' },
-      { pluginId: 'c@d', name: 'c', marketplaceName: 'd', installCount: 1200, source: 'directory' },
+      { pluginId: 'a@d', name: 'a', marketplaceName: 'd' },
+      { pluginId: 'b@d', name: 'b', marketplaceName: 'd', installCount: 500 },
+      { pluginId: 'c@d', name: 'c', marketplaceName: 'd', installCount: 1200 },
     ])
     expect(ordered.map((e) => e.name)).toEqual(['c', 'b', 'a'])
   })
@@ -87,14 +36,12 @@ describe('orderCatalog', () => {
         name: 'beta',
         marketplaceName: 'd',
         installCount: 10,
-        source: 'directory',
       },
       {
         pluginId: 'alpha@d',
         name: 'alpha',
         marketplaceName: 'd',
         installCount: 10,
-        source: 'directory',
       },
     ])
     expect(ordered.map((e) => e.name)).toEqual(['alpha', 'beta'])
@@ -107,14 +54,12 @@ describe('orderCatalog', () => {
         name: 'b',
         marketplaceName: 'd',
         installCount: 1,
-        source: 'directory' as const,
       },
       {
         pluginId: 'a@d',
         name: 'a',
         marketplaceName: 'd',
         installCount: 1,
-        source: 'directory' as const,
       },
     ]
     expect(orderCatalog(input).map((e) => e.name)).toEqual(
@@ -125,15 +70,12 @@ describe('orderCatalog', () => {
 
 describe('catalogSources', () => {
   it('lists distinct sources in plain alphabetical order', () => {
-    const entries = dedupeCatalog(
-      [
-        entry('a', DIR),
-        entry('b', 'zhbhun'),
-        entry('c', 'aaa-market'),
-        entry('d', 'claude-plugins-official'),
-      ],
-      EMPTY_INSTALLED,
-    )
+    const entries = [
+      entry('a', DIR),
+      entry('b', 'zhbhun'),
+      entry('c', 'aaa-market'),
+      entry('d', 'claude-plugins-official'),
+    ]
     expect(catalogSources(entries)).toEqual([
       'aaa-market',
       DIR,
@@ -143,10 +85,44 @@ describe('catalogSources', () => {
   })
 })
 
-describe('installedName', () => {
-  it('splits name from marketplace at the last @', () => {
-    expect(installedName('superpowers@superpowers-marketplace')).toBe('superpowers')
-    expect(installedName('weird@name@market')).toBe('weird@name')
-    expect(installedName('bare')).toBe('bare')
+describe('searchCatalog', () => {
+  it('ranks shorter prefixes above more popular longer ones and preserves popularity for ties', () => {
+    const entries = orderCatalog([
+      entry('superpower-builder', DIR, 9000),
+      entry('superpowers', DIR),
+      entry('superpowers', 'official', 1000),
+      entry('superpower', 'other', 0),
+      entry('my-superpower', 'other', 99999),
+    ])
+
+    expect(searchCatalog(entries, 'superpower').map((item) => item.pluginId)).toEqual([
+      'superpower@other',
+      'superpowers@official',
+      `superpowers@${DIR}`,
+      `superpower-builder@${DIR}`,
+      'my-superpower@other',
+    ])
+  })
+
+  it('ranks name matches before other matches while retaining popularity within each group', () => {
+    const entries = orderCatalog([
+      { ...entry('unrelated', 'superpowers-market', 9000), description: 'Other' },
+      { ...entry('related', 'other', 8000), description: 'Uses superpowers' },
+      entry('my-superpowers', 'other', 7000),
+      entry('superpowers-extra', 'other', 6000),
+      entry('superpowers', DIR),
+      entry('superpowers', 'official', 1000),
+      entry('not-matched', 'other', 9999),
+    ])
+
+    expect(searchCatalog(entries, '  SUPERPOWERS  ').map((item) => item.pluginId)).toEqual([
+      'superpowers@official',
+      `superpowers@${DIR}`,
+      'superpowers-extra@other',
+      'my-superpowers@other',
+      'unrelated@superpowers-market',
+      'related@other',
+    ])
+    expect(searchCatalog(entries, '  ')).toEqual(entries)
   })
 })

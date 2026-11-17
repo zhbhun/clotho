@@ -558,7 +558,7 @@ describe('InstallPluginPage', () => {
     expect(screen.queryByText(/3 条|共 3/)).toBeNull()
   })
 
-  it('dedupes same-name entries to one installed entry', async () => {
+  it('shows same-name entries from both sources with independent installation state', async () => {
     mock.listAgentAvailablePlugins.mockResolvedValue([
       catalogEntry({
         pluginId: 'superpowers@anthropic-plugin-directory',
@@ -582,13 +582,11 @@ describe('InstallPluginPage', () => {
     renderWithProviders(<InstallPluginPage />)
 
     const list = await findInstallList()
-    // Exactly one superpowers row, shown as installed (⋮ menu instead of +).
-    expect(list.getAllByText('superpowers')).toHaveLength(1)
+    expect(list.getAllByText('superpowers')).toHaveLength(2)
     expect(list.getByRole('button', { name: '更多操作' })).toBeInTheDocument()
-    expect(list.queryByRole('button', { name: '安装插件' })).toBeNull()
-    // The registered marketplace wins as the source label; no directory copy.
+    expect(list.getByRole('button', { name: '安装插件' })).toBeInTheDocument()
     expect(list.getByText('superpowers-marketplace')).toBeInTheDocument()
-    expect(list.queryByText('anthropic-plugin-directory')).toBeNull()
+    expect(list.getByText('anthropic-plugin-directory')).toBeInTheDocument()
   })
 
   it('narrows the list through the source filter and restores All', async () => {
@@ -618,6 +616,54 @@ describe('InstallPluginPage', () => {
     expect(list.getByText('docs')).toBeInTheDocument()
   })
 
+  it('finds same-name plugins in each source and installs the selected source', async () => {
+    mock.listAgentAvailablePlugins.mockResolvedValue([
+      catalogEntry({
+        pluginId: 'frontend-design@claude-plugins-official',
+        name: 'frontend-design',
+        marketplaceName: 'claude-plugins-official',
+      }),
+      catalogEntry({
+        pluginId: 'frontend-design@anthropic-plugin-directory',
+        name: 'frontend-design',
+        marketplaceName: 'anthropic-plugin-directory',
+      }),
+    ])
+    mock.listAgentPlugins.mockResolvedValue([
+      installedPlugin({
+        id: 'frontend-design@claude-plugins-official',
+        name: 'frontend-design',
+        marketplace: 'claude-plugins-official',
+      }),
+    ])
+    mock.installAgentPlugin.mockResolvedValue(undefined)
+    const user = userEvent.setup()
+    renderWithProviders(<InstallPluginPage />)
+
+    const list = await findInstallList()
+    await user.type(screen.getByPlaceholderText('搜索插件…'), 'frontend-de')
+    expect(list.getAllByText('frontend-design')).toHaveLength(2)
+    expect(list.getByText('claude-plugins-official')).toBeInTheDocument()
+    expect(list.getByText('anthropic-plugin-directory')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('combobox', { name: '来源' }))
+    await user.click(await screen.findByRole('option', { name: 'anthropic-plugin-directory' }))
+    expect(list.getByText('frontend-design')).toBeInTheDocument()
+    expect(list.getByText('anthropic-plugin-directory')).toBeInTheDocument()
+    await user.click(list.getByRole('button', { name: '安装插件' }))
+    await waitFor(() =>
+      expect(mock.installAgentPlugin).toHaveBeenCalledWith(
+        'frontend-design@anthropic-plugin-directory',
+      ),
+    )
+
+    await user.click(screen.getByRole('combobox', { name: '来源' }))
+    await user.click(await screen.findByRole('option', { name: 'claude-plugins-official' }))
+    expect(list.getByText('frontend-design')).toBeInTheDocument()
+    expect(list.getByText('claude-plugins-official')).toBeInTheDocument()
+    expect(list.getByRole('button', { name: '更多操作' })).toBeInTheDocument()
+  })
+
   it('applies search on top of the source filter', async () => {
     mock.listAgentAvailablePlugins.mockResolvedValue([
       catalogEntry({ pluginId: 'alpha@acme', name: 'alpha', description: 'Alpha formats' }),
@@ -642,6 +688,45 @@ describe('InstallPluginPage', () => {
     expect(list.getByText('alpha')).toBeInTheDocument()
     expect(list.queryByText('beta')).toBeNull()
     expect(list.queryByText('gamma')).toBeNull()
+  })
+
+  it('shows exact matches from both sources before other search results', async () => {
+    mock.listAgentAvailablePlugins.mockResolvedValue([
+      catalogEntry({
+        pluginId: 'related@acme',
+        name: 'related',
+        description: 'Uses superpowers',
+        installCount: 5000,
+      }),
+      catalogEntry({
+        pluginId: 'superpowers-extra@acme',
+        name: 'superpowers-extra',
+        installCount: 2000,
+      }),
+      catalogEntry({
+        pluginId: 'superpowers@claude-plugins-official',
+        name: 'superpowers',
+        marketplaceName: 'claude-plugins-official',
+        installCount: 1000,
+      }),
+      catalogEntry({
+        pluginId: 'superpowers@anthropic-plugin-directory',
+        name: 'superpowers',
+        marketplaceName: 'anthropic-plugin-directory',
+        installCount: undefined,
+      }),
+    ])
+    const user = userEvent.setup()
+    renderWithProviders(<InstallPluginPage />)
+    await findInstallList()
+    await user.type(screen.getByPlaceholderText('搜索插件…'), 'superpowers')
+
+    const tiles = [...document.querySelectorAll('[data-install-tile]')]
+    expect(tiles).toHaveLength(4)
+    expect(tiles[0]).toHaveTextContent('claude-plugins-official')
+    expect(tiles[1]).toHaveTextContent('anthropic-plugin-directory')
+    expect(tiles[2]).toHaveTextContent('superpowers-extra')
+    expect(tiles[3]).toHaveTextContent('related')
   })
 
   it('toggles enable state from the installed menu', async () => {

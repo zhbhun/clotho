@@ -107,20 +107,6 @@ The Plugins tab of Marketplace SHALL present a single unified catalog of every a
 - **WHEN** the user opens Marketplace
 - **THEN** the Plugins tab shows one catalog list containing built-in directory entries and entries from the user's registered marketplaces side by side, with no Public/Community/Personal control and no refresh action
 
-### Requirement: Catalog deduplication by plugin name
-
-When several catalog entries share a plugin name across sources, the page SHALL show exactly one entry, resolved by precedence: an entry whose plugin is installed wins over any uninstalled entry; among uninstalled entries, one from a user-registered marketplace wins over one from the built-in directory; remaining ties resolve deterministically (stable order by marketplace then plugin id). Installed status SHALL be checked per plugin name, matching any `name@marketplace` install record.
-
-#### Scenario: Same plugin in directory and a registered marketplace deduplicates
-
-- **WHEN** the catalog contains `superpowers` from both the built-in directory and the registered `superpowers-marketplace`, and the installed record is `superpowers@superpowers-marketplace`
-- **THEN** the list shows a single `superpowers` entry marked Installed (matching by plugin name), with `superpowers-marketplace` as its source label, and no second directory entry is shown
-
-#### Scenario: Duplicate uninstalled entries prefer the registered marketplace
-
-- **WHEN** the catalog contains `frontend-design` from both the built-in directory and the registered `claude-plugins-official`, and neither is installed
-- **THEN** the list shows a single `frontend-design` entry with `claude-plugins-official` as its source label
-
 ### Requirement: Catalog entry presentation
 
 Each catalog entry SHALL render as a two-column icon row (two equal columns at the page's content width; a single column when the viewport is narrow). Each row SHALL show: a letter avatar on the left — a rounded square tinted by a hue derived deterministically from the plugin name, displaying the first character of the plugin name in uppercase — followed by three text lines: the plugin name on the first line, the description on the second line (truncated to one line), and on the third line as smaller subtle text the source label followed by the install count when known (a download icon before the number, no unit word). The source label SHALL be the verbatim marketplace name (`anthropic-plugin-directory` for entries whose marketplace is the built-in Anthropic directory); no display-name layer. Rows SHALL be borderless with hover highlight and SHALL NOT overflow their column: long descriptions truncate with an ellipsis instead of widening the column.
@@ -176,12 +162,32 @@ The entry's right end SHALL be a borderless `+` button for uninstalled entries; 
 
 ### Requirement: Deterministic catalog ordering
 
-Catalog ordering SHALL be deterministic: by install count descending (entries without a known count last), then alphabetical by plugin name.
+Without search text, catalog ordering SHALL be deterministic: by install count descending (entries without a known count last), then alphabetical by plugin name. With nonempty search text, matching entries SHALL first be ordered by case-insensitive name match: exact name, name prefix, name substring, then description or marketplace matches. Within the name-prefix group, shorter names SHALL appear first; names of equal length SHALL retain the default catalog ordering. Within every other group the default catalog ordering SHALL apply.
 
 #### Scenario: Ordering across entry kinds
 
-- **WHEN** the catalog contains an entry with 500 installs, an entry with no install count, and an entry with 1200 installs, all names distinct
+- **WHEN** the catalog contains an entry with 500 installs, an entry with no install count, and an entry with 1200 installs, all names distinct, and no search text is entered
 - **THEN** the list shows the 1200-install entry first, then the 500-install entry, then the no-count entry; entries with equal install counts appear in alphabetical name order, stable across reloads
+
+#### Scenario: Search ranks exact matches before popularity
+
+- **WHEN** the user searches `superpowers`, and the catalog has two entries named `superpowers` from different marketplaces, an entry named `superpowers-extra`, and another matching only in its description
+- **THEN** the two exact name matches appear first, ordered by install count, followed by the prefix match and then the description match regardless of those entries' install counts
+
+#### Scenario: Partial name and marketplace matches
+
+- **WHEN** a search matches one plugin at the start of its name, another within its name, and a third only in its marketplace name
+- **THEN** the prefix match appears before the name substring match, which appears before the marketplace match
+
+#### Scenario: Search ignores casing and surrounding whitespace
+
+- **WHEN** the search text contains surrounding spaces or uppercase letters
+- **THEN** ranking and matching use the trimmed, case-insensitive text
+
+#### Scenario: Shorter prefix matches rank higher
+
+- **WHEN** the user searches `superpower`, and `superpowers` exists in two marketplaces while `superpower-builder` has more installs than one of them
+- **THEN** both `superpowers` entries appear before `superpower-builder`, with same-length matches ordered by install count
 
 ### Requirement: Incremental rendering of the catalog
 
@@ -199,7 +205,7 @@ The page SHALL load the full catalog data up front (the CLI exposes no paginatio
 
 ### Requirement: Source filter and search on the unified catalog
 
-The page SHALL render a source filter dropdown next to the search input, listing `All` (default) plus one option per distinct source in the deduplicated catalog. Selecting a source narrows the list to entries from that source; search text (name, description, and marketplace match) applies on top of the filter.
+The page SHALL render a source filter dropdown next to the search input, listing `All` (default) plus one option per distinct source in the full catalog. Selecting a source narrows the list to entries from that source; installed state and management actions SHALL use the exact plugin ID; search text (name, description, and marketplace match) applies on top of the filter.
 
 #### Scenario: Source filter narrows the list
 
@@ -210,6 +216,21 @@ The page SHALL render a source filter dropdown next to the search input, listing
 
 - **WHEN** a source other than `All` is selected and the user types text into search
 - **THEN** the list shows only entries from the selected source whose name, description, or marketplace matches the text
+
+#### Scenario: Search a source containing a duplicate plugin
+
+- **WHEN** `frontend-design` exists in the directory and official marketplace, and the user selects the directory and searches for `frontend-de`
+- **THEN** the directory entry is shown, and both entries are shown in the All view
+
+#### Scenario: Same-name installation belongs to another source
+
+- **WHEN** the official marketplace entry is installed and the user selects the directory entry of the same name
+- **THEN** the directory entry offers installation instead of actions for the other marketplace entry
+
+#### Scenario: A source contains only duplicate names
+
+- **WHEN** every plugin in a source shares a name with another source
+- **THEN** the source remains selectable and its entries can be shown
 
 ### Requirement: Installing from the unified list
 
@@ -309,3 +330,17 @@ Successful install, uninstall, enable, disable, add, remove, or refresh operatio
 #### Scenario: Marketplace sources change
 - **WHEN** a marketplace is added, removed, or refreshed successfully
 - **THEN** the catalog is revalidated and reflects the changed sources without allowing an older response to replace the newer result
+
+### Requirement: Catalog entries by source
+
+The catalog SHALL show one entry per plugin ID, including same-name plugins from different marketplaces, and SHALL use the full plugin ID for installed status and management actions.
+
+#### Scenario: Same name in two sources
+
+- **WHEN** the user searches All for a plugin present in two marketplaces
+- **THEN** both entries are shown with their own source labels and actions
+
+#### Scenario: Only one source is installed
+
+- **WHEN** one of two same-name entries is installed
+- **THEN** only that entry shows installed actions and the other offers installation
