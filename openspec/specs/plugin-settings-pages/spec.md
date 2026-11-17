@@ -320,7 +320,7 @@ The unified catalog feed SHALL keep the `version` field the CLI's available-plug
 
 ### Requirement: Navigation and dirty guard follow the shared detail navigation
 
-All plugin and Marketplace pages SHALL follow the shared settings detail navigation: at most one page open at a time in the content pane, breadcrumb bar visible only on non-top-level pages, and unsaved form changes (the Add marketplace form) gated by the discard-confirmation dialog on list-bound navigation. Marketplace details SHALL use Marketplace as their breadcrumb root; returning from a detail SHALL restore the tab from which it was opened.
+All plugin and Marketplace pages SHALL follow the shared settings detail navigation: at most one page open at a time in the content pane, breadcrumb bar visible only on non-top-level pages, and unsaved form changes (the Add marketplace form) gated by the discard-confirmation dialog on list-bound navigation. A catalog plugin detail SHALL use the localized Plugins tab label as its breadcrumb root; a marketplace detail SHALL use the localized Marketplaces tab label. Returning from a detail SHALL restore the tab from which it was opened. Add marketplace SHALL retain Marketplace as its breadcrumb root.
 
 #### Scenario: Three-level breadcrumb navigation
 
@@ -332,6 +332,21 @@ All plugin and Marketplace pages SHALL follow the shared settings detail navigat
 
 - **WHEN** the user returns from a marketplace detail
 - **THEN** Marketplace shows the Marketplaces tab
+
+#### Scenario: Catalog plugin breadcrumb root
+
+- **WHEN** a user opens a plugin detail from the Marketplace Plugins tab
+- **THEN** the breadcrumb root shows the localized Plugins label and returns to that tab when clicked
+
+#### Scenario: Marketplace detail breadcrumb root
+
+- **WHEN** a user opens a marketplace detail from the Marketplaces tab
+- **THEN** the breadcrumb root shows the localized Marketplaces label and returns to that tab when clicked
+
+#### Scenario: Add marketplace breadcrumb root
+
+- **WHEN** a user opens Add marketplace from the Marketplaces tab
+- **THEN** the breadcrumb root retains the localized Marketplace category label and the existing dirty guard still applies
 
 ### Requirement: Marketplace catalog retains the last successful result
 The Marketplace Plugins tab SHALL retain the most recent successful catalog and installed-plugin results in memory for the renderer lifetime. On a subsequent visit, it SHALL display the cached catalog without a blocking loading indicator and revalidate both results in the background. An empty successful catalog SHALL count as a cached result.

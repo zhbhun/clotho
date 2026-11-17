@@ -296,6 +296,15 @@ function SettingsPageContent({
   const detailCategory = detailCategoryId
     ? (CATEGORIES.find((item) => item.id === detailCategoryId) ?? null)
     : null
+  let detailRoot = detailCategory ? t(detailCategory.labelKey) : ''
+  if (
+    detail.view.kind === 'detail' &&
+    detail.view.categoryId === 'agent-marketplace' &&
+    detail.view.file
+  ) {
+    if (detail.view.page === 'install') detailRoot = t('settings.agent.title.plugins')
+    if (detail.view.page === 'marketplaces') detailRoot = t('settings.agent.plugins.marketplaces')
+  }
 
   /**
    * Sidebar navigation while any detail page is open: with unsaved changes the
@@ -447,7 +456,7 @@ function SettingsPageContent({
                             else detail.backToList()
                           }}
                         >
-                          {detailCategory ? t(detailCategory.labelKey) : ''}
+                          {detailRoot}
                         </BreadcrumbLink>
                       </BreadcrumbItem>
                       <BreadcrumbSeparator />

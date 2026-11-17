@@ -238,17 +238,19 @@ describe('SettingsPage', () => {
 
     await user.click(await screen.findByText('formatter'))
     expect(await screen.findByText('Formatter details')).toBeInTheDocument()
-    expect(screen.getByTestId('settings-breadcrumb-root')).toHaveTextContent('插件广场')
+    expect(screen.getByTestId('settings-breadcrumb-root')).toHaveTextContent(/^插件$/)
     await user.click(screen.getByTestId('settings-breadcrumb-root'))
     expect(screen.getByRole('tab', { name: '插件' })).toHaveAttribute('aria-selected', 'true')
 
     await user.click(screen.getByRole('tab', { name: '插件市场' }))
     await user.click(await screen.findByText('github · acme/plugins'))
     expect(await screen.findByRole('heading', { name: 'acme' })).toBeInTheDocument()
+    expect(screen.getByTestId('settings-breadcrumb-root')).toHaveTextContent(/^插件市场$/)
     await user.click(screen.getByTestId('settings-breadcrumb-root'))
     expect(screen.getByRole('tab', { name: '插件市场' })).toHaveAttribute('aria-selected', 'true')
 
     await user.click(await screen.findByRole('button', { name: '添加市场' }))
+    expect(screen.getByTestId('settings-breadcrumb-root')).toHaveTextContent(/^插件广场$/)
     await user.type(screen.getByLabelText('来源'), 'acme/new-market')
     await user.click(screen.getByTestId('settings-breadcrumb-root'))
     expect(await screen.findByRole('alertdialog', { name: '放弃更改？' })).toBeInTheDocument()
