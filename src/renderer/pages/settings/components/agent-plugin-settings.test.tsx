@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactElement } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -138,8 +138,8 @@ describe('MarketplaceListPage cache', () => {
     expect(await screen.findByText('directory · ~/projects/local')).toBeInTheDocument()
     view.unmount()
     renderWithProviders(<MarketplaceDetailPage marketplaceName="local" />)
-    expect(await screen.findByText('directory · ~/projects/local')).toBeInTheDocument()
-    expect(screen.getByText('~/projects/local')).toBeInTheDocument()
+    expect(await screen.findByText('~/projects/local')).toBeInTheDocument()
+    expect(screen.getByText('directory')).toBeInTheDocument()
   })
 
   it('shows cached results on return while revalidating without requesting the catalog', async () => {
@@ -520,6 +520,82 @@ describe('MarketplaceDetailPage remove confirmation', () => {
     }
   }
 
+  it('shows marketplace identity and description with only its own plugins', async () => {
+    mock.listAgentMarketplaces.mockResolvedValue([
+      marketplaceEntry({ owner: 'Alice', description: 'Helpful tools' }),
+    ])
+    mock.listAgentAvailablePlugins.mockResolvedValue([
+      {
+        pluginId: 'one@acme',
+        name: 'one',
+        marketplaceName: 'acme',
+        description: 'First tool',
+        installCount: 1234,
+      },
+      { pluginId: 'other@elsewhere', name: 'other', marketplaceName: 'elsewhere' },
+    ])
+    renderWithProviders(<MarketplaceDetailPage marketplaceName="acme" />)
+    expect(await screen.findByText('Helpful tools')).toBeInTheDocument()
+    expect(screen.getByText('By Alice')).toBeInTheDocument()
+    expect(screen.getByText('Alice')).toBeInTheDocument()
+    expect(screen.getByText('First tool')).toBeInTheDocument()
+    expect(screen.getByText('1,234')).toBeInTheDocument()
+    expect(screen.getByText('acme/plugins')).toBeInTheDocument()
+    expect(screen.queryByText('other')).toBeNull()
+  })
+
+  it('refreshes the marketplace from the overflow menu', async () => {
+    mock.listAgentMarketplaces.mockResolvedValue([marketplaceEntry()])
+    mock.refreshAgentMarketplace.mockResolvedValue(undefined)
+    const user = userEvent.setup()
+    renderWithProviders(<MarketplaceDetailPage marketplaceName="acme" />)
+    await screen.findByText('acme/plugins')
+    expect(screen.queryByRole('button', { name: '刷新' })).toBeNull()
+    await user.click(screen.getByRole('button', { name: '更多操作' }))
+    await user.click(await screen.findByRole('menuitem', { name: '刷新' }))
+    await waitFor(() => expect(mock.refreshAgentMarketplace).toHaveBeenCalledWith('acme'))
+  })
+
+  it('keeps the installed badge when an older installed-list request finishes late', async () => {
+    let resolveOld!: (plugins: agentConfig.AgentPluginInfo[]) => void
+    mock.listAgentPlugins
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveOld = resolve
+        }),
+      )
+      .mockReturnValue(new Promise(() => {}))
+    mock.listAgentMarketplaces.mockResolvedValue([marketplaceEntry()])
+    mock.listAgentAvailablePlugins.mockResolvedValue([
+      { pluginId: 'one@acme', name: 'one', marketplaceName: 'acme' },
+    ])
+    mock.installAgentPlugin.mockResolvedValue(undefined)
+    const user = userEvent.setup()
+    renderWithProviders(<MarketplaceDetailPage marketplaceName="acme" />)
+    await user.click(await screen.findByRole('button', { name: '安装插件' }))
+    expect(mock.installAgentPlugin).toHaveBeenCalledWith('one@acme')
+    expect(await screen.findByText('已安装')).toBeInTheDocument()
+    await act(async () => resolveOld([]))
+    expect(screen.getByText('已安装')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '安装插件' })).toBeNull()
+  })
+
+  it('retains the plus action after a failed install and shows existing installed plugins', async () => {
+    mock.listAgentPlugins.mockResolvedValue([installedPlugin({ id: 'one@acme', name: 'one' })])
+    mock.listAgentMarketplaces.mockResolvedValue([marketplaceEntry()])
+    mock.listAgentAvailablePlugins.mockResolvedValue([
+      { pluginId: 'one@acme', name: 'one', marketplaceName: 'acme' },
+      { pluginId: 'two@acme', name: 'two', marketplaceName: 'acme' },
+    ])
+    mock.installAgentPlugin.mockRejectedValue(new Error('install failed'))
+    const user = userEvent.setup()
+    renderWithProviders(<MarketplaceDetailPage marketplaceName="acme" />)
+    expect(await screen.findByText('已安装')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '安装插件' }))
+    expect(await screen.findByText('安装失败')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '安装插件' })).toBeInTheDocument()
+  })
+
   it('removes only after confirming and returns to the marketplaces page', async () => {
     mock.listAgentMarketplaces.mockResolvedValue([marketplaceEntry()])
     mock.removeAgentMarketplace.mockResolvedValue(undefined)
@@ -530,7 +606,7 @@ describe('MarketplaceDetailPage remove confirmation', () => {
     await screen.findByText('acme/plugins')
     await user.click(await screen.findByRole('button', { name: '更多操作' }))
     const menu = await screen.findByRole('menu', { name: '更多操作' })
-    await user.click(within(menu).getByRole('menuitem', { name: '移除市场' }))
+    await user.click(within(menu).getByRole('menuitem', { name: '卸载' }))
 
     // Not removed until confirmed.
     expect(mock.removeAgentMarketplace).not.toHaveBeenCalled()
@@ -550,7 +626,7 @@ describe('MarketplaceDetailPage remove confirmation', () => {
     await screen.findByText('acme/plugins')
     await user.click(await screen.findByRole('button', { name: '更多操作' }))
     const menu = await screen.findByRole('menu', { name: '更多操作' })
-    await user.click(within(menu).getByRole('menuitem', { name: '移除市场' }))
+    await user.click(within(menu).getByRole('menuitem', { name: '卸载' }))
 
     await user.click(await screen.findByRole('button', { name: '取消' }))
     expect(mock.removeAgentMarketplace).not.toHaveBeenCalled()

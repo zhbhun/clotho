@@ -191,10 +191,18 @@ describe('list operations', () => {
     const root = await mkdtemp(path.join(tmpdir(), 'clotho-marketplaces-'))
     try {
       const manifests = [
-        JSON.stringify({ description: 'Primary', metadata: { description: 'Secondary' } }),
-        JSON.stringify({ description: ' ', metadata: { description: 'Metadata' } }),
+        JSON.stringify({
+          description: 'Primary',
+          metadata: { description: 'Secondary' },
+          owner: { name: 'Alice' },
+        }),
+        JSON.stringify({
+          description: ' ',
+          metadata: { description: 'Metadata' },
+          owner: { name: '  ' },
+        }),
         '{invalid',
-        JSON.stringify({ description: 17, metadata: { description: '' } }),
+        JSON.stringify({ description: 17, metadata: { description: '' }, owner: { name: 17 } }),
       ]
       for (const [index, manifest] of manifests.entries()) {
         const dir = path.join(root, String(index), '.claude-plugin')
@@ -210,12 +218,14 @@ describe('list operations', () => {
         callback(null, JSON.stringify(entries), '')
       })
       const marketplaces = await listMarketplaces()
-      expect(marketplaces.map(({ name, description }) => ({ name, description }))).toEqual([
-        { name: '0', description: 'Primary' },
-        { name: '1', description: 'Metadata' },
-        { name: '2', description: undefined },
-        { name: '3', description: undefined },
-        { name: '4', description: undefined },
+      expect(
+        marketplaces.map(({ name, description, owner }) => ({ name, description, owner })),
+      ).toEqual([
+        { name: '0', description: 'Primary', owner: 'Alice' },
+        { name: '1', description: 'Metadata', owner: undefined },
+        { name: '2', description: undefined, owner: undefined },
+        { name: '3', description: undefined, owner: undefined },
+        { name: '4', description: undefined, owner: undefined },
       ])
     } finally {
       await rm(root, { recursive: true, force: true })

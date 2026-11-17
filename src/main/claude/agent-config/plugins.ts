@@ -40,6 +40,7 @@ export interface MarketplacePlugin {
 export interface MarketplaceInfo {
   name: string
   description?: string
+  owner?: string
   source: { source: string; repo?: string; url?: string; path?: string }
   installLocation: string
 }
@@ -158,8 +159,10 @@ export async function listMarketplacePlugins(): Promise<MarketplacePlugin[]> {
   }))
 }
 
-async function readMarketplaceDescription(installLocation: string): Promise<string | undefined> {
-  if (!installLocation) return undefined
+async function readMarketplaceMetadata(
+  installLocation: string,
+): Promise<{ description?: string; owner?: string }> {
+  if (!installLocation) return {}
   try {
     const raw = await fs.readFile(
       path.join(installLocation, '.claude-plugin', 'marketplace.json'),
@@ -168,13 +171,18 @@ async function readMarketplaceDescription(installLocation: string): Promise<stri
     const manifest = JSON.parse(raw) as {
       description?: unknown
       metadata?: { description?: unknown }
+      owner?: { name?: unknown }
     }
     const description = [manifest?.description, manifest?.metadata?.description].find(
       (value): value is string => typeof value === 'string' && value.trim().length > 0,
     )
-    return description
+    const owner = manifest?.owner?.name
+    return {
+      ...(description ? { description } : {}),
+      ...(typeof owner === 'string' && owner.trim() ? { owner } : {}),
+    }
   } catch {
-    return undefined
+    return {}
   }
 }
 
@@ -182,10 +190,10 @@ export async function listMarketplaces(): Promise<MarketplaceInfo[]> {
   const marketplaces = await runPluginCommandJson<CliMarketplace[]>(['marketplace', 'list'])
   return Promise.all(
     marketplaces.map(async (entry) => {
-      const description = await readMarketplaceDescription(entry.installLocation)
+      const metadata = await readMarketplaceMetadata(entry.installLocation)
       return {
         name: entry.name,
-        ...(description ? { description } : {}),
+        ...metadata,
         source: { source: entry.source, repo: entry.repo, url: entry.url, path: entry.path },
         installLocation: entry.installLocation,
       }

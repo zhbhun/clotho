@@ -1,5 +1,5 @@
-import { RefreshCw } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Download, Plus, Puzzle } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -23,14 +23,19 @@ import {
   addAgentMarketplace,
   listAgentAvailablePlugins,
   listAgentMarketplaces,
-  listAgentPlugins,
   refreshAgentMarketplace,
   removeAgentMarketplace,
 } from '../../../services/claude/agent-config'
 import { tildePath } from '../../../utils/path-display'
 import { AgentEmpty } from './agent-shared'
-import { refreshMarketplaces, updateMarketplaces, useCatalogCache } from './catalog-cache'
+import {
+  refreshInstalled,
+  refreshMarketplaces,
+  updateMarketplaces,
+  useCatalogCache,
+} from './catalog-cache'
 import { PluginAvatar } from './plugin-avatar'
+import { DetailSection, PluginDetailIdentity, PluginInfoRows } from './plugin-detail-page'
 import {
   PluginOverflowMenu,
   RowChevron,
@@ -40,7 +45,6 @@ import {
 } from './plugin-shared'
 import { InstallPageSkeleton, MarketplaceDetailSkeleton } from './plugin-skeletons'
 import { useSettingsDetailStore } from './settings-detail-store'
-import { SettingsList, SettingsRow } from './settings-list'
 import { useDetailDirty } from './use-detail-dirty'
 
 /**
@@ -89,19 +93,19 @@ function useMarketplaces() {
 }
 
 function useInstalledPluginIds() {
-  const [ids, setIds] = useState<Set<string>>(new Set())
+  const installed = useCatalogCache((state) => state.installed)
+  const changes = useCatalogCache((state) => state.installedChanges)
   useEffect(() => {
-    let cancelled = false
-    listAgentPlugins()
-      .then((plugins) => {
-        if (!cancelled) setIds(new Set(plugins.map((plugin) => plugin.id)))
-      })
-      .catch(() => {})
-    return () => {
-      cancelled = true
-    }
+    void refreshInstalled()
   }, [])
-  return ids
+  return useMemo(() => {
+    const ids = new Set((installed ?? []).map((plugin) => plugin.id))
+    for (const [id, change] of changes) {
+      if (change === 'remove') ids.delete(id)
+      else ids.add(id)
+    }
+    return ids
+  }, [installed, changes])
 }
 
 /** Second-level Marketplaces page: registered sources with Add and a `⋯` menu. */
@@ -257,28 +261,17 @@ export function MarketplaceDetailPage({ marketplaceName }: { marketplaceName: st
 
   return (
     <section className="flex flex-col gap-5" data-marketplace-detail-page>
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="truncate text-xl font-medium tracking-tight">{marketplace.name}</h1>
-          <p className="mt-1 text-sm text-foreground-subtlest">
-            {[marketplace.source.source, marketplaceSource(marketplace)]
-              .filter(Boolean)
-              .join(' · ')}
-          </p>
-        </div>
+      <div className="flex items-center justify-between gap-4">
+        <PluginDetailIdentity name={marketplace.name} author={marketplace.owner} />
         <div className="flex shrink-0 items-center gap-2">
-          <Button
-            aria-label={t('settings.agent.plugins.refresh')}
-            size="icon-sm"
-            variant="outline"
-            onClick={() => void handleRefresh()}
-          >
-            <RefreshCw className="size-4" />
-          </Button>
           <PluginOverflowMenu
             items={[
               {
-                label: t('settings.agent.plugins.removeMarketplace'),
+                label: t('settings.agent.plugins.refresh'),
+                onSelect: () => void handleRefresh(),
+              },
+              {
+                label: t('settings.agent.plugins.uninstall'),
                 onSelect: () => setIsRemoveConfirmOpen(true),
                 destructive: true,
               },
@@ -288,47 +281,32 @@ export function MarketplaceDetailPage({ marketplaceName }: { marketplaceName: st
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-medium">{t('settings.agent.plugins.info')}</h3>
-        <div className="flex flex-col gap-2 rounded-lg border px-4 py-3">
-          <div className="grid grid-cols-[110px_1fr] gap-4 text-sm">
-            <span className="text-foreground-subtlest">{t('settings.agent.plugins.type')}</span>
-            <span className="min-w-0 truncate text-sm font-normal">
-              {marketplace.source.source}
-            </span>
-          </div>
-          <div className="grid grid-cols-[110px_1fr] gap-4 text-sm">
-            <span className="text-foreground-subtlest">{t('settings.agent.plugins.source')}</span>
-            <span className="min-w-0 truncate text-sm font-normal">
-              {marketplaceSource(marketplace) ?? marketplace.source.source}
-            </span>
-          </div>
-        </div>
-      </div>
+      {marketplace.description ? (
+        <p className="text-sm text-foreground-subtlest">{marketplace.description}</p>
+      ) : null}
 
-      <div className="flex flex-col gap-2">
-        <h3 className="flex items-center gap-1.5 text-sm font-medium">
-          {t('settings.agent.title.plugins')}
-          <span className="text-foreground-subtlest">{entries.length}</span>
-        </h3>
+      <DetailSection count={entries.length} title={t('settings.agent.title.plugins')}>
         {entries.length === 0 ? (
           <AgentEmpty />
         ) : (
-          <SettingsList>
+          <div className="flex flex-col pt-1">
             {entries.map((entry) => (
-              <SettingsRow className="gap-3" key={entry.pluginId} variant="compact">
+              <div
+                className="flex items-center gap-4 py-3"
+                data-marketplace-plugin
+                key={entry.pluginId}
+              >
+                <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-muted opacity-80">
+                  <Puzzle className="size-3.5" />
+                </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="truncate text-sm font-normal">{entry.name}</span>
-                    {typeof entry.installCount === 'number' ? (
-                      <Badge variant="secondary">
-                        {t('settings.agent.plugins.installCount', { count: entry.installCount })}
-                      </Badge>
-                    ) : null}
-                  </div>
+                  <div className="truncate">{entry.name}</div>
                   {entry.description ? (
-                    <div className="truncate text-sm text-foreground-subtle">
-                      {entry.description}
+                    <div className="truncate text-foreground-subtlest">{entry.description}</div>
+                  ) : null}
+                  {typeof entry.installCount === 'number' ? (
+                    <div className="flex items-center gap-1 text-xs text-foreground-subtlest">
+                      <Download className="size-3" /> {entry.installCount.toLocaleString()}
                     </div>
                   ) : null}
                 </div>
@@ -336,8 +314,10 @@ export function MarketplaceDetailPage({ marketplaceName }: { marketplaceName: st
                   <Badge variant="secondary">{t('settings.agent.plugins.installed')}</Badge>
                 ) : (
                   <Button
-                    size="sm"
-                    variant="outline"
+                    aria-label={t('settings.agent.plugins.install')}
+                    className="text-foreground-subtlest"
+                    size="icon"
+                    variant="ghost"
                     onClick={() =>
                       void installPluginWithToast(
                         entry.pluginId,
@@ -346,14 +326,26 @@ export function MarketplaceDetailPage({ marketplaceName }: { marketplaceName: st
                       )
                     }
                   >
-                    {t('settings.agent.plugins.install')}
+                    <Plus />
                   </Button>
                 )}
-              </SettingsRow>
+              </div>
             ))}
-          </SettingsList>
+          </div>
         )}
-      </div>
+      </DetailSection>
+      <DetailSection title={t('settings.agent.plugins.info')}>
+        <PluginInfoRows
+          rows={[
+            { key: t('settings.agent.plugins.author'), value: marketplace.owner },
+            { key: t('settings.agent.plugins.type'), value: marketplace.source.source },
+            {
+              key: t('settings.agent.plugins.source'),
+              value: marketplaceSource(marketplace) ?? marketplace.source.source,
+            },
+          ]}
+        />
+      </DetailSection>
       <AppAlertDialog onOpenChange={setIsRemoveConfirmOpen} open={isRemoveConfirmOpen}>
         <AppAlertDialogContent>
           <AlertDialogHeader>
