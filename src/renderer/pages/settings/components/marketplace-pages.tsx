@@ -27,6 +27,7 @@ import {
   refreshAgentMarketplace,
   removeAgentMarketplace,
 } from '../../../services/claude/agent-config'
+import { tildePath } from '../../../utils/path-display'
 import { AgentEmpty } from './agent-shared'
 import { refreshMarketplaces, updateMarketplaces, useCatalogCache } from './catalog-cache'
 import {
@@ -51,6 +52,11 @@ export function isRepoLike(value: string): boolean {
     return false
   }
   return /^(git@[\w.-]+:|https?:\/\/)[\w.-]+/.test(source) || /^[\w.-]+\/[\w.-]+/.test(source)
+}
+
+function marketplaceSource(marketplace: AgentMarketplaceInfo): string | undefined {
+  const { repo, url, path } = marketplace.source
+  return repo ?? url ?? (path ? tildePath(path) : undefined)
 }
 
 function useMarketplaces() {
@@ -164,7 +170,7 @@ export function MarketplaceListPage() {
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-normal">{marketplace.name}</div>
                 <div className="truncate text-sm text-foreground-subtlest">
-                  {[marketplace.source.source, marketplace.source.repo ?? marketplace.source.url]
+                  {[marketplace.source.source, marketplaceSource(marketplace)]
                     .filter(Boolean)
                     .join(' · ')}
                 </div>
@@ -245,7 +251,7 @@ export function MarketplaceDetailPage({ marketplaceName }: { marketplaceName: st
         <div className="min-w-0">
           <h1 className="truncate text-xl font-medium tracking-tight">{marketplace.name}</h1>
           <p className="mt-1 text-sm text-foreground-subtlest">
-            {[marketplace.source.source, marketplace.source.repo ?? marketplace.source.url]
+            {[marketplace.source.source, marketplaceSource(marketplace)]
               .filter(Boolean)
               .join(' · ')}
           </p>
@@ -284,7 +290,7 @@ export function MarketplaceDetailPage({ marketplaceName }: { marketplaceName: st
           <div className="grid grid-cols-[110px_1fr] gap-4 text-sm">
             <span className="text-foreground-subtlest">{t('settings.agent.plugins.source')}</span>
             <span className="min-w-0 truncate text-sm font-normal">
-              {marketplace.source.repo ?? marketplace.source.url ?? marketplace.source.source}
+              {marketplaceSource(marketplace) ?? marketplace.source.source}
             </span>
           </div>
         </div>

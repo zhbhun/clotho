@@ -14,7 +14,7 @@ import { ShortcutRuntimeProvider, shortcutRuntime } from '../../../services/shor
 import { AgentPluginSettings } from './agent-plugin-settings'
 import { useCatalogCache } from './catalog-cache'
 import { InstallPluginDetailPage, InstallPluginPage } from './install-page'
-import { MarketplaceAddPage, MarketplaceListPage } from './marketplace-pages'
+import { MarketplaceAddPage, MarketplaceDetailPage, MarketplaceListPage } from './marketplace-pages'
 import { useSettingsDetailStore } from './settings-detail-store'
 
 vi.mock('../../../services/claude/agent-config', () => ({
@@ -97,6 +97,22 @@ function installedPlugin(overrides: Partial<agentConfig.AgentPluginInfo> = {}) {
 }
 
 describe('MarketplaceListPage cache', () => {
+  it('shows a directory marketplace source in the list and detail', async () => {
+    mock.listAgentMarketplaces.mockResolvedValue([
+      {
+        name: 'local',
+        source: { source: 'directory', path: '/Users/alice/projects/local' },
+        installLocation: '/Users/alice/projects/local',
+      },
+    ])
+    const view = renderWithProviders(<MarketplaceListPage />)
+    expect(await screen.findByText('directory · ~/projects/local')).toBeInTheDocument()
+    view.unmount()
+    renderWithProviders(<MarketplaceDetailPage marketplaceName="local" />)
+    expect(await screen.findByText('directory · ~/projects/local')).toBeInTheDocument()
+    expect(screen.getByText('~/projects/local')).toBeInTheDocument()
+  })
+
   it('shows cached results on return while revalidating without requesting the catalog', async () => {
     const marketplace = {
       name: 'acme',

@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 
-import { shortMiddlePath } from '../../utils/path-display'
+import { shortMiddlePath } from '../../../../utils/path-display'
 
 /** Character budget while the row cannot be measured (e.g. jsdom tests). */
 const UNMEASURED_MAX = 80

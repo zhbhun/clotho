@@ -159,6 +159,12 @@ describe('list operations', () => {
             repo: 'example/example-mp',
             installLocation: '/mp/example-mp',
           },
+          {
+            name: 'local',
+            source: 'directory',
+            path: '/projects/local',
+            installLocation: '/projects/local',
+          },
         ]),
         '',
       )
@@ -166,8 +172,13 @@ describe('list operations', () => {
     expect(await listMarketplaces()).toEqual([
       {
         name: 'example-mp',
-        source: { source: 'github', repo: 'example/example-mp', url: undefined },
+        source: { source: 'github', repo: 'example/example-mp', url: undefined, path: undefined },
         installLocation: '/mp/example-mp',
+      },
+      {
+        name: 'local',
+        source: { source: 'directory', repo: undefined, url: undefined, path: '/projects/local' },
+        installLocation: '/projects/local',
       },
     ])
   })

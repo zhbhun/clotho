@@ -8,6 +8,7 @@ import { ProjectIcon } from '../../../components/project-icon'
 import { ShortcutKeys } from '../../../components/shortcut-keys'
 import { getEffectiveBindings } from '../../../services/shortcuts/keymap'
 import { useShortcutRuntime } from '../../../services/shortcuts/runtime'
+import { shortMiddlePath, tildePath } from '../../../utils/path-display'
 import {
   compareProjectsByName,
   isUserProject,
@@ -32,7 +33,6 @@ import {
   type WorkbenchSession,
   useWorkbenchStore,
 } from '../stores/workbench-store'
-import { shortMiddlePath, tildePath } from '../utils/path-display'
 import { sessionDisplayTitle, sessionTimeLabel } from '../utils/session-list'
 import { scoreFuzzyMatch } from './fuzzy-match'
 import {

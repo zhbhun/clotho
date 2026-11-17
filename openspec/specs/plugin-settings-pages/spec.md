@@ -367,3 +367,25 @@ The Marketplaces tab SHALL retain the last successful registered marketplace lis
 #### Scenario: Marketplace management
 - **WHEN** a marketplace is added, removed, or refreshed successfully
 - **THEN** the marketplace list is revalidated and earlier in-flight responses cannot replace the newer result
+
+### Requirement: Directory marketplace source path
+The marketplace list and detail SHALL display a directory marketplace's local source path when the CLI provides it. If the path is unavailable, they SHALL retain the existing source-type fallback.
+
+#### Scenario: Directory marketplace with a path
+- **WHEN** a registered marketplace has source type `directory` and a local source path
+- **THEN** its list row and detail header show `directory · <path>` and the detail Info source shows `<path>`
+
+#### Scenario: Directory marketplace without a path
+- **WHEN** a directory marketplace has no source path
+- **THEN** its list row and detail show the source type without an invented path
+
+### Requirement: Directory marketplace path uses a home abbreviation
+Marketplace list and detail SHALL display a macOS `/Users/<user>` prefix in directory source paths as `~`, consistent with other displayed paths. Paths without that prefix SHALL remain unchanged; the underlying source path SHALL remain unchanged.
+
+#### Scenario: Home directory path
+- **WHEN** a directory marketplace source path is `/Users/alice/Projects/trading`
+- **THEN** its list row and detail source display `~/Projects/trading`
+
+#### Scenario: Other directory path
+- **WHEN** a directory marketplace source path is `/opt/plugins`
+- **THEN** its list row and detail source display `/opt/plugins`

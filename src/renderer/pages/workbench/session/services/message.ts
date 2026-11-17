@@ -5,7 +5,7 @@ import type {
   ClaudeJsonLine as RpcClaudeJsonLine,
 } from '@/shared/rpc'
 
-import { tildePath } from '../../utils/path-display'
+import { tildePath } from '../../../../utils/path-display'
 import { attachmentFromPart } from './attachments'
 
 export type ClaudeJsonLine = RpcClaudeJsonLine

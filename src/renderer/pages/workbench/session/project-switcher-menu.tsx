@@ -13,9 +13,9 @@ import {
 } from '../../../components/menu'
 import { ProjectIcon } from '../../../components/project-icon'
 import type { ClaudeProject } from '../../../services/claude/claude'
+import { tildePath } from '../../../utils/path-display'
 import { isUserProject, projectDisplayName } from '../../../utils/project'
 import { useWorkbenchStore } from '../stores/workbench-store'
-import { tildePath } from '../utils/path-display'
 import { MiddlePath } from './components/middle-path'
 import { ProjectWindowAction } from './project-window-action'
 

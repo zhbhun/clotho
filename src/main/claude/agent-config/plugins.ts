@@ -37,7 +37,7 @@ export interface MarketplacePlugin {
 
 export interface MarketplaceInfo {
   name: string
-  source: { source: string; repo?: string; url?: string }
+  source: { source: string; repo?: string; url?: string; path?: string }
   installLocation: string
 }
 
@@ -159,7 +159,7 @@ export async function listMarketplaces(): Promise<MarketplaceInfo[]> {
   const marketplaces = await runPluginCommandJson<CliMarketplace[]>(['marketplace', 'list'])
   return marketplaces.map((entry) => ({
     name: entry.name,
-    source: { source: entry.source, repo: entry.repo, url: entry.url },
+    source: { source: entry.source, repo: entry.repo, url: entry.url, path: entry.path },
     installLocation: entry.installLocation,
   }))
 }
