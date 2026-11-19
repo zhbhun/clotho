@@ -1,7 +1,5 @@
 import { Skeleton } from '@/shadcn/skeleton'
 
-import { SettingsList, SettingsRow } from './settings-list'
-
 /**
  * Store-grid tile skeleton for the Install page, mirroring the real tile:
  * letter avatar, name/description/source lines, and the trailing action.
@@ -38,25 +36,20 @@ export function InstallPageSkeleton() {
   )
 }
 
-/**
- * Loading rows of the installed-plugins / marketplace list pages, built from
- * the real `SettingsList`/`SettingsRow` so dividers and padding match. Pass
- * `withSwitch` for the installed list (its rows end in a Switch).
- */
-export function PluginRowsSkeleton({ withSwitch = false }: { withSwitch?: boolean }) {
+/** Loading rows matching the installed plugin list. */
+export function PluginRowsSkeleton() {
   return (
     <div aria-hidden="true" data-plugin-rows-skeleton>
-      <SettingsList>
-        {Array.from({ length: 6 }, (_, index) => (
-          <SettingsRow className="gap-3" key={index} variant="compact">
-            <div className="min-w-0 flex-1">
-              <Skeleton className={`h-4 ${index % 2 === 0 ? 'w-28' : 'w-36'}`} />
-              <Skeleton className="mt-1.5 h-4 w-44" />
-            </div>
-            {withSwitch ? <Skeleton className="h-[16.6px] w-7 rounded-full" /> : null}
-          </SettingsRow>
-        ))}
-      </SettingsList>
+      {Array.from({ length: 6 }, (_, index) => (
+        <div className="flex min-w-0 items-center gap-3 px-2 py-2.5" key={index}>
+          <Skeleton className="size-9 shrink-0 rounded-lg" />
+          <div className="min-w-0 flex-1">
+            <Skeleton className={`h-4 ${index % 2 === 0 ? 'w-28' : 'w-36'}`} />
+            <Skeleton className="mt-1.5 h-4 w-44" />
+          </div>
+          <Skeleton className="h-[16.6px] w-7 rounded-full" />
+        </div>
+      ))}
     </div>
   )
 }

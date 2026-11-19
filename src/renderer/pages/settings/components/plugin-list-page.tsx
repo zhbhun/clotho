@@ -13,10 +13,10 @@ import {
 } from '../../../services/claude/agent-config'
 import { AgentEmpty } from './agent-shared'
 import { updateInstalled } from './catalog-cache'
-import { RowChevron, refreshAllMarketplaces, useRestartHint } from './plugin-shared'
+import { PluginAvatar } from './plugin-avatar'
+import { refreshAllMarketplaces, useRestartHint } from './plugin-shared'
 import { PluginRowsSkeleton } from './plugin-skeletons'
 import { useSettingsDetailStore } from './settings-detail-store'
-import { SettingsList, SettingsRow } from './settings-list'
 
 /**
  * Top-level Plugins page: the installed plugin list. Header actions are the
@@ -99,37 +99,33 @@ export function PluginListPage({ onOpenMarketplace }: { onOpenMarketplace?: () =
       </div>
 
       {isLoading ? (
-        <PluginRowsSkeleton withSwitch />
+        <PluginRowsSkeleton />
       ) : plugins.length === 0 ? (
         <AgentEmpty />
       ) : (
-        <SettingsList>
+        <div>
           {plugins.map((plugin) => (
-            <SettingsRow
-              className="gap-3 cursor-pointer transition-colors hover:bg-muted"
+            <div
+              className="flex min-w-0 cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/50"
               key={plugin.id}
-              variant="compact"
               onClick={() => openDetailAction('agent-plugins', plugin.id, plugin.name)}
             >
+              <PluginAvatar name={plugin.name} />
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-normal">{plugin.name}</div>
-                <div className="truncate text-sm text-foreground-subtlest">
+                <div className="truncate text-sm font-medium">{plugin.name}</div>
+                <div className="truncate text-sm text-foreground-subtle">
                   {[plugin.marketplace, plugin.version].filter(Boolean).join(' · ')}
                 </div>
               </div>
-              {/* The switch must not trigger the row-open navigation. The
-                  switch pulls 4px toward the chevron (row gap is 12px). */}
               <Switch
                 aria-label={t('settings.agent.enabled')}
                 checked={plugin.enabled}
-                className="mr-[-4px]"
                 onClick={(event) => event.stopPropagation()}
                 onCheckedChange={(enabled) => void handleToggle(plugin, enabled)}
               />
-              <RowChevron />
-            </SettingsRow>
+            </div>
           ))}
-        </SettingsList>
+        </div>
       )}
     </section>
   )

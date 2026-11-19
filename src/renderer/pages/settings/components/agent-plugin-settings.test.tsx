@@ -199,8 +199,7 @@ describe('AgentPluginSettings list page', () => {
     expect(await screen.findByText('formatter')).toBeInTheDocument()
     expect(screen.getByText('acme · 1.0.0')).toBeInTheDocument()
     expect(screen.getByRole('switch', { name: '在 Clotho 会话中启用' })).toBeChecked()
-    // The chevron is decorative: the row div is the click target, so no button
-    // names the plugin.
+    // The row div is the click target, so no button names the plugin.
     expect(screen.queryByRole('button', { name: 'formatter@acme' })).toBeNull()
   })
 
