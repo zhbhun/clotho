@@ -206,9 +206,3 @@ For multi-step tasks, state a brief plan:
 ```
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
-
-### 5. OpenSpec workflow
-
-- New features and functional changes follow the OpenSpec skill instructions with user confirmation.
-- When explore involves UI or interaction adjustments, build a prototype demo with the `prototype` skill in a temporary directory, move it to `openspec/changes/<change-name>/prototype.html` at propose, and archive it together with the change.
-
