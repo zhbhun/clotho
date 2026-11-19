@@ -704,6 +704,11 @@ export const settingsCatalog = {
     '在 ~/.claude/skills 下创建技能目录',
     '在 ~/.claude/skills 下建立技能目錄',
   ),
+  'settings.agent.skills.confirmDelete': setting(
+    'Delete {{name}} from ~/.claude/skills? This also removes it from Claude Code when it uses this directory.',
+    '确定从 ~/.claude/skills 中删除「{{name}}」吗？从该目录读取技能的 Claude Code 也会失去此条目。',
+    '確定從 ~/.claude/skills 中刪除「{{name}}」嗎？從該目錄讀取技能的 Claude Code 也會失去此項目。',
+  ),
 
   // Plugins.
   'settings.agent.plugins.installed': setting('Installed', '已安装', '已安裝'),

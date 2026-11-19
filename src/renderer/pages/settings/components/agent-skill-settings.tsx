@@ -2,29 +2,20 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Spinner } from '@/shadcn/spinner'
-import { Switch } from '@/shadcn/switch'
 import { toast } from '@/shadcn/toast'
 
-import {
-  deleteAgentSkill,
-  getAgentCapabilityToggles,
-  listAgentSkills,
-  setAgentCapabilityToggle,
-} from '../../../services/claude/agent-config'
+import { deleteAgentSkill, listAgentSkills } from '../../../services/claude/agent-config'
 import { AgentEmpty, AgentSection, DeleteButton } from './agent-shared'
 import { SettingsList, SettingsRow } from './settings-list'
 
 export function AgentSkillSettings() {
   const { t } = useTranslation()
   const [skills, setSkills] = useState<Array<{ name: string; description: string }>>([])
-  const [disabledSkills, setDisabledSkills] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   const reload = async () => {
     try {
-      const [list, toggles] = await Promise.all([listAgentSkills(), getAgentCapabilityToggles()])
-      setSkills(list)
-      setDisabledSkills(toggles.disabledSkills)
+      setSkills(await listAgentSkills())
     } catch {
       toast.add({ id: 'agent-skills-load', title: t('settings.agent.loadError'), type: 'error' })
     } finally {
@@ -37,15 +28,6 @@ export function AgentSkillSettings() {
     // Mount-only load; reload reads fresh state on every call.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  const handleToggle = async (name: string, enabled: boolean) => {
-    try {
-      const toggles = await setAgentCapabilityToggle('skill', name, enabled)
-      setDisabledSkills(toggles.disabledSkills)
-    } catch {
-      toast.add({ id: 'agent-skill-toggle', title: t('settings.agent.saveError'), type: 'error' })
-    }
-  }
 
   const handleDelete = async (name: string) => {
     try {
@@ -67,16 +49,15 @@ export function AgentSkillSettings() {
         <SettingsList>
           {skills.map((skill) => (
             <SettingsRow className="gap-3" key={skill.name} variant="compact">
-              <Switch
-                aria-label={t('settings.agent.enabled')}
-                checked={!disabledSkills.includes(skill.name)}
-                onCheckedChange={(enabled) => void handleToggle(skill.name, enabled)}
-              />
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-normal">{skill.name}</div>
                 <div className="truncate text-sm text-foreground-subtle">{skill.description}</div>
               </div>
-              <DeleteButton label={skill.name} onDelete={() => handleDelete(skill.name)} />
+              <DeleteButton
+                description={t('settings.agent.skills.confirmDelete', { name: skill.name })}
+                label={skill.name}
+                onDelete={() => handleDelete(skill.name)}
+              />
             </SettingsRow>
           ))}
         </SettingsList>

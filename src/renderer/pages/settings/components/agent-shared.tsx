@@ -62,10 +62,12 @@ export function capitalize(value: string): string {
 
 /** Shared delete-confirmation dialog: title, copy, and confirm/cancel actions. */
 function DeleteConfirmDialog({
+  description,
   open,
   onOpenChange,
   onDelete,
 }: {
+  description?: string
   open: boolean
   onOpenChange: (open: boolean) => void
   onDelete: () => Promise<void> | void
@@ -76,7 +78,9 @@ function DeleteConfirmDialog({
       <AppAlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{t('settings.agent.deleteConfirmTitle')}</AlertDialogTitle>
-          <AlertDialogDescription>{t('settings.agent.confirmDelete')}</AlertDialogDescription>
+          <AlertDialogDescription>
+            {description ?? t('settings.agent.confirmDelete')}
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{t('settings.common.cancel')}</AlertDialogCancel>
@@ -96,10 +100,12 @@ function DeleteConfirmDialog({
 
 /** Delete button with a confirm dialog; runs `onDelete` only on confirm. */
 export function DeleteButton({
+  description,
   label,
   onDelete,
   children,
 }: {
+  description?: string
   label: string
   onDelete: () => Promise<void> | void
   /** Render text inside the trigger instead of a trash icon. */
@@ -118,7 +124,12 @@ export function DeleteButton({
       >
         {children ?? <Trash2 />}
       </Button>
-      <DeleteConfirmDialog onDelete={onDelete} onOpenChange={setConfirmOpen} open={confirmOpen} />
+      <DeleteConfirmDialog
+        description={description}
+        onDelete={onDelete}
+        onOpenChange={setConfirmOpen}
+        open={confirmOpen}
+      />
     </>
   )
 }

@@ -43,10 +43,6 @@ const mock = vi.mocked(agentConfig, true)
 beforeEach(async () => {
   await appI18n.changeLanguage('zh-CN')
   vi.clearAllMocks()
-  mock.getAgentCapabilityToggles.mockResolvedValue({
-    disabledSkills: ['already-off'],
-    disabledMcpServers: [],
-  })
 })
 
 function renderWithProviders(element: ReactElement) {
@@ -61,7 +57,7 @@ function renderWithProviders(element: ReactElement) {
 }
 
 describe('AgentSkillSettings', () => {
-  it('lists skills with their descriptions', async () => {
+  it('lists skills with descriptions and no enable switches', async () => {
     mock.listAgentSkills.mockResolvedValue([
       { name: 'commit', description: 'Commit helper' },
       { name: 'review', description: 'Review helper' },
@@ -71,34 +67,25 @@ describe('AgentSkillSettings', () => {
     expect(await screen.findByText('commit')).toBeInTheDocument()
     expect(screen.getByText('Commit helper')).toBeInTheDocument()
     expect(screen.getByText('review')).toBeInTheDocument()
-  })
-
-  it('toggles a skill through the capability toggle RPC', async () => {
-    mock.listAgentSkills.mockResolvedValue([{ name: 'commit', description: '' }])
-    mock.setAgentCapabilityToggle.mockResolvedValue({
-      disabledSkills: ['commit'],
-      disabledMcpServers: [],
-    })
-    const user = userEvent.setup()
-    renderWithProviders(<AgentSkillSettings />)
-
-    const switches = await screen.findAllByRole('switch', { name: '在 Clotho 会话中启用' })
-    await user.click(switches[0]!)
-
-    await waitFor(() =>
-      expect(mock.setAgentCapabilityToggle).toHaveBeenCalledWith('skill', 'commit', false),
-    )
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument()
   })
 
   it('deletes a skill after confirmation', async () => {
-    mock.listAgentSkills.mockResolvedValue([{ name: 'old', description: '' }])
+    mock.listAgentSkills
+      .mockResolvedValueOnce([{ name: 'old', description: '' }])
+      .mockResolvedValueOnce([])
     mock.deleteAgentSkill.mockResolvedValue(undefined)
     const user = userEvent.setup()
     renderWithProviders(<AgentSkillSettings />)
 
     await user.click(await screen.findByRole('button', { name: 'old' }))
+    expect(await screen.findByRole('alertdialog')).toHaveAccessibleDescription(
+      /从 ~\/\.claude\/skills 中删除「old」.*Claude Code/,
+    )
+    expect(mock.deleteAgentSkill).not.toHaveBeenCalled()
     await user.click(await screen.findByRole('button', { name: '删除' }))
 
     await waitFor(() => expect(mock.deleteAgentSkill).toHaveBeenCalledWith('old'))
+    expect(await screen.findByText('暂无内容')).toBeInTheDocument()
   })
 })
