@@ -37,7 +37,7 @@ import {
   removeMarketplace,
   setPluginEnabled,
 } from './claude/agent-config/plugins'
-import { deleteSkill, listSkills } from './claude/agent-config/skills'
+import { deleteSkill, listSkills, readSkill } from './claude/agent-config/skills'
 import {
   deleteSubagentConfig,
   listSubagentConfigs,
@@ -417,6 +417,7 @@ export function createClaudeDesktopService(
       saveHookGroup(group.event, group.entries),
     deleteAgentHookGroup: ({ event }: { event: string }) => deleteHookGroup(event),
     listAgentSkills: () => listSkills(),
+    readAgentSkill: readSkill,
     deleteAgentSkill: ({ name }: { name: string }) => deleteSkill(name),
     listAgentPlugins: () => listInstalledPlugins(),
     listAgentAvailablePlugins: () => listMarketplacePlugins(),

@@ -494,6 +494,7 @@ export async function bootstrap() {
         agentSaveHookGroup: (params) => service.saveAgentHookGroup(params),
         agentDeleteHookGroup: (params) => service.deleteAgentHookGroup(params),
         agentListSkills: () => service.listAgentSkills(),
+        agentReadSkill: ({ name }) => service.readAgentSkill(name),
         agentDeleteSkill: (params) => service.deleteAgentSkill(params),
         agentSetSkillEnabled: () => {
           // Clotho-scoped toggle state lives in Clotho settings; persisted by the renderer store.

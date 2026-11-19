@@ -10,6 +10,7 @@ import { appI18n } from '../../../i18n/runtime'
 import * as agentConfig from '../../../services/claude/agent-config'
 import { ShortcutRuntimeProvider, shortcutRuntime } from '../../../services/shortcuts/runtime'
 import { AgentSkillSettings } from './agent-skill-settings'
+import { useSettingsDetailStore } from './settings-detail-store'
 
 vi.mock('../../../services/claude/agent-config', () => ({
   listAgentSubagents: vi.fn(),
@@ -22,6 +23,7 @@ vi.mock('../../../services/claude/agent-config', () => ({
   saveAgentHookGroup: vi.fn(),
   deleteAgentHookGroup: vi.fn(),
   listAgentSkills: vi.fn(),
+  readAgentSkill: vi.fn(),
   deleteAgentSkill: vi.fn(),
   listAgentPlugins: vi.fn(),
   listAgentMarketplaces: vi.fn(),
@@ -43,6 +45,7 @@ const mock = vi.mocked(agentConfig, true)
 beforeEach(async () => {
   await appI18n.changeLanguage('zh-CN')
   vi.clearAllMocks()
+  useSettingsDetailStore.getState().backToList()
 })
 
 function renderWithProviders(element: ReactElement) {
@@ -70,6 +73,25 @@ describe('AgentSkillSettings', () => {
     expect(screen.queryByRole('switch')).not.toBeInTheDocument()
   })
 
+  it.each(['row', 'menu'])('opens the installed document from the %s', async (entry) => {
+    mock.listAgentSkills.mockResolvedValue([{ name: 'review', description: 'Review code' }])
+    mock.readAgentSkill.mockResolvedValue({
+      metadata: { name: 'review', version: '2.0' },
+      body: '# Review steps',
+    })
+    const user = userEvent.setup()
+    renderWithProviders(<AgentSkillSettings />)
+    if (entry === 'menu') {
+      await user.click(await screen.findByRole('button', { name: /review/ }))
+      await user.click(await screen.findByRole('menuitem', { name: '打开' }))
+    } else {
+      await user.click(await screen.findByText('review'))
+    }
+    expect(await screen.findByText('2.0')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Review steps' })).toBeInTheDocument()
+    expect(mock.readAgentSkill).toHaveBeenCalledWith('review')
+  })
+
   it('deletes a skill after confirmation', async () => {
     mock.listAgentSkills
       .mockResolvedValueOnce([{ name: 'old', description: '' }])
@@ -78,12 +100,13 @@ describe('AgentSkillSettings', () => {
     const user = userEvent.setup()
     renderWithProviders(<AgentSkillSettings />)
 
-    await user.click(await screen.findByRole('button', { name: 'old' }))
+    await user.click(await screen.findByRole('button', { name: /old/ }))
+    await user.click(await screen.findByRole('menuitem', { name: '卸载' }))
     expect(await screen.findByRole('alertdialog')).toHaveAccessibleDescription(
       /从 ~\/\.claude\/skills 中删除「old」.*Claude Code/,
     )
     expect(mock.deleteAgentSkill).not.toHaveBeenCalled()
-    await user.click(await screen.findByRole('button', { name: '删除' }))
+    await user.click(await screen.findByRole('button', { name: '卸载' }))
 
     await waitFor(() => expect(mock.deleteAgentSkill).toHaveBeenCalledWith('old'))
     expect(await screen.findByText('暂无内容')).toBeInTheDocument()

@@ -5,7 +5,7 @@ import path from 'node:path'
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { claudeSkillsDir, deleteSkill, listSkills } from './skills'
+import { claudeSkillsDir, deleteSkill, listSkills, readSkill } from './skills'
 
 let tempDir: string
 
@@ -78,6 +78,41 @@ describe('listSkills', () => {
   it('returns empty when the skills directory is missing', async () => {
     const claudeDir = await makeSkillsDir()
     await expect(listSkills(claudeDir)).resolves.toEqual([])
+  })
+})
+
+describe('readSkill', () => {
+  it('separates YAML metadata from Markdown and preserves version spelling', async () => {
+    const dir = await makeSkillsDir()
+    const skill = path.join(claudeSkillsDir(dir), 'example')
+    await mkdir(skill, { recursive: true })
+    await writeFile(
+      path.join(skill, 'SKILL.md'),
+      [
+        '---',
+        'name: Original',
+        'description: >-',
+        '  First line',
+        '  second line.',
+        'license: MIT',
+        'metadata:',
+        '  version: 3.0',
+        '  author: Example',
+        '---',
+        '# Instructions',
+      ].join('\r\n'),
+    )
+    await expect(readSkill('example', dir)).resolves.toEqual({
+      metadata: {
+        name: 'Original',
+        description: 'First line second line.',
+        license: 'MIT',
+        version: '3.0',
+        author: 'Example',
+      },
+      body: '# Instructions',
+    })
+    await expect(readSkill('../example', dir)).rejects.toThrow('Invalid skill name')
   })
 })
 

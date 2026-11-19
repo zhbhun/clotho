@@ -699,11 +699,7 @@ export const settingsCatalog = {
   'settings.agent.mcp.sseHint': setting('Server-sent events endpoint', 'SSE 端点', 'SSE 端點'),
 
   // Skills.
-  'settings.agent.skills.addHint': setting(
-    'Create skill directories under ~/.claude/skills',
-    '在 ~/.claude/skills 下创建技能目录',
-    '在 ~/.claude/skills 下建立技能目錄',
-  ),
+  'settings.agent.skills.metadata': setting('Metadata', '元信息', '中繼資料'),
   'settings.agent.skills.confirmDelete': setting(
     'Delete {{name}} from ~/.claude/skills? This also removes it from Claude Code when it uses this directory.',
     '确定从 ~/.claude/skills 中删除「{{name}}」吗？从该目录读取技能的 Claude Code 也会失去此条目。',

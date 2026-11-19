@@ -61,12 +61,16 @@ export function capitalize(value: string): string {
 }
 
 /** Shared delete-confirmation dialog: title, copy, and confirm/cancel actions. */
-function DeleteConfirmDialog({
+export function DeleteConfirmDialog({
+  actionLabel,
+  title,
   description,
   open,
   onOpenChange,
   onDelete,
 }: {
+  actionLabel?: string
+  title?: string
   description?: string
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -77,7 +81,7 @@ function DeleteConfirmDialog({
     <AppAlertDialog onOpenChange={onOpenChange} open={open}>
       <AppAlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{t('settings.agent.deleteConfirmTitle')}</AlertDialogTitle>
+          <AlertDialogTitle>{title ?? t('settings.agent.deleteConfirmTitle')}</AlertDialogTitle>
           <AlertDialogDescription>
             {description ?? t('settings.agent.confirmDelete')}
           </AlertDialogDescription>
@@ -90,7 +94,7 @@ function DeleteConfirmDialog({
               void onDelete()
             }}
           >
-            {t('settings.common.delete')}
+            {actionLabel ?? t('settings.common.delete')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AppAlertDialogContent>

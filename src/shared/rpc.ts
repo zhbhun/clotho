@@ -276,6 +276,11 @@ export interface AgentSkillInfo {
   disabled?: boolean
 }
 
+export interface AgentSkillDocument {
+  metadata: Partial<Record<'name' | 'description' | 'license' | 'version' | 'author', string>>
+  body: string
+}
+
 export interface AgentPluginInfo {
   id: string
   name: string
@@ -1409,6 +1414,10 @@ export type DesktopRPC = {
       agentListSkills: {
         params: Record<string, never>
         response: AgentSkillInfo[]
+      }
+      agentReadSkill: {
+        params: { name: string }
+        response: AgentSkillDocument
       }
       agentDeleteSkill: {
         params: { name: string }

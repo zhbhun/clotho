@@ -60,6 +60,10 @@ export function listAgentSkills() {
   return requestFromDesktop('agentListSkills', {})
 }
 
+export function readAgentSkill(name: string) {
+  return requestFromDesktop('agentReadSkill', { name })
+}
+
 export function deleteAgentSkill(name: string) {
   return requestFromDesktop('agentDeleteSkill', { name })
 }

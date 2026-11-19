@@ -1,8 +1,11 @@
 import { type Dirent, promises as fs } from 'node:fs'
 import path from 'node:path'
 
+import { parseDocument } from 'yaml'
+
+import type { AgentSkillDocument } from '@/shared/rpc'
+
 import { getLogger } from '../../logging/runtime'
-import { readFrontmatter } from './frontmatter'
 
 const logger = getLogger('agent-config')
 
@@ -15,6 +18,29 @@ export interface SkillInfo {
 
 export function claudeSkillsDir(claudeDir = path.join(process.env.HOME ?? '', '.claude')) {
   return path.join(claudeDir, 'skills')
+}
+
+function skillPath(name: string, claudeDir?: string) {
+  if (!name || name === '.' || name === '..' || /[/\\]/.test(name) || path.isAbsolute(name)) {
+    throw new Error(`Invalid skill name: ${name}`)
+  }
+  return path.join(claudeSkillsDir(claudeDir), name)
+}
+
+export async function readSkill(name: string, claudeDir?: string): Promise<AgentSkillDocument> {
+  const source = await fs.readFile(path.join(skillPath(name, claudeDir), 'SKILL.md'), 'utf8')
+  const header = /^\uFEFF?---\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/.exec(source)
+  if (!header) return { metadata: {}, body: source }
+  const yaml = parseDocument(header[1], { schema: 'failsafe' })
+  if (yaml.errors.length) return { metadata: {}, body: source }
+  const metadata: AgentSkillDocument['metadata'] = {}
+  for (const key of ['name', 'description', 'license', 'version', 'author'] as const) {
+    const value =
+      yaml.get(key) ??
+      (key === 'version' || key === 'author' ? yaml.getIn(['metadata', key]) : undefined)
+    if (typeof value === 'string' && value.trim()) metadata[key] = value.trim()
+  }
+  return { metadata, body: source.slice(header[0].length) }
 }
 
 export async function listSkills(claudeDir?: string): Promise<SkillInfo[]> {
@@ -35,11 +61,10 @@ export async function listSkills(claudeDir?: string): Promise<SkillInfo[]> {
       .filter((entry) => entry.isDirectory() || entry.isSymbolicLink())
       .map(async (entry) => {
         try {
-          const source = await fs.readFile(path.join(skillsDir, entry.name, 'SKILL.md'), 'utf8')
-          const frontmatter = readFrontmatter(source)
+          const { metadata } = await readSkill(entry.name, claudeDir)
           return {
             name: entry.name,
-            description: frontmatter.description ?? frontmatter.name ?? entry.name,
+            description: metadata.description ?? metadata.name ?? entry.name,
           }
         } catch {
           // No SKILL.md (or unreadable): not a skill (spec: directory without SKILL.md).
@@ -51,8 +76,5 @@ export async function listSkills(claudeDir?: string): Promise<SkillInfo[]> {
 }
 
 export async function deleteSkill(name: string, claudeDir?: string): Promise<void> {
-  if (!name || name.includes('/') || name.includes('..')) {
-    throw new Error(`Invalid skill name: ${name}`)
-  }
-  await fs.rm(path.join(claudeSkillsDir(claudeDir), name), { recursive: true })
+  await fs.rm(skillPath(name, claudeDir), { recursive: true })
 }
