@@ -32,7 +32,7 @@ export async function listSkills(claudeDir?: string): Promise<SkillInfo[]> {
   }
   const skills = await Promise.all(
     entries
-      .filter((entry) => entry.isDirectory())
+      .filter((entry) => entry.isDirectory() || entry.isSymbolicLink())
       .map(async (entry) => {
         try {
           const source = await fs.readFile(path.join(skillsDir, entry.name, 'SKILL.md'), 'utf8')

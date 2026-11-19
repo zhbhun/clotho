@@ -237,7 +237,7 @@ The system SHALL list command-type hooks from the `hooks` field of `~/.claude/se
 
 ### Requirement: Skill management
 
-The system SHALL list user-level skills by scanning `~/.claude/skills/` for directories containing `SKILL.md`, reading each skill's name and description from its frontmatter, and let the user delete a skill directory. The system SHALL let the user enable or disable a skill for Clotho sessions without deleting it.
+The system SHALL list user-level skills under `~/.claude/skills/`, including directories reached through absolute or relative symbolic links, when `SKILL.md` is readable. The entry name SHALL identify the skill and its frontmatter SHALL supply the description. The system SHALL let users delete skills and enable or disable them for Clotho sessions without deleting them. Deleting a symbolic-link installation SHALL remove the link and preserve its target directory.
 
 #### Scenario: List skills
 
@@ -253,6 +253,22 @@ The system SHALL list user-level skills by scanning `~/.claude/skills/` for dire
 
 - **WHEN** a directory under `~/.claude/skills/` contains no `SKILL.md`
 - **THEN** it is not listed as a skill and the listing does not fail
+
+#### Scenario: List skills installed through symbolic links
+
+- **WHEN** an absolute or relative symbolic link under `~/.claude/skills/` points to a directory containing a readable `SKILL.md`
+- **THEN** the skill is listed using the installation link's name and the target file's description
+
+#### Scenario: Skip invalid symbolic-link installations
+
+- **WHEN** a symbolic link is broken, points to a file, or points to a directory without a readable `SKILL.md`
+- **THEN** the entry is skipped and other valid skills are still listed
+
+#### Scenario: Delete a symbolic-link installation
+
+- **WHEN** the user deletes a skill installed through a symbolic link
+- **THEN** the link under `~/.claude/skills/` is removed and the skill disappears from the list
+- **AND** the target directory and its contents are preserved
 
 ### Requirement: Plugin management
 

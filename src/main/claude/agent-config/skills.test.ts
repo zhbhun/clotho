@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { lstat, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
@@ -41,6 +41,40 @@ describe('listSkills', () => {
     await expect(listSkills(claudeDir)).resolves.toEqual([{ name: 'real', description: 'real' }])
   })
 
+  it.each(['absolute', 'relative'])('lists skills installed through %s links', async (linkType) => {
+    const claudeDir = await makeSkillsDir()
+    const skillsDir = claudeSkillsDir(claudeDir)
+    const targetDir = path.join(claudeDir, 'shared', 'original')
+    await mkdir(skillsDir, { recursive: true })
+    await mkdir(targetDir, { recursive: true })
+    await writeFile(
+      path.join(targetDir, 'SKILL.md'),
+      '---\nname: original\ndescription: Linked skill helper\n---\n',
+      'utf8',
+    )
+    const target = linkType === 'relative' ? path.relative(skillsDir, targetDir) : targetDir
+    await symlink(target, path.join(skillsDir, 'linked'), 'dir')
+
+    await expect(listSkills(claudeDir)).resolves.toEqual([
+      { name: 'linked', description: 'Linked skill helper' },
+    ])
+  })
+
+  it('skips broken links and links without SKILL.md while listing valid skills', async () => {
+    const claudeDir = await makeSkillsDir()
+    const skillsDir = claudeSkillsDir(claudeDir)
+    const targetDir = path.join(claudeDir, 'empty-target')
+    const skillFile = path.join(skillsDir, 'real', 'SKILL.md')
+    await mkdir(path.dirname(skillFile), { recursive: true })
+    await mkdir(targetDir)
+    await writeFile(skillFile, '---\nname: real\n---\n', 'utf8')
+    await symlink('missing-target', path.join(skillsDir, 'broken'), 'dir')
+    await symlink(targetDir, path.join(skillsDir, 'empty'), 'dir')
+    await symlink(skillFile, path.join(skillsDir, 'file'), 'file')
+
+    await expect(listSkills(claudeDir)).resolves.toEqual([{ name: 'real', description: 'real' }])
+  })
+
   it('returns empty when the skills directory is missing', async () => {
     const claudeDir = await makeSkillsDir()
     await expect(listSkills(claudeDir)).resolves.toEqual([])
@@ -54,6 +88,24 @@ describe('deleteSkill', () => {
     await mkdir(skillDir, { recursive: true })
     await writeFile(path.join(skillDir, 'SKILL.md'), '---\nname: gone\n---\n', 'utf8')
     await deleteSkill('gone', claudeDir)
+    await expect(listSkills(claudeDir)).resolves.toEqual([])
+  })
+
+  it('removes a skill link and preserves the target directory and contents', async () => {
+    const claudeDir = await makeSkillsDir()
+    const skillsDir = claudeSkillsDir(claudeDir)
+    const targetDir = path.join(claudeDir, 'shared-skill')
+    const linkPath = path.join(skillsDir, 'linked')
+    const source = '---\nname: original\n---\n\nShared skill body\n'
+    await mkdir(skillsDir, { recursive: true })
+    await mkdir(targetDir)
+    await writeFile(path.join(targetDir, 'SKILL.md'), source, 'utf8')
+    await symlink(path.relative(skillsDir, targetDir), linkPath, 'dir')
+
+    await deleteSkill('linked', claudeDir)
+
+    await expect(lstat(linkPath)).rejects.toMatchObject({ code: 'ENOENT' })
+    await expect(readFile(path.join(targetDir, 'SKILL.md'), 'utf8')).resolves.toBe(source)
     await expect(listSkills(claudeDir)).resolves.toEqual([])
   })
 
