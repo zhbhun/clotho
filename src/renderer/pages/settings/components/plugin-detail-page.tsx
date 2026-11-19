@@ -38,7 +38,7 @@ export function PluginDetailIdentity({
     .join(' • ')
   return (
     <div className="flex items-center gap-5">
-      <PluginAvatar className="size-14 rounded-2xl text-xl" name={name} variant="neutral" />
+      <PluginAvatar className="size-14 rounded-2xl text-xl" name={name} />
       <div className="min-w-0">
         <h1 className="truncate text-2xl font-semibold tracking-tight">{displayName ?? name}</h1>
         {subtitle ? (
