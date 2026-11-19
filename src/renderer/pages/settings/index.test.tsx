@@ -209,7 +209,7 @@ describe('SettingsPage', () => {
     expect(screen.getByRole('button', { name: '插件广场', current: 'page' })).toBeInTheDocument()
   })
 
-  it('shows a newly installed marketplace skill when opening Skills in the same dialog', async () => {
+  it('opens the skill marketplace from an empty Skills list and shows the installed skill on return', async () => {
     const item = { name: 'formatter', source: 'acme/tools', installs: '12' }
     let installed = false
     vi.spyOn(agentConfig, 'getPublishedSkillBoard').mockResolvedValue({
@@ -223,13 +223,18 @@ describe('SettingsPage', () => {
       installed = true
     })
     const user = userEvent.setup()
-    render(<TestSettingsPage open initialCategory="agent-marketplace" onOpenChange={vi.fn()} />)
+    render(<TestSettingsPage open initialCategory="agent-skills" onOpenChange={vi.fn()} />)
 
-    await user.click(screen.getByRole('tab', { name: '技能' }))
+    expect(await screen.findByRole('heading', { name: /已安装\s*0/ })).toBeVisible()
+    await user.click(screen.getByRole('button', { name: '打开技能市场' }))
+    expect(screen.getByRole('tab', { name: '技能' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('button', { name: '插件广场', current: 'page' })).toBeVisible()
     await user.click(await screen.findByRole('button', { name: /安装 formatter/ }))
     await user.click(screen.getByRole('button', { name: '技能' }))
 
     expect(await screen.findByText('Installed from acme/tools')).toBeVisible()
+    await user.click(screen.getByRole('button', { name: '插件广场' }))
+    expect(screen.getByRole('tab', { name: '插件' })).toHaveAttribute('aria-selected', 'true')
   })
 
   it('returns to the originating Marketplace tab and guards unsaved source changes', async () => {

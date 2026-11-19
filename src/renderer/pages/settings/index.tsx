@@ -75,7 +75,7 @@ import { AgentSkillSettings } from './components/agent-skill-settings'
 import { AgentSubagentSettings } from './components/agent-subagent-settings'
 import { AppearanceSettings } from './components/appearance-settings'
 import { LanguageSettings } from './components/language-settings'
-import { MarketplaceSettings } from './components/marketplace-settings'
+import { type MarketplaceEntryTab, MarketplaceSettings } from './components/marketplace-settings'
 import { PermissionSettings } from './components/permission-settings'
 import { ProjectSettings } from './components/project-settings'
 import { ProviderSettings } from './components/provider-settings'
@@ -281,7 +281,10 @@ function SettingsPageContent({
 }: SettingsPageProps) {
   const { t } = useTranslation()
   const [categoryId, setCategoryId] = useState<SettingsCategoryId>(initialCategory)
-  const [marketplaceVisit, setMarketplaceVisit] = useState(0)
+  const [marketplaceVisit, setMarketplaceVisit] = useState<{
+    id: number
+    tab: MarketplaceEntryTab
+  }>({ id: 0, tab: 'plugins' })
   const [focusedCategoryId, setFocusedCategoryId] = useState<SettingsCategoryId>(initialCategory)
   const categoryRefs = useRef<Array<HTMLButtonElement | null>>([])
   const dialogRef = useRef<HTMLDivElement>(null)
@@ -312,7 +315,7 @@ function SettingsPageContent({
    * store gates the leave behind the discard dialog and the clicked category
    * stays inactive; a clean detail closes and the category activates.
    */
-  const selectCategory = (id: SettingsCategoryId) => {
+  const selectCategory = (id: SettingsCategoryId, tab: MarketplaceEntryTab = 'plugins') => {
     if (isDetailOpen) {
       if (detail.isDirty) {
         detail.requestLeave()
@@ -320,7 +323,7 @@ function SettingsPageContent({
       }
       detail.backToList()
     }
-    if (id === 'agent-marketplace') setMarketplaceVisit((visit) => visit + 1)
+    if (id === 'agent-marketplace') setMarketplaceVisit((visit) => ({ id: visit.id + 1, tab }))
     setCategoryId(id)
     setFocusedCategoryId(id)
   }
@@ -533,7 +536,10 @@ function SettingsPageContent({
                     </SettingsCategory>
                     <SettingsCategory isActive={category.id === 'agent-marketplace'}>
                       {category.id === 'agent-marketplace' ? (
-                        <MarketplaceSettings key={marketplaceVisit} />
+                        <MarketplaceSettings
+                          key={marketplaceVisit.id}
+                          initialTab={marketplaceVisit.tab}
+                        />
                       ) : null}
                     </SettingsCategory>
                     <SettingsCategory isActive={category.id === 'agent-plugins'}>
@@ -548,7 +554,11 @@ function SettingsPageContent({
                       <AgentMcpSettings />
                     </SettingsCategory>
                     <SettingsCategory isActive={category.id === 'agent-skills'}>
-                      {category.id === 'agent-skills' ? <AgentSkillSettings /> : null}
+                      {category.id === 'agent-skills' ? (
+                        <AgentSkillSettings
+                          onOpenMarketplace={() => selectCategory('agent-marketplace', 'skills')}
+                        />
+                      ) : null}
                     </SettingsCategory>
                   </div>
                 </div>

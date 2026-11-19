@@ -1,6 +1,8 @@
+import { PackagePlus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { Button } from '@/shadcn/button'
 import { Spinner } from '@/shadcn/spinner'
 import { toast } from '@/shadcn/toast'
 
@@ -11,15 +13,17 @@ import { useSettingsDetailStore } from './settings-detail-store'
 import { SkillActions } from './skill-actions'
 import { SkillDetailPage } from './skill-detail-page'
 
-export function AgentSkillSettings() {
+type SkillListProps = { onOpenMarketplace: () => void }
+
+export function AgentSkillSettings({ onOpenMarketplace }: SkillListProps) {
   const view = useSettingsDetailStore((state) => state.view)
   if (view.kind === 'detail' && view.categoryId === 'agent-skills' && view.file) {
     return <SkillDetailPage key={view.file} name={view.file} />
   }
-  return <SkillList />
+  return <SkillList onOpenMarketplace={onOpenMarketplace} />
 }
 
-function SkillList() {
+function SkillList({ onOpenMarketplace }: SkillListProps) {
   const openDetail = useSettingsDetailStore((state) => state.openDetail)
   const { t } = useTranslation()
   const [skills, setSkills] = useState<Array<{ name: string; description: string }>>([])
@@ -43,10 +47,19 @@ function SkillList() {
 
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="text-sm font-medium">
-        {t('settings.agent.plugins.installed')}{' '}
-        {!isLoading && <span className="text-foreground-subtlest">{skills.length}</span>}
-      </h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-sm font-medium">
+          {t('settings.agent.plugins.installed')}{' '}
+          {!isLoading && <span className="text-foreground-subtlest">{skills.length}</span>}
+        </h2>
+        <Button
+          aria-label={t('settings.agent.skillMarket.open')}
+          title={t('settings.agent.skillMarket.open')}
+          onClick={onOpenMarketplace}
+        >
+          <PackagePlus data-icon="inline-start" />
+        </Button>
+      </div>
       {isLoading ? (
         <Spinner className="self-center" />
       ) : skills.length === 0 ? (

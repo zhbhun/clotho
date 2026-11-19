@@ -699,6 +699,11 @@ export const settingsCatalog = {
   'settings.agent.mcp.sseHint': setting('Server-sent events endpoint', 'SSE 端点', 'SSE 端點'),
 
   // Skills.
+  'settings.agent.skillMarket.open': setting(
+    'Open skill marketplace',
+    '打开技能市场',
+    '開啟技能市集',
+  ),
   'settings.agent.skillMarket.ranking': setting('Ranking', '榜单', '排行榜'),
   'settings.agent.skillMarket.chart.best-100': setting('Best 100', '综合百强', '綜合百強'),
   'settings.agent.skillMarket.chart.top-installs': setting('Top installs', '安装量榜', '安裝量榜'),

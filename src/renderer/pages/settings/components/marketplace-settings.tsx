@@ -9,9 +9,11 @@ import { useSettingsDetailStore } from './settings-detail-store'
 import { SkillDetailPage } from './skill-detail-page'
 import { SkillMarketplace } from './skill-marketplace'
 
-export function MarketplaceSettings() {
+export type MarketplaceEntryTab = 'plugins' | 'skills'
+
+export function MarketplaceSettings({ initialTab }: { initialTab: MarketplaceEntryTab }) {
   const { t } = useTranslation()
-  const [tab, setTab] = useState('plugins')
+  const [tab, setTab] = useState<string>(initialTab)
   const view = useSettingsDetailStore((state) => state.view)
 
   if (view.kind === 'detail' && view.categoryId === 'agent-marketplace') {

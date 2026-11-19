@@ -65,7 +65,7 @@ describe('AgentSkillSettings', () => {
       { name: 'commit', description: 'Commit helper' },
       { name: 'review', description: 'Review helper' },
     ])
-    renderWithProviders(<AgentSkillSettings />)
+    renderWithProviders(<AgentSkillSettings onOpenMarketplace={vi.fn()} />)
 
     expect(await screen.findByText('commit')).toBeInTheDocument()
     expect(screen.getByText('Commit helper')).toBeInTheDocument()
@@ -80,7 +80,7 @@ describe('AgentSkillSettings', () => {
       body: '# Review steps',
     })
     const user = userEvent.setup()
-    renderWithProviders(<AgentSkillSettings />)
+    renderWithProviders(<AgentSkillSettings onOpenMarketplace={vi.fn()} />)
     if (entry === 'menu') {
       await user.click(await screen.findByRole('button', { name: /review/ }))
       await user.click(await screen.findByRole('menuitem', { name: '打开' }))
@@ -98,7 +98,7 @@ describe('AgentSkillSettings', () => {
       .mockResolvedValueOnce([])
     mock.deleteAgentSkill.mockResolvedValue(undefined)
     const user = userEvent.setup()
-    renderWithProviders(<AgentSkillSettings />)
+    renderWithProviders(<AgentSkillSettings onOpenMarketplace={vi.fn()} />)
 
     await user.click(await screen.findByRole('button', { name: /old/ }))
     await user.click(await screen.findByRole('menuitem', { name: '卸载' }))
