@@ -8,7 +8,7 @@ Own the Plugins settings page structure: how the installed-plugin list, plugin d
 
 ### Requirement: Marketplace settings category and tabs
 
-The settings sidebar SHALL show Marketplace immediately above Plugins. Marketplace SHALL show centered capsule-style Plugins and Marketplaces tabs at the top without a separate page title. Plugins SHALL be selected when entering Marketplace from the sidebar or Plugins action, and the selected sidebar category SHALL remain Marketplace while either tab is open.
+The settings sidebar SHALL show Marketplace immediately above Plugins. Marketplace SHALL show centered capsule-style Plugins, Skills and Marketplaces tabs at the top without a separate page title. Plugins SHALL be selected when entering Marketplace from the sidebar or Plugins action, and the selected sidebar category SHALL remain Marketplace while any of these tabs is open.
 
 #### Scenario: Enter Marketplace from the sidebar
 
@@ -19,6 +19,11 @@ The settings sidebar SHALL show Marketplace immediately above Plugins. Marketpla
 
 - **WHEN** the user selects the Marketplaces tab
 - **THEN** the registered marketplace list is shown and Marketplace remains selected in the sidebar
+
+#### Scenario: Browse individual skills
+
+- **WHEN** the user selects the Skills tab
+- **THEN** the skill catalog is shown and Marketplace remains selected in the sidebar
 
 ### Requirement: Plugins page shows the installed plugin list with paged actions
 

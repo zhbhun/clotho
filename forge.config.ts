@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs'
-import { cp } from 'node:fs/promises'
+import { cp, readFile } from 'node:fs/promises'
+import { createRequire } from 'node:module'
 import path from 'node:path'
 
 import { MakerDeb } from '@electron-forge/maker-deb'
@@ -51,6 +52,33 @@ function ffiRsBindingPackages(platform: string, arch: string) {
   return candidates.map((suffix) => `@yuuang/ffi-rs-${suffix}`)
 }
 
+/** Keep the CLI's ESM entry and its npm dependency layout available on disk. */
+async function copySkillsRuntime(buildPath: string) {
+  const copied = new Set<string>()
+  async function copyPackage(name: string, parentManifest: string) {
+    const paths = createRequire(parentManifest).resolve.paths(name) ?? []
+    const source = paths
+      .map((base) => path.join(base, name))
+      .find((dir) => existsSync(path.join(dir, 'package.json')))
+    if (!source) throw new Error(`Missing skills runtime dependency: ${name}`)
+    if (copied.has(source)) return
+    copied.add(source)
+    const manifest = path.join(source, 'package.json')
+    const { dependencies = {} } = JSON.parse(await readFile(manifest, 'utf8'))
+    const target = path.join(buildPath, 'skill-runtime', path.relative(__dirname, source))
+    await cp(source, target, {
+      recursive: true,
+      filter: (file) => path.basename(file) !== 'node_modules',
+    })
+    for (const dependency of Object.keys(dependencies)) await copyPackage(dependency, manifest)
+  }
+  await copyPackage('skills', path.join(__dirname, 'package.json'))
+  await cp(
+    path.join(__dirname, 'src/main/claude/agent-config/skills-runner.cjs'),
+    path.join(buildPath, 'skill-runtime/skills-runner.cjs'),
+  )
+}
+
 async function packageAfterCopy(
   _forgeConfig: unknown,
   buildPath: string,
@@ -58,6 +86,7 @@ async function packageAfterCopy(
   platform: string,
   arch: string,
 ) {
+  await copySkillsRuntime(buildPath)
   const targets = [
     ...EXTERNAL_RUNTIME_PACKAGES,
     ...claudeAgentSdkPlatformPackages(platform, arch),
@@ -83,7 +112,7 @@ const config: ForgeConfig = {
     // paths, so they need the leading `**/`.
     asar: {
       unpack:
-        '{**/*.node,**/node_modules/@anthropic-ai/claude-agent-sdk-*/**,**/node_modules/@ff-labs/fff-bin-*/**,**/node_modules/@yuuang/ffi-rs-*/**}',
+        '{**/skill-runtime/**,**/*.node,**/node_modules/@anthropic-ai/claude-agent-sdk-*/**,**/node_modules/@ff-labs/fff-bin-*/**,**/node_modules/@yuuang/ffi-rs-*/**}',
     },
   },
   rebuildConfig: {},

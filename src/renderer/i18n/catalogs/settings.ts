@@ -699,6 +699,112 @@ export const settingsCatalog = {
   'settings.agent.mcp.sseHint': setting('Server-sent events endpoint', 'SSE 端点', 'SSE 端點'),
 
   // Skills.
+  'settings.agent.skillMarket.ranking': setting('Ranking', '榜单', '排行榜'),
+  'settings.agent.skillMarket.chart.best-100': setting('Best 100', '综合百强', '綜合百強'),
+  'settings.agent.skillMarket.chart.top-installs': setting('Top installs', '安装量榜', '安裝量榜'),
+  'settings.agent.skillMarket.chart.trending-7d': setting(
+    'Trending (7 days)',
+    '近 7 天增长榜',
+    '近 7 天成長榜',
+  ),
+  'settings.agent.skillMarket.chart.social-buzz': setting(
+    'Social buzz',
+    '社交热度榜',
+    '社群熱度榜',
+  ),
+  'settings.agent.skillMarket.chart.most-active': setting(
+    'Most active',
+    '更新活跃榜',
+    '更新活躍榜',
+  ),
+  'settings.agent.skillMarket.chart.official-100': setting(
+    'Official 100',
+    '认证技能百强',
+    '認證技能百強',
+  ),
+  'settings.agent.skillMarket.chart.top-repos': setting(
+    'Top repositories',
+    '仓库星标榜',
+    '儲存庫星標榜',
+  ),
+  'settings.agent.skillMarket.chart.rising-stars': setting('Rising stars', '新秀榜', '新秀榜'),
+  'settings.agent.skillMarket.metric.score': setting(
+    'Score {{value}}',
+    '综合分 {{value}}',
+    '綜合分 {{value}}',
+  ),
+  'settings.agent.skillMarket.metric.installs': setting(
+    '{{value}} installs',
+    '{{value}} 次安装',
+    '{{value}} 次安裝',
+  ),
+  'settings.agent.skillMarket.metric.downloads': setting(
+    '{{value}} downloads',
+    '{{value}} 次下载',
+    '{{value}} 次下載',
+  ),
+  'settings.agent.skillMarket.metric.growth': setting(
+    '{{value}}% growth',
+    '增长 {{value}}%',
+    '成長 {{value}}%',
+  ),
+  'settings.agent.skillMarket.metric.trendRank': setting(
+    'Trending #{{value}}',
+    '趋势排名 #{{value}}',
+    '趨勢排名 #{{value}}',
+  ),
+  'settings.agent.skillMarket.metric.buzz': setting(
+    'Buzz {{value}}',
+    '热度 {{value}}',
+    '熱度 {{value}}',
+  ),
+  'settings.agent.skillMarket.metric.updated': setting(
+    'Updated {{value}}',
+    '更新于 {{value}}',
+    '更新於 {{value}}',
+  ),
+  'settings.agent.skillMarket.metric.stars': setting(
+    '{{value}} stars',
+    '{{value}} 个星标',
+    '{{value}} 個星標',
+  ),
+  'settings.agent.skillMarket.metric.age': setting(
+    'First seen {{value}} days ago',
+    '首次收录于 {{value}} 天前',
+    '首次收錄於 {{value}} 天前',
+  ),
+  'settings.agent.skillMarket.search': setting('Search skills...', '搜索技能…', '搜尋技能…'),
+  'settings.agent.skillMarket.unavailable': setting(
+    'Rankings unavailable',
+    '暂时无法获取榜单',
+    '暫時無法取得排行榜',
+  ),
+  'settings.agent.skillMarket.retry': setting('Retry', '重试', '重試'),
+  'settings.agent.skillMarket.searchFailed': setting(
+    'Skill search failed',
+    '搜索技能失败',
+    '搜尋技能失敗',
+  ),
+  'settings.agent.skillMarket.noResults': setting(
+    'No results returned',
+    '没有搜索结果',
+    '沒有搜尋結果',
+  ),
+  'settings.agent.skillMarket.lastSync': setting(
+    'Last sync {{time}}',
+    '上次同步 {{time}}',
+    '上次同步 {{time}}',
+  ),
+  'settings.agent.skillMarket.installFailed': setting(
+    'Could not install {{name}}',
+    '无法安装 {{name}}',
+    '無法安裝 {{name}}',
+  ),
+  'settings.agent.skillMarket.install': setting(
+    'Install {{name}} for Claude Code',
+    '为 Claude Code 安装 {{name}}',
+    '為 Claude Code 安裝 {{name}}',
+  ),
   'settings.agent.skills.metadata': setting('Metadata', '元信息', '中繼資料'),
   'settings.agent.skills.confirmDelete': setting(
     'Delete {{name}} from ~/.claude/skills? This also removes it from Claude Code when it uses this directory.',

@@ -15,6 +15,12 @@ import { clothoDir } from './app-data'
 import { createAppWindows } from './app-windows'
 import { type ApplicationWindowItem, applicationMenuItems } from './application-menu'
 import { createClaudeDesktopService } from './claude-service'
+import {
+  findMarketSkills,
+  installMarketSkill,
+  readMarketSkillSource,
+} from './claude/agent-config/market-skills-cli'
+import { getPublishedSkillBoard } from './claude/agent-config/published-skill-board'
 import { loadAttachmentFiles } from './claude/attachments'
 import { createModelProxy } from './claude/model-proxy'
 import { ensureWorkProject } from './claude/projects'
@@ -493,7 +499,17 @@ export async function bootstrap() {
         agentListHookGroups: () => service.listAgentHookGroups(),
         agentSaveHookGroup: (params) => service.saveAgentHookGroup(params),
         agentDeleteHookGroup: (params) => service.deleteAgentHookGroup(params),
-        agentListSkills: () => service.listAgentSkills(),
+        agentGetPublishedSkillBoard: ({ chart, cachedOnly }) =>
+          getPublishedSkillBoard(app.getPath('userData'), chart, cachedOnly),
+        agentFindMarketSkills: ({ query }) => findMarketSkills(query),
+        agentInstallMarketSkill: ({ source, name }) => installMarketSkill(source, name),
+        agentListSkills: async () =>
+          Promise.all(
+            (await service.listAgentSkills()).map(async (skill) => {
+              const marketSource = await readMarketSkillSource(skill.name)
+              return marketSource ? { ...skill, marketSource } : skill
+            }),
+          ),
         agentReadSkill: ({ name }) => service.readAgentSkill(name),
         agentDeleteSkill: (params) => service.deleteAgentSkill(params),
         agentSetSkillEnabled: () => {

@@ -7,6 +7,7 @@ import type {
   AgentPluginInfo,
   AgentSubagentConfig,
   AgentWorkflowInfo,
+  PublishedSkillChart,
 } from '@/shared/rpc'
 
 import { requestFromDesktop } from '../desktop/client'
@@ -54,6 +55,18 @@ export function saveAgentHookGroup(group: AgentHookGroup) {
 
 export function deleteAgentHookGroup(event: string) {
   return requestFromDesktop('agentDeleteHookGroup', { event })
+}
+
+export function getPublishedSkillBoard(chart: PublishedSkillChart, cachedOnly: boolean) {
+  return requestFromDesktop('agentGetPublishedSkillBoard', { chart, cachedOnly })
+}
+
+export function findMarketSkills(query: string) {
+  return requestFromDesktop('agentFindMarketSkills', { query })
+}
+
+export function installMarketSkill(source: string, name: string) {
+  return requestFromDesktop('agentInstallMarketSkill', { source, name })
 }
 
 export function listAgentSkills() {

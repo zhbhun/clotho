@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clotho · Skill marketplace prototype</title>
+<style>
+* { box-sizing: border-box }
+body { margin: 0; color: #191919; font: 14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background: white }
+button,input,select { font: inherit; color: inherit }
+button { cursor: pointer; border: 0; background: transparent }
+aside { width: 255px; background: #e6e6e6; padding: 0 9px; position: fixed; inset: 0 auto 0 0; overflow: auto }
+.lights { display:flex; gap:8px; margin:12px 0 22px }
+.lights i { width:14px; height:14px; border-radius:50%; background:#ff6059; border:1px solid #e64d46 }
+.lights i:nth-child(2) { background:#ffbd2e; border-color:#e8ab25 }
+.lights i:last-child { background:#28c840; border-color:#24b238 }
+.navitem,.back { display:flex; gap:10px; align-items:center; height:32px; width:100%; padding:0 10px; border-radius:7px; margin-bottom:6px }
+.back, .group { color:#737373 }
+.group { margin:16px 7px 10px }
+.active { background:#ffffff75 }
+main { margin-left:255px; height:100vh; overflow:auto }
+.content { max-width:848px; padding:48px 24px; margin:auto }
+nav { margin:0 auto 8px; display:flex; width:fit-content; padding:3px; gap:1px; border-radius:10px; background:#f1f1f1 }
+nav button { padding:3px 9px; color:#757575; border-radius:7px; font-weight:500 }
+nav .current { color:#171717; background:white }
+.toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px }
+select,input { border:1px solid #dedede; border-radius:6px; background:white; padding:3px 8px; height:29px }
+select { width:160px } input { width:240px; max-width:50% }
+.grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:24px }
+article { min-width:0; display:flex; align-items:center; gap:12px; border-radius:8px; padding:10px 8px }
+article:hover { background:#f7f7f7 }
+.avatar { width:36px; height:36px; flex:none; display:grid; place-items:center; border-radius:8px; background:hsl(var(--h) 70% 90%); color:hsl(var(--h) 46% 34%) }
+.copy { flex:1; min-width:0 }
+.name,.description,.meta { overflow:hidden; white-space:nowrap; text-overflow:ellipsis }
+.description { color:#737373; font-size:13px; margin-top:2px }
+.meta,footer { color:#757575; font-size:11px; margin-top:3px }
+.meta svg { vertical-align:-2px; margin-left:4px }
+.install { font-size:18px; color:#777; border-radius:5px; padding:0 7px }
+.install:hover { background:#eee }
+.installed { color:#666; background:#f1f1f1; font-size:11px; border-radius:5px; padding:2px 6px }
+footer { margin:18px 8px }
+h2 { font-size:16px; font-weight:550 }
+[hidden] { display:none!important }
+@media(max-width:1023px){.grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:650px){aside{width:52px}.group,.navitem span,.back span,.lights{display:none}.back{margin-top:20px}.navitem,.back{justify-content:center;padding:0}main{margin-left:52px}.content{padding:32px 12px}select{width:auto}}
+</style>
+<aside><div class="lights"><i></i><i></i><i></i></div><div id="sidebar"></div></aside>
+<main><div class="content">
+<nav id="tabs"></nav><h2 id="heading" hidden>Skills</h2>
+<div class="toolbar" id="tools"><select id="view" aria-label="Catalog view"></select><input type="search" id="query" aria-label="Search catalog"></div>
+<div class="grid" id="list"></div><footer id="note"></footer>
+</div></main>
+<script>
+const icons = {"SlidersHorizontal":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-sliders-horizontal\" aria-hidden=\"true\"><path d=\"M10 5H3\"></path><path d=\"M12 19H3\"></path><path d=\"M14 3v4\"></path><path d=\"M16 17v4\"></path><path d=\"M21 12h-9\"></path><path d=\"M21 19h-5\"></path><path d=\"M21 5h-7\"></path><path d=\"M8 10v4\"></path><path d=\"M8 12H3\"></path></svg>","Library":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-library\" aria-hidden=\"true\"><path d=\"m16 6 4 14\"></path><path d=\"M12 6v14\"></path><path d=\"M8 8v12\"></path><path d=\"M4 4v16\"></path></svg>","Palette":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-palette\" aria-hidden=\"true\"><path d=\"M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z\"></path><circle cx=\"13.5\" cy=\"6.5\" r=\".5\" fill=\"currentColor\"></circle><circle cx=\"17.5\" cy=\"10.5\" r=\".5\" fill=\"currentColor\"></circle><circle cx=\"6.5\" cy=\"12.5\" r=\".5\" fill=\"currentColor\"></circle><circle cx=\"8.5\" cy=\"7.5\" r=\".5\" fill=\"currentColor\"></circle></svg>","Keyboard":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-keyboard\" aria-hidden=\"true\"><path d=\"M10 8h.01\"></path><path d=\"M12 12h.01\"></path><path d=\"M14 8h.01\"></path><path d=\"M16 12h.01\"></path><path d=\"M18 8h.01\"></path><path d=\"M6 8h.01\"></path><path d=\"M7 16h10\"></path><path d=\"M8 12h.01\"></path><rect width=\"20\" height=\"16\" x=\"2\" y=\"4\" rx=\"2\"></rect></svg>","Folder":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-folder\" aria-hidden=\"true\"><path d=\"M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z\"></path></svg>","Store":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-store\" aria-hidden=\"true\"><path d=\"M15 21v-5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5\"></path><path d=\"M17.774 10.31a1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.451 0 1.12 1.12 0 0 0-1.548 0 2.5 2.5 0 0 1-3.452 0 1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.77-3.248l2.889-4.184A2 2 0 0 1 7 2h10a2 2 0 0 1 1.653.873l2.895 4.192a2.5 2.5 0 0 1-3.774 3.244\"></path><path d=\"M4 10.95V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8.05\"></path></svg>","Puzzle":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-puzzle\" aria-hidden=\"true\"><path d=\"M15.39 4.39a1 1 0 0 0 1.68-.474 2.5 2.5 0 1 1 3.014 3.015 1 1 0 0 0-.474 1.68l1.683 1.682a2.414 2.414 0 0 1 0 3.414L19.61 15.39a1 1 0 0 1-1.68-.474 2.5 2.5 0 1 0-3.014 3.015 1 1 0 0 1 .474 1.68l-1.683 1.682a2.414 2.414 0 0 1-3.414 0L8.61 19.61a1 1 0 0 0-1.68.474 2.5 2.5 0 1 1-3.014-3.015 1 1 0 0 0 .474-1.68l-1.683-1.682a2.414 2.414 0 0 1 0-3.414L4.39 8.61a1 1 0 0 1 1.68.474 2.5 2.5 0 1 0 3.014-3.015 1 1 0 0 1-.474-1.68l1.683-1.682a2.414 2.414 0 0 1 3.414 0z\"></path></svg>","Users":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-users\" aria-hidden=\"true\"><path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"></path><path d=\"M16 3.128a4 4 0 0 1 0 7.744\"></path><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"></path><circle cx=\"9\" cy=\"7\" r=\"4\"></circle></svg>","Server":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-server\" aria-hidden=\"true\"><rect width=\"20\" height=\"8\" x=\"2\" y=\"2\" rx=\"2\" ry=\"2\"></rect><rect width=\"20\" height=\"8\" x=\"2\" y=\"14\" rx=\"2\" ry=\"2\"></rect><line x1=\"6\" x2=\"6.01\" y1=\"6\" y2=\"6\"></line><line x1=\"6\" x2=\"6.01\" y1=\"18\" y2=\"18\"></line></svg>","Sparkles":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-sparkles lucide-stars\" aria-hidden=\"true\"><path d=\"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z\"></path><path d=\"M20 2v4\"></path><path d=\"M22 4h-4\"></path><circle cx=\"4\" cy=\"20\" r=\"2\"></circle></svg>","ArrowLeft":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-arrow-left\" aria-hidden=\"true\"><path d=\"m12 19-7-7 7-7\"></path><path d=\"M19 12H5\"></path></svg>","Download":"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-download\" aria-hidden=\"true\"><path d=\"M12 15V3\"></path><path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"></path><path d=\"m7 10 5 5 5-5\"></path></svg>"}
+const navGroups = [
+  ['Settings',[['General','SlidersHorizontal'],['Models','Library'],['Appearance','Palette'],['Keyboard shortcuts','Keyboard'],['Projects','Folder']]],
+  ['Agent capabilities',[['Marketplace','Store'],['Plugins','Puzzle'],['Subagents','Users'],['MCP','Server'],['Skills','Sparkles']]]
+]
+const skills = [
+  ['find-skills','vercel-labs/skills',4430966], ['hyperframes-cli','heygen-com/hyperframes',1624378],
+  ['agent-browser','vercel-labs/agent-browser',1593043], ['hyperframes','heygen-com/hyperframes',1588356],
+  ['grill-me','mattpocock/skills',1574152], ['design-mobile-apps','designed-by-ai/skills',1502384],
+  ['media-use','heygen-com/hyperframes',1497077], ['reddit-automation','flowkit-labs/skills',1441825],
+  ['calendar-helper','example/calendar',420]
+]
+const charts = {
+  "Best 100": [
+    [
+      "agent-browser",
+      "vercel-labs/agent-browser",
+      null,
+      "Score 81.9",
+      true
+    ]
+  ],
+  "Top installs": [
+    [
+      "find-skills",
+      "vercel-labs/skills",
+      null,
+      "Installs 4430966",
+      true
+    ]
+  ],
+  "Trending (7 days)": [
+    [
+      "ai-video-generation",
+      "beltsh/superpowers",
+      null,
+      "Trending rank 1",
+      true
+    ]
+  ],
+  "Social buzz": [
+    [
+      "agent-browser",
+      "vercel-labs/agent-browser",
+      null,
+      "Buzz 0.929",
+      true
+    ]
+  ],
+  "Most active": [
+    [
+      "ai-insurance-advisor",
+      "clawhub",
+      null,
+      "Updated 2026-11-18",
+      false
+    ]
+  ],
+  "Official 100": [
+    [
+      "find-skills",
+      "vercel-labs/skills",
+      null,
+      "Installs 4430966",
+      true
+    ]
+  ],
+  "Top repositories": [
+    [
+      "morluto/rea",
+      "GitHub",
+      null,
+      "Stars 468288",
+      false
+    ]
+  ],
+  "Rising stars": [
+    [
+      "patent-search-i",
+      "skillhub-cn",
+      null,
+      "Days since first seen 25",
+      false
+    ]
+  ]
+}
+const plugins = [
+  ['frontend-design','claude-plugins-official',1266133,'Create distinctive, production-grade frontend interfaces'],
+  ['superpowers','claude-plugins-official',1123984,'Superpowers teaches Claude brainstorming and more'],
+  ['code-review','claude-plugins-official',477558,'Automated code review for pull requests'],
+  ['skill-creator','claude-plugins-official',428976,'Create new skills and improve existing skills']
+]
+const byId = id => document.getElementById(id)
+const query = byId('query'), view = byId('view')
+const installed = new Set()
+let page = 'Marketplace', tab = 'Skills', rank = 'Best 100'
+function switchPage(next, nextTab) {
+  page = next
+  tab = nextTab
+  query.value = ''
+  render()
+}
+function item(title, icon, active, click) {
+  const el = document.createElement(click ? 'button' : 'div')
+  el.className = 'navitem' + (active ? ' active' : '')
+  el.innerHTML = icons[icon] + '<span></span>'
+  el.lastChild.textContent = title
+  el.title = title
+  if (click) el.onclick = click
+  return el
+}
+function render() {
+  const side = byId('sidebar')
+  side.replaceChildren(item('Back to app','ArrowLeft',false))
+  side.firstChild.className = 'back'
+  for (const [label, items] of navGroups) {
+    const group = document.createElement('div')
+    group.className = 'group'
+    group.textContent = label
+    side.append(group)
+    for (const [title, icon] of items) {
+      const click = title === 'Marketplace' ? () => switchPage(title,'Plugins') :
+        title === 'Skills' ? () => switchPage(title,'Skills') : null
+      side.append(item(title,icon,title === page,click))
+    }
+  }
+  const market = page === 'Marketplace', catalog = market && tab !== 'Marketplaces'
+  byId('heading').hidden = market
+  byId('tabs').hidden = !market
+  byId('tabs').replaceChildren(...['Plugins','Skills','Marketplaces'].map(title => {
+    const el = document.createElement('button')
+    el.textContent = title
+    el.className = title === tab ? 'current' : ''
+    el.onclick = () => switchPage('Marketplace',title)
+    return el
+  }))
+  byId('tools').hidden = !catalog
+  const skillCatalog = catalog && tab === 'Skills'
+  view.replaceChildren(...(skillCatalog ? Object.keys(charts) : ['All']).map(key => new Option(key,key)))
+  view.value = skillCatalog ? rank : 'All'
+  query.placeholder = skillCatalog ? 'Search skills...' : 'Search plugins...'
+  const term = query.value.trim().toLowerCase()
+  const matches = row => row.slice(0,2).some(value => value.toLowerCase().includes(term))
+  let rows
+  if (!market) rows = skills.filter(row => installed.has(row[0]))
+  else if (!catalog) rows = [['claude-plugins-official','github · anthropics/claude-plugins-official']]
+  else if (!skillCatalog) rows = plugins.filter(matches)
+  else rows = term ? skills.filter(matches) : charts[rank]
+  const list = byId('list')
+  list.replaceChildren()
+  for (const [name, source, count, description, installable = true] of rows) {
+    const el = document.createElement('article')
+    let hash = 0
+    for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) >>> 0
+    el.style.setProperty('--h',Math.round((hash * 137.508) % 360) % 360)
+    el.innerHTML = '<div class="avatar"></div><div class="copy"><div class="name"></div><div class="description"></div><div class="meta"></div></div>'
+    el.querySelector('.avatar').textContent = name[0].toUpperCase()
+    el.querySelector('.name').textContent = name
+    el.querySelector('.description').textContent = description || ''
+    const meta = el.querySelector('.meta')
+    meta.textContent = source
+    if (count != null) {
+      meta.append('　| ')
+      meta.insertAdjacentHTML('beforeend',icons.Download)
+      meta.append(' ' + count.toLocaleString('en-US'))
+    }
+    if (skillCatalog && installable) {
+      const added = installed.has(name)
+      const action = document.createElement('button')
+      action.className = added ? 'installed' : 'install'
+      action.textContent = added ? 'Installed' : '+'
+      action.title = 'Install ' + name + ' for Claude Code (user)'
+      action.disabled = added
+      action.onclick = () => { installed.add(name); render() }
+      el.append(action)
+    }
+    list.append(el)
+  }
+  if (!rows.length) list.textContent = market ? 'No results returned' : 'No installed skills'
+  byId('note').textContent = skillCatalog && !term ? 'skills.sh · LinklyAI/best-skills · Sample snapshot' : ''
+}
+view.onchange = () => { rank = view.value; render() }
+query.oninput = render
+render()
+</script></html>

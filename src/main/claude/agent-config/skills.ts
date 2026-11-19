@@ -1,4 +1,5 @@
 import { type Dirent, promises as fs } from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 
 import { parseDocument } from 'yaml'
@@ -16,7 +17,9 @@ export interface SkillInfo {
   description: string
 }
 
-export function claudeSkillsDir(claudeDir = path.join(process.env.HOME ?? '', '.claude')) {
+export function claudeSkillsDir(
+  claudeDir = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude'),
+) {
   return path.join(claudeDir, 'skills')
 }
 

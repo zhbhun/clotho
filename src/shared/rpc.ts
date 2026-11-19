@@ -270,7 +270,39 @@ export interface AgentHookGroup {
   }>
 }
 
+export interface MarketSkill {
+  source: string
+  name: string
+  installs: string
+  url?: string
+}
+
+export const PUBLISHED_SKILL_CHARTS = [
+  'best-100',
+  'top-installs',
+  'trending-7d',
+  'social-buzz',
+  'most-active',
+  'official-100',
+  'top-repos',
+  'rising-stars',
+] as const
+export type PublishedSkillChart = (typeof PUBLISHED_SKILL_CHARTS)[number]
+export type SkillChartMetric =
+  'score' | 'installs' | 'downloads' | 'growth' | 'trendRank' | 'buzz' | 'updated' | 'stars' | 'age'
+export interface PublishedSkillRow extends MarketSkill {
+  rank: number
+  installable: boolean
+  metric: SkillChartMetric
+  value: string
+}
+export interface PublishedSkillBoard {
+  syncedAt: number
+  rows: PublishedSkillRow[]
+}
+
 export interface AgentSkillInfo {
+  marketSource?: string
   name: string
   description: string
   disabled?: boolean
@@ -1409,6 +1441,18 @@ export type DesktopRPC = {
       }
       agentDeleteHookGroup: {
         params: { event: string }
+        response: void
+      }
+      agentGetPublishedSkillBoard: {
+        params: { chart: PublishedSkillChart; cachedOnly: boolean }
+        response: PublishedSkillBoard | null
+      }
+      agentFindMarketSkills: {
+        params: { query: string }
+        response: MarketSkill[]
+      }
+      agentInstallMarketSkill: {
+        params: { source: string; name: string }
         response: void
       }
       agentListSkills: {

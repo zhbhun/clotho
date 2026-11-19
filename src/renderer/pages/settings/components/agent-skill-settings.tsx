@@ -1,21 +1,14 @@
-import { EllipsisVertical } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { Button } from '@/shadcn/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/shadcn/dropdown-menu'
 import { Spinner } from '@/shadcn/spinner'
 import { toast } from '@/shadcn/toast'
 
-import { deleteAgentSkill, listAgentSkills } from '../../../services/claude/agent-config'
-import { AgentEmpty, DeleteConfirmDialog } from './agent-shared'
+import { listAgentSkills } from '../../../services/claude/agent-config'
+import { AgentEmpty } from './agent-shared'
 import { PluginAvatar } from './plugin-avatar'
 import { useSettingsDetailStore } from './settings-detail-store'
+import { SkillActions } from './skill-actions'
 import { SkillDetailPage } from './skill-detail-page'
 
 export function AgentSkillSettings() {
@@ -28,7 +21,6 @@ export function AgentSkillSettings() {
 
 function SkillList() {
   const openDetail = useSettingsDetailStore((state) => state.openDetail)
-  const [selected, setSelected] = useState<string | null>(null)
   const { t } = useTranslation()
   const [skills, setSkills] = useState<Array<{ name: string; description: string }>>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -48,15 +40,6 @@ function SkillList() {
     // Mount-only load; reload reads fresh state on every call.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  const handleDelete = async (name: string) => {
-    try {
-      await deleteAgentSkill(name)
-      await reload()
-    } catch {
-      toast.add({ id: 'agent-skill-delete', title: t('settings.agent.deleteError'), type: 'error' })
-    }
-  }
 
   return (
     <section className="flex flex-col gap-3">
@@ -84,43 +67,13 @@ function SkillList() {
                   <div className="truncate text-sm text-foreground-subtle">{skill.description}</div>
                 </div>
                 <div onClick={(event) => event.stopPropagation()}>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      aria-label={t('settings.agent.plugins.more') + ' · ' + skill.name}
-                      render={<Button size="icon" variant="ghost" />}
-                    >
-                      <EllipsisVertical className="size-4 text-foreground-subtlest" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={open}>
-                        {t('settings.agent.plugins.open')}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="text-destructive"
-                        onClick={() => setSelected(skill.name)}
-                      >
-                        {t('settings.agent.plugins.uninstall')}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <SkillActions name={skill.name} onOpen={open} onUninstall={reload} />
                 </div>
               </div>
             )
           })}
         </div>
       )}
-      <DeleteConfirmDialog
-        open={selected !== null}
-        title={t('settings.agent.plugins.uninstall')}
-        actionLabel={t('settings.agent.plugins.uninstall')}
-        description={t('settings.agent.skills.confirmDelete', { name: selected })}
-        onOpenChange={(open) => {
-          if (!open) setSelected(null)
-        }}
-        onDelete={() => {
-          if (selected) return handleDelete(selected)
-        }}
-      />
     </section>
   )
 }

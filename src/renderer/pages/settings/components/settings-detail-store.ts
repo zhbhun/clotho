@@ -3,7 +3,7 @@ import { create } from 'zustand'
 import type { SettingsCategoryId } from '../index'
 
 /** Second-level pages reachable from a category list. */
-export type DetailPage = 'entry' | 'marketplaces' | 'install'
+export type DetailPage = 'entry' | 'marketplaces' | 'install' | 'skills'
 /** Third-level subpages openable under a second-level page. */
 export type DetailSubPage = 'add' | 'market-detail' | 'install-detail'
 

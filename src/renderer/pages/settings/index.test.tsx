@@ -209,6 +209,29 @@ describe('SettingsPage', () => {
     expect(screen.getByRole('button', { name: '插件广场', current: 'page' })).toBeInTheDocument()
   })
 
+  it('shows a newly installed marketplace skill when opening Skills in the same dialog', async () => {
+    const item = { name: 'formatter', source: 'acme/tools', installs: '12' }
+    let installed = false
+    vi.spyOn(agentConfig, 'getPublishedSkillBoard').mockResolvedValue({
+      syncedAt: 1,
+      rows: [{ ...item, rank: 1, metric: 'score', value: '80', installable: true }],
+    })
+    vi.spyOn(agentConfig, 'listAgentSkills').mockImplementation(async () =>
+      installed ? [{ name: item.name, description: 'Installed from acme/tools' }] : [],
+    )
+    vi.spyOn(agentConfig, 'installMarketSkill').mockImplementation(async () => {
+      installed = true
+    })
+    const user = userEvent.setup()
+    render(<TestSettingsPage open initialCategory="agent-marketplace" onOpenChange={vi.fn()} />)
+
+    await user.click(screen.getByRole('tab', { name: '技能' }))
+    await user.click(await screen.findByRole('button', { name: /安装 formatter/ }))
+    await user.click(screen.getByRole('button', { name: '技能' }))
+
+    expect(await screen.findByText('Installed from acme/tools')).toBeVisible()
+  })
+
   it('returns to the originating Marketplace tab and guards unsaved source changes', async () => {
     vi.spyOn(agentConfig, 'listAgentPlugins').mockResolvedValue([])
     vi.spyOn(agentConfig, 'listAgentAvailablePlugins').mockResolvedValue([

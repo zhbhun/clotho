@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shadcn/tabs'
 import { InstallPluginDetailPage, InstallPluginPage } from './install-page'
 import { MarketplaceAddPage, MarketplaceDetailPage, MarketplaceListPage } from './marketplace-pages'
 import { useSettingsDetailStore } from './settings-detail-store'
+import { SkillDetailPage } from './skill-detail-page'
+import { SkillMarketplace } from './skill-marketplace'
 
 export function MarketplaceSettings() {
   const { t } = useTranslation()
@@ -13,6 +15,7 @@ export function MarketplaceSettings() {
   const view = useSettingsDetailStore((state) => state.view)
 
   if (view.kind === 'detail' && view.categoryId === 'agent-marketplace') {
+    if (view.page === 'skills' && view.file) return <SkillDetailPage name={view.file} />
     if (view.page === 'install' && view.file)
       return <InstallPluginDetailPage pluginId={view.file} />
     if (view.page === 'marketplaces') {
@@ -28,10 +31,14 @@ export function MarketplaceSettings() {
     <Tabs value={tab} onValueChange={setTab}>
       <TabsList className="self-center">
         <TabsTrigger value="plugins">{t('settings.agent.title.plugins')}</TabsTrigger>
+        <TabsTrigger value="skills">{t('settings.agent.title.skills')}</TabsTrigger>
         <TabsTrigger value="marketplaces">{t('settings.agent.plugins.marketplaces')}</TabsTrigger>
       </TabsList>
       <TabsContent value="plugins">
         <InstallPluginPage />
+      </TabsContent>
+      <TabsContent value="skills">
+        <SkillMarketplace />
       </TabsContent>
       <TabsContent value="marketplaces">
         <MarketplaceListPage />

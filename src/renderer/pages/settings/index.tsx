@@ -302,6 +302,7 @@ function SettingsPageContent({
     detail.view.categoryId === 'agent-marketplace' &&
     detail.view.file
   ) {
+    if (detail.view.page === 'skills') detailRoot = t('settings.agent.title.skills')
     if (detail.view.page === 'install') detailRoot = t('settings.agent.title.plugins')
     if (detail.view.page === 'marketplaces') detailRoot = t('settings.agent.plugins.marketplaces')
   }
@@ -547,7 +548,7 @@ function SettingsPageContent({
                       <AgentMcpSettings />
                     </SettingsCategory>
                     <SettingsCategory isActive={category.id === 'agent-skills'}>
-                      <AgentSkillSettings />
+                      {category.id === 'agent-skills' ? <AgentSkillSettings /> : null}
                     </SettingsCategory>
                   </div>
                 </div>
