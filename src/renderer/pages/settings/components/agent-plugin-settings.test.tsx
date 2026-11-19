@@ -273,6 +273,52 @@ describe('AgentPluginSettings list page', () => {
     expect(screen.getByText('Format')).toBeInTheDocument()
   })
 
+  it('opens plugin details from the row menu without opening them when the menu is shown', async () => {
+    mock.listAgentPlugins.mockResolvedValue([installedPlugin()])
+    const user = userEvent.setup()
+    renderWithProviders(<AgentPluginSettings />)
+
+    await user.click(await screen.findByRole('button', { name: '更多操作 · formatter' }))
+    expect(useSettingsDetailStore.getState().view.kind).toBe('list')
+    await user.click(await screen.findByRole('menuitem', { name: '打开' }))
+
+    expect(useSettingsDetailStore.getState().view).toMatchObject({
+      kind: 'detail',
+      file: 'formatter@acme',
+    })
+  })
+
+  it('uninstalls a plugin from the row menu and updates the list and cache', async () => {
+    mock.listAgentPlugins.mockResolvedValueOnce([installedPlugin()]).mockResolvedValue([])
+    useCatalogCache.setState({ installed: [installedPlugin()] })
+    mock.removeAgentPlugin.mockResolvedValue(undefined)
+    const user = userEvent.setup()
+    renderWithProviders(<AgentPluginSettings />)
+
+    await user.click(await screen.findByRole('button', { name: '更多操作 · formatter' }))
+    await user.click(await screen.findByRole('menuitem', { name: '卸载' }))
+
+    await waitFor(() => expect(mock.removeAgentPlugin).toHaveBeenCalledWith('formatter@acme'))
+    await waitFor(() => expect(screen.queryByText('formatter')).not.toBeInTheDocument())
+    expect(useCatalogCache.getState().installed).toEqual([])
+    expect(useSettingsDetailStore.getState().view.kind).toBe('list')
+    expect(await screen.findByText('插件变更将在新会话中生效')).toBeInTheDocument()
+  })
+
+  it('keeps the plugin in the list when uninstall fails', async () => {
+    mock.listAgentPlugins.mockResolvedValue([installedPlugin()])
+    mock.removeAgentPlugin.mockRejectedValue(new Error('CLI failed'))
+    const user = userEvent.setup()
+    renderWithProviders(<AgentPluginSettings />)
+
+    await user.click(await screen.findByRole('button', { name: '更多操作 · formatter' }))
+    await user.click(await screen.findByRole('menuitem', { name: '卸载' }))
+
+    expect(await screen.findByText('删除失败')).toBeInTheDocument()
+    expect(screen.getByText('formatter')).toBeInTheDocument()
+    expect(useSettingsDetailStore.getState().view.kind).toBe('list')
+  })
+
   it('refreshes all marketplaces from the header refresh button', async () => {
     mock.refreshAgentMarketplace.mockResolvedValue(undefined)
     const user = userEvent.setup()

@@ -1,14 +1,22 @@
-import { PackagePlus, RotateCw } from 'lucide-react'
+import { Ellipsis, PackagePlus, RotateCw } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/shadcn/dropdown-menu'
 import { Switch } from '@/shadcn/switch'
 import { toast } from '@/shadcn/toast'
 
 import {
   type AgentPluginInfo,
   listAgentPlugins,
+  removeAgentPlugin,
   setAgentPluginEnabled,
 } from '../../../services/claude/agent-config'
 import { AgentEmpty } from './agent-shared'
@@ -69,6 +77,21 @@ export function PluginListPage({ onOpenMarketplace }: { onOpenMarketplace?: () =
   const handleRefreshAll = () =>
     refreshAllMarketplaces(reload, t('settings.agent.plugins.refreshError'))
 
+  const handleUninstall = async (plugin: AgentPluginInfo) => {
+    try {
+      await removeAgentPlugin(plugin.id)
+      setPlugins((current) => current.filter((entry) => entry.id !== plugin.id))
+      updateInstalled(plugin.id, 'remove')
+      notifyRestart()
+    } catch {
+      toast.add({
+        id: 'agent-plugin-remove',
+        title: t('settings.agent.deleteError'),
+        type: 'error',
+      })
+    }
+  }
+
   return (
     <section className="flex flex-col gap-3" data-plugin-list-page>
       <div className="flex min-h-7 items-center justify-between gap-4">
@@ -106,7 +129,7 @@ export function PluginListPage({ onOpenMarketplace }: { onOpenMarketplace?: () =
         <div>
           {plugins.map((plugin) => (
             <div
-              className="flex min-w-0 cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/50"
+              className="group/plugin flex min-w-0 cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/50"
               key={plugin.id}
               onClick={() => openDetailAction('agent-plugins', plugin.id, plugin.name)}
             >
@@ -116,6 +139,37 @@ export function PluginListPage({ onOpenMarketplace }: { onOpenMarketplace?: () =
                 <div className="truncate text-sm text-foreground-subtle">
                   {[plugin.marketplace, plugin.version].filter(Boolean).join(' · ')}
                 </div>
+              </div>
+              <div className="-mr-1" onClick={(event) => event.stopPropagation()}>
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    aria-label={t('settings.agent.plugins.more') + ' · ' + plugin.name}
+                    render={
+                      <Button
+                        className="pointer-events-none opacity-0 group-hover/plugin:pointer-events-auto group-hover/plugin:opacity-100 focus-visible:pointer-events-auto focus-visible:opacity-100 aria-expanded:pointer-events-auto aria-expanded:opacity-100"
+                        size="icon"
+                        variant="ghost"
+                      />
+                    }
+                  >
+                    <Ellipsis className="size-4 text-foreground-subtlest" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem
+                        onClick={() => openDetailAction('agent-plugins', plugin.id, plugin.name)}
+                      >
+                        {t('settings.agent.plugins.open')}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-destructive"
+                        onClick={() => void handleUninstall(plugin)}
+                      >
+                        {t('settings.agent.plugins.uninstall')}
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
               <Switch
                 aria-label={t('settings.agent.enabled')}
