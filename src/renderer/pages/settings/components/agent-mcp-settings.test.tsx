@@ -83,7 +83,7 @@ describe('AgentMcpSettings', () => {
 
     await user.click(await screen.findByRole('button', { name: '添加服务器' }))
     await user.type(screen.getByLabelText('名称'), 'remote')
-    await user.click(screen.getByRole('button', { name: 'http' }))
+    await user.click(screen.getByRole('button', { name: 'Streamable HTTP' }))
     await user.type(screen.getByLabelText('URL'), 'https://mcp.example')
     await user.click(screen.getByRole('button', { name: '保存' }))
 

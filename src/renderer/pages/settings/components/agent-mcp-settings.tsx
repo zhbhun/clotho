@@ -3,11 +3,13 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
+import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from '@/shadcn/field'
 import { Input } from '@/shadcn/input'
 import { Label } from '@/shadcn/label'
 import { Spinner } from '@/shadcn/spinner'
 import { Textarea } from '@/shadcn/textarea'
 import { toast } from '@/shadcn/toast'
+import { ToggleGroup, ToggleGroupItem } from '@/shadcn/toggle-group'
 
 import { SettingsSection } from '../../../components/settings-section'
 import {
@@ -30,7 +32,7 @@ function useMcpDetailOpen() {
   return view.kind === 'detail' && view.categoryId === MCP_CATEGORY
 }
 
-const SERVER_TYPES = ['stdio', 'http', 'sse'] as const
+const SERVER_TYPES = ['stdio', 'http'] as const
 
 function parseKeyValueBlock(source: string): Record<string, string> {
   const result: Record<string, string> = {}
@@ -86,31 +88,44 @@ function McpEditor({ draft, onClose }: { draft: AgentMcpServerConfig; onClose: (
       isSaveDisabled={!form.name.trim()}
       onSave={() => void handleSave()}
     >
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="agent-mcp-name">{t('settings.agent.name')}</Label>
+      <FieldGroup>
+        <Field>
+          <FieldLabel htmlFor="agent-mcp-name">{t('settings.agent.name')}</FieldLabel>
           <Input
             id="agent-mcp-name"
             value={form.name}
             onChange={(event) => setForm({ ...form, name: event.target.value })}
           />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label>{t('settings.agent.mcp.type')}</Label>
-          <div className="flex gap-1">
+        </Field>
+        <Field
+          orientation="responsive"
+          className="@md/field-group:has-[>[data-slot=field-content]]:items-center"
+        >
+          <FieldContent>
+            <FieldLabel id="agent-mcp-type">{t('settings.agent.mcp.type')}</FieldLabel>
+            <FieldDescription>{t('settings.agent.mcp.typeHint')}</FieldDescription>
+          </FieldContent>
+          <ToggleGroup
+            aria-labelledby="agent-mcp-type"
+            className="shrink-0"
+            spacing={1}
+            value={[form.type]}
+            onValueChange={([type]) => {
+              if (type === 'stdio' || type === 'http') setForm({ ...form, type })
+            }}
+          >
             {SERVER_TYPES.map((type) => (
-              <Button
+              <ToggleGroupItem
                 key={type}
-                size="sm"
-                variant={form.type === type ? 'default' : 'outline'}
-                onClick={() => setForm({ ...form, type })}
+                value={type}
+                className="rounded-xl px-3 py-1.5 text-sm whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground data-pressed:bg-muted data-pressed:text-foreground"
               >
-                {type}
-              </Button>
+                {type === 'stdio' ? 'STDIO' : 'Streamable HTTP'}
+              </ToggleGroupItem>
             ))}
-          </div>
-        </div>
-      </div>
+          </ToggleGroup>
+        </Field>
+      </FieldGroup>
       {form.type === 'stdio' ? (
         <>
           <div className="flex flex-col gap-1.5">

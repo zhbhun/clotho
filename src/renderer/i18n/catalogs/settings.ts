@@ -670,6 +670,11 @@ export const settingsCatalog = {
     '設定伺服器連線資訊，儲存後返回列表。',
   ),
   'settings.agent.mcp.type': setting('Type', '类型', '類型'),
+  'settings.agent.mcp.typeHint': setting(
+    'How the app connects to this MCP server',
+    '应用连接此 MCP 服务器的方式',
+    '應用程式連線至此 MCP 伺服器的方式',
+  ),
   'settings.agent.mcp.command': setting('Command', '命令', '命令'),
   'settings.agent.mcp.args': setting('Arguments', '参数', '參數'),
   'settings.agent.mcp.argsHint': setting('Space separated', '空格分隔', '空格分隔'),
