@@ -319,14 +319,12 @@ describe('AgentPluginSettings list page', () => {
     expect(useSettingsDetailStore.getState().view.kind).toBe('list')
   })
 
-  it('refreshes all marketplaces from the header refresh button', async () => {
-    mock.refreshAgentMarketplace.mockResolvedValue(undefined)
-    const user = userEvent.setup()
+  it('omits the header refresh button', async () => {
+    mock.listAgentPlugins.mockResolvedValue([installedPlugin()])
     renderWithProviders(<AgentPluginSettings />)
 
-    await user.click(await screen.findByRole('button', { name: '刷新' }))
-
-    await waitFor(() => expect(mock.refreshAgentMarketplace).toHaveBeenCalledWith())
+    expect(await screen.findByText('formatter')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '刷新' })).not.toBeInTheDocument()
   })
 })
 

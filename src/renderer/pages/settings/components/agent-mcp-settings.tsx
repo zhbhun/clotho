@@ -263,11 +263,10 @@ export function AgentMcpSettings() {
       action={
         <Button
           aria-label={t('settings.agent.mcp.add')}
-          size="icon"
-          variant="outline"
+          title={t('settings.agent.mcp.add')}
           onClick={startCreate}
         >
-          <Plus />
+          <Plus data-icon="inline-start" />
         </Button>
       }
     >

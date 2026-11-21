@@ -1,4 +1,4 @@
-import { PackagePlus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -57,7 +57,7 @@ function SkillList({ onOpenMarketplace }: SkillListProps) {
           title={t('settings.agent.skillMarket.open')}
           onClick={onOpenMarketplace}
         >
-          <PackagePlus data-icon="inline-start" />
+          <Plus data-icon="inline-start" />
         </Button>
       </div>
       {isLoading ? (

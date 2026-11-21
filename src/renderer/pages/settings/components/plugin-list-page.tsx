@@ -1,4 +1,4 @@
-import { Ellipsis, PackagePlus, RotateCw } from 'lucide-react'
+import { Ellipsis, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -22,13 +22,12 @@ import {
 import { AgentEmpty } from './agent-shared'
 import { updateInstalled } from './catalog-cache'
 import { PluginAvatar } from './plugin-avatar'
-import { refreshAllMarketplaces, useRestartHint } from './plugin-shared'
+import { useRestartHint } from './plugin-shared'
 import { PluginRowsSkeleton } from './plugin-skeletons'
 import { useSettingsDetailStore } from './settings-detail-store'
 
 /**
- * Top-level Plugins page: the installed plugin list. Header actions are the
- * refresh-all and install icon buttons.
+ * Top-level Plugins page: the installed plugin list with a marketplace action.
  * Only user-scope plugins are listed for now; local (project) scope plugins
  * are deferred until a unified handling lands.
  */
@@ -74,9 +73,6 @@ export function PluginListPage({ onOpenMarketplace }: { onOpenMarketplace?: () =
     }
   }
 
-  const handleRefreshAll = () =>
-    refreshAllMarketplaces(reload, t('settings.agent.plugins.refreshError'))
-
   const handleUninstall = async (plugin: AgentPluginInfo) => {
     try {
       await removeAgentPlugin(plugin.id)
@@ -103,22 +99,13 @@ export function PluginListPage({ onOpenMarketplace }: { onOpenMarketplace?: () =
             </span>
           )}
         </h2>
-        <div className="flex items-center gap-2">
-          <Button
-            aria-label={t('settings.agent.plugins.refresh')}
-            size="icon"
-            variant="outline"
-            onClick={() => void handleRefreshAll()}
-          >
-            <RotateCw className="size-4" />
-          </Button>
-          <Button
-            aria-label={t('settings.categories.agentMarketplace')}
-            onClick={onOpenMarketplace}
-          >
-            <PackagePlus data-icon="inline-start" />
-          </Button>
-        </div>
+        <Button
+          aria-label={t('settings.categories.agentMarketplace')}
+          title={t('settings.categories.agentMarketplace')}
+          onClick={onOpenMarketplace}
+        >
+          <Plus data-icon="inline-start" />
+        </Button>
       </div>
 
       {isLoading ? (
