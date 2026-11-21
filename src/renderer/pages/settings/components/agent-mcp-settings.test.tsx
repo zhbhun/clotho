@@ -10,6 +10,7 @@ import { appI18n } from '../../../i18n/runtime'
 import * as agentConfig from '../../../services/claude/agent-config'
 import { ShortcutRuntimeProvider, shortcutRuntime } from '../../../services/shortcuts/runtime'
 import { AgentMcpSettings } from './agent-mcp-settings'
+import { useSettingsDetailStore } from './settings-detail-store'
 
 vi.mock('../../../services/claude/agent-config', () => ({
   listAgentSubagents: vi.fn(),
@@ -43,6 +44,7 @@ const mock = vi.mocked(agentConfig, true)
 beforeEach(async () => {
   await appI18n.changeLanguage('zh-CN')
   vi.clearAllMocks()
+  useSettingsDetailStore.getState().backToList()
   mock.getAgentCapabilityToggles.mockResolvedValue({
     disabledSkills: [],
     disabledMcpServers: [],
@@ -61,7 +63,7 @@ function renderWithProviders(element: ReactElement) {
 }
 
 describe('AgentMcpSettings', () => {
-  it('lists servers with type badges and connection summary', async () => {
+  it('lists servers with type and connection summary on the second line', async () => {
     mock.listAgentMcpServers.mockResolvedValue([
       { name: 'docs', type: 'http', url: 'https://mcp.example' },
       { name: 'local', type: 'stdio', command: 'npx', args: ['-y', 'server'] },
@@ -69,10 +71,8 @@ describe('AgentMcpSettings', () => {
     renderWithProviders(<AgentMcpSettings />)
 
     expect(await screen.findByText('docs')).toBeInTheDocument()
-    expect(screen.getByText('https://mcp.example')).toBeInTheDocument()
-    expect(screen.getByText('npx -y server')).toBeInTheDocument()
-    expect(screen.getAllByText('http')).toHaveLength(1)
-    expect(screen.getAllByText('stdio')).toHaveLength(1)
+    expect(screen.getByText('http · https://mcp.example')).toBeInTheDocument()
+    expect(screen.getByText('stdio · npx -y server')).toBeInTheDocument()
   })
 
   it('switches editor fields with the server type and saves through the RPC', async () => {
@@ -95,6 +95,33 @@ describe('AgentMcpSettings', () => {
     )
   })
 
+  it('opens the existing server editor when clicking the row', async () => {
+    mock.listAgentMcpServers.mockResolvedValue([
+      { name: 'docs', type: 'http', url: 'https://mcp.example' },
+    ])
+    const user = userEvent.setup()
+    renderWithProviders(<AgentMcpSettings />)
+
+    await user.click(await screen.findByText('http · https://mcp.example'))
+
+    expect(screen.getByLabelText('名称')).toHaveValue('docs')
+    expect(screen.getByLabelText('URL')).toHaveValue('https://mcp.example')
+  })
+
+  it('opens the menu without editing, then edits from the menu', async () => {
+    mock.listAgentMcpServers.mockResolvedValue([
+      { name: 'docs', type: 'http', url: 'https://mcp.example' },
+    ])
+    const user = userEvent.setup()
+    renderWithProviders(<AgentMcpSettings />)
+
+    await user.click(await screen.findByRole('button', { name: '更多操作 · docs' }))
+    expect(screen.queryByLabelText('名称')).toBeNull()
+    await user.click(await screen.findByRole('menuitem', { name: '编辑' }))
+
+    expect(screen.getByLabelText('名称')).toHaveValue('docs')
+  })
+
   it('toggles a server through the capability toggle RPC', async () => {
     mock.listAgentMcpServers.mockResolvedValue([
       { name: 'docs', type: 'http', url: 'https://mcp.example' },
@@ -111,6 +138,7 @@ describe('AgentMcpSettings', () => {
     await waitFor(() =>
       expect(mock.setAgentCapabilityToggle).toHaveBeenCalledWith('mcp', 'docs', false),
     )
+    expect(screen.queryByLabelText('名称')).toBeNull()
   })
 
   it('deletes a server after confirmation', async () => {
@@ -121,7 +149,10 @@ describe('AgentMcpSettings', () => {
     const user = userEvent.setup()
     renderWithProviders(<AgentMcpSettings />)
 
-    await user.click(await screen.findByRole('button', { name: 'docs' }))
+    await user.click(await screen.findByRole('button', { name: '更多操作 · docs' }))
+    await user.click(await screen.findByRole('menuitem', { name: '删除' }))
+    expect(mock.deleteAgentMcpServer).not.toHaveBeenCalled()
+    expect(screen.queryByLabelText('名称')).toBeNull()
     await user.click(await screen.findByRole('button', { name: '删除' }))
 
     await waitFor(() => expect(mock.deleteAgentMcpServer).toHaveBeenCalledWith('docs'))

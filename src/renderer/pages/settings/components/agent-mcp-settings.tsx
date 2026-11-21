@@ -1,15 +1,15 @@
+import { Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { Badge } from '@/shadcn/badge'
 import { Button } from '@/shadcn/button'
 import { Input } from '@/shadcn/input'
 import { Label } from '@/shadcn/label'
 import { Spinner } from '@/shadcn/spinner'
-import { Switch } from '@/shadcn/switch'
 import { Textarea } from '@/shadcn/textarea'
 import { toast } from '@/shadcn/toast'
 
+import { SettingsSection } from '../../../components/settings-section'
 import {
   type AgentMcpServerConfig,
   deleteAgentMcpServer,
@@ -18,9 +18,9 @@ import {
   setAgentCapabilityToggle,
 } from '../../../services/claude/agent-config'
 import { AgentDetailPage } from './agent-detail-page'
-import { AgentEmpty, AgentSection, DeleteButton } from './agent-shared'
+import { AgentEmpty } from './agent-shared'
+import { McpRow } from './mcp-row'
 import { useSettingsDetailStore } from './settings-detail-store'
-import { SettingsList, SettingsRow, markAsRow } from './settings-list'
 
 const MCP_CATEGORY = 'agent-mcp' as const
 
@@ -167,45 +167,6 @@ function McpEditor({ draft, onClose }: { draft: AgentMcpServerConfig; onClose: (
   )
 }
 
-const McpRow = markAsRow(function McpRow({
-  server,
-  onEdit,
-  onDelete,
-  onToggle,
-}: {
-  server: AgentMcpServerConfig
-  onEdit: () => void
-  onDelete: () => Promise<void> | void
-  onToggle: (enabled: boolean) => void
-}) {
-  const { t } = useTranslation()
-  const summary =
-    server.type === 'stdio' ? [server.command, ...(server.args ?? [])].join(' ') : server.url
-
-  return (
-    <SettingsRow variant="compact">
-      <Switch
-        aria-label={t('settings.agent.enabled')}
-        checked={!server.disabled}
-        onCheckedChange={onToggle}
-      />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="truncate text-sm font-normal">{server.name}</span>
-          <Badge variant="secondary">{server.type}</Badge>
-        </div>
-        <div className="truncate text-sm text-foreground-subtle">{summary}</div>
-      </div>
-      <div className="flex shrink-0 items-center gap-1">
-        <Button size="sm" variant="ghost" onClick={onEdit}>
-          {t('settings.common.edit')}
-        </Button>
-        <DeleteButton label={server.name} onDelete={onDelete} />
-      </div>
-    </SettingsRow>
-  )
-})
-
 export function AgentMcpSettings() {
   const { t } = useTranslation()
   const [servers, setServers] = useState<AgentMcpServerConfig[]>([])
@@ -273,14 +234,35 @@ export function AgentMcpSettings() {
   }
 
   return (
-    <AgentSection addLabel={t('settings.agent.mcp.add')} onAdd={startCreate} titleKey="mcp">
+    <SettingsSection
+      title={
+        <>
+          {t('settings.agent.plugins.installed')}{' '}
+          {!isLoading && (
+            <span className="text-foreground-subtlest">
+              {t('settings.agent.subagent.itemCount', { count: servers.length })}
+            </span>
+          )}
+        </>
+      }
+      action={
+        <Button
+          aria-label={t('settings.agent.mcp.add')}
+          size="icon"
+          variant="outline"
+          onClick={startCreate}
+        >
+          <Plus />
+        </Button>
+      }
+    >
       <div className="flex flex-col gap-3">
         {isLoading ? (
           <Spinner className="self-center" />
         ) : servers.length === 0 ? (
           <AgentEmpty />
         ) : (
-          <SettingsList>
+          <div>
             {servers.map((server) => (
               <McpRow
                 key={server.name}
@@ -290,9 +272,9 @@ export function AgentMcpSettings() {
                 onToggle={(enabled) => void handleToggle(server, enabled)}
               />
             ))}
-          </SettingsList>
+          </div>
         )}
       </div>
-    </AgentSection>
+    </SettingsSection>
   )
 }
