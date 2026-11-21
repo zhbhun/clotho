@@ -71,7 +71,7 @@ function SkillList({ onOpenMarketplace }: SkillListProps) {
             return (
               <div
                 key={skill.name}
-                className="flex min-w-0 cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/50"
+                className="group/skill flex min-w-0 cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/50"
                 onClick={open}
               >
                 <PluginAvatar name={skill.name} />
@@ -80,7 +80,12 @@ function SkillList({ onOpenMarketplace }: SkillListProps) {
                   <div className="truncate text-sm text-foreground-subtle">{skill.description}</div>
                 </div>
                 <div onClick={(event) => event.stopPropagation()}>
-                  <SkillActions name={skill.name} onOpen={open} onUninstall={reload} />
+                  <SkillActions
+                    name={skill.name}
+                    className="pointer-events-none opacity-0 group-hover/skill:pointer-events-auto group-hover/skill:opacity-100 focus-visible:pointer-events-auto focus-visible:opacity-100 aria-expanded:pointer-events-auto aria-expanded:opacity-100"
+                    onOpen={open}
+                    onUninstall={reload}
+                  />
                 </div>
               </div>
             )

@@ -16,10 +16,12 @@ import { DeleteConfirmDialog } from './agent-shared'
 
 export function SkillActions({
   name,
+  className,
   onOpen,
   onUninstall,
 }: {
   name: string
+  className?: string
   onOpen: () => void
   onUninstall: () => void | Promise<void>
 }) {
@@ -38,7 +40,7 @@ export function SkillActions({
       <DropdownMenu>
         <DropdownMenuTrigger
           aria-label={t('settings.agent.plugins.more') + ' · ' + name}
-          render={<Button size="icon" variant="ghost" />}
+          render={<Button className={className} size="icon" variant="ghost" />}
         >
           <EllipsisVertical className="size-4 text-foreground-subtlest" />
         </DropdownMenuTrigger>
