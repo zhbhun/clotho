@@ -102,7 +102,6 @@ export function ConversationHeader({
       />
       <div className="session-tab-actions app-region-no-drag relative flex shrink-0 items-center px-1 text-foreground-subtlest">
         <BranchSwitcherButton
-          appearance="header"
           project={selectedProject}
           projectMode={projectMode}
           projectName={projectName}

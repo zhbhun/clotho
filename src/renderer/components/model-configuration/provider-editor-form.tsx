@@ -302,7 +302,8 @@ export function ProviderEditorForm({
                   <Button
                     aria-label={t('settings.provider.addModel')}
                     size="icon"
-                    variant="mute"
+                    variant="ghost"
+                    className="text-muted-foreground"
                     onClick={onAddModel}
                   />
                 }
@@ -318,7 +319,8 @@ export function ProviderEditorForm({
                     aria-label={t('settings.provider.fetchModels')}
                     disabled={isFetchingModels || !provider.baseURL || !provider.authToken}
                     size="icon"
-                    variant="mute"
+                    variant="ghost"
+                    className="text-muted-foreground"
                     onClick={onFetchModels}
                   />
                 }

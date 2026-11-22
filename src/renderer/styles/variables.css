@@ -60,8 +60,6 @@
   --color-project-icon-cyan: var(--project-icon-cyan);
   --color-project-switcher-surface: var(--project-switcher-surface);
   --color-sidebar-active: var(--sidebar-active);
-  --color-control-checked: var(--control-checked);
-  --color-control-checked-foreground: var(--control-checked-foreground);
   --color-chat-message: var(--chat-message);
   --color-chat-input: var(--chat-input);
   --color-border-chat-reply: var(--border-chat-reply);
@@ -158,9 +156,6 @@
   --chat-message: var(--secondary);
   --chat-input: var(--card);
   --sidebar-active: var(--sidebar-accent);
-  /* Checked-state black/white for selection controls; palette overrides must not tint it. */
-  --control-checked: var(--color-neutral-900);
-  --control-checked-foreground: var(--color-white);
 
   /* A translucent divider adapts to the surface behind it. */
   --divider: oklch(0 0 0 / 7%);
@@ -252,8 +247,6 @@
   --chat-message: var(--card);
   --chat-input: color-mix(in oklab, var(--background), var(--color-white) 12.74%);
   --sidebar-active: var(--sidebar-accent);
-  --control-checked: var(--color-neutral-100);
-  --control-checked-foreground: var(--color-neutral-900);
 
   --divider: oklch(1 0 0 / 5%);
   /* Chat-surface border tier: 0.1238 × 0.55 = 0.06809 oklab above each chat

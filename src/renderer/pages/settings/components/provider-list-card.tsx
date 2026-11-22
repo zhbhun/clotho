@@ -57,7 +57,8 @@ export const ProviderListRow = markAsRow(function ProviderListRow({
         <Button
           aria-label={t('settings.provider.editProvider', { name })}
           size="icon"
-          variant="mute"
+          variant="ghost"
+          className="text-muted-foreground"
           onClick={onEdit}
         >
           <Pencil />
@@ -66,7 +67,8 @@ export const ProviderListRow = markAsRow(function ProviderListRow({
           aria-label={t('settings.provider.deleteProvider', { name })}
           disabled={isDeleteDisabled}
           size="icon"
-          variant="mute"
+          variant="ghost"
+          className="text-muted-foreground"
           onClick={onDelete}
         >
           {isDeleting ? <Spinner /> : <Trash2 />}

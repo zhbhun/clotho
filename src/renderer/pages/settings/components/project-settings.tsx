@@ -109,7 +109,8 @@ function ProjectRows({
                       aria-label={t('settings.provider.editProvider', { name })}
                       size="icon"
                       type="button"
-                      variant="mute"
+                      variant="ghost"
+                      className="text-muted-foreground"
                       onClick={() => onEditProject(project)}
                     />
                   }
@@ -125,7 +126,8 @@ function ProjectRows({
                       aria-label={t('settings.project.removeNamed', { name })}
                       size="icon"
                       type="button"
-                      variant="mute"
+                      variant="ghost"
+                      className="text-muted-foreground"
                       onClick={() => onRemoveProject(project)}
                     />
                   }

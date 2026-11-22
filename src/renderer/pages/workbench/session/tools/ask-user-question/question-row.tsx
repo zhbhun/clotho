@@ -15,7 +15,6 @@ import {
 } from '@/shadcn/field'
 import { Input } from '@/shadcn/input'
 import { RadioGroup, RadioGroupItem } from '@/shadcn/radio-group'
-import { cn } from '@/shadcn/utils'
 
 interface AskOption {
   label?: string
@@ -34,10 +33,6 @@ export type Answer = {
   isOtherSelected: boolean
   otherText: string
 }
-
-/* Checked control color follows the dialog's neutral palette, not the user accent. */
-const CONTROL_CHECKED =
-  'data-checked:border-foreground data-checked:bg-foreground data-checked:text-background'
 
 export function QuestionRow({
   question,
@@ -149,27 +144,12 @@ function OptionField({
 }) {
   const id = `${fieldId}-option-${optionIndex}`
   return (
-    <FieldLabel
-      className={cn(
-        'cursor-pointer border-0! transition-colors',
-        checked ? 'bg-muted' : 'hover:bg-muted/60',
-      )}
-      htmlFor={id}
-    >
-      <Field className="items-center! px-2! py-1.5!" orientation="horizontal">
+    <FieldLabel htmlFor={id}>
+      <Field orientation="horizontal">
         {control === 'radio' ? (
-          <RadioGroupItem
-            className={cn('cursor-pointer', CONTROL_CHECKED)}
-            id={id}
-            value={`option-${optionIndex}`}
-          />
+          <RadioGroupItem id={id} value={`option-${optionIndex}`} />
         ) : (
-          <Checkbox
-            checked={checked}
-            className={cn('cursor-pointer', CONTROL_CHECKED)}
-            id={id}
-            onCheckedChange={() => onToggle(optionIndex)}
-          />
+          <Checkbox checked={checked} id={id} onCheckedChange={() => onToggle(optionIndex)} />
         )}
         <FieldContent>
           <FieldTitle>{option.label}</FieldTitle>
@@ -199,32 +179,19 @@ function OtherField({
 }) {
   const id = `${fieldId}-other`
   return (
-    <Field
-      className={cn(
-        'items-center! rounded-md px-2 py-1.5 transition-colors',
-        usingOther ? 'bg-muted' : 'hover:bg-muted/60',
-      )}
-      orientation="horizontal"
-    >
+    <Field orientation="horizontal">
       {control === 'radio' ? (
-        <RadioGroupItem
-          aria-label={t('tools.ask.otherCustomAnswer')}
-          className={cn('cursor-pointer', CONTROL_CHECKED)}
-          id={id}
-          value="other"
-        />
+        <RadioGroupItem aria-label={t('tools.ask.otherCustomAnswer')} id={id} value="other" />
       ) : (
         <Checkbox
           aria-label={t('tools.ask.otherCustomAnswer')}
           checked={usingOther}
-          className={cn('cursor-pointer', CONTROL_CHECKED)}
           id={id}
           onCheckedChange={(checked) => onSelectionChange(checked === true)}
         />
       )}
       <Input
         aria-label={t('tools.ask.customAnswer')}
-        className="cursor-text border-0 bg-transparent! px-0 shadow-none focus-visible:ring-0"
         placeholder={t('tools.ask.otherCustomAnswer')}
         value={text}
         onChange={(event) => onTextChange(event.target.value)}

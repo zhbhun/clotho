@@ -54,7 +54,13 @@ function ScrollArea({
         className={cn('size-full rounded-[inherit] outline-none', viewportClassName)}
         ref={viewportRef}
       >
-        {children}
+        <ScrollAreaPrimitive.Content
+          data-slot="scroll-area-content"
+          className="min-h-full"
+          style={{ minWidth: 0 }}
+        >
+          {children}
+        </ScrollAreaPrimitive.Content>
       </ScrollAreaPrimitive.Viewport>
       <ScrollBar orientation={orientation} />
       <ScrollAreaPrimitive.Corner />

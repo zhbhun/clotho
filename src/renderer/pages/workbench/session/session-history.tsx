@@ -60,7 +60,14 @@ export function SessionHistoryButton({
         side="bottom"
       >
         <MenuTrigger
-          render={<Button aria-label={t('workbench.history.title')} size="icon" variant="mute" />}
+          render={
+            <Button
+              aria-label={t('workbench.history.title')}
+              size="icon"
+              variant="ghost"
+              className="text-muted-foreground"
+            />
+          }
         >
           <Clock data-icon="inline-start" strokeWidth={1.5} />
         </MenuTrigger>
