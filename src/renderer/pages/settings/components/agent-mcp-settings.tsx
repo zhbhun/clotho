@@ -254,7 +254,7 @@ export function AgentMcpSettings() {
         <>
           {t('settings.agent.plugins.installed')}{' '}
           {!isLoading && (
-            <span className="text-foreground-subtlest">
+            <span className="font-normal text-foreground-subtlest">
               {t('settings.agent.subagent.itemCount', { count: servers.length })}
             </span>
           )}

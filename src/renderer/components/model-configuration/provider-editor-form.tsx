@@ -290,7 +290,7 @@ export function ProviderEditorForm({
       <FieldSet>
         <FieldLegend className="sr-only">{t('settings.provider.models')}</FieldLegend>
         <div className="flex items-center justify-between gap-4">
-          <div className="text-sm font-normal text-foreground">{t('settings.provider.models')}</div>
+          <div className="text-sm font-medium text-foreground">{t('settings.provider.models')}</div>
           <div className="flex items-center gap-1">
             <Tooltip>
               <TooltipTrigger
