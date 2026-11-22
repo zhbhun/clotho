@@ -94,8 +94,8 @@ export function PendingMessagePanel({
       {onEdit ? (
         <Button
           aria-label={t('workbench.prompt.pendingEdit')}
-          className="size-7 rounded-full text-foreground-subtlest shadow-none"
-          size="icon"
+          className="rounded-full text-foreground-subtlest shadow-none"
+          size="icon-sm"
           type="button"
           variant="ghost"
           onClick={onEdit}
@@ -106,8 +106,8 @@ export function PendingMessagePanel({
       {onDelete ? (
         <Button
           aria-label={t('workbench.prompt.pendingDelete')}
-          className="size-7 rounded-full text-foreground-subtlest shadow-none"
-          size="icon"
+          className="rounded-full text-foreground-subtlest shadow-none"
+          size="icon-sm"
           type="button"
           variant="ghost"
           onClick={onDelete}

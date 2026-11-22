@@ -266,7 +266,7 @@ export function DefaultModelSettings({
       <SettingsList>
         <SettingsRow className="gap-3">
           <FieldContent className="min-w-0">
-            <FieldLabel className="font-normal" htmlFor="settings-default-model">
+            <FieldLabel htmlFor="settings-default-model">
               {t('settings.defaultModel.label')}
             </FieldLabel>
             <FieldDescription className="truncate">
@@ -287,7 +287,7 @@ export function DefaultModelSettings({
           return (
             <SettingsRow className="gap-3" key={role}>
               <FieldContent className="min-w-0">
-                <FieldLabel className="font-normal capitalize" htmlFor={pickerId}>
+                <FieldLabel className="capitalize" htmlFor={pickerId}>
                   {role}
                 </FieldLabel>
                 <FieldDescription className="truncate">

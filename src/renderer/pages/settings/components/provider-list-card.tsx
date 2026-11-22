@@ -40,7 +40,7 @@ export const ProviderListRow = markAsRow(function ProviderListRow({
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex min-w-0 items-center gap-2">
           <span className="truncate text-sm font-normal">{name}</span>
-          <Badge className="shrink-0 font-normal text-foreground-subtle" variant="secondary">
+          <Badge className="shrink-0 text-foreground-subtle" variant="secondary">
             {provider.models.length} {t('settings.provider.models')}
           </Badge>
           <ProviderUsageBadges

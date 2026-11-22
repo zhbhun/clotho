@@ -46,7 +46,7 @@
   /* Tab row is vertically centered (h-8); the surface runs past it down to
      the header's bottom edge, Chrome-style. Its x/width are set from JS with
      ACTIVE_SURFACE_INSET_X applied, so the horizontal extents match the hover
-     highlight (::before, inset 2px 3px) and selecting a tab does not shift. */
+     highlight (::before, inset 0 3px) and selecting a tab does not shift. */
   height: 36px;
   border-radius: 12px 12px 0 0;
   background: var(--session-tab-surface);
@@ -67,10 +67,10 @@
 .session-tab:not([data-active='true'])::before {
   position: absolute;
   z-index: -1;
-  /* 28px tall: matches the header project button (h-7) centered in the tab row.
+  /* 32px tall: matches the Nova header project button (h-8).
      The 3px horizontal inset must equal ACTIVE_SURFACE_INSET_X in
      session-tabs.tsx so hover and selected backgrounds share their extents. */
-  inset: 2px 3px;
+  inset: 0 3px;
   display: block;
   border-radius: 10px;
   background: var(--session-tab-surface);

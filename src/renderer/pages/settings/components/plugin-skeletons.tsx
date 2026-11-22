@@ -16,7 +16,7 @@ function InstallTileSkeleton({ index }: { index: number }) {
         <Skeleton className={`h-3 ${index % 2 === 0 ? 'w-52' : 'w-44'}`} />
         <Skeleton className={`h-3 ${index % 2 === 0 ? 'w-36' : 'w-28'}`} />
       </div>
-      <Skeleton className="h-7 w-7 shrink-0 rounded-md" />
+      <Skeleton className="size-8 shrink-0 rounded-lg" />
     </div>
   )
 }
@@ -47,7 +47,7 @@ export function PluginRowsSkeleton() {
             <Skeleton className={`h-4 ${index % 2 === 0 ? 'w-28' : 'w-36'}`} />
             <Skeleton className="mt-1.5 h-4 w-44" />
           </div>
-          <Skeleton className="h-[16.6px] w-7 rounded-full" />
+          <Skeleton className="h-[18.4px] w-8 rounded-full" />
         </div>
       ))}
     </div>
@@ -81,7 +81,7 @@ export function MarketplaceDetailSkeleton() {
                 <Skeleton className="h-4 w-28" />
                 <Skeleton className="mt-1 h-3 w-52" />
               </div>
-              <Skeleton className="size-7 shrink-0 rounded-md" />
+              <Skeleton className="size-8 shrink-0 rounded-lg" />
             </div>
           ))}
         </div>

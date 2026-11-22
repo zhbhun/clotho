@@ -5,7 +5,7 @@
 ## Technology stack
 
 - **Frontend**: React 19, TypeScript 6, Vite 8
-- **Styling / UI**: Tailwind CSS 4, shadcn/ui (`base-mira`, Base UI), Lucide React
+- **Styling / UI**: Tailwind CSS 4, shadcn/ui (`base-nova`, Base UI), Lucide React
 - **Backend**: Node.js (Electron main process), Electron Forge
 - **Testing**: Vitest, React Testing Library
 - **Quality**: ESLint 9, Prettier 3

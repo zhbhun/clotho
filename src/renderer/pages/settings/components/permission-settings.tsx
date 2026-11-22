@@ -70,7 +70,7 @@ const PermissionOption = markAsRow(function PermissionOption({
         <FieldContent className="min-w-0 gap-0.5">
           <FieldTitle
             className={cn(
-              'font-normal transition-colors',
+              'transition-colors',
               !isChecked && 'text-foreground-subtlest group-hover/settings-row:text-foreground',
             )}
           >

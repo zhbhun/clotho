@@ -204,11 +204,8 @@ export function ProjectForm({
         <Field data-invalid={Boolean(pathError)}>
           <FieldLabel>{t('project.path')}</FieldLabel>
           {isEditing ? (
-            <div className="flex h-7 items-center gap-3.5 rounded-md border border-input bg-input/20 px-2 dark:bg-input/30">
-              <FolderRoot
-                className="size-3.5 shrink-0 text-foreground-subtlest"
-                strokeWidth={1.5}
-              />
+            <div className="flex h-8 items-center gap-3.5 rounded-lg border border-input bg-input/20 px-2.5 dark:bg-input/30">
+              <FolderRoot className="size-4 shrink-0 text-foreground-subtlest" strokeWidth={1.5} />
               <ProjectPath
                 className="min-w-0 flex-1 font-mono text-xs text-foreground-subtlest"
                 path={projectPath}
@@ -218,7 +215,7 @@ export function ProjectForm({
             <Button
               aria-label={t('project.selectFolder')}
               aria-invalid={Boolean(pathError)}
-              className="h-7 w-full justify-start gap-3.5 border-input bg-input/20 px-2 hover:bg-input dark:bg-transparent dark:hover:bg-input"
+              className="w-full justify-start gap-3.5 border-input bg-input/20 hover:bg-input dark:bg-transparent dark:hover:bg-input"
               disabled={isSaving}
               type="button"
               variant="outline"

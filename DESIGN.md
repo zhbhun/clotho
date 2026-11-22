@@ -406,7 +406,7 @@ Use monospace only for code, identifiers, file paths, and compact technical summ
 
 ### Spacing Principles
 
-The typography rhythm is compact but not cramped. Rows are often 20px to 32px tall. Sidebar rows are 28px high, default buttons are 28px high, and small icon controls are 20px to 32px. Larger input or reading areas may use extra internal padding, but they should still align to the compact density scale.
+The typography rhythm is compact but not cramped. Rows are often 20px to 32px tall. Sidebar rows retain their page-specific sizing; default Nova buttons and single-line inputs are 32px high. Icon buttons range from 24px to 36px. Larger input or reading areas may use extra internal padding, but they should still align to the compact density scale.
 
 Keep letter spacing at zero for normal text. Only tiny technical labels may use slight positive tracking. Use tabular numbers for counters, elapsed time, and progress summaries.
 
@@ -414,11 +414,13 @@ Keep letter spacing at zero for normal text. Only tiny technical labels may use 
 
 ### Buttons
 
-Buttons follow shadcn `radix-mira` composition with custom compact sizing. The default shape is `rounded-md`, default and large button text is 14px medium, small is 12px, extra-small is 10px, and controls use subtle transitions plus a one-pixel active press (`translate-y-px`) for tactile feedback.
+Buttons follow shadcn `base-nova` composition with the existing business variants and palette. The default shape is `rounded-lg`. Default and large button text is 14px, small is 12.8px (`text-[0.8rem]`), and extra-small is 12px; the default weight is 500 (`font-medium`). The `xs`, `sm`, default, and `lg` heights are 24px, 28px, 32px, and 36px respectively. Controls use subtle transitions.
 
 Primary buttons use `bg-primary text-primary-foreground` and hover to `bg-primary/80`. Secondary and ghost buttons are neutral surfaces with low-contrast hover states. Outline buttons use border-first treatment and hover into `bg-input/50` or a slight foreground mix. Destructive buttons are tinted, not solid: `bg-destructive/10 text-destructive` with stronger tint on hover.
 
-Icon buttons are very small and precise: `icon-xs` is 20px, `icon-sm` is 24px, default icon is 28px, and `icon-lg` is 32px. Use Lucide icons and `data-icon` placement in text buttons. Avoid oversized icons inside dense interfaces.
+Icon buttons use Nova's size variants: `icon-xs` is 24px, `icon-sm` is 28px, default icon is 32px, and `icon-lg` is 36px. Use Lucide icons and `data-icon` placement in text buttons. Compact pending-message actions use `icon-sm`, retain 14px icons, and keep their circular shape. Use size variants rather than fixed dimensions to express standard control sizes.
+
+Form labels, option titles, and badges use their component defaults (500 weight). The model picker button intentionally retains 400 weight to read like a selection control; session tab titles retain 400 weight as application navigation. Fullscreen settings, image previews, composer geometry, and circular actions retain their existing layout-specific overrides.
 
 ### Surfaces & Cards
 
@@ -440,7 +442,7 @@ Top bars and section headers should use background translucency only when they n
 
 ### Inputs & Forms
 
-Inputs use neutral borders and subtle fills. Search inputs are `h-8`, rounded-md, `bg-background/60`, with border-sidebar-border and focus returning to `bg-background`. Textareas use `rounded-md border-input bg-input/20`, `min-h-16`, and focus rings based on `ring`.
+Inputs and input groups use Nova's `h-8 rounded-lg` geometry, with `px-2.5 py-1` on standard inputs. Textareas use `rounded-lg`, `px-2.5 py-2`, and `min-h-16`. Standard input and textarea text uses `text-base md:text-sm` (14px at desktop widths). Preserve the existing `border-input bg-background` treatment, `dark:bg-transparent`, and focus rings based on `ring`. Search wrappers may retain their layout-specific surface treatment.
 
 Placeholder text uses `foreground-subtlest`; helper text uses `foreground-subtle`. Focus states use `ring`, not a one-off color. Validation uses `destructive` and `aria-invalid`, with the invalid state on the control and the visual grouping state on the field.
 
@@ -480,7 +482,7 @@ The strongest visual weight belongs to the current primary action, active naviga
 
 This is a desktop-first system. Use viewport-safe width constraints for floating panels, menus, and headers. Do not scale font sizes with viewport width.
 
-Keep touch targets compact for desktop productivity: 20px to 32px icon controls, 28px list rows, 28px default buttons. When designing new responsive views, preserve density on desktop and only increase targets when a mobile or tablet mode is explicitly introduced.
+Keep controls compact for desktop productivity: standard icon buttons range from 24px to 36px, default buttons and single-line inputs are 32px high, and list rows retain their page-specific density. Existing application chrome may use smaller custom targets where its layout requires them. When designing new responsive views, preserve density on desktop and only increase targets when a mobile or tablet mode is explicitly introduced.
 
 ## 7. Design System Notes for Stitch Generation
 
@@ -512,4 +514,4 @@ When extending the design, start by choosing the semantic shadcn token role, the
 
 Do not add raw brand colors unless they encode domain meaning. If a new state is needed, add a named CSS variable under `:root` and `.dark`, expose it through `@theme inline`, and document its role here.
 
-Prefer compact shadcn composition over custom markup. Components should preserve semantic token usage, focus rings, rounded-md defaults, full accessible composition, and the current small-control rhythm.
+Prefer compact shadcn composition over custom markup. Components should preserve semantic token usage, focus rings, each Nova component's default radius, full accessible composition, and the current control density. Default buttons and inputs use `rounded-lg`; other components and deliberate application-specific shapes follow their own definitions.

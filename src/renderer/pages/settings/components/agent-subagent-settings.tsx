@@ -65,7 +65,7 @@ const SubagentRow = markAsRow(function SubagentRow({
           {subagent.broken ? t('settings.agent.broken') : subagent.description}
         </div>
       </div>
-      <Badge className="shrink-0 font-normal" variant="outline">
+      <Badge className="shrink-0" variant="outline">
         {modelLabel}
       </Badge>
       {!isReadOnly ? (

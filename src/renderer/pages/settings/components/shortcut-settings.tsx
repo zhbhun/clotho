@@ -43,7 +43,7 @@ function ShortcutRowEditButton({ editLabel, onEdit }: { editLabel: string; onEdi
     <div className="flex shrink-0 items-center">
       <Button
         aria-label={editLabel}
-        className="m-px size-[26px] border"
+        className="border"
         size="icon-sm"
         type="button"
         variant="mute"

@@ -162,7 +162,7 @@ function ThemeOption({
         </div>
         <FieldTitle
           className={cn(
-            'justify-center font-normal transition-colors',
+            'justify-center transition-colors',
             !selected && 'text-muted-foreground group-hover/field-label:text-foreground',
           )}
         >

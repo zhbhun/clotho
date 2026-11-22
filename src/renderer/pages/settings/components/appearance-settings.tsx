@@ -44,11 +44,9 @@ const PreferenceRow = markAsRow(function PreferenceRow({
     <SettingsRow>
       <FieldContent>
         {controlId ? (
-          <FieldLabel className="font-normal" htmlFor={controlId}>
-            {title}
-          </FieldLabel>
+          <FieldLabel htmlFor={controlId}>{title}</FieldLabel>
         ) : (
-          <FieldTitle className="font-normal">{title}</FieldTitle>
+          <FieldTitle>{title}</FieldTitle>
         )}
         <FieldDescription>{description}</FieldDescription>
       </FieldContent>

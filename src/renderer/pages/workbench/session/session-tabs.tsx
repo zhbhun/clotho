@@ -61,8 +61,8 @@ export function SessionTabs({
     if (!activeTab) return
 
     const updatePosition = () => {
-      // Inset the surface by SURFACE_INSET_X so its horizontal extents match the
-      // hover highlight (.session-tab::before, inset 2px 3px): selecting a tab
+      // Inset the surface by ACTIVE_SURFACE_INSET_X so its horizontal extents match the
+      // hover highlight (.session-tab::before, inset 0 3px): selecting a tab
       // then only morphs the shape vertically instead of jumping sideways.
       activeSurfaceX.set(activeTab.offsetLeft + ACTIVE_SURFACE_INSET_X)
       activeSurfaceWidth.set(activeTab.offsetWidth - ACTIVE_SURFACE_INSET_X * 2)

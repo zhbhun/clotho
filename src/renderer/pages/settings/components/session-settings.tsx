@@ -94,7 +94,7 @@ export function SessionSettings() {
       <SettingsList>
         <SettingsRow>
           <FieldContent>
-            <FieldLabel className="font-normal" htmlFor="settings-archive-inactive">
+            <FieldLabel htmlFor="settings-archive-inactive">
               <FieldTitle>{t('settings.sessions.archive.title')}</FieldTitle>
             </FieldLabel>
             <FieldDescription>{t('settings.sessions.archive.description')}</FieldDescription>

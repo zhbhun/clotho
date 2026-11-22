@@ -29,9 +29,9 @@ import {
 } from '@/shadcn/select'
 import { Separator } from '@/shadcn/separator'
 import { Spinner } from '@/shadcn/spinner'
-import { cn } from '@/shadcn/utils'
 import { Switch } from '@/shadcn/switch'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip'
+import { cn } from '@/shadcn/utils'
 import { normalizeProviderApiType } from '@/shared/provider'
 import { GENERIC_REASONING_PRESET, findReasoningPreset } from '@/shared/reasoning'
 
@@ -56,7 +56,7 @@ function ProviderField({
 }) {
   return (
     <Field>
-      <FieldLabel className="font-normal text-foreground" htmlFor={id}>
+      <FieldLabel className="text-foreground" htmlFor={id}>
         {label}
       </FieldLabel>
       {children}
@@ -198,7 +198,7 @@ export function ProviderEditorForm({
     <FieldGroup className={cn('gap-5 px-6 py-4', className)}>
       <FieldGroup className="grid gap-4 md:grid-cols-2">
         <Field data-invalid={Boolean(providerIdError)}>
-          <FieldLabel className="font-normal text-foreground" htmlFor={`provider-${suffix}-id`}>
+          <FieldLabel className="text-foreground" htmlFor={`provider-${suffix}-id`}>
             {t('settings.provider.idLabel')}
           </FieldLabel>
           {isProviderIdReadOnly ? (

@@ -23,7 +23,7 @@ export function AdditionalDirectoriesField({
   if (directories.length === 0) {
     return (
       <Button
-        className="h-7 w-full justify-start gap-3.5 border-input bg-background px-2 text-foreground-subtlest hover:bg-accent dark:bg-transparent"
+        className="w-full justify-start gap-3.5 border-input bg-background text-foreground-subtlest hover:bg-accent dark:bg-transparent"
         disabled={disabled}
         type="button"
         variant="outline"
@@ -36,7 +36,7 @@ export function AdditionalDirectoriesField({
   }
 
   return (
-    <div className="rounded-md border border-input bg-background">
+    <div className="rounded-lg border border-input bg-background">
       <ul>
         {directories.map((directory, index) => {
           const name = projectNameFromPath(directory)

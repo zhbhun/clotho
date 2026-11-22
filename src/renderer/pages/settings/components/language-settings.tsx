@@ -50,9 +50,7 @@ export function LanguageSettings() {
       <SettingsList>
         <SettingsRow>
           <FieldContent>
-            <FieldLabel className="font-normal" htmlFor="settings-language">
-              {t('settings.language.title')}
-            </FieldLabel>
+            <FieldLabel htmlFor="settings-language">{t('settings.language.title')}</FieldLabel>
             <FieldDescription>{t('settings.language.description')}</FieldDescription>
           </FieldContent>
           <Select

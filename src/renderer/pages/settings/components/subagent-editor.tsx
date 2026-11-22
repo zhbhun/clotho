@@ -107,9 +107,7 @@ function SelectField({
   ]
   return (
     <div className="flex flex-col gap-1.5">
-      <Label className="font-normal" htmlFor={id}>
-        {label}
-      </Label>
+      <Label htmlFor={id}>{label}</Label>
       <Select
         items={items}
         value={value ?? ''}
@@ -146,7 +144,7 @@ function SwitchField({
   return (
     <div className="flex items-center justify-between gap-3">
       <div className="min-w-0">
-        <Label className="font-normal">{label}</Label>
+        <Label>{label}</Label>
         {hint ? <p className="text-xs text-foreground-subtlest">{hint}</p> : null}
       </div>
       <Switch checked={checked} onCheckedChange={onCheckedChange} />
@@ -253,7 +251,7 @@ function AdvancedOptions({
               onChange={(effort) => set({ effort })}
             />
             <div className="flex flex-col gap-1.5">
-              <Label className="font-normal" htmlFor="agent-subagent-max-turns">
+              <Label htmlFor="agent-subagent-max-turns">
                 {t('settings.agent.subagent.maxTurns')}
               </Label>
               <Input
@@ -267,9 +265,7 @@ function AdvancedOptions({
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="font-normal" htmlFor="agent-subagent-tools">
-              {t('settings.agent.tools')}
-            </Label>
+            <Label htmlFor="agent-subagent-tools">{t('settings.agent.tools')}</Label>
             <div className="flex items-center gap-3">
               <Select
                 items={[
@@ -320,7 +316,7 @@ function AdvancedOptions({
             ) : null}
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="font-normal" htmlFor="agent-subagent-disallowed">
+            <Label htmlFor="agent-subagent-disallowed">
               {t('settings.agent.subagent.disallowedTools')}
             </Label>
             <Input
@@ -334,9 +330,7 @@ function AdvancedOptions({
             </p>
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="font-normal" htmlFor="agent-subagent-skills">
-              {t('settings.agent.subagent.skills')}
-            </Label>
+            <Label htmlFor="agent-subagent-skills">{t('settings.agent.subagent.skills')}</Label>
             <Input
               id="agent-subagent-skills"
               value={form.skills ?? ''}
@@ -438,9 +432,7 @@ export function SubagentEditor({
       </header>
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <Label className="font-normal" htmlFor="agent-subagent-name">
-            {t('settings.agent.name')}
-          </Label>
+          <Label htmlFor="agent-subagent-name">{t('settings.agent.name')}</Label>
           <Input
             id="agent-subagent-name"
             value={form.name ?? ''}
@@ -449,9 +441,7 @@ export function SubagentEditor({
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label className="font-normal" htmlFor="agent-subagent-description">
-            {t('settings.agent.description')}
-          </Label>
+          <Label htmlFor="agent-subagent-description">{t('settings.agent.description')}</Label>
           <Textarea
             id="agent-subagent-description"
             className="min-h-14 resize-none"
@@ -467,9 +457,7 @@ export function SubagentEditor({
         </div>
         <AdvancedOptions form={form} setForm={setForm} />
         <div className="flex flex-col gap-1.5">
-          <Label className="font-normal" htmlFor="agent-subagent-body">
-            {t('settings.agent.prompt')}
-          </Label>
+          <Label htmlFor="agent-subagent-body">{t('settings.agent.prompt')}</Label>
           <Textarea
             className="min-h-40 font-mono"
             id="agent-subagent-body"

@@ -164,9 +164,7 @@ const ColorControl = markAsRow(function ColorControl({
 
   return (
     <SettingsRow className="min-h-16 py-3.5">
-      <FieldLabel className="font-normal" htmlFor={inputId}>
-        {label}
-      </FieldLabel>
+      <FieldLabel htmlFor={inputId}>{label}</FieldLabel>
       <InputGroup className="w-28 shrink-0">
         <InputGroupInput
           aria-label={ariaLabel}
