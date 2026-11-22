@@ -177,7 +177,7 @@ export function SessionTabs({
                 ref={(element) => handleTabRef(session.id, element)}
               >
                 <TabsTrigger
-                  className="h-full w-full justify-start rounded-none border-0 bg-transparent px-3 text-sm font-normal hover:text-foreground has-data-[icon=inline-start]:pl-3 data-active:bg-transparent data-active:text-foreground data-active:hover:text-foreground dark:data-active:bg-transparent"
+                  className="h-full w-full justify-start rounded-none border-0 bg-transparent px-3 text-sm font-normal hover:text-foreground has-data-[icon=inline-start]:pl-3 data-active:bg-transparent data-active:text-foreground data-active:hover:text-foreground group-data-[variant=default]/tabs-list:data-active:shadow-none dark:data-active:bg-transparent"
                   data-session-tab={session.id}
                   // Click must not focus the tab, or dialog close returns focus to it.
                   onMouseDown={(event) => event.preventDefault()}
