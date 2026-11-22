@@ -227,8 +227,12 @@ export function ProviderEditorForm({
                 <ComboboxList>
                   {(preset: ProviderPreset) => (
                     <ComboboxItem key={preset.id} value={preset} className="pr-6">
-                      <span className="font-medium">{preset.id}</span>
-                      <span className="ml-auto text-muted-foreground">{preset.name}</span>
+                      <div className="flex min-w-0 flex-1 items-baseline gap-2">
+                        <span className="min-w-0 truncate font-medium">{preset.id}</span>
+                        <span className="min-w-0 truncate text-xs font-normal text-muted-foreground">
+                          {preset.name}
+                        </span>
+                      </div>
                     </ComboboxItem>
                   )}
                 </ComboboxList>
