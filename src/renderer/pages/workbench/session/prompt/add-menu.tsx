@@ -107,7 +107,7 @@ export function AddMenu({
             aria-label={t('workbench.prompt.addMenu')}
             className={COMPOSER_CONTROL_CLASS}
             disabled={!canOpenMenu}
-            size="icon"
+            size="icon-sm"
             type="button"
             variant="ghost"
           />

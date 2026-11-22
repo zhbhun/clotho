@@ -333,6 +333,7 @@ export function PromptComposer({
           <Button
             className={COMPOSER_TEXT_CONTROL_CLASS}
             disabled={!modelOptions.length}
+            size="sm"
             type="button"
             variant="ghost"
           />
@@ -501,6 +502,7 @@ export function PromptComposer({
                 <Button
                   aria-label={t('permission.mode.menuLabel')}
                   className={COMPOSER_TEXT_CONTROL_CLASS}
+                  size="sm"
                   type="button"
                   variant="ghost"
                 />
@@ -549,6 +551,7 @@ export function PromptComposer({
                   <Button
                     className="rounded-lg border-input"
                     disabled={isSubmitting}
+                    size="sm"
                     type="button"
                     variant="outline"
                     onClick={onCancel}
@@ -562,6 +565,7 @@ export function PromptComposer({
                   }
                   className="rounded-lg bg-foreground text-background hover:bg-foreground/80"
                   disabled={isSubmitting || !canSubmit}
+                  size="sm"
                   type="button"
                   onClick={handleSubmit}
                 >
@@ -603,7 +607,7 @@ export function PromptComposer({
                   }
                   className="rounded-full prompt-composer-send"
                   disabled={isStreaming ? false : isSubmitting || (!showResumeButton && !canSubmit)}
-                  size="icon"
+                  size="icon-sm"
                   type="button"
                   onClick={
                     isStreaming
