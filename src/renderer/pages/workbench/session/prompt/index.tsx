@@ -60,7 +60,7 @@ import { resolveDirectSlashCommand } from './slash-command'
 import { usePromptHistory } from './use-prompt-history'
 
 export const COMPOSER_CONTROL_CLASS = 'rounded-full text-foreground-subtlest shadow-none'
-const COMPOSER_TEXT_CONTROL_CLASS = cn(COMPOSER_CONTROL_CLASS, 'px-2.5!')
+const COMPOSER_TEXT_CONTROL_CLASS = cn(COMPOSER_CONTROL_CLASS, 'px-2.5! font-normal')
 const EMPTY_SENT_PROMPTS: string[] = []
 
 function PromptComposerShortcuts({
