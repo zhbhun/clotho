@@ -1,4 +1,4 @@
-import { Ellipsis, Plus } from 'lucide-react'
+import { Ellipsis } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -100,11 +100,12 @@ export function PluginListPage({ onOpenMarketplace }: { onOpenMarketplace?: () =
           )}
         </h2>
         <Button
+          variant="outline"
           aria-label={t('settings.categories.agentMarketplace')}
           title={t('settings.categories.agentMarketplace')}
           onClick={onOpenMarketplace}
         >
-          <Plus data-icon="inline-start" />
+          Add
         </Button>
       </div>
 

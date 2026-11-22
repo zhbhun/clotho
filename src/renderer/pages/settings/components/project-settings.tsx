@@ -1,4 +1,4 @@
-import { FolderPlus, Pencil, Plus, Trash2 } from 'lucide-react'
+import { FolderPlus, Pencil, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -237,8 +237,7 @@ export function ProjectSettings({
         </EmptyHeader>
         <EmptyContent>
           <Button type="button" variant="outline" onClick={startCreate}>
-            <Plus data-icon="inline-start" />
-            {t('settings.project.add')}
+            Add
           </Button>
         </EmptyContent>
       </Empty>
@@ -265,8 +264,7 @@ export function ProjectSettings({
         {sortedProjects.length > 0 ? (
           <div className="flex min-h-7 items-center justify-end">
             <Button type="button" variant="outline" onClick={startCreate}>
-              <Plus data-icon="inline-start" />
-              {t('settings.project.add')}
+              Add
             </Button>
           </div>
         ) : null}

@@ -1,5 +1,5 @@
 import ClaudeIcon from '@thesvg/react/claude'
-import { ChevronRight, Plus, Puzzle, UserRound } from 'lucide-react'
+import { ChevronRight, Puzzle, UserRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -241,11 +241,12 @@ export function AgentSubagentSettings() {
           </span>
         </h2>
         <Button
+          variant="outline"
           aria-label={t('settings.agent.subagent.add')}
           title={t('settings.agent.subagent.add')}
           onClick={() => openDetail(null)}
         >
-          <Plus data-icon="inline-start" />
+          Add
         </Button>
       </div>
       {isLoading ? (

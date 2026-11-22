@@ -1,4 +1,3 @@
-import { Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -262,11 +261,12 @@ export function AgentMcpSettings() {
       }
       action={
         <Button
+          variant="outline"
           aria-label={t('settings.agent.mcp.add')}
           title={t('settings.agent.mcp.add')}
           onClick={startCreate}
         >
-          <Plus data-icon="inline-start" />
+          Add
         </Button>
       }
     >

@@ -1,4 +1,3 @@
-import { Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -55,11 +54,12 @@ function SkillList({ onOpenMarketplace }: SkillListProps) {
           )}
         </h2>
         <Button
+          variant="outline"
           aria-label={t('settings.agent.skillMarket.open')}
           title={t('settings.agent.skillMarket.open')}
           onClick={onOpenMarketplace}
         >
-          <Plus data-icon="inline-start" />
+          Add
         </Button>
       </div>
       {isLoading ? (
