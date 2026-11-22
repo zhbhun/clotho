@@ -136,7 +136,7 @@ export function MarketplaceListPage() {
         <h2 className="text-sm font-medium">
           {t('settings.agent.plugins.registered')}{' '}
           {marketplaces && (
-            <span className="text-foreground-subtlest">
+            <span className="font-normal text-foreground-subtlest">
               {t('settings.agent.subagent.itemCount', { count: marketplaces.length })}
             </span>
           )}
@@ -177,7 +177,7 @@ export function MarketplaceListPage() {
             >
               <PluginAvatar name={marketplace.name} />
               <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <div className="truncate text-sm font-normal">{marketplace.name}</div>
+                <div className="truncate text-sm font-medium">{marketplace.name}</div>
                 {marketplace.description ? (
                   <div className="truncate text-xs text-foreground-subtlest">
                     {marketplace.description}
@@ -300,7 +300,7 @@ export function MarketplaceDetailPage({ marketplaceName }: { marketplaceName: st
                   <Puzzle className="size-3.5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate">{entry.name}</div>
+                  <div className="truncate font-medium">{entry.name}</div>
                   {entry.description ? (
                     <div className="truncate text-foreground-subtlest">{entry.description}</div>
                   ) : null}

@@ -220,8 +220,12 @@ export function SkillMarketplace() {
               >
                 <PluginAvatar name={name} />
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
-                  <div className="truncate text-sm">
-                    {entry && <span className="mr-2 text-foreground-subtlest">#{entry.rank}</span>}
+                  <div className="truncate text-sm font-medium">
+                    {entry && (
+                      <span className="mr-2 font-normal text-foreground-subtlest">
+                        #{entry.rank}
+                      </span>
+                    )}
                     {skill.url ? <ExternalLink href={skill.url}>{name}</ExternalLink> : name}
                   </div>
                   <div className="flex items-center gap-2 text-[11px] tabular-nums text-foreground-subtlest">

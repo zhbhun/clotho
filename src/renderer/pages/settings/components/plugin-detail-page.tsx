@@ -40,7 +40,7 @@ export function PluginDetailIdentity({
     <div className="flex items-center gap-5">
       <PluginAvatar className="size-14 rounded-2xl text-xl" name={name} />
       <div className="min-w-0">
-        <h1 className="truncate text-2xl font-semibold tracking-tight">{displayName ?? name}</h1>
+        <h1 className="truncate text-2xl font-medium tracking-tight">{displayName ?? name}</h1>
         {subtitle ? (
           <p className="mt-1 truncate text-base text-foreground-subtle">{subtitle}</p>
         ) : null}
@@ -60,7 +60,7 @@ export function DetailSection({
 }) {
   return (
     <div className="flex flex-col">
-      <h3 className="flex items-baseline gap-2 border-b border-divider pb-3 text-lg font-semibold">
+      <h3 className="flex items-baseline gap-2 border-b border-divider pb-3 text-lg font-medium">
         {title}
         {typeof count === 'number' ? (
           <span className="text-sm font-normal text-foreground-subtlest">{count}</span>
@@ -106,7 +106,7 @@ function DetailRows({
             <Icon className="size-3.5" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="truncate">
+            <div className="truncate font-medium">
               {/* Event names (SessionStart) are proper nouns — no title-casing. */}
               {kind === 'hooks' ? row.name : componentDisplayName(row.name)}
             </div>

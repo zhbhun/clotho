@@ -73,7 +73,7 @@ const ShortcutRow = markAsRow(function ShortcutRow({
   return (
     <SettingsRow className="gap-2 py-2.5" variant="compact">
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="font-normal">{definition.title}</span>
+        <span className="font-medium">{definition.title}</span>
         {definition.description ? (
           <span className="text-xs text-muted-foreground">{definition.description}</span>
         ) : null}

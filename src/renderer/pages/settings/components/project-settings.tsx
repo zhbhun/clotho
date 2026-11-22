@@ -96,7 +96,7 @@ function ProjectRows({
           <SettingsRow className="min-h-16 gap-3 py-2" key={project.id} variant="compact">
             <ProjectIcon plain icon={project.icon} />
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <div className="shrink-0 truncate text-sm leading-normal font-normal">{name}</div>
+              <div className="shrink-0 truncate text-sm leading-normal font-medium">{name}</div>
               <div className="min-w-0 text-xs/relaxed text-muted-foreground">
                 <ProjectPath path={project.path} />
               </div>

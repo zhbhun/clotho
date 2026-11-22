@@ -50,7 +50,9 @@ function SkillList({ onOpenMarketplace }: SkillListProps) {
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-sm font-medium">
           {t('settings.agent.plugins.installed')}{' '}
-          {!isLoading && <span className="text-foreground-subtlest">{skills.length}</span>}
+          {!isLoading && (
+            <span className="font-normal text-foreground-subtlest">{skills.length}</span>
+          )}
         </h2>
         <Button
           aria-label={t('settings.agent.skillMarket.open')}

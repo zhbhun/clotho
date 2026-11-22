@@ -58,7 +58,7 @@ const SubagentRow = markAsRow(function SubagentRow({
     <SettingsRow className="gap-3 py-3" variant="compact">
       {subagent.source ? <SourceBadge source={subagent.source} /> : null}
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-normal leading-snug">
+        <div className="truncate text-sm font-medium leading-snug">
           {subagent.name || subagent.file}
         </div>
         <div className="truncate text-sm leading-snug text-foreground-subtlest">
@@ -236,7 +236,7 @@ export function AgentSubagentSettings() {
       <div className="flex min-h-7 items-center justify-between gap-4">
         <h2 className="text-sm font-medium">
           {t('settings.agent.subagent.installed')}{' '}
-          <span className="text-foreground-subtlest">
+          <span className="font-normal text-foreground-subtlest">
             {t('settings.agent.subagent.itemCount', { count: subagents.length })}
           </span>
         </h2>

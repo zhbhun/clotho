@@ -94,7 +94,7 @@ export function PluginListPage({ onOpenMarketplace }: { onOpenMarketplace?: () =
         <h2 className="text-sm font-medium">
           {t('settings.agent.plugins.installed')}{' '}
           {!isLoading && (
-            <span className="text-foreground-subtlest">
+            <span className="font-normal text-foreground-subtlest">
               {t('settings.agent.subagent.itemCount', { count: plugins.length })}
             </span>
           )}

@@ -235,7 +235,7 @@ export function InstallPluginPage() {
               >
                 <PluginAvatar name={entry.name} />
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
-                  <div className="truncate text-sm font-normal">{entry.name}</div>
+                  <div className="truncate text-sm font-medium">{entry.name}</div>
                   {entry.description ? (
                     <div className="truncate text-xs text-foreground-subtlest">
                       {entry.description}

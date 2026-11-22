@@ -212,7 +212,7 @@ function AdvancedOptions({
     <div className="flex flex-col gap-3">
       <button
         type="button"
-        className="flex items-center gap-1.5 text-sm font-normal text-foreground"
+        className="flex items-center gap-1.5 text-sm font-medium text-foreground"
         onClick={() => setIsOpen(!isOpen)}
       >
         <ChevronDown className={cn('size-3.5 transition-transform', !isOpen && '-rotate-90')} />
