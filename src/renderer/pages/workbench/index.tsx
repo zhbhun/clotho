@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from '@/shadcn/toast'
 
 import { ErrorBoundary } from '../../components/error-boundary'
+import { Extensions } from '../../components/marketplace/extensions'
 import { ResizableSidebarProvider } from '../../components/resizable-sidebar'
 import type { ClaudeProject } from '../../services/claude/claude'
 import { listenDesktopEvent } from '../../services/desktop/client'
@@ -42,6 +43,8 @@ export function WorkbenchPage() {
 
 function WorkbenchContent() {
   const { t } = useTranslation()
+  const [hasOpenedExtensions, setHasOpenedExtensions] = useState(false)
+  const [isExtensionsOpen, setIsExtensionsOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [settingsCategory, setSettingsCategory] = useState<SettingsCategoryId>('general')
   const settingsReturnFocusRef = useRef<HTMLElement | null>(null)
@@ -101,12 +104,34 @@ function WorkbenchContent() {
     openSettings('models')
   }, [openSettings, t])
   const {
-    handleNavigate,
+    handleNavigate: navigate,
     handleOpenProjectInNewWindow,
-    handleSelectSession,
-    handleStartNewSessionInCurrentWorkspace,
+    handleSelectSession: selectSession,
+    handleStartNewSessionInCurrentWorkspace: startNewSession,
     handleSwitchWorkspace,
   } = useSessionNavigation(workbench)
+
+  const handleSelectSession = useCallback<typeof selectSession>(
+    (...args) => {
+      setIsExtensionsOpen(false)
+      return selectSession(...args)
+    },
+    [selectSession],
+  )
+  const handleNavigate = useCallback<typeof navigate>(
+    (...args) => {
+      setIsExtensionsOpen(false)
+      return navigate(...args)
+    },
+    [navigate],
+  )
+  const handleStartNewSessionInCurrentWorkspace = useCallback<typeof startNewSession>(
+    (...args) => {
+      setIsExtensionsOpen(false)
+      return startNewSession(...args)
+    },
+    [startNewSession],
+  )
 
   const handleRenameSession = useCallback((session: WorkbenchSession) => {
     setSessionAction({ kind: 'rename', sessionId: session.id })
@@ -246,6 +271,11 @@ function WorkbenchContent() {
             onSelectSession={handleSelectSession}
           />
           <SessionSidebar
+            isExtensionsOpen={isExtensionsOpen}
+            onOpenExtensions={() => {
+              setHasOpenedExtensions(true)
+              setIsExtensionsOpen(true)
+            }}
             activeTab={workbench.activeTab}
             focusNavigationRevision={workbench.focusNavigationRevision}
             focusedSessionId={workbench.focusedSessionId}
@@ -264,7 +294,14 @@ function WorkbenchContent() {
             onToggleArchiveSession={handleToggleArchiveSession}
           />
 
-          <SessionArea {...sessionAreaProps} />
+          <div hidden={isExtensionsOpen} className={isExtensionsOpen ? 'hidden' : 'contents'}>
+            <SessionArea {...sessionAreaProps} />
+          </div>
+          {hasOpenedExtensions ? (
+            <div hidden={!isExtensionsOpen} className={isExtensionsOpen ? 'contents' : 'hidden'}>
+              <Extensions />
+            </div>
+          ) : null}
         </ErrorBoundary>
 
         <SettingsPage

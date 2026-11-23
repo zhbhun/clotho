@@ -1,4 +1,4 @@
-import { Settings, SquarePen } from 'lucide-react'
+import { Puzzle, Settings, SquarePen } from 'lucide-react'
 import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -28,6 +28,8 @@ const SIDEBAR_PREVIEW_SETTLE_MS = 300
 
 export function SessionSidebar({
   activeTab,
+  isExtensionsOpen = false,
+  onOpenExtensions,
   focusNavigationRevision = 0,
   focusedSessionId,
   onTabChange,
@@ -44,6 +46,8 @@ export function SessionSidebar({
   onToggleArchiveSession,
   showTabSwitcher = true,
 }: {
+  isExtensionsOpen?: boolean
+  onOpenExtensions?: () => void
   activeTab: 'current' | 'history'
   focusNavigationRevision?: number
   focusedSessionId: string | null
@@ -137,7 +141,7 @@ export function SessionSidebar({
       <SidebarHeader className="gap-0 p-0">
         <MacWindowChrome />
 
-        <SidebarMenu className="mt-1 h-10 justify-center px-2">
+        <SidebarMenu className="mt-1 gap-0.5 px-2 py-1">
           <SidebarMenuItem>
             <SidebarMenuButton
               className="h-[30px] px-2 text-sm font-normal"
@@ -146,6 +150,16 @@ export function SessionSidebar({
             >
               <SquarePen strokeWidth={1.5} />
               <span>{t('workbench.session.new')}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              className="h-[30px] px-2 text-sm font-normal"
+              isActive={isExtensionsOpen}
+              onClick={onOpenExtensions}
+            >
+              <Puzzle strokeWidth={1.5} />
+              <span>{t('workbench.nav.extensions')}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -179,7 +193,7 @@ export function SessionSidebar({
               focusedSessionId={focusedSessionId}
               isArchivedCollapsed={isArchivedCollapsed}
               locateRequestRevision={locateRequestRevision}
-              selectedSessionId={selectedSessionId}
+              selectedSessionId={isExtensionsOpen ? null : selectedSessionId}
               sessionTimeline={sessionTimeline}
               viewport={viewport}
               pinsHeaders={!hasTabBar}

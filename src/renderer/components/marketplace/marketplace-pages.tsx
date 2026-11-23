@@ -16,7 +16,6 @@ import { Input } from '@/shadcn/input'
 import { Spinner } from '@/shadcn/spinner'
 import { toast } from '@/shadcn/toast'
 
-import { AppAlertDialog, AppAlertDialogContent } from '../../../components/app-dialog'
 import {
   type AgentMarketplaceInfo,
   type AgentMarketplacePlugin,
@@ -25,8 +24,9 @@ import {
   listAgentMarketplaces,
   refreshAgentMarketplace,
   removeAgentMarketplace,
-} from '../../../services/claude/agent-config'
-import { tildePath } from '../../../utils/path-display'
+} from '../../services/claude/agent-config'
+import { tildePath } from '../../utils/path-display'
+import { AppAlertDialog, AppAlertDialogContent } from '../app-dialog'
 import { AgentEmpty } from './agent-shared'
 import {
   refreshInstalled,
@@ -200,6 +200,7 @@ export function MarketplaceListPage() {
 
 /** Third-level marketplace detail: source info plus that marketplace's plugins. */
 export function MarketplaceDetailPage({ marketplaceName }: { marketplaceName: string }) {
+  const requestLeave = useSettingsDetailStore((state) => state.requestLeave)
   const { t } = useTranslation()
   const { marketplaces, catalog, isLoading, reload } = useMarketplaces()
   const notifyRestart = useRestartHint()
@@ -234,7 +235,7 @@ export function MarketplaceDetailPage({ marketplaceName }: { marketplaceName: st
       await removeAgentMarketplace(marketplaceName)
       updateMarketplaces(marketplaceName)
       // Leave first: the Marketplaces page remounts and fetches its own data.
-      useSettingsDetailStore.getState().requestLeave()
+      requestLeave()
     } catch {
       toast.add({
         id: 'agent-marketplace-remove',
@@ -375,6 +376,7 @@ export function MarketplaceDetailPage({ marketplaceName }: { marketplaceName: st
 
 /** Third-level Add marketplace page: Source + conditional Git ref. */
 export function MarketplaceAddPage() {
+  const setDirty = useSettingsDetailStore((state) => state.setDirty)
   const { t } = useTranslation()
   const [source, setSource] = useState('')
   const [ref, setRef] = useState('')
@@ -394,7 +396,7 @@ export function MarketplaceAddPage() {
     try {
       await addAgentMarketplace(composed)
       updateMarketplaces()
-      useSettingsDetailStore.getState().setDirty(false)
+      setDirty(false)
       requestLeave()
     } catch {
       toast.add({

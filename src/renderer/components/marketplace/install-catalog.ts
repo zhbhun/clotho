@@ -1,4 +1,4 @@
-import type { AgentMarketplacePlugin } from '../../../services/claude/agent-config'
+import type { AgentMarketplacePlugin } from '../../services/claude/agent-config'
 
 export type CatalogEntry = AgentMarketplacePlugin
 

@@ -5,12 +5,12 @@ import { Button } from '@/shadcn/button'
 import { Spinner } from '@/shadcn/spinner'
 import { toast } from '@/shadcn/toast'
 
+import { AgentEmpty } from '../../../components/marketplace/agent-shared'
+import { PluginAvatar } from '../../../components/marketplace/plugin-avatar'
+import { useSettingsDetailStore } from '../../../components/marketplace/settings-detail-store'
+import { SkillActions } from '../../../components/marketplace/skill-actions'
+import { SkillDetailPage } from '../../../components/marketplace/skill-detail-page'
 import { listAgentSkills } from '../../../services/claude/agent-config'
-import { AgentEmpty } from './agent-shared'
-import { PluginAvatar } from './plugin-avatar'
-import { useSettingsDetailStore } from './settings-detail-store'
-import { SkillActions } from './skill-actions'
-import { SkillDetailPage } from './skill-detail-page'
 
 type SkillListProps = { onOpenMarketplace: () => void }
 

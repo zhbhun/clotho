@@ -16,17 +16,17 @@ import {
 import { toast } from '@/shadcn/toast'
 
 import {
+  getAgentPluginDetails,
+  removeAgentPlugin,
+  setAgentPluginEnabled,
+} from '../../services/claude/agent-config'
+import { requestFromDesktop } from '../../services/desktop/client'
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '../../../components/dropdown-menu'
-import {
-  getAgentPluginDetails,
-  removeAgentPlugin,
-  setAgentPluginEnabled,
-} from '../../../services/claude/agent-config'
-import { requestFromDesktop } from '../../../services/desktop/client'
+} from '../dropdown-menu'
 import { AgentEmpty } from './agent-shared'
 import { refreshCatalog, refreshInstalled, updateInstalled, useCatalogCache } from './catalog-cache'
 import { type CatalogEntry, catalogSources, orderCatalog, searchCatalog } from './install-catalog'

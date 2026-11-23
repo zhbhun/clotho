@@ -6,11 +6,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { Toaster } from '@/shadcn/toast'
 import { TooltipProvider } from '@/shadcn/tooltip'
 
+import { useSettingsDetailStore } from '../../../components/marketplace/settings-detail-store'
 import { appI18n } from '../../../i18n/runtime'
 import * as agentConfig from '../../../services/claude/agent-config'
 import { ShortcutRuntimeProvider, shortcutRuntime } from '../../../services/shortcuts/runtime'
 import { AgentMcpSettings } from './agent-mcp-settings'
-import { useSettingsDetailStore } from './settings-detail-store'
 
 vi.mock('../../../services/claude/agent-config', () => ({
   listAgentSubagents: vi.fn(),

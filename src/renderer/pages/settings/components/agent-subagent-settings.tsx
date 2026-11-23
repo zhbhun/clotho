@@ -8,14 +8,14 @@ import { Button } from '@/shadcn/button'
 import { Spinner } from '@/shadcn/spinner'
 import { toast } from '@/shadcn/toast'
 
+import { AgentEmpty, DeleteButton, capitalize } from '../../../components/marketplace/agent-shared'
+import { useSettingsDetailStore } from '../../../components/marketplace/settings-detail-store'
 import {
   type AgentSubagentConfig,
   deleteAgentSubagent,
   listAgentAvailableSubagents,
   listAgentSubagents,
 } from '../../../services/claude/agent-config'
-import { AgentEmpty, DeleteButton, capitalize } from './agent-shared'
-import { useSettingsDetailStore } from './settings-detail-store'
 import { SettingsList, SettingsRow, markAsRow } from './settings-list'
 import { SubagentEditor } from './subagent-editor'
 

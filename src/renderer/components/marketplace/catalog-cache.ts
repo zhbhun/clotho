@@ -2,7 +2,7 @@ import { create } from 'zustand'
 
 import { toast } from '@/shadcn/toast'
 
-import { appI18n } from '../../../i18n/runtime'
+import { appI18n } from '../../i18n/runtime'
 import {
   type AgentMarketplaceInfo,
   type AgentMarketplacePlugin,
@@ -10,7 +10,7 @@ import {
   listAgentAvailablePlugins,
   listAgentMarketplaces,
   listAgentPlugins,
-} from '../../../services/claude/agent-config'
+} from '../../services/claude/agent-config'
 
 type InstalledChange = 'install' | 'remove' | boolean
 

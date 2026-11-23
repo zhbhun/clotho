@@ -4,7 +4,7 @@ import {
   listAgentAvailablePlugins,
   listAgentMarketplaces,
   listAgentPlugins,
-} from '../../../services/claude/agent-config'
+} from '../../services/claude/agent-config'
 import {
   refreshCatalog,
   refreshInstalled,
@@ -14,7 +14,7 @@ import {
   useCatalogCache,
 } from './catalog-cache'
 
-vi.mock('../../../services/claude/agent-config', () => ({
+vi.mock('../../services/claude/agent-config', () => ({
   listAgentAvailablePlugins: vi.fn(),
   listAgentMarketplaces: vi.fn(),
   listAgentPlugins: vi.fn(),

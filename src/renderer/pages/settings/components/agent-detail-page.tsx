@@ -4,10 +4,10 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/shadcn/button'
 import { Spinner } from '@/shadcn/spinner'
 
+import { DeleteConfirmButton } from '../../../components/marketplace/agent-shared'
+import { useSettingsDetailStore } from '../../../components/marketplace/settings-detail-store'
+import { useDetailDirty } from '../../../components/marketplace/use-detail-dirty'
 import type { MessageKey } from '../../../i18n/resources'
-import { DeleteConfirmButton } from './agent-shared'
-import { useSettingsDetailStore } from './settings-detail-store'
-import { useDetailDirty } from './use-detail-dirty'
 
 /**
  * Shared second-level detail page for the agent-capability editors: an h1

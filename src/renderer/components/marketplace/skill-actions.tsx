@@ -11,7 +11,7 @@ import {
 } from '@/shadcn/dropdown-menu'
 import { toast } from '@/shadcn/toast'
 
-import { deleteAgentSkill } from '../../../services/claude/agent-config'
+import { deleteAgentSkill } from '../../services/claude/agent-config'
 import { DeleteConfirmDialog } from './agent-shared'
 
 export function SkillActions({

@@ -1,6 +1,22 @@
 import { type TranslationRow, messages } from '../catalog'
 
 export const workbenchCatalog = {
+  'workbench.nav.extensions': messages(
+    'Extension',
+    '扩展',
+    '擴充功能',
+    '拡張機能',
+    '확장',
+    'Extensiones',
+    'Extensions',
+    'Erweiterungen',
+    'Extensões',
+    'Расширения',
+    'एक्सटेंशन',
+    'Ekstensi',
+    'Uzantılar',
+    'Tiện ích mở rộng',
+  ),
   'workbench.modelConfigurationRequired': messages(
     'Sign in to Claude or configure a model provider',
     '请先登录 Claude 或配置模型供应商',

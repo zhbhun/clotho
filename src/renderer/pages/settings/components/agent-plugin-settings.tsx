@@ -1,11 +1,18 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { InstallPluginDetailPage, InstallPluginPage } from './install-page'
-import { MarketplaceAddPage, MarketplaceDetailPage, MarketplaceListPage } from './marketplace-pages'
-import { PluginDetailPage } from './plugin-detail-page'
+import {
+  InstallPluginDetailPage,
+  InstallPluginPage,
+} from '../../../components/marketplace/install-page'
+import {
+  MarketplaceAddPage,
+  MarketplaceDetailPage,
+  MarketplaceListPage,
+} from '../../../components/marketplace/marketplace-pages'
+import { PluginDetailPage } from '../../../components/marketplace/plugin-detail-page'
+import { useSettingsDetailStore } from '../../../components/marketplace/settings-detail-store'
 import { PluginListPage } from './plugin-list-page'
-import { useSettingsDetailStore } from './settings-detail-store'
 
 /**
  * Plugins category dispatcher: switches between the category's pages per the

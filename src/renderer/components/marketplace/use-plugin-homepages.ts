@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
-import { getAgentPluginDetails } from '../../../services/claude/agent-config'
+import { getAgentPluginDetails } from '../../services/claude/agent-config'
 import type { CatalogEntry } from './install-catalog'
 
 /**

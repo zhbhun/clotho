@@ -13,18 +13,18 @@ import {
 import { Switch } from '@/shadcn/switch'
 import { toast } from '@/shadcn/toast'
 
+import { AgentEmpty } from '../../../components/marketplace/agent-shared'
+import { updateInstalled } from '../../../components/marketplace/catalog-cache'
+import { PluginAvatar } from '../../../components/marketplace/plugin-avatar'
+import { useRestartHint } from '../../../components/marketplace/plugin-shared'
+import { PluginRowsSkeleton } from '../../../components/marketplace/plugin-skeletons'
+import { useSettingsDetailStore } from '../../../components/marketplace/settings-detail-store'
 import {
   type AgentPluginInfo,
   listAgentPlugins,
   removeAgentPlugin,
   setAgentPluginEnabled,
 } from '../../../services/claude/agent-config'
-import { AgentEmpty } from './agent-shared'
-import { updateInstalled } from './catalog-cache'
-import { PluginAvatar } from './plugin-avatar'
-import { useRestartHint } from './plugin-shared'
-import { PluginRowsSkeleton } from './plugin-skeletons'
-import { useSettingsDetailStore } from './settings-detail-store'
 
 /**
  * Top-level Plugins page: the installed plugin list with a marketplace action.

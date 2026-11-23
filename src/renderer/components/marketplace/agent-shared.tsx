@@ -13,8 +13,8 @@ import {
 import { Button } from '@/shadcn/button'
 import { cn } from '@/shadcn/utils'
 
-import { AppAlertDialog, AppAlertDialogContent } from '../../../components/app-dialog'
-import { SettingsSection } from '../../../components/settings-section'
+import { AppAlertDialog, AppAlertDialogContent } from '../app-dialog'
+import { SettingsSection } from '../settings-section'
 
 /**
  * Shared list-section shell for the six agent capability domains: heading,

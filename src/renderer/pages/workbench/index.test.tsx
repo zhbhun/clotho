@@ -679,6 +679,46 @@ describe('resizable sidebar', () => {
   })
 })
 
+describe('extension navigation', () => {
+  it('opens the market in the main area and preserves the conversation when returning', async () => {
+    const { sessions } = setupShortcutSessions()
+    const user = userEvent.setup()
+    renderWorkbenchPage()
+    await screen.findByRole('tab', { name: 'Shortcut one' })
+    const extensionLabel = appI18n.t('workbench.nav.extensions')
+    const extension = screen.getByRole('button', { name: extensionLabel })
+    const newChat = screen.getByRole('button', { name: appI18n.t('workbench.session.new') })
+    expect(
+      newChat.compareDocumentPosition(extension) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+
+    await user.click(extension)
+    const market = document.querySelector('[data-extensions]')
+    expect(market).toBeVisible()
+    expect(screen.queryByRole('heading', { name: extensionLabel })).toBeNull()
+    expect(
+      screen.getByRole('tab', { name: appI18n.t('settings.agent.title.plugins') }),
+    ).toBeVisible()
+    expect(useWorkbenchStore.getState().currentSessionId).toBe(sessions[0].id)
+    expect(screen.queryByRole('textbox', { name: 'Prompt' })).toBeNull()
+
+    const sessionRow = document.querySelector(
+      `[data-session-item="${sessions[0].id}"] [data-sidebar="menu-button"]`,
+    )
+    expect(sessionRow).not.toBeNull()
+    await user.click(sessionRow as HTMLElement)
+    expect(market).not.toBeVisible()
+    expect(useWorkbenchStore.getState().currentSessionId).toBe(sessions[0].id)
+    expect(screen.getByRole('tab', { name: 'Shortcut one' })).toBeVisible()
+
+    await user.click(extension)
+    await user.click(newChat)
+    expect(market).not.toBeVisible()
+    const state = useWorkbenchStore.getState()
+    expect(state.sessions[state.currentSessionId!].isUnsavedDraft).toBe(true)
+  })
+})
+
 describe('workbench shortcuts', () => {
   it('starts a new conversation in the current session project from the shortcut', async () => {
     const { project } = setupShortcutSessions()

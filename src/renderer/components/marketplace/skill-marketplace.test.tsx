@@ -4,21 +4,21 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { MarketSkill, PublishedSkillBoard } from '@/shared/rpc'
 
-import { appI18n } from '../../../i18n/runtime'
-import * as api from '../../../services/claude/agent-config'
-import { requestFromDesktop } from '../../../services/desktop/client'
-import { ShortcutRuntimeProvider, shortcutRuntime } from '../../../services/shortcuts/runtime'
+import { appI18n } from '../../i18n/runtime'
+import * as api from '../../services/claude/agent-config'
+import { requestFromDesktop } from '../../services/desktop/client'
+import { ShortcutRuntimeProvider, shortcutRuntime } from '../../services/shortcuts/runtime'
 import { useSettingsDetailStore } from './settings-detail-store'
 import { SkillMarketplace } from './skill-marketplace'
 
-vi.mock('../../../services/claude/agent-config', () => ({
+vi.mock('../../services/claude/agent-config', () => ({
   deleteAgentSkill: vi.fn(),
   getPublishedSkillBoard: vi.fn(),
   findMarketSkills: vi.fn(),
   installMarketSkill: vi.fn(),
   listAgentSkills: vi.fn(),
 }))
-vi.mock('../../../services/desktop/client', () => ({ requestFromDesktop: vi.fn() }))
+vi.mock('../../services/desktop/client', () => ({ requestFromDesktop: vi.fn() }))
 const mock = vi.mocked(api)
 const ranked = {
   name: 'ranked',

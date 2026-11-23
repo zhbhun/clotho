@@ -24,12 +24,12 @@ import { toast } from '@/shadcn/toast'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip'
 
 import { AppAlertDialog, AppAlertDialogContent } from '../../../components/app-dialog'
+import { useSettingsDetailStore } from '../../../components/marketplace/settings-detail-store'
 import { ProjectForm } from '../../../components/project-form'
 import { ProjectIcon } from '../../../components/project-icon'
 import { ProjectPath } from '../../../components/project-path'
 import type { ClaudeProject } from '../../../services/claude/claude'
 import { compareProjectsByName, isUserProject, projectDisplayName } from '../../../utils/project'
-import { useSettingsDetailStore } from './settings-detail-store'
 import { SettingsList, SettingsRow } from './settings-list'
 
 const PROJECT_CATEGORY = 'projects' as const

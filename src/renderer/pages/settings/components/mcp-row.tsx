@@ -12,9 +12,9 @@ import {
 } from '@/shadcn/dropdown-menu'
 import { Switch } from '@/shadcn/switch'
 
+import { DeleteConfirmDialog } from '../../../components/marketplace/agent-shared'
+import { PluginAvatar } from '../../../components/marketplace/plugin-avatar'
 import type { AgentMcpServerConfig } from '../../../services/claude/agent-config'
-import { DeleteConfirmDialog } from './agent-shared'
-import { PluginAvatar } from './plugin-avatar'
 
 export function McpRow({
   server,

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 
 import type { PublishedSkillBoard, PublishedSkillChart } from '@/shared/rpc'
 
-import { getPublishedSkillBoard } from '../../../services/claude/agent-config'
+import { getPublishedSkillBoard } from '../../services/claude/agent-config'
 
 export function useSkillRankings(view: PublishedSkillChart) {
   const [snapshot, setSnapshot] = useState<PublishedSkillBoard & { view: PublishedSkillChart }>()

@@ -22,15 +22,15 @@ import {
 } from '@/shadcn/empty'
 import { Spinner } from '@/shadcn/spinner'
 
+import { useSettingsDetailStore } from '../../../components/marketplace/settings-detail-store'
+import { useDetailDirty } from '../../../components/marketplace/use-detail-dirty'
 import { DefaultModelSettings } from '../../../components/model-configuration/default-model-settings'
 import { ProviderEditorForm } from '../../../components/model-configuration/provider-editor-form'
 import { SettingsSection } from '../../../components/settings-section'
 import { ShortcutAlertDialog } from '../../../components/shortcut-dialog'
 import { ProviderActions } from './provider-actions'
 import { ProviderListRow } from './provider-list-card'
-import { useSettingsDetailStore } from './settings-detail-store'
 import { SettingsList } from './settings-list'
-import { useDetailDirty } from './use-detail-dirty'
 import { useProviderSettings } from './use-provider-settings'
 
 /**

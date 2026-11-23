@@ -7,6 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { AppPreferences } from '@/shared/rpc'
 
+import { Extensions } from '../../components/marketplace/extensions'
+import { useSettingsDetailStore } from '../../components/marketplace/settings-detail-store'
 import { ThemeProvider } from '../../components/theme-provider'
 import { LanguageProvider } from '../../i18n/language-provider'
 import { appI18n } from '../../i18n/runtime'
@@ -19,19 +21,21 @@ import * as agentConfig from '../../services/claude/agent-config'
 import { ShortcutRuntimeProvider, shortcutRuntime } from '../../services/shortcuts/runtime'
 import { ModelConfigurationProvider } from '../../stores/model-configuration-context'
 import { ProviderUsageProvider } from '../../stores/provider-usage-context'
-import { useSettingsDetailStore } from './components/settings-detail-store'
 import { SettingsPage } from './index'
 
 let savedPreferences: AppPreferences[] = []
 
-function TestSettingsPage(props: ComponentProps<typeof SettingsPage>) {
+function TestSettingsPage({
+  extensions = false,
+  ...props
+}: ComponentProps<typeof SettingsPage> & { extensions?: boolean }) {
   return (
     <LanguageProvider initialPreference="zh-CN" instance={appI18n}>
       <ThemeProvider disableTransitionOnChange={false}>
         <ModelConfigurationProvider>
           <ProviderUsageProvider>
             <ShortcutRuntimeProvider runtime={shortcutRuntime}>
-              <SettingsPage {...props} />
+              {extensions ? <Extensions /> : <SettingsPage {...props} />}
             </ShortcutRuntimeProvider>
           </ProviderUsageProvider>
         </ModelConfigurationProvider>
@@ -178,7 +182,7 @@ describe('SettingsPage', () => {
     }
   })
 
-  it('opens Marketplace from Plugins and switches between the catalog and sources', async () => {
+  it('opens a tabless plugin catalog within settings and returns to the installed list', async () => {
     vi.spyOn(agentConfig, 'listAgentPlugins').mockResolvedValue([])
     vi.spyOn(agentConfig, 'listAgentAvailablePlugins').mockResolvedValue([
       { pluginId: 'formatter@acme', name: 'formatter', marketplaceName: 'acme' },
@@ -193,20 +197,14 @@ describe('SettingsPage', () => {
     const user = userEvent.setup()
     render(<TestSettingsPage open initialCategory="agent-plugins" onOpenChange={vi.fn()} />)
 
-    const marketplace = screen.getAllByRole('button', { name: '插件广场' })[0]
-    const plugins = screen.getByRole('button', { name: '插件' })
-    expect(
-      marketplace.compareDocumentPosition(plugins) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy()
-    await user.click(screen.getAllByRole('button', { name: '插件广场' })[1])
-    expect(screen.getByRole('button', { name: '插件广场', current: 'page' })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: '插件' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.queryByRole('button', { name: '插件广场', current: 'page' })).toBeNull()
+    await user.click(screen.getByRole('button', { name: '插件广场' }))
+    expect(screen.queryByRole('tab')).toBeNull()
+    expect(screen.getByRole('button', { name: '插件', current: 'page' })).toBeInTheDocument()
     expect(await screen.findByText('formatter')).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { level: 1, name: '插件广场' })).toBeNull()
-
-    await user.click(screen.getByRole('tab', { name: '插件市场' }))
-    expect(await screen.findByText('github · acme/plugins')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '插件广场', current: 'page' })).toBeInTheDocument()
+    await user.click(screen.getByTestId('settings-breadcrumb-root'))
+    expect(await screen.findByRole('heading', { level: 1, name: '插件' })).toBeVisible()
+    expect(screen.queryByText('formatter')).toBeNull()
   })
 
   it('opens the skill marketplace from an empty Skills list and shows the installed skill on return', async () => {
@@ -227,14 +225,12 @@ describe('SettingsPage', () => {
 
     expect(await screen.findByRole('heading', { name: /已安装\s*0/ })).toBeVisible()
     await user.click(screen.getByRole('button', { name: '打开技能市场' }))
-    expect(screen.getByRole('tab', { name: '技能' })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByRole('button', { name: '插件广场', current: 'page' })).toBeVisible()
+    expect(screen.queryByRole('tab')).toBeNull()
+    expect(screen.getByRole('button', { name: '技能', current: 'page' })).toBeVisible()
     await user.click(await screen.findByRole('button', { name: /安装 formatter/ }))
-    await user.click(screen.getByRole('button', { name: '技能' }))
+    await user.click(screen.getByTestId('settings-breadcrumb-root'))
 
     expect(await screen.findByText('Installed from acme/tools')).toBeVisible()
-    await user.click(screen.getByRole('button', { name: '插件广场' }))
-    expect(screen.getByRole('tab', { name: '插件' })).toHaveAttribute('aria-selected', 'true')
   })
 
   it('returns to the originating Marketplace tab and guards unsaved source changes', async () => {
@@ -262,25 +258,22 @@ describe('SettingsPage', () => {
     })
     const addMarketplace = vi.spyOn(agentConfig, 'addAgentMarketplace').mockResolvedValue(undefined)
     const user = userEvent.setup()
-    render(<TestSettingsPage open initialCategory="agent-marketplace" onOpenChange={vi.fn()} />)
+    render(<TestSettingsPage extensions open onOpenChange={vi.fn()} />)
 
     await user.click(await screen.findByText('formatter'))
     expect(await screen.findByText('Formatter details')).toBeInTheDocument()
-    expect(screen.getByTestId('settings-breadcrumb-root')).toHaveTextContent(/^插件$/)
-    await user.click(screen.getByTestId('settings-breadcrumb-root'))
+    await user.click(screen.getByRole('button', { name: '扩展' }))
     expect(screen.getByRole('tab', { name: '插件' })).toHaveAttribute('aria-selected', 'true')
 
     await user.click(screen.getByRole('tab', { name: '插件市场' }))
     await user.click(await screen.findByText('github · acme/plugins'))
     expect(await screen.findByRole('heading', { name: 'acme' })).toBeInTheDocument()
-    expect(screen.getByTestId('settings-breadcrumb-root')).toHaveTextContent(/^插件市场$/)
-    await user.click(screen.getByTestId('settings-breadcrumb-root'))
+    await user.click(screen.getByRole('button', { name: '扩展' }))
     expect(screen.getByRole('tab', { name: '插件市场' })).toHaveAttribute('aria-selected', 'true')
 
     await user.click(await screen.findByRole('button', { name: '添加市场' }))
-    expect(screen.getByTestId('settings-breadcrumb-root')).toHaveTextContent(/^插件广场$/)
     await user.type(screen.getByLabelText('来源'), 'acme/new-market')
-    await user.click(screen.getByTestId('settings-breadcrumb-root'))
+    await user.click(screen.getByRole('button', { name: '扩展' }))
     expect(await screen.findByRole('alertdialog', { name: '放弃更改？' })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: '放弃' }))
     expect(screen.getByRole('tab', { name: '插件市场' })).toHaveAttribute('aria-selected', 'true')
@@ -295,8 +288,7 @@ describe('SettingsPage', () => {
     )
     expect(screen.queryByRole('alertdialog', { name: '放弃更改？' })).toBeNull()
 
-    await user.click(screen.getByRole('button', { name: '插件广场', current: 'page' }))
-    expect(screen.getByRole('tab', { name: '插件' })).toHaveAttribute('aria-selected', 'true')
+    expect(useSettingsDetailStore.getState().view).toEqual({ kind: 'list' })
   })
 
   describe('subagent detail leave guard', () => {

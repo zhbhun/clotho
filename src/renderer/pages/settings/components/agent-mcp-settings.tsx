@@ -10,6 +10,8 @@ import { Textarea } from '@/shadcn/textarea'
 import { toast } from '@/shadcn/toast'
 import { ToggleGroup, ToggleGroupItem } from '@/shadcn/toggle-group'
 
+import { AgentEmpty } from '../../../components/marketplace/agent-shared'
+import { useSettingsDetailStore } from '../../../components/marketplace/settings-detail-store'
 import { SettingsSection } from '../../../components/settings-section'
 import {
   type AgentMcpServerConfig,
@@ -19,9 +21,7 @@ import {
   setAgentCapabilityToggle,
 } from '../../../services/claude/agent-config'
 import { AgentDetailPage } from './agent-detail-page'
-import { AgentEmpty } from './agent-shared'
 import { McpRow } from './mcp-row'
-import { useSettingsDetailStore } from './settings-detail-store'
 
 const MCP_CATEGORY = 'agent-mcp' as const
 

@@ -6,11 +6,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { Toaster } from '@/shadcn/toast'
 import { TooltipProvider } from '@/shadcn/tooltip'
 
+import { useSettingsDetailStore } from '../../../components/marketplace/settings-detail-store'
 import { appI18n } from '../../../i18n/runtime'
 import type { ClaudeProject } from '../../../services/claude/claude'
 import { ShortcutRuntimeProvider, shortcutRuntime } from '../../../services/shortcuts/runtime'
 import { ProjectSettings } from './project-settings'
-import { useSettingsDetailStore } from './settings-detail-store'
 
 const alpha: ClaudeProject = {
   id: 'alpha',

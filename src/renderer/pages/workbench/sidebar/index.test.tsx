@@ -187,6 +187,7 @@ describe('SessionSidebar', () => {
       '.sidebar-session-scroll [data-slot="scroll-area-viewport"]',
     )
     const newConversation = screen.getByText(appI18n.t('workbench.session.new')).closest('button')
+    const extensions = screen.getByRole('button', { name: appI18n.t('workbench.nav.extensions') })
     const currentTab = document.querySelector<HTMLButtonElement>('[data-session-tab="current"]')
     const historyTab = document.querySelector<HTMLButtonElement>('[data-session-tab="history"]')
     const locateAction = document.querySelector<HTMLButtonElement>(
@@ -216,6 +217,8 @@ describe('SessionSidebar', () => {
     await user.tab()
     expect(newConversation).toHaveFocus()
     await user.tab()
+    expect(extensions).toHaveFocus()
+    await user.tab()
     expect(currentTab).toHaveFocus()
     await user.tab()
     expect(historyTab).toHaveFocus()
@@ -243,6 +246,8 @@ describe('SessionSidebar', () => {
     await user.tab({ shift: true })
     expect(currentTab).toHaveFocus()
     await user.tab({ shift: true })
+    expect(extensions).toHaveFocus()
+    await user.tab({ shift: true })
     expect(newConversation).toHaveFocus()
     await user.tab({ shift: true })
     expect(expandedSidebarToggle).toHaveFocus()
@@ -252,6 +257,7 @@ describe('SessionSidebar', () => {
     const user = userEvent.setup()
     renderSidebar({ selectedSession: session })
     const newConversation = screen.getByText(appI18n.t('workbench.session.new')).closest('button')
+    const extensions = screen.getByRole('button', { name: appI18n.t('workbench.nav.extensions') })
     const currentTab = document.querySelector<HTMLButtonElement>('[data-session-tab="current"]')
     const historyTab = document.querySelector<HTMLButtonElement>('[data-session-tab="history"]')
     const locateAction = document.querySelector<HTMLButtonElement>(
@@ -277,6 +283,8 @@ describe('SessionSidebar', () => {
     expect(historyTab).toHaveFocus()
     await user.tab({ shift: true })
     expect(currentTab).toHaveFocus()
+    await user.tab({ shift: true })
+    expect(extensions).toHaveFocus()
     await user.tab({ shift: true })
     expect(newConversation).toHaveFocus()
   })
@@ -369,7 +377,8 @@ describe('SessionSidebar', () => {
     expect(screen.queryByText(currentSession.title)).not.toBeInTheDocument()
     vi.mocked(viewport.scrollTo).mockClear()
     newConversation.focus()
-    // New Conversation → both tab pills → locate → scroll-to-top; the last Tab is
+    await user.keyboard('{Tab}')
+    // New Conversation → Extension → both tab pills → locate → scroll-to-top; the last Tab is
     // intercepted to scroll the list and focus the roving session outside the window.
     await user.keyboard('{Tab}')
     await user.keyboard('{Tab}')

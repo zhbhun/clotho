@@ -26,8 +26,8 @@ import {
   findMarketSkills,
   installMarketSkill,
   listAgentSkills,
-} from '../../../services/claude/agent-config'
-import { requestFromDesktop } from '../../../services/desktop/client'
+} from '../../services/claude/agent-config'
+import { requestFromDesktop } from '../../services/desktop/client'
 import { PluginAvatar } from './plugin-avatar'
 import { InstallPageSkeleton } from './plugin-skeletons'
 import { useSettingsDetailStore } from './settings-detail-store'

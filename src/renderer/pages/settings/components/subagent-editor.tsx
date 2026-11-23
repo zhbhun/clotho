@@ -21,10 +21,10 @@ import { Textarea } from '@/shadcn/textarea'
 import { toast } from '@/shadcn/toast'
 import { cn } from '@/shadcn/utils'
 
+import { DeleteConfirmButton, capitalize } from '../../../components/marketplace/agent-shared'
+import { useSettingsDetailStore } from '../../../components/marketplace/settings-detail-store'
+import { useDetailDirty } from '../../../components/marketplace/use-detail-dirty'
 import { type AgentSubagentConfig, saveAgentSubagent } from '../../../services/claude/agent-config'
-import { DeleteConfirmButton, capitalize } from './agent-shared'
-import { useSettingsDetailStore } from './settings-detail-store'
-import { useDetailDirty } from './use-detail-dirty'
 
 /** Common tools shown as checkboxes; other entries in `tools` pass through on save. */
 const GRID_TOOLS = [

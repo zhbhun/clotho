@@ -10,8 +10,8 @@ import {
   getAgentPluginDetails,
   removeAgentPlugin,
   setAgentPluginEnabled,
-} from '../../../services/claude/agent-config'
-import { requestFromDesktop } from '../../../services/desktop/client'
+} from '../../services/claude/agent-config'
+import { requestFromDesktop } from '../../services/desktop/client'
 import { updateInstalled } from './catalog-cache'
 import { PluginAvatar } from './plugin-avatar'
 import { PluginOverflowMenu, useRestartHint } from './plugin-shared'

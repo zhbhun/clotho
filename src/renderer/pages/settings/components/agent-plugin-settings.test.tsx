@@ -8,14 +8,21 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { Toaster } from '@/shadcn/toast'
 import { TooltipProvider } from '@/shadcn/tooltip'
 
+import { useCatalogCache } from '../../../components/marketplace/catalog-cache'
+import {
+  InstallPluginDetailPage,
+  InstallPluginPage,
+} from '../../../components/marketplace/install-page'
+import {
+  MarketplaceAddPage,
+  MarketplaceDetailPage,
+  MarketplaceListPage,
+} from '../../../components/marketplace/marketplace-pages'
+import { useSettingsDetailStore } from '../../../components/marketplace/settings-detail-store'
 import { appI18n } from '../../../i18n/runtime'
 import * as agentConfig from '../../../services/claude/agent-config'
 import { ShortcutRuntimeProvider, shortcutRuntime } from '../../../services/shortcuts/runtime'
 import { AgentPluginSettings } from './agent-plugin-settings'
-import { useCatalogCache } from './catalog-cache'
-import { InstallPluginDetailPage, InstallPluginPage } from './install-page'
-import { MarketplaceAddPage, MarketplaceDetailPage, MarketplaceListPage } from './marketplace-pages'
-import { useSettingsDetailStore } from './settings-detail-store'
 
 vi.mock('../../../services/claude/agent-config', () => ({
   listAgentSubagents: vi.fn(),

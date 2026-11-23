@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import { toast } from '@/shadcn/toast'
 
+import { useSettingsDetailStore } from '../../../components/marketplace/settings-detail-store'
 import type { ProviderIdErrorKind } from '../../../components/model-configuration/provider-draft'
 import {
   createProviderDraft,
@@ -16,7 +17,6 @@ import type { ProviderPreset } from '../../../components/model-configuration/pro
 import { useProviderDraft } from '../../../components/model-configuration/use-provider-draft'
 import type { ModelProvider } from '../../../services/claude/claude'
 import { claude } from '../../../services/claude/claude'
-import { useSettingsDetailStore } from './settings-detail-store'
 
 export function useProviderEditor({
   defaultModel,

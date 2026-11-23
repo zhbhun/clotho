@@ -5,13 +5,13 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { Toaster } from '@/shadcn/toast'
 
+import { useSettingsDetailStore } from '../../../components/marketplace/settings-detail-store'
 import { appI18n } from '../../../i18n/runtime'
 import type { ModelProvider } from '../../../services/claude/claude'
 import { ShortcutRuntimeProvider, shortcutRuntime } from '../../../services/shortcuts/runtime'
 import { ModelConfigurationProvider } from '../../../stores/model-configuration-context'
 import { ProviderUsageProvider } from '../../../stores/provider-usage-context'
 import { ProviderSettings } from './provider-settings'
-import { useSettingsDetailStore } from './settings-detail-store'
 
 const claudeMock = vi.hoisted(() => ({
   createProvider: vi.fn(),

@@ -9,7 +9,6 @@ import {
   Server,
   Settings2,
   Sparkles,
-  Store,
 } from 'lucide-react'
 import {
   type CSSProperties,
@@ -22,14 +21,6 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import {
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/shadcn/alert-dialog'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -60,10 +51,18 @@ import {
 } from '@/shadcn/sidebar'
 import { cn } from '@/shadcn/utils'
 
-import { AppAlertDialog, AppAlertDialogContent } from '../../components/app-dialog'
 import { APP_CONTENT_CONTAINER_CLASS, APP_SIDEBAR_DEFAULT_WIDTH } from '../../components/app-layout'
 import { ErrorBoundary } from '../../components/error-boundary'
 import { FailureEmpty } from '../../components/failure-empty'
+import { DiscardChangesDialog } from '../../components/marketplace/discard-changes-dialog'
+import {
+  type MarketplaceEntryTab,
+  MarketplaceSettings,
+} from '../../components/marketplace/marketplace-settings'
+import {
+  type SettingsCategoryId,
+  useSettingsDetailStore,
+} from '../../components/marketplace/settings-detail-store'
 import { useSidebarResize } from '../../components/resizable-sidebar'
 import { ShortcutDialog } from '../../components/shortcut-dialog'
 import { ShortcutScope } from '../../components/shortcut-scope'
@@ -75,12 +74,10 @@ import { AgentSkillSettings } from './components/agent-skill-settings'
 import { AgentSubagentSettings } from './components/agent-subagent-settings'
 import { AppearanceSettings } from './components/appearance-settings'
 import { LanguageSettings } from './components/language-settings'
-import { type MarketplaceEntryTab, MarketplaceSettings } from './components/marketplace-settings'
 import { PermissionSettings } from './components/permission-settings'
 import { ProjectSettings } from './components/project-settings'
 import { ProviderSettings } from './components/provider-settings'
 import { SessionSettings } from './components/session-settings'
-import { useSettingsDetailStore } from './components/settings-detail-store'
 import { ShortcutSettings } from './components/shortcut-settings'
 
 const BASE_CATEGORIES = [
@@ -92,7 +89,6 @@ const BASE_CATEGORIES = [
 ] as const
 
 const AGENT_CATEGORIES = [
-  { id: 'agent-marketplace', labelKey: 'settings.categories.agentMarketplace', icon: Store },
   { id: 'agent-plugins', labelKey: 'settings.categories.agentPlugins', icon: Puzzle },
   { id: 'agent-subagents', labelKey: 'settings.categories.agentSubagents', icon: Bot },
   { id: 'agent-mcp', labelKey: 'settings.categories.agentMcp', icon: Server },
@@ -110,7 +106,7 @@ const CATEGORY_GROUPS = [
 
 const CATEGORIES = [...BASE_CATEGORIES, ...AGENT_CATEGORIES] as const
 
-export type SettingsCategoryId = (typeof CATEGORIES)[number]['id']
+export type { SettingsCategoryId } from '../../components/marketplace/settings-detail-store'
 
 type SettingsPageProps = {
   error?: string | null
@@ -226,47 +222,6 @@ function SettingsCategory({ children, isActive }: { children: ReactNode; isActiv
   )
 }
 
-/**
- * Unsaved-changes guard for the subagent detail page: confirming discards the
- * edits and runs the pending navigation; declining keeps editing (design D4/D5).
- */
-function DiscardChangesDialog({
-  open,
-  subject,
-  onOpenChange,
-  onDiscard,
-}: {
-  open: boolean
-  subject: string
-  onOpenChange: (open: boolean) => void
-  onDiscard: () => void
-}) {
-  const { t } = useTranslation()
-  return (
-    <AppAlertDialog onOpenChange={onOpenChange} open={open}>
-      <AppAlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{t('settings.detail.discardTitle')}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {t('settings.detail.discardDescription', { subject })}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{t('settings.detail.discardKeepEditing')}</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={() => {
-              onOpenChange(false)
-              onDiscard()
-            }}
-          >
-            {t('settings.detail.discardConfirm')}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AppAlertDialogContent>
-    </AppAlertDialog>
-  )
-}
-
 function SettingsPageContent({
   error,
   fallbackFocusRef,
@@ -281,10 +236,7 @@ function SettingsPageContent({
 }: SettingsPageProps) {
   const { t } = useTranslation()
   const [categoryId, setCategoryId] = useState<SettingsCategoryId>(initialCategory)
-  const [marketplaceVisit, setMarketplaceVisit] = useState<{
-    id: number
-    tab: MarketplaceEntryTab
-  }>({ id: 0, tab: 'plugins' })
+  const [installTab, setInstallTab] = useState<MarketplaceEntryTab | null>(null)
   const [focusedCategoryId, setFocusedCategoryId] = useState<SettingsCategoryId>(initialCategory)
   const categoryRefs = useRef<Array<HTMLButtonElement | null>>([])
   const dialogRef = useRef<HTMLDivElement>(null)
@@ -315,7 +267,7 @@ function SettingsPageContent({
    * store gates the leave behind the discard dialog and the clicked category
    * stays inactive; a clean detail closes and the category activates.
    */
-  const selectCategory = (id: SettingsCategoryId, tab: MarketplaceEntryTab = 'plugins') => {
+  const selectCategory = (id: SettingsCategoryId) => {
     if (isDetailOpen) {
       if (detail.isDirty) {
         detail.requestLeave()
@@ -323,7 +275,7 @@ function SettingsPageContent({
       }
       detail.backToList()
     }
-    if (id === 'agent-marketplace') setMarketplaceVisit((visit) => ({ id: visit.id + 1, tab }))
+    setInstallTab(null)
     setCategoryId(id)
     setFocusedCategoryId(id)
   }
@@ -355,6 +307,7 @@ function SettingsPageContent({
 
   useEffect(() => {
     if (open) {
+      setInstallTab(null)
       setCategoryId(initialCategory)
       setFocusedCategoryId(initialCategory)
     }
@@ -442,7 +395,7 @@ function SettingsPageContent({
             </Sidebar>
 
             <SidebarInset className="min-w-0 overflow-hidden">
-              {isDetailOpen ? (
+              {isDetailOpen || installTab ? (
                 <div
                   className="app-region-drag flex h-10 shrink-0 items-center px-4"
                   data-settings-breadcrumb-bar
@@ -457,13 +410,39 @@ function SettingsPageContent({
                             // The root always returns to the category list;
                             // the dirty guard still applies first.
                             if (detail.isDirty) detail.requestLeave()
-                            else detail.backToList()
+                            else {
+                              detail.backToList()
+                              setInstallTab(null)
+                            }
                           }}
                         >
-                          {detailRoot}
+                          {installTab
+                            ? t(
+                                installTab === 'plugins'
+                                  ? 'settings.agent.title.plugins'
+                                  : 'settings.agent.title.skills',
+                              )
+                            : detailRoot}
                         </BreadcrumbLink>
                       </BreadcrumbItem>
                       <BreadcrumbSeparator />
+                      {installTab && isDetailOpen ? (
+                        <>
+                          <BreadcrumbItem>
+                            <BreadcrumbLink
+                              className="cursor-pointer text-foreground-subtlest"
+                              onClick={detail.requestLeave}
+                            >
+                              {t(
+                                installTab === 'plugins'
+                                  ? 'settings.agent.plugins.installPageTitle'
+                                  : 'settings.agent.skillMarket.open',
+                              )}
+                            </BreadcrumbLink>
+                          </BreadcrumbItem>
+                          <BreadcrumbSeparator />
+                        </>
+                      ) : null}
                       <BreadcrumbItem className="min-w-0">
                         {detail.view.kind === 'detail' && detail.view.sub ? (
                           <BreadcrumbLink
@@ -474,7 +453,13 @@ function SettingsPageContent({
                           </BreadcrumbLink>
                         ) : (
                           <BreadcrumbPage className="max-w-80 truncate">
-                            {detailLeaf}
+                            {installTab && !isDetailOpen
+                              ? t(
+                                  installTab === 'plugins'
+                                    ? 'settings.agent.plugins.installPageTitle'
+                                    : 'settings.agent.skillMarket.open',
+                                )
+                              : detailLeaf}
                           </BreadcrumbPage>
                         )}
                       </BreadcrumbItem>
@@ -492,8 +477,10 @@ function SettingsPageContent({
                   </Breadcrumb>
                 </div>
               ) : null}
-              <TransientScrollArea className={isDetailOpen ? 'min-h-0 flex-1' : 'h-svh'}>
-                <div className={cn('px-6', isDetailOpen ? 'pb-12 pt-10' : 'py-12')}>
+              <TransientScrollArea
+                className={isDetailOpen || installTab ? 'min-h-0 flex-1' : 'h-svh'}
+              >
+                <div className={cn('px-6', isDetailOpen || installTab ? 'pb-12 pt-10' : 'py-12')}>
                   <div
                     className={cn(APP_CONTENT_CONTAINER_CLASS, 'flex flex-col gap-8')}
                     data-settings-content
@@ -501,7 +488,7 @@ function SettingsPageContent({
                     {/* A detail page renders its own h1 (entry name or create
                         label); the category header would duplicate the
                         breadcrumb root above it. */}
-                    {!isDetailOpen && category.id !== 'agent-marketplace' ? (
+                    {!isDetailOpen && !installTab ? (
                       <header>
                         <h1 className="text-xl font-medium tracking-tight">
                           {t(category.labelKey)}
@@ -534,18 +521,9 @@ function SettingsPageContent({
                         onRemoveProject={onRemoveProject}
                       />
                     </SettingsCategory>
-                    <SettingsCategory isActive={category.id === 'agent-marketplace'}>
-                      {category.id === 'agent-marketplace' ? (
-                        <MarketplaceSettings
-                          key={marketplaceVisit.id}
-                          initialTab={marketplaceVisit.tab}
-                        />
-                      ) : null}
-                    </SettingsCategory>
-                    <SettingsCategory isActive={category.id === 'agent-plugins'}>
-                      <AgentPluginSettings
-                        onOpenMarketplace={() => selectCategory('agent-marketplace')}
-                      />
+                    {installTab ? <MarketplaceSettings initialTab={installTab} hideTabs /> : null}
+                    <SettingsCategory isActive={category.id === 'agent-plugins' && !installTab}>
+                      <AgentPluginSettings onOpenMarketplace={() => setInstallTab('plugins')} />
                     </SettingsCategory>
                     <SettingsCategory isActive={category.id === 'agent-subagents'}>
                       <AgentSubagentSettings />
@@ -553,11 +531,9 @@ function SettingsPageContent({
                     <SettingsCategory isActive={category.id === 'agent-mcp'}>
                       <AgentMcpSettings />
                     </SettingsCategory>
-                    <SettingsCategory isActive={category.id === 'agent-skills'}>
-                      {category.id === 'agent-skills' ? (
-                        <AgentSkillSettings
-                          onOpenMarketplace={() => selectCategory('agent-marketplace', 'skills')}
-                        />
+                    <SettingsCategory isActive={category.id === 'agent-skills' && !installTab}>
+                      {category.id === 'agent-skills' && !installTab ? (
+                        <AgentSkillSettings onOpenMarketplace={() => setInstallTab('skills')} />
                       ) : null}
                     </SettingsCategory>
                   </div>

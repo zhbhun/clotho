@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { AgentMarketplacePlugin } from '../../../services/claude/agent-config'
+import type { AgentMarketplacePlugin } from '../../services/claude/agent-config'
 import { catalogSources, orderCatalog, searchCatalog } from './install-catalog'
 
 const DIR = 'anthropic-plugin-directory'

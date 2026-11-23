@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { Spinner } from '@/shadcn/spinner'
 import type { AgentSkillDocument } from '@/shared/rpc'
 
-import { MarkdownRenderer } from '../../../components/markdown-renderer'
-import { readAgentSkill } from '../../../services/claude/agent-config'
+import { readAgentSkill } from '../../services/claude/agent-config'
+import { MarkdownRenderer } from '../markdown-renderer'
 
 export function SkillDetailPage({ name }: { name: string }) {
   const { t } = useTranslation()

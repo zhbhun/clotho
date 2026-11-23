@@ -4,13 +4,13 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/shadcn/button'
 import { toast } from '@/shadcn/toast'
 
+import { installAgentPlugin, refreshAgentMarketplace } from '../../services/claude/agent-config'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '../../../components/dropdown-menu'
-import { installAgentPlugin, refreshAgentMarketplace } from '../../../services/claude/agent-config'
+} from '../dropdown-menu'
 import { updateInstalled, updateMarketplaces } from './catalog-cache'
 
 /** Shared "changes apply to new sessions" hint after a plugin/marketplace change. */
