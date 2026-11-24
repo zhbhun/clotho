@@ -2,6 +2,7 @@ import { Puzzle, Settings, SquarePen } from 'lucide-react'
 import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { Separator } from '@/shadcn/separator'
 import {
   Sidebar,
   SidebarContent,
@@ -163,6 +164,8 @@ export function SessionSidebar({
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+
+        <Separator className="my-2" />
 
         {hasTabBar ? (
           <SessionListTabs
