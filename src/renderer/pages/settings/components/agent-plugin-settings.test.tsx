@@ -1068,7 +1068,7 @@ describe('InstallPluginPage', () => {
     ).toEqual(['superpowers@anthropic-plugin-directory', 'superpowers@superpowers-marketplace'])
   })
 
-  it('narrows the list through the source filter and restores All', async () => {
+  it('searches across sources without a source selector', async () => {
     mock.listAgentAvailablePlugins.mockResolvedValue([
       catalogEntry(),
       catalogEntry({
@@ -1086,14 +1086,7 @@ describe('InstallPluginPage', () => {
     expect(list.getByText('docs')).toBeInTheDocument()
     expect(list.getByText('formatter')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('combobox', { name: '来源' }))
-    await user.click(await screen.findByRole('option', { name: 'acme' }))
-    expect(list.getByText('formatter')).toBeInTheDocument()
-    expect(list.queryByText('docs')).toBeNull()
-
-    await user.click(screen.getByRole('combobox', { name: '来源' }))
-    await user.click(await screen.findByRole('option', { name: '全部' }))
-    expect(list.getByText('docs')).toBeInTheDocument()
+    expect(screen.queryByRole('combobox', { name: '来源' })).toBeNull()
   })
 
   it('finds same-name plugins in each source and installs the selected source', async () => {
@@ -1126,31 +1119,23 @@ describe('InstallPluginPage', () => {
     expect(list.queryByText('claude-plugins-official')).toBeNull()
     expect(list.queryByText('anthropic-plugin-directory')).toBeNull()
 
-    await user.click(screen.getByRole('combobox', { name: '来源' }))
-    await user.click(await screen.findByRole('option', { name: 'anthropic-plugin-directory' }))
-    expect(list.getByText('frontend-design')).toBeInTheDocument()
-    expect(document.querySelector('[data-install-tile]')).toHaveAttribute(
-      'data-plugin-id',
-      'frontend-design@anthropic-plugin-directory',
-    )
-    await user.click(list.getByRole('button', { name: '安装插件' }))
+    const directoryTile = document.querySelector(
+      '[data-plugin-id="frontend-design@anthropic-plugin-directory"]',
+    ) as HTMLElement
+    await user.click(within(directoryTile).getByRole('button', { name: '安装插件' }))
     await waitFor(() =>
       expect(mock.installAgentPlugin).toHaveBeenCalledWith(
         'frontend-design@anthropic-plugin-directory',
       ),
     )
 
-    await user.click(screen.getByRole('combobox', { name: '来源' }))
-    await user.click(await screen.findByRole('option', { name: 'claude-plugins-official' }))
-    expect(list.getByText('frontend-design')).toBeInTheDocument()
-    expect(document.querySelector('[data-install-tile]')).toHaveAttribute(
-      'data-plugin-id',
-      'frontend-design@claude-plugins-official',
-    )
-    expect(list.getByRole('button', { name: '更多操作' })).toBeInTheDocument()
+    const officialTile = document.querySelector(
+      '[data-plugin-id="frontend-design@claude-plugins-official"]',
+    ) as HTMLElement
+    expect(within(officialTile).getByRole('button', { name: '更多操作' })).toBeInTheDocument()
   })
 
-  it('applies search on top of the source filter', async () => {
+  it('filters the full catalog by search', async () => {
     mock.listAgentAvailablePlugins.mockResolvedValue([
       catalogEntry({ pluginId: 'alpha@acme', name: 'alpha', description: 'Alpha formats' }),
       catalogEntry({ pluginId: 'beta@acme', name: 'beta', description: 'Beta formats' }),
@@ -1167,8 +1152,6 @@ describe('InstallPluginPage', () => {
 
     const list = await findInstallList()
 
-    await user.click(screen.getByRole('combobox', { name: '来源' }))
-    await user.click(await screen.findByRole('option', { name: 'acme' }))
     await user.type(screen.getByPlaceholderText('搜索插件…'), 'alp')
 
     expect(list.getByText('alpha')).toBeInTheDocument()

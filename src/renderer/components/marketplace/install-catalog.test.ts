@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { AgentMarketplacePlugin } from '../../services/claude/agent-config'
-import { catalogSources, orderCatalog, searchCatalog } from './install-catalog'
+import { orderCatalog, searchCatalog } from './install-catalog'
 
 const DIR = 'anthropic-plugin-directory'
 
@@ -65,23 +65,6 @@ describe('orderCatalog', () => {
     expect(orderCatalog(input).map((e) => e.name)).toEqual(
       orderCatalog(structuredClone(input)).map((e) => e.name),
     )
-  })
-})
-
-describe('catalogSources', () => {
-  it('lists distinct sources in plain alphabetical order', () => {
-    const entries = [
-      entry('a', DIR),
-      entry('b', 'zhbhun'),
-      entry('c', 'aaa-market'),
-      entry('d', 'claude-plugins-official'),
-    ]
-    expect(catalogSources(entries)).toEqual([
-      'aaa-market',
-      DIR,
-      'claude-plugins-official',
-      'zhbhun',
-    ])
   })
 })
 

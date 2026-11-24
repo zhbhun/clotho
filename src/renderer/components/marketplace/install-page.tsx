@@ -5,14 +5,6 @@ import { useTranslation } from 'react-i18next'
 import { Badge } from '@/shadcn/badge'
 import { Button } from '@/shadcn/button'
 import { Input } from '@/shadcn/input'
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shadcn/select'
 import { Separator } from '@/shadcn/separator'
 import { toast } from '@/shadcn/toast'
 
@@ -21,7 +13,7 @@ import { requestFromDesktop } from '../../services/desktop/client'
 import { AgentEmpty } from './agent-shared'
 import { refreshCatalog, refreshInstalled, useCatalogCache } from './catalog-cache'
 import { type CatalogSection, catalogSections } from './catalog-sections'
-import { type CatalogEntry, catalogSources, orderCatalog, searchCatalog } from './install-catalog'
+import { type CatalogEntry, orderCatalog, searchCatalog } from './install-catalog'
 import { InstallGrid } from './install-grid'
 import {
   DetailSection,
@@ -45,7 +37,6 @@ export function InstallPluginPage() {
   const view = useSettingsDetailStore((state) => state.view)
   const openDetail = useSettingsDetailStore((state) => state.openDetail)
   const openSub = useSettingsDetailStore((state) => state.openSub)
-  const [sourceFilter, setSourceFilter] = useState('')
   const [search, setSearch] = useState('')
   const [renderLimit, setRenderLimit] = useState(INSTALL_PAGE_SIZE)
   const sentinelRef = useRef<HTMLDivElement | null>(null)
@@ -70,24 +61,12 @@ export function InstallPluginPage() {
   )
   const sections = useMemo(() => catalogSections(entries), [entries])
   const section = sections.find((entry) => entry.id === sectionId)
-  const groups = useMemo(
-    () =>
-      sections.flatMap((group) => {
-        const entries = sourceFilter
-          ? group.entries.filter((entry) => entry.marketplaceName === sourceFilter)
-          : group.entries
-        return entries.length ? [{ ...group, entries }] : []
-      }),
-    [sections, sourceFilter],
-  )
+  const groups = sections
   const rows = useMemo(() => {
     // Search always covers the full catalog, including excluded and unknown entries.
     const scope = sectionId && !isSearching ? (section?.entries ?? []) : entries
-    const filtered = sourceFilter
-      ? scope.filter((entry) => entry.marketplaceName === sourceFilter)
-      : scope
-    return searchCatalog(filtered, search)
-  }, [entries, sectionId, section, isSearching, search, sourceFilter])
+    return searchCatalog(scope, search)
+  }, [entries, sectionId, section, isSearching, search])
   const shown = useMemo(() => rows.slice(0, renderLimit), [rows, renderLimit])
   const visibleEntries = useMemo(
     () =>
@@ -95,13 +74,6 @@ export function InstallPluginPage() {
     [isGrouped, groups, shown],
   )
   const actions = useInstallActions(visibleEntries)
-  const sourceItems = useMemo(
-    () => [
-      { value: '', label: t('settings.agent.plugins.allSources') },
-      ...catalogSources(entries).map((market) => ({ value: market, label: market })),
-    ],
-    [entries, t],
-  )
   const hasMore = !isGrouped && rows.length > renderLimit
   const isEmpty = isGrouped ? groups.length === 0 : shown.length === 0
   const sectionTitle = (group: CatalogSection) =>
@@ -134,32 +106,7 @@ export function InstallPluginPage() {
 
   return (
     <section className="flex flex-col gap-4" data-install-page>
-      <div className="flex items-center justify-between gap-4">
-        <Select
-          items={sourceItems}
-          value={sourceFilter}
-          onValueChange={(value) => {
-            setSourceFilter(typeof value === 'string' ? value : '')
-            setRenderLimit(INSTALL_PAGE_SIZE)
-          }}
-        >
-          <SelectTrigger aria-label={t('settings.agent.plugins.source')} className="min-w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent
-            align="start"
-            alignItemWithTrigger={false}
-            className="w-fit min-w-(--anchor-width)"
-          >
-            <SelectGroup>
-              {sourceItems.map((item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+      <div className="flex items-center justify-end gap-4">
         <Input
           className="w-60"
           placeholder={t('settings.agent.plugins.searchPlaceholder')}

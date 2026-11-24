@@ -44,13 +44,3 @@ export function searchCatalog(entries: CatalogEntry[], search: string): CatalogE
   prefix.sort((a, b) => a.name.length - b.name.length)
   return [...exact, ...prefix, ...substring, ...other]
 }
-
-/**
- * Distinct sources in the full catalog for the filter dropdown,
- * plain alphabetical — the built-in directory sorts in like any marketplace.
- */
-export function catalogSources(
-  entries: Pick<AgentMarketplacePlugin, 'marketplaceName'>[],
-): string[] {
-  return [...new Set(entries.map((e) => e.marketplaceName))].sort((a, b) => (a < b ? -1 : 1))
-}
