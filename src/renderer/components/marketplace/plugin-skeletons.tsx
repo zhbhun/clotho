@@ -7,10 +7,7 @@ import { Skeleton } from '@/shadcn/skeleton'
  */
 function InstallTileSkeleton({ index }: { index: number }) {
   return (
-    <div
-      className="relative after:absolute after:bottom-0 after:left-14 after:right-2 after:border-border/60 lg:[&:nth-last-child(n+3)]:after:border-t max-lg:[&:not(:last-child)]:after:border-t flex min-w-0 items-center gap-3 px-2 py-2.5"
-      aria-hidden="true"
-    >
+    <div className="flex min-w-0 items-center gap-3 px-2 py-2.5" aria-hidden="true">
       <Skeleton className="size-9 shrink-0 rounded-lg" />
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <div className="flex items-center gap-2">
@@ -31,7 +28,7 @@ export function InstallPageSkeleton() {
   return (
     <div
       aria-hidden="true"
-      className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] max-lg:grid-cols-1 gap-x-6"
+      className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] max-lg:grid-cols-1 gap-x-6 gap-y-1"
       data-install-skeleton
     >
       {Array.from({ length: 12 }, (_, index) => (
