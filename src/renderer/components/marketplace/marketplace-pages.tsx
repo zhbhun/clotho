@@ -25,6 +25,7 @@ import {
   refreshAgentMarketplace,
   removeAgentMarketplace,
 } from '../../services/claude/agent-config'
+import { requestFromDesktop } from '../../services/desktop/client'
 import { tildePath } from '../../utils/path-display'
 import { AppAlertDialog, AppAlertDialogContent } from '../app-dialog'
 import { AgentEmpty } from './agent-shared'
@@ -108,6 +109,20 @@ function useInstalledPluginIds() {
   }, [installed, changes])
 }
 
+function openMarketplaceSource(marketplace: AgentMarketplaceInfo) {
+  const { source, repo, url, path } = marketplace.source
+  if (source === 'directory') {
+    return requestFromDesktop('appOpenDirectory', { path: path ?? marketplace.installLocation })
+  }
+  const href = repo
+    ? `https://github.com/${repo}`
+    : url
+        ?.replace(/^git@([^:]+):/, 'https://$1/')
+        .replace(/^ssh:\/\/git@/, 'https://')
+        .replace(/\.git$/, '')
+  if (href) return requestFromDesktop('appOpenLink', { href, projectPath: '' })
+}
+
 /** Second-level Marketplaces page: registered sources with Add and a `⋯` menu. */
 export function MarketplaceListPage() {
   const { t } = useTranslation()
@@ -177,17 +192,20 @@ export function MarketplaceListPage() {
             >
               <PluginAvatar name={marketplace.name} />
               <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <div className="truncate text-sm font-medium">{marketplace.name}</div>
+                <div
+                  className="max-w-full cursor-pointer self-start truncate text-sm font-medium hover:underline underline-offset-4"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    void openMarketplaceSource(marketplace)
+                  }}
+                >
+                  {marketplace.name}
+                </div>
                 {marketplace.description ? (
                   <div className="truncate text-xs text-foreground-subtlest">
                     {marketplace.description}
                   </div>
                 ) : null}
-                <div className="truncate text-[11px] text-foreground-subtlest">
-                  {[marketplace.source.source, marketplaceSource(marketplace)]
-                    .filter(Boolean)
-                    .join(' · ')}
-                </div>
               </div>
               <RowChevron />
             </div>

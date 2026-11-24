@@ -1150,6 +1150,10 @@ export type DesktopRPC = {
         params: { preferences: AppPreferences }
         response: AppPreferences
       }
+      appOpenDirectory: {
+        params: { path: string }
+        response: { opened: boolean }
+      }
       appOpenLink: {
         params: { href: string; projectPath: string }
         response: { opened: boolean }

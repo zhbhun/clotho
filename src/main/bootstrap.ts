@@ -327,6 +327,14 @@ export async function bootstrap() {
           applyNativeAppearance(saved.appearance.theme)
           return saved
         },
+        appOpenDirectory: async ({ path }) => {
+          const isDirectory = await fs.promises.stat(path).then(
+            (stat) => stat.isDirectory(),
+            () => false,
+          )
+          if (!isDirectory) return { opened: false }
+          return { opened: (await shell.openPath(path)) === '' }
+        },
         appOpenLink: (params) =>
           openLink(params, {
             openExternal: (url) => shell.openExternal(url),

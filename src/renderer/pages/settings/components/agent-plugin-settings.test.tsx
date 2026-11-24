@@ -22,6 +22,7 @@ import { MarketplaceSettings } from '../../../components/marketplace/marketplace
 import { useSettingsDetailStore } from '../../../components/marketplace/settings-detail-store'
 import { appI18n } from '../../../i18n/runtime'
 import * as agentConfig from '../../../services/claude/agent-config'
+import { requestFromDesktop } from '../../../services/desktop/client'
 import { ShortcutRuntimeProvider, shortcutRuntime } from '../../../services/shortcuts/runtime'
 import { AgentPluginSettings } from './agent-plugin-settings'
 
@@ -124,9 +125,17 @@ describe('MarketplaceListPage cache', () => {
     expect(await screen.findByText('Development tools')).toBeInTheDocument()
     const tiles = view.container.querySelectorAll('[data-marketplace-tile]')
     expect(tiles).toHaveLength(2)
-    expect(within(tiles[0] as HTMLElement).getByText('github · acme/plugins')).toBeInTheDocument()
-    expect(within(tiles[1] as HTMLElement).getByText('directory · /opt/local')).toBeInTheDocument()
+    expect(screen.queryByText('github · acme/plugins')).not.toBeInTheDocument()
+    expect(screen.queryByText('directory · /opt/local')).not.toBeInTheDocument()
+    await user.click(within(tiles[0] as HTMLElement).getByText('acme'))
+    expect(requestFromDesktop).toHaveBeenCalledWith('appOpenLink', {
+      href: 'https://github.com/acme/plugins',
+      projectPath: '',
+    })
     await user.click(within(tiles[1] as HTMLElement).getByText('local'))
+    expect(requestFromDesktop).toHaveBeenCalledWith('appOpenDirectory', { path: '/opt/local' })
+    expect(useSettingsDetailStore.getState().view).toEqual({ kind: 'list' })
+    await user.click(tiles[1] as HTMLElement)
     expect(useSettingsDetailStore.getState().view).toMatchObject({
       kind: 'detail',
       file: 'local',
@@ -134,7 +143,7 @@ describe('MarketplaceListPage cache', () => {
     })
   })
 
-  it('shows a directory marketplace source in the list and detail', async () => {
+  it('keeps the directory marketplace source in the detail only', async () => {
     mock.listAgentMarketplaces.mockResolvedValue([
       {
         name: 'local',
@@ -143,7 +152,8 @@ describe('MarketplaceListPage cache', () => {
       },
     ])
     const view = renderWithProviders(<MarketplaceListPage />)
-    expect(await screen.findByText('directory · ~/projects/local')).toBeInTheDocument()
+    expect(await screen.findByText('local')).toBeInTheDocument()
+    expect(screen.queryByText('directory · ~/projects/local')).not.toBeInTheDocument()
     view.unmount()
     renderWithProviders(<MarketplaceDetailPage marketplaceName="local" />)
     expect(await screen.findByText('~/projects/local')).toBeInTheDocument()
@@ -161,10 +171,10 @@ describe('MarketplaceListPage cache', () => {
       .mockResolvedValueOnce([marketplace])
       .mockReturnValueOnce(new Promise(() => {}))
     const view = renderWithProviders(<MarketplaceListPage />)
-    expect(await screen.findByText('github · acme/plugins')).toBeInTheDocument()
+    expect(await screen.findByText('acme')).toBeInTheDocument()
     view.unmount()
     renderWithProviders(<MarketplaceListPage />)
-    expect(screen.getByText('github · acme/plugins')).toBeInTheDocument()
+    expect(screen.getByText('acme')).toBeInTheDocument()
     expect(screen.getByText('Development tools')).toBeInTheDocument()
     expect(document.querySelector('[data-install-skeleton]')).toBeNull()
     expect(mock.listAgentMarketplaces).toHaveBeenCalledTimes(2)
