@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -39,7 +39,10 @@ const snapshot: PublishedSkillBoard = {
 beforeEach(async () => {
   await appI18n.changeLanguage('en')
   vi.resetAllMocks()
-  mock.getPublishedSkillBoard.mockResolvedValue(snapshot)
+  useSettingsDetailStore.setState({ view: { kind: 'list' }, leaf: '', subLeaf: '' })
+  mock.getPublishedSkillBoard.mockImplementation(async (chart) =>
+    chart === 'best-100' ? snapshot : { syncedAt: 1000, rows: [] },
+  )
   mock.listAgentSkills.mockResolvedValue([])
 })
 
@@ -56,30 +59,94 @@ function search(value: string) {
 }
 
 describe('SkillMarketplace', () => {
-  it('keeps repository rankings separate from global installable search results', async () => {
-    const user = userEvent.setup()
-    mock.getPublishedSkillBoard.mockResolvedValue({
+  it('previews ten per chart with independent ranks and opens the full chart', async () => {
+    mock.getPublishedSkillBoard.mockImplementation(async () => ({
       syncedAt: 1000,
-      rows: [
-        {
-          rank: 1,
-          name: 'example',
-          source: 'GitHub',
-          metric: 'stars',
-          value: '1200',
-          installable: false,
-          installs: '',
-        },
-      ],
+      rows: Array.from({ length: 12 }, (_, index) => ({
+        ...snapshot.rows[0],
+        name: `skill-${index}`,
+        rank: index + 1,
+      })),
+    }))
+    const user = userEvent.setup()
+    const view = renderMarket()
+    await screen.findAllByText('skill-0')
+    const charts = [...view.container.querySelectorAll('[data-skill-chart]')]
+    expect(charts).toHaveLength(8)
+    for (const chart of charts) {
+      expect(chart.querySelectorAll('[data-skill-tile]')).toHaveLength(10)
+      const tile = chart.querySelector('[data-skill-tile]')!
+      expect(tile.children[1]).toHaveAttribute('data-skill-rank')
+      expect(tile.children[1]).toHaveTextContent('1')
+    }
+    await user.click(within(charts[1] as HTMLElement).getByRole('button', { name: 'View all' }))
+    expect(useSettingsDetailStore.getState().view).toMatchObject({
+      page: 'skill-section',
+      file: 'top-installs',
     })
+    expect(view.container.querySelectorAll('[data-skill-chart]')).toHaveLength(1)
+    expect(view.container.querySelectorAll('[data-skill-tile]')).toHaveLength(12)
+    act(() => useSettingsDetailStore.getState().requestLeave())
+    expect(view.container.querySelectorAll('[data-skill-chart]')).toHaveLength(8)
+  })
+
+  it('shows other charts when one board fails and shares installation state between groups', async () => {
+    mock.getPublishedSkillBoard.mockImplementation(async (chart) => {
+      if (chart === 'top-repos') throw new Error('offline')
+      return snapshot
+    })
+    mock.installMarketSkill.mockResolvedValue(undefined)
+    renderMarket()
+    const buttons = await screen.findAllByRole('button', { name: /Install ranked/ })
+    expect(buttons).toHaveLength(7)
+    fireEvent.click(buttons[0])
+    await waitFor(() => expect(screen.getAllByText('Installed')).toHaveLength(7))
+    expect(mock.installMarketSkill).toHaveBeenCalledTimes(1)
+    expect(screen.getByText('Rankings unavailable')).toBeInTheDocument()
+  })
+
+  it('returns local skill details to their originating chart', async () => {
+    mock.listAgentSkills.mockResolvedValue([{ name: 'ranked', description: '' }])
+    const user = userEvent.setup()
+    renderMarket()
+    const menu = await screen.findByRole('button', { name: /More actions/ })
+    await user.click(menu)
+    await user.click(await screen.findByRole('menuitem', { name: 'Open' }))
+    expect(useSettingsDetailStore.getState().view).toMatchObject({
+      page: 'skill-section',
+      file: 'best-100',
+      sub: { page: 'skill-detail', file: 'ranked' },
+    })
+    act(() => useSettingsDetailStore.getState().requestLeave())
+    expect(useSettingsDetailStore.getState().view).toMatchObject({
+      page: 'skill-section',
+      file: 'best-100',
+      sub: null,
+    })
+  })
+
+  it('keeps repository rankings separate from global installable search results', async () => {
+    mock.getPublishedSkillBoard.mockImplementation(async (chart) => ({
+      syncedAt: 1000,
+      rows:
+        chart === 'top-repos'
+          ? [
+              {
+                rank: 1,
+                name: 'example',
+                source: 'GitHub',
+                metric: 'stars',
+                value: '1200',
+                installable: false,
+                installs: '',
+              },
+            ]
+          : [],
+    }))
     mock.findMarketSkills.mockResolvedValue([offList])
     renderMarket()
-    expect(screen.getByRole('combobox')).toHaveTextContent('Best 100')
-    await user.click(screen.getByRole('combobox'))
-    expect(await screen.findAllByRole('option')).toHaveLength(8)
-    expect(screen.queryByRole('option', { name: 'Official vendors' })).toBeNull()
-    expect(screen.getByRole('option', { name: 'Official 100' })).toBeVisible()
-    await user.click(screen.getByRole('option', { name: 'Top repositories' }))
+    expect(screen.queryByRole('combobox')).toBeNull()
+    expect(screen.getByRole('heading', { name: 'Official 100' })).toBeInTheDocument()
     expect(await screen.findByText('1,200 stars')).toBeInTheDocument()
     expect(mock.getPublishedSkillBoard).toHaveBeenCalledWith('top-repos', false)
     expect(screen.queryByRole('button', { name: /Install example/ })).not.toBeInTheDocument()
@@ -127,7 +194,7 @@ describe('SkillMarketplace', () => {
       finishOldSearch = resolve
     })
     mock.getPublishedSkillBoard.mockImplementation(async (_chart, cachedOnly) => {
-      if (cachedOnly) return snapshot
+      if (cachedOnly) return _chart === 'best-100' ? snapshot : { syncedAt: 1000, rows: [] }
       throw new Error('offline')
     })
     mock.findMarketSkills.mockReturnValueOnce(oldSearch).mockResolvedValueOnce([offList])

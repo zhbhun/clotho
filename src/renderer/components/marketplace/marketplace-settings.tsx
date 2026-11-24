@@ -27,6 +27,14 @@ export function MarketplaceSettings({
   let detailContent: ReactNode = null
   if (view.kind === 'detail' && view.categoryId === 'agent-marketplace') {
     if (view.page === 'skills' && view.file) detailContent = <SkillDetailPage name={view.file} />
+    if (view.page === 'skill-section') {
+      detailContent =
+        view.sub?.page === 'skill-detail' && view.sub.file ? (
+          <SkillDetailPage name={view.sub.file} />
+        ) : (
+          <SkillMarketplace />
+        )
+    }
     if (view.page === 'install' && view.file)
       detailContent = <InstallPluginDetailPage pluginId={view.file} />
     if (view.page === 'install-section') {

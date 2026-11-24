@@ -14,9 +14,10 @@ export type SettingsCategoryId =
   | 'agent-skills'
 
 /** Second-level pages reachable from a category list. */
-export type DetailPage = 'entry' | 'marketplaces' | 'install' | 'install-section' | 'skills'
+export type DetailPage =
+  'entry' | 'marketplaces' | 'install' | 'install-section' | 'skill-section' | 'skills'
 /** Third-level subpages openable under a second-level page. */
-export type DetailSubPage = 'add' | 'market-detail' | 'install-detail'
+export type DetailSubPage = 'add' | 'market-detail' | 'install-detail' | 'skill-detail'
 
 /**
  * Which view the settings content pane shows: a category's list, or a detail

@@ -27,7 +27,7 @@ function ExtensionsContent() {
           <Button className="app-region-no-drag" variant="ghost" onClick={detail.requestLeave}>
             <ArrowLeft />
             {detail.view.kind === 'detail' &&
-            detail.view.page === 'install-section' &&
+            (detail.view.page === 'install-section' || detail.view.page === 'skill-section') &&
             detail.view.sub
               ? detail.leaf
               : t('workbench.nav.extensions')}

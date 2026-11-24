@@ -1,49 +1,22 @@
-import { Download, Plus } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { Badge } from '@/shadcn/badge'
 import { Button } from '@/shadcn/button'
 import { Input } from '@/shadcn/input'
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shadcn/select'
-import { Spinner } from '@/shadcn/spinner'
+import { Separator } from '@/shadcn/separator'
 import { toast } from '@/shadcn/toast'
-import {
-  type MarketSkill,
-  PUBLISHED_SKILL_CHARTS,
-  type PublishedSkillChart,
-  type PublishedSkillRow,
-} from '@/shared/rpc'
+import { type MarketSkill, PUBLISHED_SKILL_CHARTS } from '@/shared/rpc'
 
 import {
   findMarketSkills,
   installMarketSkill,
   listAgentSkills,
 } from '../../services/claude/agent-config'
-import { requestFromDesktop } from '../../services/desktop/client'
-import { PluginAvatar } from './plugin-avatar'
 import { InstallPageSkeleton } from './plugin-skeletons'
 import { useSettingsDetailStore } from './settings-detail-store'
-import { SkillActions } from './skill-actions'
+import { ExternalLink, SkillGrid, directoryName } from './skill-grid'
 import { useSkillRankings } from './use-skill-rankings'
-
-// skills CLI 1.8.1 uses this directory name when installing a selector.
-function directoryName(name: string) {
-  return (
-    name
-      .toLowerCase()
-      .replace(/[^a-z0-9._]+/g, '-')
-      .replace(/^[.-]+|[.-]+$/g, '')
-      .slice(0, 255) || 'unnamed-skill'
-  )
-}
 
 function useSkillSearch(query: string) {
   const [response, setResponse] = useState<{ query: string; rows: MarketSkill[] | null }>()
@@ -74,37 +47,20 @@ function useSkillSearch(query: string) {
   }
 }
 
-function ExternalLink({
-  href,
-  children,
-  label,
-}: {
-  href: string
-  children: string
-  label?: string
-}) {
-  return (
-    <a
-      className="cursor-pointer hover:underline"
-      href={href}
-      aria-label={label}
-      onClick={(event) => {
-        event.preventDefault()
-        void requestFromDesktop('appOpenLink', { href, projectPath: '' })
-      }}
-    >
-      {children}
-    </a>
-  )
-}
-
 export function SkillMarketplace() {
   const { t, i18n } = useTranslation()
   const openDetail = useSettingsDetailStore((state) => state.openDetail)
-  const [view, setView] = useState<PublishedSkillChart>('best-100')
+  const view = useSettingsDetailStore((state) => state.view)
+  const openSub = useSettingsDetailStore((state) => state.openSub)
+  const chart =
+    view.kind === 'detail' &&
+    view.categoryId === 'agent-marketplace' &&
+    view.page === 'skill-section'
+      ? PUBLISHED_SKILL_CHARTS.find((chart) => chart === view.file)
+      : undefined
   const [input, setInput] = useState('')
   const query = input.trim()
-  const ranks = useSkillRankings(view)
+  const ranks = useSkillRankings()
   const search = useSkillSearch(query)
   const [installedSources, setInstalledSources] = useState<Map<string, string | undefined>>(
     new Map(),
@@ -153,31 +109,28 @@ export function SkillMarketplace() {
     }
   }
 
-  const options = PUBLISHED_SKILL_CHARTS.map((value) => ({
-    value,
-    label: t(`settings.agent.skillMarket.chart.${value}`),
-  }))
-  const rows: (MarketSkill | PublishedSkillRow)[] | null | undefined = query
-    ? search.rows
-    : ranks.snapshot?.rows
-  const failed = query ? search.rows === null : ranks.failed
+  const gridActions = {
+    installedSources,
+    pending,
+    onInstall: handleInstall,
+    onOpen(directory: string) {
+      if (chart) openSub('agent-marketplace', 'skill-detail', directory, directory)
+      else openDetail('agent-marketplace', directory, directory, 'skills')
+    },
+    onUninstall(directory: string) {
+      setInstalledSources((current) => {
+        const next = new Map(current)
+        next.delete(directory)
+        return next
+      })
+    },
+  }
+  const charts = chart ? [chart] : PUBLISHED_SKILL_CHARTS
+  const syncedAt = Math.min(...Object.values(ranks.snapshots).map((board) => board.syncedAt))
+
   return (
-    <section className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-4">
-        <Select items={options} value={view} onValueChange={(value) => value && setView(value)}>
-          <SelectTrigger className="min-w-40" aria-label={t('settings.agent.skillMarket.ranking')}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent align="start" alignItemWithTrigger={false}>
-            <SelectGroup>
-              {options.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+    <section className="flex flex-col gap-4" data-skill-marketplace>
+      <div className="flex items-center justify-end gap-4">
         <Input
           className="w-60"
           type="search"
@@ -186,106 +139,94 @@ export function SkillMarketplace() {
           placeholder={t('settings.agent.skillMarket.search')}
         />
       </div>
-      {failed && (
-        <div className="flex items-center justify-center gap-2 text-sm text-foreground-subtle">
-          {t(
-            query
-              ? 'settings.agent.skillMarket.searchFailed'
-              : 'settings.agent.skillMarket.unavailable',
-          )}
-          <Button variant="outline" size="sm" onClick={query ? search.retry : ranks.retry}>
-            {t('settings.agent.skillMarket.retry')}
-          </Button>
-        </div>
-      )}
-      {!rows ? (
-        !failed && <InstallPageSkeleton />
-      ) : rows.length === 0 ? (
-        <div className="py-8 text-center text-sm text-foreground-subtle">
-          {t('settings.agent.skillMarket.noResults')}
-        </div>
+      {query ? (
+        search.rows === undefined ? (
+          <InstallPageSkeleton />
+        ) : search.rows === null ? (
+          <div className="flex items-center justify-center gap-2 text-sm text-foreground-subtle">
+            {t('settings.agent.skillMarket.searchFailed')}
+            <Button variant="outline" size="sm" onClick={search.retry}>
+              {t('settings.agent.skillMarket.retry')}
+            </Button>
+          </div>
+        ) : search.rows.length === 0 ? (
+          <div className="py-8 text-center text-sm text-foreground-subtle">
+            {t('settings.agent.skillMarket.noResults')}
+          </div>
+        ) : (
+          <SkillGrid rows={search.rows} {...gridActions} />
+        )
       ) : (
-        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-x-6 gap-y-1 max-lg:grid-cols-1">
-          {rows.map((skill) => {
-            const { source, name, installs } = skill
-            const entry = 'metric' in skill ? skill : undefined
-            const directory = directoryName(name)
-            const installed =
-              installedSources.get(directory)?.toLowerCase() === source.toLowerCase()
-            const nameInUse = installedSources.has(directory)
+        <div className="flex flex-col gap-8">
+          {charts.map((id) => {
+            const board = ranks.snapshots[id]
             return (
-              <div
-                className="flex min-w-0 items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/50"
-                key={entry ? view + ':' + entry.rank : source + '@' + name}
-              >
-                <PluginAvatar name={name} />
-                <div className="flex min-w-0 flex-1 flex-col gap-1">
-                  <div className="truncate text-sm font-medium">
-                    {entry && (
-                      <span className="mr-2 font-normal text-foreground-subtlest">
-                        #{entry.rank}
-                      </span>
-                    )}
-                    {skill.url ? <ExternalLink href={skill.url}>{name}</ExternalLink> : name}
-                  </div>
-                  <div className="flex items-center gap-2 text-[11px] tabular-nums text-foreground-subtlest">
-                    <span className="truncate">{source}</span>
-                    {entry?.value && (
-                      <span className="shrink-0">
-                        {t(`settings.agent.skillMarket.metric.${entry.metric}`, {
-                          value: /^-?\d+(?:\.\d+)?$/.test(entry.value)
-                            ? Number(entry.value).toLocaleString(i18n.language)
-                            : entry.value,
-                        })}
-                      </span>
-                    )}
-                    {installs && (
-                      <>
-                        <span aria-hidden className="text-foreground-subtlest/50">
-                          |
-                        </span>
-                        <span className="flex shrink-0 items-center gap-1">
-                          <Download className="size-3" />
-                          {/^\d+$/.test(installs)
-                            ? Number(installs).toLocaleString(i18n.language)
-                            : installs}
-                        </span>
-                      </>
+              <section className="flex flex-col gap-2" data-skill-chart={id} key={id}>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-1 px-2">
+                    <h2 className="text-lg font-semibold tracking-tight">
+                      {t(`settings.agent.skillMarket.chart.${id}`)}
+                    </h2>
+                    {!chart && board && board.rows.length > 10 && (
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        className="text-foreground-subtlest/60"
+                        aria-label={t('settings.agent.plugins.viewAll')}
+                        onClick={() =>
+                          openDetail(
+                            'agent-marketplace',
+                            id,
+                            t(`settings.agent.skillMarket.chart.${id}`),
+                            'skill-section',
+                          )
+                        }
+                      >
+                        <ChevronRight className="size-4" />
+                      </Button>
                     )}
                   </div>
+                  <Separator />
                 </div>
-                {entry && !entry.installable ? null : installed ? (
-                  <Badge variant="secondary">{t('settings.agent.plugins.installed')}</Badge>
-                ) : nameInUse ? (
-                  <SkillActions
-                    name={directory}
-                    onOpen={() => openDetail('agent-marketplace', directory, directory, 'skills')}
-                    onUninstall={() =>
-                      setInstalledSources((current) => {
-                        const next = new Map(current)
-                        next.delete(directory)
-                        return next
-                      })
-                    }
-                  />
-                ) : (
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="text-foreground-subtlest"
-                    aria-label={t('settings.agent.skillMarket.install', { name })}
-                    disabled={pending.has(directory)}
-                    onClick={() => void handleInstall(skill)}
-                  >
-                    {pending.has(directory) ? <Spinner /> : <Plus />}
-                  </Button>
+                {ranks.failed.has(id) && (
+                  <div className="flex items-center justify-center gap-2 text-sm text-foreground-subtle">
+                    {t('settings.agent.skillMarket.unavailable')}
+                    <Button variant="outline" size="sm" onClick={ranks.retry}>
+                      {t('settings.agent.skillMarket.retry')}
+                    </Button>
+                  </div>
                 )}
-              </div>
+                {board ? (
+                  board.rows.length ? (
+                    <SkillGrid
+                      rows={chart ? board.rows : board.rows.slice(0, 10)}
+                      {...gridActions}
+                      onOpen={(directory) => {
+                        if (!chart) {
+                          openDetail(
+                            'agent-marketplace',
+                            id,
+                            t(`settings.agent.skillMarket.chart.${id}`),
+                            'skill-section',
+                          )
+                        }
+                        openSub('agent-marketplace', 'skill-detail', directory, directory)
+                      }}
+                    />
+                  ) : (
+                    <div className="py-8 text-center text-sm text-foreground-subtle">
+                      {t('settings.agent.skillMarket.noResults')}
+                    </div>
+                  )
+                ) : (
+                  !ranks.failed.has(id) && <InstallPageSkeleton />
+                )}
+              </section>
             )
           })}
         </div>
       )}
-      {!query && ranks.snapshot && (
+      {!query && Number.isFinite(syncedAt) && (
         <footer className="px-2 text-[11px] text-foreground-subtlest">
           <ExternalLink
             href="https://github.com/LinklyAI/best-skills"
@@ -299,7 +240,7 @@ export function SkillMarketplace() {
           <ExternalLink href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</ExternalLink>
           {' · '}
           {t('settings.agent.skillMarket.lastSync', {
-            time: new Date(ranks.snapshot.syncedAt).toLocaleString(i18n.language),
+            time: new Date(syncedAt).toLocaleString(i18n.language),
           })}
         </footer>
       )}

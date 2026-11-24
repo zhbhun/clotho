@@ -1,39 +1,46 @@
 import { useEffect, useState } from 'react'
 
-import type { PublishedSkillBoard, PublishedSkillChart } from '@/shared/rpc'
+import {
+  PUBLISHED_SKILL_CHARTS,
+  type PublishedSkillBoard,
+  type PublishedSkillChart,
+} from '@/shared/rpc'
 
 import { getPublishedSkillBoard } from '../../services/claude/agent-config'
 
-export function useSkillRankings(view: PublishedSkillChart) {
-  const [snapshot, setSnapshot] = useState<PublishedSkillBoard & { view: PublishedSkillChart }>()
-  const [failed, setFailed] = useState<PublishedSkillChart>()
+export function useSkillRankings() {
+  const [snapshots, setSnapshots] = useState<
+    Partial<Record<PublishedSkillChart, PublishedSkillBoard>>
+  >({})
+  const [failed, setFailed] = useState<Set<PublishedSkillChart>>(new Set())
   const [attempt, setAttempt] = useState(0)
   useEffect(() => {
     let active = true
-    async function load() {
-      const cached = await getPublishedSkillBoard(view, true)
-      if (!active) return
-      if (cached) setSnapshot({ view, ...cached })
-      const current = await getPublishedSkillBoard(view, false)
-      if (!active) return
-      if (current) {
-        setSnapshot({ view, ...current })
-        setFailed(undefined)
-      } else setFailed(view)
+    // Boards load independently so a slow or unavailable chart cannot block the others.
+    for (const chart of PUBLISHED_SKILL_CHARTS) {
+      async function load() {
+        const cached = await getPublishedSkillBoard(chart, true)
+        if (!active) return
+        if (cached) setSnapshots((current) => ({ ...current, [chart]: cached }))
+        const current = await getPublishedSkillBoard(chart, false)
+        if (!active) return
+        if (current) setSnapshots((boards) => ({ ...boards, [chart]: current }))
+        else setFailed((charts) => new Set(charts).add(chart))
+      }
+      void load().catch(() => {
+        if (active) setFailed((charts) => new Set(charts).add(chart))
+      })
     }
-    void load().catch(() => {
-      if (active) setFailed(view)
-    })
     return () => {
       active = false
     }
-  }, [view, attempt])
+  }, [attempt])
 
   return {
-    snapshot: snapshot?.view === view ? snapshot : undefined,
-    failed: failed === view,
+    snapshots,
+    failed,
     retry() {
-      setFailed(undefined)
+      setFailed(new Set())
       setAttempt((n) => n + 1)
     },
   }
