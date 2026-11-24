@@ -2,7 +2,7 @@ import { Skeleton } from '@/shadcn/skeleton'
 
 /**
  * Store-grid tile skeleton for the Install page, mirroring the real tile:
- * letter avatar, name/description/source lines, and the trailing action.
+ * letter avatar, name/count line, description, and the trailing action.
  * `index` varies line widths so rows don't read as a uniform grid.
  */
 function InstallTileSkeleton({ index }: { index: number }) {
@@ -10,11 +10,13 @@ function InstallTileSkeleton({ index }: { index: number }) {
     <div className="flex min-w-0 items-center gap-3 px-2 py-2.5" aria-hidden="true">
       <Skeleton className="size-9 shrink-0 rounded-lg" />
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-        <Skeleton
-          className={`h-4 ${index % 3 === 0 ? 'w-24' : index % 3 === 1 ? 'w-32' : 'w-28'}`}
-        />
+        <div className="flex items-center gap-2">
+          <Skeleton
+            className={`h-4 ${index % 3 === 0 ? 'w-24' : index % 3 === 1 ? 'w-32' : 'w-28'}`}
+          />
+          <Skeleton className="h-3 w-10" />
+        </div>
         <Skeleton className={`h-3 ${index % 2 === 0 ? 'w-52' : 'w-44'}`} />
-        <Skeleton className={`h-3 ${index % 2 === 0 ? 'w-36' : 'w-28'}`} />
       </div>
       <Skeleton className="size-8 shrink-0 rounded-lg" />
     </div>

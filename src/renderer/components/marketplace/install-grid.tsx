@@ -37,34 +37,29 @@ export function InstallGrid({
           <div
             className="flex min-w-0 items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/50"
             data-install-tile
+            data-plugin-id={entry.pluginId}
             key={entry.pluginId}
             onClick={() => onDetails(entry)}
           >
+            <PluginAvatar name={entry.name} />
             {isRanked ? (
               <span className="w-6 shrink-0 text-center text-sm font-medium tabular-nums text-foreground-subtlest">
                 {index + 1}
               </span>
             ) : null}
-            <PluginAvatar name={entry.name} />
             <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <div className="truncate text-sm font-medium">{entry.name}</div>
+              <div className="flex min-w-0 items-center gap-2">
+                <div className="truncate text-sm font-medium">{entry.name}</div>
+                {typeof entry.installCount === 'number' ? (
+                  <span className="flex shrink-0 items-center gap-1 text-[11px] tabular-nums text-foreground-subtlest">
+                    <Download className="size-3" aria-hidden />
+                    {entry.installCount.toLocaleString()}
+                  </span>
+                ) : null}
+              </div>
               {entry.description ? (
                 <div className="truncate text-xs text-foreground-subtlest">{entry.description}</div>
               ) : null}
-              <div className="flex min-w-0 items-center gap-2 text-[11px] tabular-nums text-foreground-subtlest">
-                <span className="truncate">{entry.marketplaceName}</span>
-                {typeof entry.installCount === 'number' ? (
-                  <>
-                    <span aria-hidden className="text-foreground-subtlest/50">
-                      |
-                    </span>
-                    <span className="flex shrink-0 items-center gap-1">
-                      <Download className="size-3" aria-hidden />
-                      {entry.installCount.toLocaleString()}
-                    </span>
-                  </>
-                ) : null}
-              </div>
             </div>
             {isInstalled ? (
               <div className="shrink-0" onClick={(event) => event.stopPropagation()}>

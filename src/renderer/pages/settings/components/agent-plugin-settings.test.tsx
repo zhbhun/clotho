@@ -1049,8 +1049,13 @@ describe('InstallPluginPage', () => {
     expect(list.getAllByText('superpowers')).toHaveLength(2)
     expect(list.getByRole('button', { name: '更多操作' })).toBeInTheDocument()
     expect(list.getByRole('button', { name: '安装插件' })).toBeInTheDocument()
-    expect(list.getByText('superpowers-marketplace')).toBeInTheDocument()
-    expect(list.getByText('anthropic-plugin-directory')).toBeInTheDocument()
+    expect(list.queryByText('superpowers-marketplace')).toBeNull()
+    expect(list.queryByText('anthropic-plugin-directory')).toBeNull()
+    expect(
+      [...document.querySelectorAll('[data-install-tile]')].map((tile) =>
+        tile.getAttribute('data-plugin-id'),
+      ),
+    ).toEqual(['superpowers@anthropic-plugin-directory', 'superpowers@superpowers-marketplace'])
   })
 
   it('narrows the list through the source filter and restores All', async () => {
@@ -1108,13 +1113,16 @@ describe('InstallPluginPage', () => {
     const list = await findInstallList()
     await user.type(screen.getByPlaceholderText('搜索插件…'), 'frontend-de')
     expect(list.getAllByText('frontend-design')).toHaveLength(2)
-    expect(list.getByText('claude-plugins-official')).toBeInTheDocument()
-    expect(list.getByText('anthropic-plugin-directory')).toBeInTheDocument()
+    expect(list.queryByText('claude-plugins-official')).toBeNull()
+    expect(list.queryByText('anthropic-plugin-directory')).toBeNull()
 
     await user.click(screen.getByRole('combobox', { name: '来源' }))
     await user.click(await screen.findByRole('option', { name: 'anthropic-plugin-directory' }))
     expect(list.getByText('frontend-design')).toBeInTheDocument()
-    expect(list.getByText('anthropic-plugin-directory')).toBeInTheDocument()
+    expect(document.querySelector('[data-install-tile]')).toHaveAttribute(
+      'data-plugin-id',
+      'frontend-design@anthropic-plugin-directory',
+    )
     await user.click(list.getByRole('button', { name: '安装插件' }))
     await waitFor(() =>
       expect(mock.installAgentPlugin).toHaveBeenCalledWith(
@@ -1125,7 +1133,10 @@ describe('InstallPluginPage', () => {
     await user.click(screen.getByRole('combobox', { name: '来源' }))
     await user.click(await screen.findByRole('option', { name: 'claude-plugins-official' }))
     expect(list.getByText('frontend-design')).toBeInTheDocument()
-    expect(list.getByText('claude-plugins-official')).toBeInTheDocument()
+    expect(document.querySelector('[data-install-tile]')).toHaveAttribute(
+      'data-plugin-id',
+      'frontend-design@claude-plugins-official',
+    )
     expect(list.getByRole('button', { name: '更多操作' })).toBeInTheDocument()
   })
 
@@ -1188,8 +1199,8 @@ describe('InstallPluginPage', () => {
 
     const tiles = [...document.querySelectorAll('[data-install-tile]')]
     expect(tiles).toHaveLength(4)
-    expect(tiles[0]).toHaveTextContent('claude-plugins-official')
-    expect(tiles[1]).toHaveTextContent('anthropic-plugin-directory')
+    expect(tiles[0]).toHaveAttribute('data-plugin-id', 'superpowers@claude-plugins-official')
+    expect(tiles[1]).toHaveAttribute('data-plugin-id', 'superpowers@anthropic-plugin-directory')
     expect(tiles[2]).toHaveTextContent('superpowers-extra')
     expect(tiles[3]).toHaveTextContent('related')
   })
