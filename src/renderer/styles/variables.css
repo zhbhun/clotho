@@ -158,7 +158,7 @@
   --sidebar-active: var(--sidebar-accent);
 
   /* A translucent divider adapts to the surface behind it. */
-  --divider: oklch(0 0 0 / 7%);
+  --divider: oklch(0 0 0 / 5%);
 
   /* Chat tool-card borders land on #ededed too; --chat-reply (#fafafa) sits
      closer to it, so the mix is proportionally smaller. */
