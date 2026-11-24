@@ -183,7 +183,7 @@ export function MarketplaceListPage() {
         >
           {marketplaces.map((marketplace) => (
             <div
-              className="flex min-w-0 cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/50"
+              className="relative after:absolute after:bottom-0 after:left-14 after:right-2 after:border-border/60 lg:[&:nth-last-child(n+3)]:after:border-t max-lg:[&:not(:last-child)]:after:border-t flex min-w-0 cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/50"
               data-marketplace-tile
               key={marketplace.name}
               onClick={() =>

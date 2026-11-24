@@ -1,3 +1,4 @@
+import { ChevronRight } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -179,32 +180,36 @@ export function InstallPluginPage() {
       ) : (
         <div className="flex flex-col gap-8" data-install-list>
           {isGrouped ? (
-            groups.map((group, index) => (
+            groups.map((group) => (
               <section
-                className="flex flex-col gap-4"
+                className="flex flex-col gap-2"
                 data-catalog-section={group.id}
                 key={group.id}
               >
-                {index > 0 ? <Separator /> : null}
-                <div className="flex items-center justify-between gap-4 px-2">
-                  <h2 className="text-lg font-semibold tracking-tight">{sectionTitle(group)}</h2>
-                  {group.entries.length > group.previewLimit ? (
-                    <Button
-                      variant="link"
-                      size="sm"
-                      onClick={() => {
-                        setRenderLimit(INSTALL_PAGE_SIZE)
-                        openDetail(
-                          'agent-marketplace',
-                          group.id,
-                          sectionTitle(group),
-                          'install-section',
-                        )
-                      }}
-                    >
-                      {t('settings.agent.plugins.viewAll')}
-                    </Button>
-                  ) : null}
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-1 px-2">
+                    <h2 className="text-lg font-semibold tracking-tight">{sectionTitle(group)}</h2>
+                    {group.entries.length > group.previewLimit ? (
+                      <Button
+                        aria-label={t('settings.agent.plugins.viewAll')}
+                        variant="ghost"
+                        size="icon-xs"
+                        className="text-foreground-subtlest/60"
+                        onClick={() => {
+                          setRenderLimit(INSTALL_PAGE_SIZE)
+                          openDetail(
+                            'agent-marketplace',
+                            group.id,
+                            sectionTitle(group),
+                            'install-section',
+                          )
+                        }}
+                      >
+                        <ChevronRight className="size-4" />
+                      </Button>
+                    ) : null}
+                  </div>
+                  <Separator />
                 </div>
                 <InstallGrid
                   entries={group.entries.slice(0, group.previewLimit)}

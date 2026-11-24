@@ -7,7 +7,10 @@ import { Skeleton } from '@/shadcn/skeleton'
  */
 function InstallTileSkeleton({ index }: { index: number }) {
   return (
-    <div className="flex min-w-0 items-center gap-3 px-2 py-2.5" aria-hidden="true">
+    <div
+      className="relative after:absolute after:bottom-0 after:left-14 after:right-2 after:border-border/60 lg:[&:nth-last-child(n+3)]:after:border-t max-lg:[&:not(:last-child)]:after:border-t flex min-w-0 items-center gap-3 px-2 py-2.5"
+      aria-hidden="true"
+    >
       <Skeleton className="size-9 shrink-0 rounded-lg" />
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <div className="flex items-center gap-2">
