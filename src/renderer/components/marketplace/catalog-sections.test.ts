@@ -50,9 +50,9 @@ describe('catalogSections', () => {
 
     expect(popular.entries.map((item) => item.name)).toEqual(['superpowers'])
     expect(category.entries.map((item) => item.name)).toEqual(['superpowers'])
-    expect(category.previewLimit).toBe(6)
+    expect(category.previewLimit).toBe(10)
     expect(personal.entries.map((item) => item.name)).toEqual(['frontend-design', 'context7'])
-    expect(personal.previewLimit).toBe(6)
+    expect(personal.previewLimit).toBe(10)
     expect(searchCatalog(entries, 'frontend-design')).toHaveLength(2)
     expect(searchCatalog(entries, 'new-unclassified')).toHaveLength(1)
   })

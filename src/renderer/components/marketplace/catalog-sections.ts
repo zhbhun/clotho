@@ -88,7 +88,7 @@ export function catalogSections(entries: CatalogEntry[]): CatalogSection[] {
         id: `category:${category}`,
         category,
         entries: orderCatalog(group),
-        previewLimit: 6,
+        previewLimit: 10,
       })
     }
   }
@@ -98,7 +98,7 @@ export function catalogSections(entries: CatalogEntry[]): CatalogSection[] {
       id: `marketplace:${marketplaceName}`,
       marketplaceName,
       entries: marketplaces.get(marketplaceName)!,
-      previewLimit: 6,
+      previewLimit: 10,
     })
   }
   return sections

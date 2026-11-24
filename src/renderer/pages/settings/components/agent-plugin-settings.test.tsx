@@ -757,7 +757,7 @@ describe('InstallPluginPage', () => {
         installCount: 1000 - index,
       }),
     )
-    const personal = Array.from({ length: 8 }, (_, index) =>
+    const personal = Array.from({ length: 12 }, (_, index) =>
       catalogEntry({
         pluginId: `local-${index}@acme`,
         name: `local-${index}`,
@@ -767,7 +767,7 @@ describe('InstallPluginPage', () => {
     return [...developers, ...personal]
   }
 
-  it('previews 10 / 6 / 6, opens full sections, and returns from plugin details to their section', async () => {
+  it('previews 10 per group, opens full sections, and returns from plugin details to their section', async () => {
     const catalog = groupedCatalog()
     mock.listAgentAvailablePlugins.mockResolvedValue(catalog)
     mock.getAgentPluginDetails.mockResolvedValue({
@@ -783,8 +783,8 @@ describe('InstallPluginPage', () => {
     expect(section('popular').querySelectorAll('[data-install-tile]')).toHaveLength(10)
     expect(
       section('category:developer-tools').querySelectorAll('[data-install-tile]'),
-    ).toHaveLength(6)
-    expect(section('marketplace:acme').querySelectorAll('[data-install-tile]')).toHaveLength(6)
+    ).toHaveLength(10)
+    expect(section('marketplace:acme').querySelectorAll('[data-install-tile]')).toHaveLength(10)
     expect(section('popular').querySelector('[data-install-tile]')).toHaveTextContent('superpowers')
     act(() =>
       useCatalogCache.setState({
@@ -816,7 +816,7 @@ describe('InstallPluginPage', () => {
     act(() => useSettingsDetailStore.getState().requestLeave())
 
     await user.click(within(section('marketplace:acme')).getByRole('button', { name: '查看全部' }))
-    expect(document.querySelectorAll('[data-install-tile]')).toHaveLength(8)
+    expect(document.querySelectorAll('[data-install-tile]')).toHaveLength(12)
     act(() => useSettingsDetailStore.getState().requestLeave())
 
     await user.click(within(section('popular')).getByRole('button', { name: '查看全部' }))
@@ -955,7 +955,7 @@ describe('InstallPluginPage', () => {
     await findInstallList()
     const category = section('category:developer-tools')
     const tiles = [...category.querySelectorAll('[data-install-tile]')]
-    expect(tiles).toHaveLength(6)
+    expect(tiles).toHaveLength(10)
     expect(tiles[0]).toHaveTextContent('commit-commands')
     expect(tiles[0]).toHaveTextContent('1,011')
     expect(tiles[5]).toHaveTextContent('agent-sdk-dev')
