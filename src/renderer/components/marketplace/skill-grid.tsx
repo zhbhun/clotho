@@ -77,15 +77,7 @@ export function SkillGrid({
             data-skill-tile
             key={source + '@' + name}
           >
-            <PluginAvatar name={name} />
-            {entry && (
-              <span
-                className="w-6 shrink-0 text-center text-sm font-medium tabular-nums text-foreground-subtlest"
-                data-skill-rank
-              >
-                {entry.rank}
-              </span>
-            )}
+            <PluginAvatar name={name} rank={entry?.rank} />
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <div className="truncate text-sm font-medium">
                 {skill.url ? <ExternalLink href={skill.url}>{name}</ExternalLink> : name}

@@ -1,5 +1,7 @@
 import type { CSSProperties } from 'react'
 
+import { Badge } from '@/shadcn/badge'
+
 /**
  * Deterministic letter avatar for catalog entries: the catalog data carries no
  * icon field, so a name-derived hue on a rounded square provides the store-style
@@ -11,7 +13,15 @@ export function pluginNameHue(name: string): number {
   return Math.round((hash * 137.508) % 360) % 360
 }
 
-export function PluginAvatar({ name, className }: { name: string; className?: string }) {
+export function PluginAvatar({
+  name,
+  className,
+  rank,
+}: {
+  name: string
+  className?: string
+  rank?: number
+}) {
   const hue = pluginNameHue(name)
   const letter = (Array.from(name)[0] ?? '?').toUpperCase()
   const palette =
@@ -22,10 +32,19 @@ export function PluginAvatar({ name, className }: { name: string; className?: st
   return (
     <div
       aria-hidden
-      className={`flex size-9 shrink-0 select-none items-center justify-center rounded-lg ${palette} ${className ?? ''}`}
+      className={`relative flex size-9 shrink-0 select-none items-center justify-center rounded-lg ${palette} ${className ?? ''}`}
       style={style}
     >
       {letter}
+      {rank !== undefined && (
+        <Badge
+          variant="secondary"
+          className="absolute -top-2 -left-2 min-w-5 px-1 text-[8px]"
+          data-avatar-rank
+        >
+          {rank}
+        </Badge>
+      )}
     </div>
   )
 }

@@ -59,7 +59,7 @@ function search(value: string) {
 }
 
 describe('SkillMarketplace', () => {
-  it('previews ten per chart with independent ranks and opens the full chart', async () => {
+  it('previews ten per chart with avatar rank badges and opens the full chart', async () => {
     mock.getPublishedSkillBoard.mockImplementation(async () => ({
       syncedAt: 1000,
       rows: Array.from({ length: 12 }, (_, index) => ({
@@ -76,8 +76,7 @@ describe('SkillMarketplace', () => {
     for (const chart of charts) {
       expect(chart.querySelectorAll('[data-skill-tile]')).toHaveLength(10)
       const tile = chart.querySelector('[data-skill-tile]')!
-      expect(tile.children[1]).toHaveAttribute('data-skill-rank')
-      expect(tile.children[1]).toHaveTextContent('1')
+      expect(tile.children[0].querySelector('[data-avatar-rank]')).toHaveTextContent('1')
     }
     await user.click(within(charts[1] as HTMLElement).getByRole('button', { name: 'View all' }))
     expect(useSettingsDetailStore.getState().view).toMatchObject({

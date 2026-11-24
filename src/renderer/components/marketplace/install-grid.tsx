@@ -41,12 +41,7 @@ export function InstallGrid({
             key={entry.pluginId}
             onClick={() => onDetails(entry)}
           >
-            <PluginAvatar name={entry.name} />
-            {isRanked ? (
-              <span className="w-6 shrink-0 text-center text-sm font-medium tabular-nums text-foreground-subtlest">
-                {index + 1}
-              </span>
-            ) : null}
+            <PluginAvatar name={entry.name} rank={isRanked ? index + 1 : undefined} />
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <div className="flex min-w-0 items-center gap-2">
                 <div className="truncate text-sm font-medium">{entry.name}</div>
