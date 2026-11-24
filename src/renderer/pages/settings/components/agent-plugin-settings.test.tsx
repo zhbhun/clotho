@@ -18,6 +18,7 @@ import {
   MarketplaceDetailPage,
   MarketplaceListPage,
 } from '../../../components/marketplace/marketplace-pages'
+import { MarketplaceSettings } from '../../../components/marketplace/marketplace-settings'
 import { useSettingsDetailStore } from '../../../components/marketplace/settings-detail-store'
 import { appI18n } from '../../../i18n/runtime'
 import * as agentConfig from '../../../services/claude/agent-config'
@@ -718,6 +719,244 @@ describe('InstallPluginPage', () => {
     return within(element)
   }
 
+  function section(id: string) {
+    const element = document.querySelector(`[data-catalog-section="${id}"]`)
+    assert(element instanceof HTMLElement, `section ${id} rendered`)
+    return element
+  }
+
+  function groupedCatalog() {
+    const developers = [
+      'superpowers',
+      'feature-dev',
+      'pr-review-toolkit',
+      'vercel',
+      'supabase',
+      'plugin-dev',
+      'agent-sdk-dev',
+      'ralph-loop',
+      'hookify',
+      'code-review',
+      'code-simplifier',
+      'commit-commands',
+    ].map((name, index) =>
+      catalogEntry({
+        pluginId: `${name}@anthropic-plugin-directory`,
+        name,
+        marketplaceName: 'anthropic-plugin-directory',
+        installCount: 1000 - index,
+      }),
+    )
+    const personal = Array.from({ length: 8 }, (_, index) =>
+      catalogEntry({
+        pluginId: `local-${index}@acme`,
+        name: `local-${index}`,
+        installCount: 100000 - index,
+      }),
+    )
+    return [...developers, ...personal]
+  }
+
+  it('previews 10 / 6 / 6, opens full sections, and returns from plugin details to their section', async () => {
+    const catalog = groupedCatalog()
+    mock.listAgentAvailablePlugins.mockResolvedValue(catalog)
+    mock.getAgentPluginDetails.mockResolvedValue({
+      ...emptyDetails,
+      pluginId: 'superpowers@anthropic-plugin-directory',
+      name: 'superpowers',
+      installed: false,
+    })
+    const user = userEvent.setup()
+    renderWithProviders(<MarketplaceSettings initialTab="plugins" hideTabs />)
+    await findInstallList()
+
+    expect(section('popular').querySelectorAll('[data-install-tile]')).toHaveLength(10)
+    expect(
+      section('category:developer-tools').querySelectorAll('[data-install-tile]'),
+    ).toHaveLength(6)
+    expect(section('marketplace:acme').querySelectorAll('[data-install-tile]')).toHaveLength(6)
+    expect(section('popular').querySelector('[data-install-tile]')).toHaveTextContent('superpowers')
+    act(() =>
+      useCatalogCache.setState({
+        catalog: catalog.map((entry) =>
+          entry.name === 'feature-dev' ? { ...entry, installCount: 20000 } : entry,
+        ),
+      }),
+    )
+    expect(section('popular').querySelector('[data-install-tile]')).toHaveTextContent('feature-dev')
+
+    await user.click(
+      within(section('category:developer-tools')).getByRole('button', { name: '查看全部' }),
+    )
+    expect(useSettingsDetailStore.getState().view).toMatchObject({
+      page: 'install-section',
+      file: 'category:developer-tools',
+    })
+    expect(document.querySelectorAll('[data-install-tile]')).toHaveLength(12)
+
+    await user.click(screen.getByText('superpowers'))
+    await waitFor(() =>
+      expect(document.querySelector('[data-install-detail-page]')).toBeInTheDocument(),
+    )
+    expect(useSettingsDetailStore.getState().view).toMatchObject({
+      sub: { page: 'install-detail', file: 'superpowers@anthropic-plugin-directory' },
+    })
+    act(() => useSettingsDetailStore.getState().requestLeave())
+    expect(document.querySelectorAll('[data-install-tile]')).toHaveLength(12)
+    act(() => useSettingsDetailStore.getState().requestLeave())
+
+    await user.click(within(section('marketplace:acme')).getByRole('button', { name: '查看全部' }))
+    expect(document.querySelectorAll('[data-install-tile]')).toHaveLength(8)
+    act(() => useSettingsDetailStore.getState().requestLeave())
+
+    await user.click(within(section('popular')).getByRole('button', { name: '查看全部' }))
+    expect(document.querySelectorAll('[data-install-tile]')).toHaveLength(12)
+    expect(screen.queryByText('local-0')).toBeNull()
+  })
+
+  it('keeps all excluded component shapes and unknown directory entries searchable', async () => {
+    const excluded = [
+      'frontend-design',
+      'context7',
+      'api-drift-detector-typescript-contract-checker',
+      'unreviewed-plugin',
+    ]
+    mock.listAgentAvailablePlugins.mockResolvedValue([
+      catalogEntry(),
+      ...excluded.map((name) =>
+        catalogEntry({
+          pluginId: `${name}@anthropic-plugin-directory`,
+          name,
+          marketplaceName: 'anthropic-plugin-directory',
+        }),
+      ),
+    ])
+    const user = userEvent.setup()
+    renderWithProviders(<InstallPluginPage />)
+    await findInstallList()
+    for (const name of excluded) expect(screen.queryByText(name)).toBeNull()
+    for (const name of excluded) {
+      await user.clear(screen.getByPlaceholderText('搜索插件…'))
+      await user.type(screen.getByPlaceholderText('搜索插件…'), name)
+      expect(screen.getByText(name)).toBeInTheDocument()
+      expect(document.querySelectorAll('[data-install-tile]')).toHaveLength(1)
+    }
+  })
+
+  it.each([
+    {
+      group: 'popular',
+      title: '热门',
+      name: 'superpowers',
+      pluginId: 'superpowers@anthropic-plugin-directory',
+    },
+    {
+      group: 'category:developer-tools',
+      title: '开发工具',
+      name: 'superpowers',
+      pluginId: 'superpowers@anthropic-plugin-directory',
+    },
+    { group: 'marketplace:acme', title: 'acme', name: 'formatter', pluginId: 'formatter@acme' },
+  ])(
+    'returns preview details through their full $group section even without View all',
+    async ({ group, title, name, pluginId }) => {
+      mock.listAgentAvailablePlugins.mockResolvedValue([
+        catalogEntry(),
+        catalogEntry({
+          pluginId: 'superpowers@anthropic-plugin-directory',
+          name: 'superpowers',
+          marketplaceName: 'anthropic-plugin-directory',
+        }),
+      ])
+      mock.getAgentPluginDetails.mockResolvedValue({ ...emptyDetails, pluginId, name })
+      const user = userEvent.setup()
+      renderWithProviders(<MarketplaceSettings initialTab="plugins" hideTabs />)
+      await findInstallList()
+      const preview = within(section(group))
+      expect(preview.queryByRole('button', { name: '查看全部' })).toBeNull()
+
+      await user.click(preview.getByText(name))
+      expect(useSettingsDetailStore.getState().view).toMatchObject({
+        page: 'install-section',
+        file: group,
+        sub: { page: 'install-detail', file: pluginId },
+      })
+      await waitFor(() =>
+        expect(document.querySelector('[data-install-detail-page]')).toBeInTheDocument(),
+      )
+
+      act(() => useSettingsDetailStore.getState().requestLeave())
+      expect(screen.getByRole('heading', { level: 1, name: title })).toBeInTheDocument()
+      expect(document.querySelectorAll('[data-install-tile]')).toHaveLength(1)
+      act(() => useSettingsDetailStore.getState().requestLeave())
+      expect(section(group)).toBeInTheDocument()
+    },
+  )
+
+  it('shares successful installation state between Popular and category occurrences', async () => {
+    mock.listAgentAvailablePlugins.mockResolvedValue([
+      catalogEntry({
+        pluginId: 'superpowers@anthropic-plugin-directory',
+        name: 'superpowers',
+        marketplaceName: 'anthropic-plugin-directory',
+      }),
+    ])
+    mock.installAgentPlugin.mockResolvedValue(undefined)
+    mock.getAgentPluginDetails.mockResolvedValue({
+      ...emptyDetails,
+      pluginId: 'superpowers@anthropic-plugin-directory',
+      name: 'superpowers',
+    })
+    const user = userEvent.setup()
+    renderWithProviders(<InstallPluginPage />)
+    await findInstallList()
+    expect(document.querySelectorAll('[data-install-tile]')).toHaveLength(2)
+    expect(within(section('popular')).queryByRole('button', { name: '查看全部' })).toBeNull()
+    expect(
+      within(section('category:developer-tools')).queryByRole('button', { name: '查看全部' }),
+    ).toBeNull()
+    mock.listAgentPlugins.mockResolvedValue([
+      installedPlugin({
+        id: 'superpowers@anthropic-plugin-directory',
+        name: 'superpowers',
+        marketplace: 'anthropic-plugin-directory',
+      }),
+    ])
+    await user.click(within(section('popular')).getByRole('button', { name: '安装插件' }))
+    await waitFor(() => expect(screen.getAllByRole('button', { name: '更多操作' })).toHaveLength(2))
+    expect(screen.queryByRole('button', { name: '安装插件' })).toBeNull()
+  })
+
+  it('previews category leaders by alias runtime counts and still installs their original directory ids', async () => {
+    const directory = groupedCatalog()
+      .filter((entry) => entry.marketplaceName === 'anthropic-plugin-directory')
+      .map((entry) => ({ ...entry, installCount: undefined }))
+    const aliases = directory.map((entry, index) => ({
+      ...entry,
+      pluginId: `${entry.name}@claude-plugins-official`,
+      marketplaceName: 'claude-plugins-official',
+      installCount: 1000 + index,
+    }))
+    mock.listAgentAvailablePlugins.mockResolvedValue([...directory, ...aliases])
+    mock.installAgentPlugin.mockResolvedValue(undefined)
+    mock.getAgentPluginDetails.mockResolvedValue(emptyDetails)
+    const user = userEvent.setup()
+    renderWithProviders(<InstallPluginPage />)
+    await findInstallList()
+    const category = section('category:developer-tools')
+    const tiles = [...category.querySelectorAll('[data-install-tile]')]
+    expect(tiles).toHaveLength(6)
+    expect(tiles[0]).toHaveTextContent('commit-commands')
+    expect(tiles[0]).toHaveTextContent('1,011')
+    expect(tiles[5]).toHaveTextContent('agent-sdk-dev')
+    await user.click(within(tiles[0] as HTMLElement).getByRole('button', { name: '安装插件' }))
+    await waitFor(() =>
+      expect(mock.installAgentPlugin).toHaveBeenCalledWith(
+        'commit-commands@anthropic-plugin-directory',
+      ),
+    )
+  })
+
   it('shows cached results on return, retains them after a failure, and retries', async () => {
     mock.listAgentAvailablePlugins.mockResolvedValueOnce([catalogEntry()])
     const first = renderWithProviders(<InstallPluginPage />)
@@ -757,7 +996,7 @@ describe('InstallPluginPage', () => {
     expect(useCatalogCache.getState().installed).toBeNull()
   })
 
-  it('renders one unified list without tabs or a result count', async () => {
+  it('groups custom marketplaces and leaves unreviewed directory entries searchable', async () => {
     mock.listAgentAvailablePlugins.mockResolvedValue([
       catalogEntry(),
       catalogEntry({
@@ -769,11 +1008,10 @@ describe('InstallPluginPage', () => {
     ])
     renderWithProviders(<InstallPluginPage />)
 
-    // Directory and marketplace entries share one list.
     const list = await findInstallList()
-    expect(list.getByText('docs')).toBeInTheDocument()
+    expect(list.queryByText('docs')).toBeNull()
     expect(list.getByText('formatter')).toBeInTheDocument()
-    expect(list.getByText('anthropic-plugin-directory')).toBeInTheDocument()
+    expect(document.querySelector('[data-catalog-section="marketplace:acme"]')).toBeInTheDocument()
     // No Public/Community/Personal control anywhere.
     expect(screen.queryByRole('tablist')).toBeNull()
     // Counts render as icon + number only, no unit word, no summary line.
@@ -802,7 +1040,10 @@ describe('InstallPluginPage', () => {
         marketplace: 'superpowers-marketplace',
       }),
     ])
+    const user = userEvent.setup()
     renderWithProviders(<InstallPluginPage />)
+    await findInstallList()
+    await user.type(screen.getByPlaceholderText('搜索插件…'), 'superpowers')
 
     const list = await findInstallList()
     expect(list.getAllByText('superpowers')).toHaveLength(2)
@@ -826,6 +1067,7 @@ describe('InstallPluginPage', () => {
     renderWithProviders(<InstallPluginPage />)
 
     const list = await findInstallList()
+    await user.type(screen.getByPlaceholderText('搜索插件…'), 'Formats')
     expect(list.getByText('docs')).toBeInTheDocument()
     expect(list.getByText('formatter')).toBeInTheDocument()
 

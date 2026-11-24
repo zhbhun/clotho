@@ -29,6 +29,14 @@ export function MarketplaceSettings({
     if (view.page === 'skills' && view.file) detailContent = <SkillDetailPage name={view.file} />
     if (view.page === 'install' && view.file)
       detailContent = <InstallPluginDetailPage pluginId={view.file} />
+    if (view.page === 'install-section') {
+      detailContent =
+        view.sub?.page === 'install-detail' && view.sub.file ? (
+          <InstallPluginDetailPage pluginId={view.sub.file} />
+        ) : (
+          <InstallPluginPage />
+        )
+    }
     if (view.page === 'marketplaces') {
       detailContent = view.file ? (
         <MarketplaceDetailPage marketplaceName={view.file} />

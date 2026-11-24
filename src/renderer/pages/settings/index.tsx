@@ -259,7 +259,8 @@ function SettingsPageContent({
     detail.view.file
   ) {
     if (detail.view.page === 'skills') detailRoot = t('settings.agent.title.skills')
-    if (detail.view.page === 'install') detailRoot = t('settings.agent.title.plugins')
+    if (detail.view.page === 'install' || detail.view.page === 'install-section')
+      detailRoot = t('settings.agent.title.plugins')
     if (detail.view.page === 'marketplaces') detailRoot = t('settings.agent.plugins.marketplaces')
   }
 

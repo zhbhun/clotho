@@ -1,4 +1,3 @@
-import { Download, EllipsisVertical, Plus } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -13,24 +12,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shadcn/select'
+import { Separator } from '@/shadcn/separator'
 import { toast } from '@/shadcn/toast'
 
-import {
-  getAgentPluginDetails,
-  removeAgentPlugin,
-  setAgentPluginEnabled,
-} from '../../services/claude/agent-config'
+import { getAgentPluginDetails } from '../../services/claude/agent-config'
 import { requestFromDesktop } from '../../services/desktop/client'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '../dropdown-menu'
 import { AgentEmpty } from './agent-shared'
-import { refreshCatalog, refreshInstalled, updateInstalled, useCatalogCache } from './catalog-cache'
+import { refreshCatalog, refreshInstalled, useCatalogCache } from './catalog-cache'
+import { type CatalogSection, catalogSections } from './catalog-sections'
 import { type CatalogEntry, catalogSources, orderCatalog, searchCatalog } from './install-catalog'
-import { PluginAvatar } from './plugin-avatar'
+import { InstallGrid } from './install-grid'
 import {
   DetailSection,
   PluginDetailIdentity,
@@ -40,79 +31,85 @@ import {
 import { installPluginWithToast, useRestartHint } from './plugin-shared'
 import { InstallPageSkeleton, PluginDetailSkeleton } from './plugin-skeletons'
 import { useSettingsDetailStore } from './settings-detail-store'
-import { usePluginHomepages } from './use-plugin-homepages'
+import { useInstallActions } from './use-install-actions'
 
 const INSTALL_PAGE_SIZE = 100
 
-/**
- * Second-level Install page (Marketplace): catalog with a source
- * filter and search at the toolbar, three-line rows rendered
- * incrementally (a sentinel appends the next page near the viewport end).
- */
+/** Section previews by default; full catalogs stay available through search. */
 export function InstallPluginPage() {
   const { t } = useTranslation()
   const catalog = useCatalogCache((state) => state.catalog)
-  const installedPlugins = useCatalogCache((state) => state.installed)
-  const installedChanges = useCatalogCache((state) => state.installedChanges)
   const catalogLoading = useCatalogCache((state) => state.catalogLoading)
   const catalogError = useCatalogCache((state) => state.catalogError)
+  const view = useSettingsDetailStore((state) => state.view)
+  const openDetail = useSettingsDetailStore((state) => state.openDetail)
+  const openSub = useSettingsDetailStore((state) => state.openSub)
   const [sourceFilter, setSourceFilter] = useState('')
   const [search, setSearch] = useState('')
-  const [enabledById, setEnabledById] = useState<Map<string, boolean>>(new Map())
   const [renderLimit, setRenderLimit] = useState(INSTALL_PAGE_SIZE)
-  const openDetail = useSettingsDetailStore((state) => state.openDetail)
-  const notifyRestart = useRestartHint()
   const sentinelRef = useRef<HTMLDivElement | null>(null)
+  const sectionId =
+    view.kind === 'detail' &&
+    view.categoryId === 'agent-marketplace' &&
+    view.page === 'install-section'
+      ? view.file
+      : null
+  const isSearching = search.trim().length > 0
+  const isGrouped = !sectionId && !isSearching
 
   useEffect(() => {
     void refreshCatalog()
     void refreshInstalled()
   }, [])
 
-  const installed = useMemo(() => {
-    const ids = new Set<string>()
-    const enabled = new Map<string, boolean>()
-    for (const plugin of installedPlugins ?? []) {
-      ids.add(plugin.id)
-      enabled.set(plugin.id, plugin.enabled)
-    }
-    for (const [id, change] of installedChanges) {
-      if (change === 'remove') {
-        ids.delete(id)
-        enabled.delete(id)
-      } else {
-        ids.add(id)
-        enabled.set(id, typeof change === 'boolean' ? change : true)
-      }
-    }
-    return { ids, enabled }
-  }, [installedPlugins, installedChanges])
-
-  const entries = useMemo(() => {
-    const unique = [...new Map((catalog ?? []).map((entry) => [entry.pluginId, entry])).values()]
-    return orderCatalog(
-      sourceFilter ? unique.filter((entry) => entry.marketplaceName === sourceFilter) : unique,
-    )
-  }, [catalog, sourceFilter])
-  const homepagesById = usePluginHomepages(entries, installed.ids)
-
-  const rows = useMemo(() => searchCatalog(entries, search), [entries, search])
-
-  const visibleSources = useMemo(() => catalogSources(catalog ?? []), [catalog])
+  const entries = useMemo(
+    () =>
+      orderCatalog([...new Map((catalog ?? []).map((entry) => [entry.pluginId, entry])).values()]),
+    [catalog],
+  )
+  const sections = useMemo(() => catalogSections(entries), [entries])
+  const section = sections.find((entry) => entry.id === sectionId)
+  const groups = useMemo(
+    () =>
+      sections.flatMap((group) => {
+        const entries = sourceFilter
+          ? group.entries.filter((entry) => entry.marketplaceName === sourceFilter)
+          : group.entries
+        return entries.length ? [{ ...group, entries }] : []
+      }),
+    [sections, sourceFilter],
+  )
+  const rows = useMemo(() => {
+    // Search always covers the full catalog, including excluded and unknown entries.
+    const scope = sectionId && !isSearching ? (section?.entries ?? []) : entries
+    const filtered = sourceFilter
+      ? scope.filter((entry) => entry.marketplaceName === sourceFilter)
+      : scope
+    return searchCatalog(filtered, search)
+  }, [entries, sectionId, section, isSearching, search, sourceFilter])
+  const shown = useMemo(() => rows.slice(0, renderLimit), [rows, renderLimit])
+  const visibleEntries = useMemo(
+    () =>
+      isGrouped ? groups.flatMap((group) => group.entries.slice(0, group.previewLimit)) : shown,
+    [isGrouped, groups, shown],
+  )
+  const actions = useInstallActions(visibleEntries)
   const sourceItems = useMemo(
     () => [
       { value: '', label: t('settings.agent.plugins.allSources') },
-      ...visibleSources.map((market) => ({ value: market, label: market })),
+      ...catalogSources(entries).map((market) => ({ value: market, label: market })),
     ],
-    [visibleSources, t],
+    [entries, t],
   )
-  // Optimistic menu state wins, then the CLI's install record, then enabled.
-  const isEntryEnabled = (entry: CatalogEntry) =>
-    enabledById.get(entry.pluginId) ?? installed.enabled.get(entry.pluginId) ?? true
-  const shown = rows.slice(0, renderLimit)
-  const hasMore = rows.length > renderLimit
+  const hasMore = !isGrouped && rows.length > renderLimit
+  const isEmpty = isGrouped ? groups.length === 0 : shown.length === 0
+  const sectionTitle = (group: CatalogSection) =>
+    group.kind === 'marketplace'
+      ? group.marketplaceName
+      : group.kind === 'popular'
+        ? t('settings.agent.plugins.popular')
+        : t(`settings.agent.plugins.categories.${group.category}`)
 
-  // Append the next page when the sentinel scrolls near the viewport end.
   useEffect(() => {
     const sentinel = sentinelRef.current
     if (!hasMore || !sentinel) return
@@ -125,51 +122,13 @@ export function InstallPluginPage() {
     return () => observer.disconnect()
   }, [hasMore])
 
-  const handleInstall = async (pluginId: string) => {
-    await installPluginWithToast(pluginId, notifyRestart, t('settings.agent.plugins.installError'))
-  }
-
-  const handleToggle = async (entry: CatalogEntry) => {
-    const enabled = !isEntryEnabled(entry)
-    setEnabledById((current) => new Map(current).set(entry.pluginId, enabled))
-    try {
-      await setAgentPluginEnabled(entry.pluginId, enabled)
-      notifyRestart()
-      updateInstalled(entry.pluginId, enabled)
-      setEnabledById((current) => {
-        const next = new Map(current)
-        next.delete(entry.pluginId)
-        return next
-      })
-    } catch {
-      setEnabledById((current) => {
-        const next = new Map(current)
-        next.delete(entry.pluginId)
-        return next
-      })
-      toast.add({ id: 'agent-plugin-toggle', title: t('settings.agent.saveError'), type: 'error' })
+  const handleDetails = (entry: CatalogEntry, group?: CatalogSection) => {
+    if (group) {
+      openDetail('agent-marketplace', group.id, sectionTitle(group), 'install-section')
     }
-  }
-
-  const handleUninstall = async (pluginId: string) => {
-    try {
-      await removeAgentPlugin(pluginId)
-      notifyRestart()
-      updateInstalled(pluginId, 'remove')
-    } catch {
-      toast.add({
-        id: 'agent-plugin-remove',
-        title: t('settings.agent.deleteError'),
-        type: 'error',
-      })
-    }
-  }
-
-  const handleOpen = (entry: CatalogEntry) => {
-    const homepage = homepagesById.get(entry.pluginId)
-    if (homepage) {
-      void requestFromDesktop('appOpenLink', { href: homepage, projectPath: '' })
-    }
+    if (group || sectionId)
+      openSub('agent-marketplace', 'install-detail', entry.pluginId, entry.name)
+    else openDetail('agent-marketplace', entry.pluginId, entry.name, 'install')
   }
 
   return (
@@ -186,7 +145,6 @@ export function InstallPluginPage() {
           <SelectTrigger aria-label={t('settings.agent.plugins.source')} className="min-w-40">
             <SelectValue />
           </SelectTrigger>
-          {/* Widen past the anchor width so long marketplace slugs don't clip. */}
           <SelectContent
             align="start"
             alignItemWithTrigger={false}
@@ -211,100 +169,59 @@ export function InstallPluginPage() {
           }}
         />
       </div>
-
+      {section && !isSearching ? (
+        <h1 className="px-2 text-xl font-semibold tracking-tight">{sectionTitle(section)}</h1>
+      ) : null}
       {catalog === null && (catalogLoading || !catalogError) ? (
         <InstallPageSkeleton />
-      ) : shown.length === 0 ? (
+      ) : isEmpty ? (
         <AgentEmpty />
       ) : (
-        <div
-          className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] max-lg:grid-cols-1 gap-x-6"
-          data-install-list
-        >
-          {shown.map((entry) => {
-            const isInstalled = installed.ids.has(entry.pluginId)
-            const isEnabled = isEntryEnabled(entry)
-            return (
-              <div
-                className="flex min-w-0 items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/50"
-                data-install-tile
-                key={entry.pluginId}
-                onClick={() =>
-                  openDetail('agent-marketplace', entry.pluginId, entry.name, 'install')
-                }
+        <div className="flex flex-col gap-8" data-install-list>
+          {isGrouped ? (
+            groups.map((group, index) => (
+              <section
+                className="flex flex-col gap-4"
+                data-catalog-section={group.id}
+                key={group.id}
               >
-                <PluginAvatar name={entry.name} />
-                <div className="flex min-w-0 flex-1 flex-col gap-1">
-                  <div className="truncate text-sm font-medium">{entry.name}</div>
-                  {entry.description ? (
-                    <div className="truncate text-xs text-foreground-subtlest">
-                      {entry.description}
-                    </div>
+                {index > 0 ? <Separator /> : null}
+                <div className="flex items-center justify-between gap-4 px-2">
+                  <h2 className="text-lg font-semibold tracking-tight">{sectionTitle(group)}</h2>
+                  {group.entries.length > group.previewLimit ? (
+                    <Button
+                      variant="link"
+                      size="sm"
+                      onClick={() => {
+                        setRenderLimit(INSTALL_PAGE_SIZE)
+                        openDetail(
+                          'agent-marketplace',
+                          group.id,
+                          sectionTitle(group),
+                          'install-section',
+                        )
+                      }}
+                    >
+                      {t('settings.agent.plugins.viewAll')}
+                    </Button>
                   ) : null}
-                  <div className="flex items-center gap-2 text-[11px] tabular-nums text-foreground-subtlest">
-                    <span>{entry.marketplaceName}</span>
-                    {typeof entry.installCount === 'number' ? (
-                      <>
-                        <span aria-hidden className="text-foreground-subtlest/50">
-                          |
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Download className="size-3" aria-hidden />
-                          {entry.installCount.toLocaleString()}
-                        </span>
-                      </>
-                    ) : null}
-                  </div>
                 </div>
-                {isInstalled ? (
-                  <div className="shrink-0" onClick={(event) => event.stopPropagation()}>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        aria-label={t('settings.agent.plugins.more')}
-                        render={<Button size="icon" variant="ghost" />}
-                      >
-                        <EllipsisVertical className="size-4 text-foreground-subtlest" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="end"
-                        aria-label={t('settings.agent.plugins.more')}
-                      >
-                        <DropdownMenuItem onClick={() => void handleToggle(entry)}>
-                          {isEnabled
-                            ? t('settings.agent.plugins.disable')
-                            : t('settings.agent.plugins.enable')}
-                        </DropdownMenuItem>
-                        {homepagesById.get(entry.pluginId) ? (
-                          <DropdownMenuItem onClick={() => handleOpen(entry)}>
-                            {t('settings.agent.plugins.open')}
-                          </DropdownMenuItem>
-                        ) : null}
-                        <DropdownMenuItem
-                          className="text-destructive"
-                          onClick={() => void handleUninstall(entry.pluginId)}
-                        >
-                          {t('settings.agent.plugins.uninstall')}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                ) : (
-                  <Button
-                    aria-label={t('settings.agent.plugins.install')}
-                    className="text-foreground-subtlest"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      void handleInstall(entry.pluginId)
-                    }}
-                    size="icon"
-                    variant="ghost"
-                  >
-                    <Plus />
-                  </Button>
-                )}
-              </div>
-            )
-          })}
+                <InstallGrid
+                  entries={group.entries.slice(0, group.previewLimit)}
+                  actions={actions}
+                  isRanked={group.kind === 'popular'}
+                  onDetails={(entry) => handleDetails(entry, group)}
+                />
+              </section>
+            ))
+          ) : (
+            <InstallGrid
+              entries={shown}
+              actions={actions}
+              isRanked={!isSearching && section?.kind === 'popular'}
+              onDetails={handleDetails}
+            />
+          )}
           {hasMore ? <div data-install-sentinel ref={sentinelRef} /> : null}
         </div>
       )}
