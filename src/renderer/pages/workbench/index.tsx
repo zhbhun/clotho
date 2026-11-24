@@ -14,6 +14,7 @@ import { type SettingsCategoryId, SettingsPage } from '../settings'
 import { LoadFailure, WorkbenchStartupFailure } from './components/loading-state'
 import { ModelStartupBoundary } from './components/model-startup-boundary'
 import { ProjectDialog } from './components/project-dialog'
+import { ClaudeRuntimeBoundary } from './components/runtime-boundary'
 import { type SessionAction, SessionActionDialogs } from './components/session-action-dialogs'
 import { useArchiveSweep } from './hooks/use-archive-sweep'
 import { useSessionNavigation } from './hooks/use-session-navigation'
@@ -34,7 +35,9 @@ export function WorkbenchPage() {
     <ProviderUsageProvider>
       <ModelConfigurationProvider>
         <SessionControllerRegistryProvider>
-          <WorkbenchContent />
+          <ClaudeRuntimeBoundary>
+            <WorkbenchContent />
+          </ClaudeRuntimeBoundary>
         </SessionControllerRegistryProvider>
       </ModelConfigurationProvider>
     </ProviderUsageProvider>

@@ -2,6 +2,8 @@ import { execFile } from 'node:child_process'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
+import { claudeRuntime } from '../runtime'
+import { trackClaudeProcess } from '../runtime/processes'
 import { resolveClaudeCodeBinary } from '../sdk-binary'
 
 const CLI_TIMEOUT_MS = 30_000
@@ -77,11 +79,6 @@ interface CliMarketplace {
   [extra: string]: unknown
 }
 
-/** Resolves the same binary Clotho sessions spawn, falling back to `PATH`. */
-function claudeBinary(): string {
-  return resolveClaudeCodeBinary() ?? 'claude'
-}
-
 /**
  * Promise wrapper over execFile (hand-rolled instead of `promisify` so the
  * resolve shape is exactly `{ stdout, stderr }` regardless of the callee).
@@ -92,16 +89,18 @@ function run(
   options: { timeout: number; maxBuffer: number; encoding: string },
 ): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
-    execFile(file, args, options, (error, stdout, stderr) => {
+    const child = execFile(file, args, options, (error, stdout, stderr) => {
       if (error) reject(error)
       else resolve({ stdout: String(stdout), stderr: String(stderr) })
     })
+    trackClaudeProcess(child)
+    child.on('error', (error) => claudeRuntime.invalidate(error))
   })
 }
 
 async function runPluginCommand(args: string[]): Promise<string> {
   try {
-    const { stdout } = await run(claudeBinary(), ['plugin', ...args], {
+    const { stdout } = await run(await resolveClaudeCodeBinary(), ['plugin', ...args], {
       timeout: CLI_TIMEOUT_MS,
       maxBuffer: CLI_MAX_BUFFER,
       encoding: 'utf-8',

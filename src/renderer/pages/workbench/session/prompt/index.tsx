@@ -92,6 +92,7 @@ export type PromptComposerProps = {
   /** The latest turn was interrupted after content streamed and can be resumed. */
   canResume?: boolean
   className?: string
+  error?: string
   /** Real context-window usage from the latest SDK snapshot; null hides the ring. */
   contextUsage: ContextUsage | null
   contextUsageDetail?: ContextUsageDetail
@@ -152,6 +153,7 @@ export function PromptComposer({
   canRefreshSession,
   canResume,
   className,
+  error,
   contextUsage,
   contextUsageDetail,
   isSamplingContext = false,
@@ -407,6 +409,12 @@ export function PromptComposer({
     // The wrapper anchors the pending strip, which sinks behind the card
     // above it (the card stacks above while the strip is visible).
     <div className="relative w-full">
+      {error ? (
+        <div className="mb-3 max-h-28 overflow-y-auto rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          <p className="font-medium">{t('workbench.error.messageSendFailed')}</p>
+          <p className="mt-1 whitespace-pre-wrap break-words">{error}</p>
+        </div>
+      ) : null}
       {appearance === 'default' && pendingMessage ? (
         <PendingMessagePanel
           message={pendingMessage}

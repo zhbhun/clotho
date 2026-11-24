@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -13,7 +13,6 @@ import { useCommandHandler } from '../../../hooks/use-command-handler'
 import type { ClaudeSlashCommand } from '../../../services/claude/claude'
 import { projectDisplayName } from '../../../utils/project'
 import { LoadFailure } from '../components/loading-state'
-import { useModelStartupContext } from '../components/model-startup-boundary'
 import { QuickOpenPanel } from '../quick-open'
 import { useQuickOpenStore } from '../quick-open/quick-open-store'
 import {
@@ -32,7 +31,6 @@ import { computeTurns } from './conversation/turns'
 import type { VirtualConversationHandle } from './conversation/virtual-conversation'
 import { SessionEmptyState } from './empty-state'
 import { ConversationHeader } from './header'
-import { ModelOnboarding } from './model-onboarding'
 import type { PromptComposerBaseProps } from './prompt'
 import { isUserPromptMessage } from './services/message'
 import {
@@ -219,17 +217,15 @@ export function SessionArea(props: SessionAreaProps) {
             </div>
           </div>
         ) : (
-          <ModelOnboardingGate {...props}>
-            <SessionControllerProvider key={sessionId} {...sessionControllerProps(props)}>
-              <SessionAreaContent
-                {...props}
-                selectedSession={selectedSession}
-                sessionId={sessionId}
-                turnScrollRequest={turnScrollRequest}
-                onContentScrolledChange={handleContentScrolledChange}
-              />
-            </SessionControllerProvider>
-          </ModelOnboardingGate>
+          <SessionControllerProvider key={sessionId} {...sessionControllerProps(props)}>
+            <SessionAreaContent
+              {...props}
+              selectedSession={selectedSession}
+              sessionId={sessionId}
+              turnScrollRequest={turnScrollRequest}
+              onContentScrolledChange={handleContentScrolledChange}
+            />
+          </SessionControllerProvider>
         )}
       </ErrorBoundary>
       {/* The quick-open palette mounts once here; the picker commands open it
@@ -246,17 +242,6 @@ export function SessionArea(props: SessionAreaProps) {
       />
     </SidebarInset>
   )
-}
-
-function ModelOnboardingGate({
-  children,
-  isMockProject,
-}: Pick<SessionAreaProps, 'isMockProject'> & { children: ReactNode }) {
-  const { dismissModelOnboarding, shouldShowModelOnboarding } = useModelStartupContext()
-
-  if (isMockProject || !shouldShowModelOnboarding) return children
-
-  return <ModelOnboarding onSkip={dismissModelOnboarding} onComplete={dismissModelOnboarding} />
 }
 
 function SessionAreaContent({
@@ -441,11 +426,14 @@ function SessionAreaContent({
     !isMessageEditPending &&
     !isMockProject &&
     (projectMode === 'home' || Boolean(selectedProject))
-  // Runtime errors surface as a toast instead of a composer footnote; the
-  // fixed id keeps a re-labelled follow-up (message-send → message-edit)
-  // replacing the first toast rather than stacking a second one.
+  // Send failures stay above the composer so the user can inspect them before retrying.
   useEffect(() => {
-    if (!runtimeError || runtimeError.kind === 'session-initialize') return
+    if (
+      !runtimeError ||
+      runtimeError.kind === 'session-initialize' ||
+      runtimeError.kind === 'message-send'
+    )
+      return
     toast.add({
       id: 'workbench-session-error',
       title: t(sessionErrorKey(runtimeError.kind)),
@@ -593,6 +581,7 @@ function SessionAreaContent({
   )
 
   const promptComposerProps: PromptComposerBaseProps = {
+    error: runtimeError?.kind === 'message-send' ? runtimeError.message : undefined,
     attachments,
     availableCommands,
     canSubmit: canSendPrompt,

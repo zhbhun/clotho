@@ -24,6 +24,7 @@ const logger = getLogger('settings')
 /** Main-process persisted shape for `~/.clotho/settings.json`. */
 export interface ClaudeskSettings {
   providers: ModelProvider[]
+  claudeCodePath?: string
   /** App-level default model as a qualified `providerId/modelId` string. */
   defaultModel?: string
   language: AppLanguagePreference
@@ -278,6 +279,8 @@ export async function readSettings(filePath = settingsJsonPath()): Promise<Claud
     const legacyFallback = candidate.models as Record<string, unknown> | undefined
     return {
       providers,
+      claudeCodePath:
+        typeof candidate.claudeCodePath === 'string' ? candidate.claudeCodePath.trim() : undefined,
       defaultModel: sanitizeDefaultModel(
         candidate.defaultModel ?? legacyFallback?.fallback,
         providers,
@@ -329,6 +332,7 @@ function cloneSettings(settings: ClaudeskSettings): ClaudeskSettings {
       models: provider.models.map((model) => ({ ...model })),
     })),
     defaultModel: settings.defaultModel,
+    claudeCodePath: settings.claudeCodePath,
     language: settings.language,
     defaultPermissionMode: settings.defaultPermissionMode,
     archiveInactiveSessions: settings.archiveInactiveSessions,

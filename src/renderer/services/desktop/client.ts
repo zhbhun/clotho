@@ -26,6 +26,7 @@ type DesktopMessageToBunName = keyof DesktopMessageToBunMap & string
 type DesktopMessageMap = DesktopRPC['renderer']['messages']
 
 type DesktopEventMap = {
+  'claude-runtime-changed': DesktopMessageMap['claudeRuntimeChanged']
   'claude-output': DesktopMessageMap['claudeOutput']
   'claude-error': DesktopMessageMap['claudeError']
   'claude-complete': DesktopMessageMap['claudeComplete']
@@ -44,6 +45,7 @@ type DesktopEventHandler<K extends DesktopEventName> = (payload: DesktopEventMap
 
 /** Push messages sent by the main process mapped to renderer event names. */
 const PUSH_EVENT_BINDINGS: Array<[keyof DesktopMessageMap & string, DesktopEventName]> = [
+  ['claudeRuntimeChanged', 'claude-runtime-changed'],
   ['claudeOutput', 'claude-output'],
   ['claudeError', 'claude-error'],
   ['claudeComplete', 'claude-complete'],
@@ -60,6 +62,7 @@ const PUSH_EVENT_BINDINGS: Array<[keyof DesktopMessageMap & string, DesktopEvent
 const eventListeners: {
   [K in DesktopEventName]: Set<DesktopEventHandler<K>>
 } = {
+  'claude-runtime-changed': new Set(),
   'claude-output': new Set(),
   'claude-error': new Set(),
   'claude-complete': new Set(),

@@ -1,5 +1,6 @@
 import { type TranslationRow, messages } from './catalog'
 import { commonCatalog } from './catalogs/common'
+import { runtimeCatalog } from './catalogs/runtime'
 import { settingsCatalog } from './catalogs/settings'
 import { shortcutsCatalog } from './catalogs/shortcuts'
 import { toolsCatalog } from './catalogs/tools'
@@ -443,6 +444,7 @@ const coreCatalog = {
 
 export const messageCatalog = {
   ...commonCatalog,
+  ...runtimeCatalog,
   ...coreCatalog,
   ...settingsCatalog,
   ...shortcutsCatalog,

@@ -55,7 +55,7 @@ import {
 } from './claude/agent-config/workflows'
 import { getAttachmentPreview, snapshotAttachments } from './claude/attachments'
 import { getProjectGitBranch, listProjectGitBranches, switchProjectGitBranch } from './claude/git'
-import { buildModelCatalog } from './claude/model-catalog'
+import { buildModelCatalog, readClaudeModelConfiguration } from './claude/model-catalog'
 import { fetchProviderModels } from './claude/model-fetch'
 import type { ModelProxy } from './claude/model-proxy'
 import { projectFileSearch } from './claude/project-file-search'
@@ -116,12 +116,21 @@ async function startupWithProviders(
   settingsStore: SettingsStore,
   params?: ClaudeStartupParams,
 ): Promise<ClaudeInitializationResult> {
-  const result = await startup(params)
+  const [result, hasConfiguredClaudeModels] = await Promise.all([
+    startup(params),
+    readClaudeModelConfiguration(),
+  ])
   const settings = settingsStore.get()
-  const catalog = buildModelCatalog(result.models, settings.providers, result.account)
+  const catalog = buildModelCatalog(
+    result.models,
+    settings.providers,
+    result.account,
+    hasConfiguredClaudeModels,
+  )
   return {
     ...result,
     ...catalog,
+    hasConfiguredClaudeModels,
     providers: settings.providers,
     defaultModel: settings.defaultModel,
   }

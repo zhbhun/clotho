@@ -21,9 +21,11 @@ import {
   readMarketSkillSource,
 } from './claude/agent-config/market-skills-cli'
 import { getPublishedSkillBoard } from './claude/agent-config/published-skill-board'
+import { resetAvailableSubagents } from './claude/agent-config/supported-agents'
 import { loadAttachmentFiles } from './claude/attachments'
 import { createModelProxy } from './claude/model-proxy'
 import { ensureWorkProject } from './claude/projects'
+import { claudeRuntime } from './claude/runtime'
 import { projectIdFromPath } from './claude/sessions'
 import { createSettingsStore, defaultSettings, readSettings } from './claude/settings'
 import { attachExternalNavigation } from './external-navigation'
@@ -234,6 +236,20 @@ export async function bootstrap() {
     }
     rebuildApplicationMenu()
 
+    claudeRuntime.configure({
+      customPath: settingsStore.get().claudeCodePath,
+      savePath: async (claudeCodePath) => {
+        await settingsStore.update((settings) => ({
+          ...settings,
+          claudeCodePath: claudeCodePath || undefined,
+        }))
+      },
+      publish: (state) => {
+        if (state.phase === 'ready') resetAvailableSubagents()
+        appWindows.broadcast('claudeRuntimeChanged', state)
+      },
+    })
+
     const proxySettings = settingsStore.get()
     let modelProxy
     try {
@@ -327,6 +343,9 @@ export async function bootstrap() {
             })
             return { opened: false }
           }),
+        claudeRuntimeGet: () => claudeRuntime.get(),
+        claudeRuntimeCheck: ({ customPath }) => claudeRuntime.check(customPath),
+        claudeRuntimeInstall: () => claudeRuntime.start(),
         claudeStartup: (params) => service.startup(params),
         claudeQueryControl: (params) => service.controlQuery(params),
         claudeSessionQueryEnsure: (params) => service.sessionQueryEnsure(params),
@@ -599,7 +618,12 @@ export async function bootstrap() {
           error: caught,
         })
       })
-      void Promise.all([stopModelProxy, saveWindowState, stopSessionQueries]).finally(async () => {
+      void Promise.all([
+        stopModelProxy,
+        saveWindowState,
+        stopSessionQueries,
+        claudeRuntime.stop(),
+      ]).finally(async () => {
         await shutdownLogging().catch(() => undefined)
         app.exit(0)
       })

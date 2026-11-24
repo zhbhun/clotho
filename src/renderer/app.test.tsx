@@ -11,11 +11,28 @@ import { requestFromDesktop } from './services/desktop/client'
 vi.mock('./services/desktop/client', () => ({
   isDesktopRuntime: () => true,
   requestFromDesktop: vi.fn(async (command: string) => {
+    if (command === 'claudeRuntimeGet' || command === 'claudeRuntimeCheck') {
+      return {
+        phase: 'ready',
+        minimumVersion: '2.1.0',
+        version: '2.1.0',
+        path: '/user/claude',
+        customPath: '',
+        installPath: '/user/claude',
+        logs: '',
+      }
+    }
     if (command === 'claudeListProjects') {
       return []
     }
     if (command === 'claudeStartup') {
-      return { cwd: '/Users/test', commands: [], agents: [], models: [] }
+      return {
+        cwd: '/Users/test',
+        commands: [],
+        agents: [],
+        models: [],
+        hasClaudeAuthentication: true,
+      }
     }
     if (command === 'claudeListProviders') {
       return []

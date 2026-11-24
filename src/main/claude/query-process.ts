@@ -2,6 +2,9 @@ import { spawn } from 'node:child_process'
 
 import type { SpawnOptions, SpawnedProcess } from '@anthropic-ai/claude-agent-sdk'
 
+import { claudeRuntime } from './runtime'
+import { trackClaudeProcess } from './runtime/processes'
+
 /** Tracks the actual child exit independently of the SDK's bounded cleanup wait. */
 export function createQueryProcess() {
   let exited: Promise<void> | undefined
@@ -16,6 +19,8 @@ export function createQueryProcess() {
         stdio: 'pipe',
         windowsHide: true,
       })
+      trackClaudeProcess(child)
+      child.on('error', (error) => claudeRuntime.invalidate(error))
       child.stderr.setEncoding('utf8')
       child.stderr.on('data', (chunk: string) => {
         stderr = (stderr + chunk).slice(-16_384)

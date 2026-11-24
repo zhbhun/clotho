@@ -19,17 +19,6 @@ import { FuseV1Options, FuseVersion } from '@electron/fuses'
  */
 const EXTERNAL_RUNTIME_PACKAGES = ['@anthropic-ai/claude-agent-sdk', '@ff-labs/fff-node', 'ffi-rs']
 
-/** Claude Agent SDK ships its CLI binary in per-platform packages. */
-function claudeAgentSdkPlatformPackages(platform: string, arch: string) {
-  const candidates: string[] = []
-  if (platform === 'darwin') candidates.push(`darwin-${arch}`)
-  else if (platform === 'win32') candidates.push(`win32-${arch}`)
-  else if (platform === 'linux') {
-    candidates.push(`linux-${arch}`, `linux-${arch}-musl`)
-  }
-  return candidates.map((suffix) => `@anthropic-ai/claude-agent-sdk-${suffix}`)
-}
-
 /** fff ships its dylib/dll/so in per-platform packages (see @ff-labs/fff-node). */
 function fffBinPackages(platform: string, arch: string) {
   const candidates: string[] = []
@@ -89,7 +78,6 @@ async function packageAfterCopy(
   await copySkillsRuntime(buildPath)
   const targets = [
     ...EXTERNAL_RUNTIME_PACKAGES,
-    ...claudeAgentSdkPlatformPackages(platform, arch),
     ...fffBinPackages(platform, arch),
     ...ffiRsBindingPackages(platform, arch),
   ]
@@ -112,7 +100,7 @@ const config: ForgeConfig = {
     // paths, so they need the leading `**/`.
     asar: {
       unpack:
-        '{**/skill-runtime/**,**/*.node,**/node_modules/@anthropic-ai/claude-agent-sdk-*/**,**/node_modules/@ff-labs/fff-bin-*/**,**/node_modules/@yuuang/ffi-rs-*/**}',
+        '{**/skill-runtime/**,**/*.node,**/node_modules/@ff-labs/fff-bin-*/**,**/node_modules/@yuuang/ffi-rs-*/**}',
     },
   },
   rebuildConfig: {},

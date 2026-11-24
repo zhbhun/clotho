@@ -52,6 +52,7 @@ import {
 import { cn } from '@/shadcn/utils'
 
 import { APP_CONTENT_CONTAINER_CLASS, APP_SIDEBAR_DEFAULT_WIDTH } from '../../components/app-layout'
+import { ClaudeRuntimePanel } from '../../components/claude-runtime'
 import { ErrorBoundary } from '../../components/error-boundary'
 import { FailureEmpty } from '../../components/failure-empty'
 import { DiscardChangesDialog } from '../../components/marketplace/discard-changes-dialog'
@@ -501,6 +502,7 @@ function SettingsPageContent({
                         <LanguageSettings />
                         <PermissionSettings />
                         <SessionSettings />
+                        <ClaudeRuntimePanel />
                       </div>
                     </SettingsCategory>
                     <SettingsCategory isActive={category.id === 'models'}>

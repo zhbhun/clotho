@@ -1,0 +1,897 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Clotho · Claude Code 安装引导原型</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5f5f6;
+        --paper: #fff;
+        --ink: #242427;
+        --muted: #77777e;
+        --line: #e6e6e9;
+        --soft: #f8f8f9;
+        --green: #26765b;
+        --amber: #95651e;
+        --red: #b34747;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          14px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          'PingFang SC',
+          sans-serif;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+      button,
+      a,
+      summary,
+      select {
+        cursor: pointer;
+      }
+      button {
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        padding: 8px 15px;
+        background: white;
+        color: var(--ink);
+      }
+      button:hover {
+        background: #f1f1f3;
+      }
+      button:disabled {
+        opacity: 0.38;
+        cursor: default;
+      }
+      button.primary {
+        background: var(--ink);
+        border-color: var(--ink);
+        color: white;
+      }
+      button.primary:hover {
+        background: #414146;
+      }
+      button.ghost {
+        border-color: transparent;
+        background: transparent;
+        color: var(--muted);
+      }
+      a {
+        color: inherit;
+        text-underline-offset: 4px;
+      }
+      h1,
+      h2,
+      p {
+        margin: 0;
+      }
+      h1 {
+        font-size: 25px;
+        letter-spacing: -0.7px;
+        font-weight: 600;
+      }
+      h2 {
+        font-size: 15px;
+        font-weight: 600;
+      }
+      small,
+      .muted {
+        color: var(--muted);
+      }
+      code,
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        font-size: 12px;
+      }
+      .intro {
+        max-width: 1376px;
+        margin: 26px auto 18px;
+        padding: 0 28px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+      }
+      .intro strong {
+        font-size: 15px;
+      }
+      .intro p {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .tag {
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        font-size: 11px;
+        padding: 2px 7px;
+        margin-left: 8px;
+        color: var(--muted);
+        background: white;
+      }
+      .layout {
+        max-width: 1376px;
+        margin: auto;
+        padding: 0 28px 28px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 262px;
+        gap: 20px;
+      }
+      .window {
+        min-height: 660px;
+        background: white;
+        border: 1px solid #dedee2;
+        border-radius: 13px;
+        overflow: hidden;
+        box-shadow: 0 12px 38px #2020240a;
+        display: flex;
+        flex-direction: column;
+      }
+      .titlebar {
+        height: 46px;
+        padding: 0 18px;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        position: relative;
+      }
+      .dot {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background: #e5e5e8;
+      }
+      .window-name {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .steps {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        margin: 22px 20px 10px;
+        font-size: 12px;
+        color: #9999a0;
+      }
+      .step {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+      }
+      .step i {
+        width: 24px;
+        height: 24px;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        font-style: normal;
+        font-size: 11px;
+      }
+      .step.active {
+        color: var(--ink);
+      }
+      .step.active i {
+        background: var(--ink);
+        color: white;
+        border-color: var(--ink);
+      }
+      .steps .line {
+        width: 45px;
+        height: 1px;
+        background: var(--line);
+      }
+      main {
+        width: 100%;
+        max-width: 600px;
+        padding: 37px 28px 28px;
+        margin: 0 auto;
+        flex: 1;
+      }
+      .lead {
+        margin: 8px 0 26px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      .card-top {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 21px;
+      }
+      .terminal {
+        width: 45px;
+        height: 45px;
+        border-radius: 11px;
+        display: grid;
+        place-items: center;
+        color: white;
+        background: #29292d;
+        font:
+          20px ui-monospace,
+          monospace;
+      }
+      .card-top .muted {
+        font-size: 12px;
+      }
+      .badge {
+        font-size: 11px;
+        border-radius: 4px;
+        padding: 3px 7px;
+        margin-left: auto;
+        background: #f1f1f3;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+      .badge.good {
+        color: var(--green);
+        background: #eef7f2;
+      }
+      .badge.warn {
+        color: var(--amber);
+        background: #fcf5e9;
+      }
+      .badge.bad {
+        color: var(--red);
+        background: #fceeee;
+      }
+      .status {
+        border-top: 1px solid var(--line);
+        background: var(--soft);
+        padding: 18px 21px;
+      }
+      .status-head {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-weight: 500;
+        font-size: 13px;
+      }
+      .status p {
+        font-size: 12px;
+        color: var(--muted);
+        margin: 5px 0 0 24px;
+      }
+      .status-icon {
+        width: 15px;
+        height: 15px;
+        display: grid;
+        place-items: center;
+        font-size: 13px;
+      }
+      .facts {
+        margin-top: 20px;
+        display: grid;
+        gap: 11px;
+        font-size: 12px;
+      }
+      .fact {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 16px;
+      }
+      .fact span:first-child {
+        color: var(--muted);
+        flex-shrink: 0;
+      }
+      .fact code {
+        text-align: right;
+        overflow-wrap: anywhere;
+      }
+      .note {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 17px;
+      }
+      .path-form {
+        display: flex;
+        gap: 7px;
+        margin-top: 10px;
+      }
+      input {
+        min-width: 0;
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 8px 10px;
+        background: white;
+        font-size: 12px;
+      }
+      .path-form button {
+        flex-shrink: 0;
+      }
+      details {
+        margin-top: 18px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      summary {
+        list-style: none;
+      }
+      summary::before {
+        content: '›';
+        margin-right: 8px;
+      }
+      details[open] summary::before {
+        content: '⌄';
+      }
+      pre {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        padding: 12px;
+        border-radius: 6px;
+        background: var(--soft);
+        font-size: 11px;
+        color: #5e5e66;
+      }
+      .actions {
+        display: flex;
+        gap: 9px;
+        flex-wrap: wrap;
+        margin-top: 25px;
+      }
+      .actions button {
+        font-size: 13px;
+      }
+      .secondary {
+        display: flex;
+        gap: 20px;
+        margin-top: 16px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .secondary button {
+        padding: 0;
+        font-size: 12px;
+      }
+      .window-foot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 17px 26px;
+        border-top: 1px solid #f0f0f2;
+        font-size: 11px;
+        color: #96969d;
+      }
+      aside {
+        padding-top: 3px;
+      }
+      .aside-title {
+        font-size: 11px;
+        color: var(--muted);
+        margin: 0 0 12px;
+      }
+      .scenarios {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .scenario {
+        text-align: left;
+        border-color: transparent;
+        background: transparent;
+        padding: 10px 12px;
+        font-size: 12px;
+      }
+      .scenario.selected {
+        border-color: var(--line);
+        background: white;
+      }
+      .scenario span {
+        display: block;
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+      .inspector {
+        margin: 22px 0;
+        border-top: 1px solid var(--line);
+        padding-top: 18px;
+      }
+      dl {
+        margin: 0;
+        font-size: 11px;
+      }
+      dl div {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin: 9px 0;
+      }
+      dt {
+        color: var(--muted);
+      }
+      dd {
+        margin: 0;
+        text-align: right;
+      }
+      .event {
+        border: 1px dashed #cccdd2;
+        border-radius: 8px;
+        padding: 13px;
+        background: #ffffff60;
+      }
+      .event p {
+        color: var(--muted);
+        font-size: 11px;
+        margin: 5px 0 12px;
+      }
+      .event button {
+        width: 100%;
+        font-size: 12px;
+      }
+      .free {
+        margin-top: 17px;
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .free button {
+        font-size: 11px;
+        padding: 5px 8px;
+        background: transparent;
+      }
+      .field {
+        margin-top: 18px;
+      }
+      .field label {
+        display: block;
+        font-size: 12px;
+        margin-bottom: 7px;
+      }
+      select {
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 7px 9px;
+        background: white;
+        font-size: 12px;
+      }
+      .field select {
+        width: 100%;
+      }
+      .success-mark {
+        font-size: 24px;
+        color: var(--green);
+        margin-bottom: 15px;
+      }
+      @media (max-width: 1000px) {
+        .layout {
+          grid-template-columns: 1fr 225px;
+          gap: 12px;
+          padding: 0 16px 20px;
+        }
+        .intro {
+          padding: 0 16px;
+        }
+        .steps {
+          gap: 9px;
+        }
+        .steps .line {
+          width: 20px;
+        }
+      }
+      @media (max-width: 760px) {
+        .layout {
+          display: flex;
+          flex-direction: column;
+        }
+        .window {
+          min-height: 610px;
+        }
+        .intro {
+          align-items: start;
+        }
+        .intro p {
+          max-width: 340px;
+        }
+        aside {
+          padding: 12px;
+        }
+        .scenarios {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+        }
+        .steps {
+          gap: 7px;
+          font-size: 10px;
+        }
+        .steps .line {
+          width: 10px;
+        }
+        main {
+          padding: 30px 22px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="intro">
+      <div>
+        <strong>Claude Code 首次启动引导</strong><span class="tag">交互原型</span>
+        <p>体验检测、安装与修复能否顺畅衔接。所有操作均为模拟，不会下载安装或保存设置。</p>
+      </div>
+      <select id="platform" aria-label="模拟系统">
+        <option value="macOS">macOS · Apple Silicon</option>
+        <option value="Windows">Windows · x64</option>
+        <option value="Linux">Linux · x64</option>
+      </select>
+    </header>
+    <div class="layout">
+      <section class="window">
+        <div class="titlebar">
+          <i class="dot"></i><i class="dot"></i><i class="dot"></i
+          ><span class="window-name">Clotho</span>
+        </div>
+        <div class="steps" id="steps"></div>
+        <main id="screen"></main>
+        <footer class="window-foot">
+          <span>设置 Clotho</span><span id="footnote">准备运行环境</span>
+        </footer>
+      </section>
+      <aside>
+        <div class="aside-title">体验场景 · 点击重新开始</div>
+        <div class="scenarios" id="scenarios"></div>
+        <div class="inspector">
+          <div class="aside-title">模拟状态</div>
+          <dl id="state"></dl>
+        </div>
+        <div class="event">
+          <h2 style="font-size: 12px">模拟下一步结果</h2>
+          <p id="event-hint"></p>
+          <button id="next-event"></button>
+        </div>
+        <div class="free">
+          <button data-action="fail">模拟网络中断</button
+          ><button data-action="remove">模拟 CLI 被移除</button
+          ><button data-action="reset">重置场景</button>
+        </div>
+        <p class="note">
+          右侧是原型控制台，正式应用中不会出现。安装阶段由“模拟下一步结果”推进，便于逐屏查看。
+        </p>
+      </aside>
+    </div>
+    <script>
+      // Throwaway prototype. Pure state transitions; no system, network, or persistence access.
+      const scenarios = [
+        {
+          id: 'fresh',
+          title: '首次安装',
+          text: '未安装 → 一键安装 → 配置模型',
+          result: 'missing',
+          configured: false,
+        },
+        {
+          id: 'existing',
+          title: '已经安装',
+          text: '检测通过 → 继续配置',
+          result: 'ready',
+          configured: false,
+        },
+        {
+          id: 'retry',
+          title: '安装中断',
+          text: '网络失败 → 重试并恢复',
+          result: 'missing',
+          configured: false,
+        },
+        {
+          id: 'old',
+          title: '版本过旧',
+          text: '提示更新 → 验证新版本',
+          result: 'outdated',
+          configured: false,
+        },
+        {
+          id: 'manual',
+          title: '自定义安装位置',
+          text: '指定路径 → 重新检测',
+          result: 'missing',
+          configured: false,
+        },
+        {
+          id: 'returning',
+          title: '老用户环境失效',
+          text: '已有模型配置，仍需修复 CLI',
+          result: 'missing',
+          configured: true,
+        },
+      ]
+      const names = {
+        checking: '正在检测',
+        missing: '未安装',
+        outdated: '版本过旧',
+        preparing: '准备安装',
+        downloading: '下载安装中',
+        verifying: '验证安装',
+        failed: '安装失败',
+        ready: '环境就绪',
+        provider: '配置模型',
+        done: '可以开始使用',
+      }
+      const busy = ['preparing', 'downloading', 'verifying']
+      function initial(id = 'fresh', platform = 'macOS') {
+        const scenario = scenarios.find((item) => item.id === id)
+        return {
+          scenario: id,
+          platform,
+          phase: 'checking',
+          result: scenario.result,
+          configured: scenario.configured,
+          version: scenario.result === 'outdated' ? '2.0.76' : null,
+          customPath: '',
+          source: '官方原生安装',
+          operation: '安装',
+          attempts: 0,
+          logs: [],
+          error: '',
+        }
+      }
+      function reduce(state, action) {
+        if (action.type === 'reset') return initial(state.scenario, state.platform)
+        if (action.type === 'scenario') return initial(action.value, state.platform)
+        if (action.type === 'platform') return initial(state.scenario, action.value)
+        if (action.type === 'check' && !busy.includes(state.phase))
+          return { ...state, phase: 'checking', error: '' }
+        if (action.type === 'path' && !busy.includes(state.phase))
+          return { ...state, customPath: action.value, result: 'ready', phase: 'checking' }
+        if (action.type === 'install' && ['missing', 'outdated', 'failed'].includes(state.phase))
+          return {
+            ...state,
+            phase: 'preparing',
+            attempts: state.attempts + 1,
+            operation: state.phase === 'outdated' ? '更新' : state.operation,
+            error: '',
+            logs: ['已由用户确认，准备官方安装器。'],
+          }
+        if (action.type === 'fail' && busy.includes(state.phase))
+          return {
+            ...state,
+            phase: 'failed',
+            error: '连接下载服务器超时，请检查网络后重试。',
+            logs: [...state.logs, '下载超时 · ETIMEDOUT（模拟）'],
+          }
+        if (action.type === 'remove' && !busy.includes(state.phase))
+          return {
+            ...state,
+            phase: 'missing',
+            result: 'missing',
+            version: null,
+            customPath: '',
+            error: '',
+          }
+        if (action.type === 'continue' && state.phase === 'ready')
+          return { ...state, phase: state.configured ? 'done' : 'provider' }
+        if (action.type === 'finish' && state.phase === 'provider')
+          return { ...state, phase: 'done', configured: true }
+        if (action.type !== 'advance') return state
+        if (state.phase === 'checking')
+          return {
+            ...state,
+            phase: state.result,
+            version: state.result === 'ready' ? '2.1.319' : state.version,
+          }
+        if (state.phase === 'preparing')
+          return {
+            ...state,
+            phase: 'downloading',
+            logs: [...state.logs, '官方安装器已启动，正在下载安装 Claude Code。'],
+          }
+        if (state.phase === 'downloading')
+          return state.scenario === 'retry' && state.attempts === 1
+            ? reduce(state, { type: 'fail' })
+            : {
+                ...state,
+                phase: 'verifying',
+                logs: [...state.logs, '安装器已退出，重新扫描用户安装目录并验证版本。'],
+              }
+        if (state.phase === 'verifying')
+          return {
+            ...state,
+            phase: 'ready',
+            result: 'ready',
+            version: '2.1.319',
+            logs: [...state.logs, 'Claude Code 2.1.319 · 验证通过。'],
+          }
+        return state
+      }
+    </script>
+    <script>
+      let state = initial()
+      const $ = (id) => document.getElementById(id)
+      const escape = (text) =>
+        String(text)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#39;')
+      const path = () =>
+        state.customPath ||
+        (state.platform === 'Windows'
+          ? 'C:\\Users\\you\\.local\\bin\\claude.exe'
+          : '~/.local/bin/claude')
+      const button = (label, action, primary = false) =>
+        `<button ${primary ? 'class="primary"' : ''} data-action="${action}">${label}</button>`
+      function dispatch(action) {
+        state = reduce(state, action)
+        render()
+      }
+      function render() {
+        const phase = state.phase
+        const activeStep = phase === 'provider' ? 1 : phase === 'done' ? 3 : 0
+        $('steps').innerHTML = ['运行环境', '模型服务', '默认模型', '开始使用']
+          .map(
+            (label, index) =>
+              `${index ? '<span class="line"></span>' : ''}<div class="step ${index === activeStep ? 'active' : ''}"><i>${index < activeStep ? '✓' : index + 1}</i>${label}</div>`,
+          )
+          .join('')
+        $('scenarios').innerHTML = scenarios
+          .map(
+            (item) =>
+              `<button class="scenario ${item.id === state.scenario ? 'selected' : ''}" data-scenario="${item.id}">${item.title}<span>${item.text}</span></button>`,
+          )
+          .join('')
+        $('state').innerHTML = [
+          ['运行系统', state.platform],
+          ['当前阶段', names[phase]],
+          ['CLI 版本', state.version || '尚未检测到'],
+          ['最低版本', '2.1.0'],
+          ['已有模型配置', state.configured ? '有，修复后直接进入' : '无'],
+          ['安装尝试', `${state.attempts} 次`],
+          ['本机实际改动', '无，全部模拟'],
+        ]
+          .map(([key, value]) => `<div><dt>${key}</dt><dd>${escape(value)}</dd></div>`)
+          .join('')
+        const next = {
+          checking: ['返回检测结果', '模拟主进程完成路径与版本检查。'],
+          preparing: ['安装器开始下载', '进入安装器执行阶段，不显示虚构百分比。'],
+          downloading: [
+            state.scenario === 'retry' && state.attempts === 1
+              ? '返回下载失败'
+              : '安装完成，开始验证',
+            '首次“安装中断”场景将在这里返回网络错误。',
+          ],
+          verifying: ['验证通过', '重新发现 CLI，更新当前进程路径，再检查版本。'],
+        }[phase]
+        $('next-event').disabled = !next
+        $('next-event').textContent = next?.[0] || '请操作左侧引导'
+        $('event-hint').textContent =
+          next?.[1] || '在左侧执行安装、重试或继续，也可以切换体验场景。'
+        $('footnote').textContent = state.configured ? '你的模型配置会保留' : '准备运行环境'
+        document.querySelector('[data-action="fail"]').disabled = !busy.includes(phase)
+        document.querySelector('[data-action="remove"]').disabled = busy.includes(phase)
+        if (phase === 'provider') {
+          $('screen').innerHTML =
+            `<h1>连接你的模型服务</h1><p class="lead">运行环境已就绪，继续设置你使用的模型。</p><div class="card"><div class="card-top"><div><h2>模型服务</h2><p class="muted">这里衔接 Clotho 现有的模型配置流程</p></div><span class="badge good">环境已就绪</span></div><div class="status"><div class="field"><label>服务商</label><select><option>Anthropic</option><option>智谱 GLM</option><option>自定义兼容服务</option></select></div><div class="field"><label>API Key</label><input placeholder="填写 API Key（仅作界面演示）" type="password" /></div></div></div><p class="note">本原型只演示衔接，不校验或保存模型配置。</p><div class="actions">${button('模拟配置完成', 'finish', true)}</div>`
+          return
+        }
+        if (phase === 'done') {
+          $('screen').innerHTML =
+            `<div class="success-mark">✓</div><h1>一切就绪</h1><p class="lead">Claude Code 已可用${state.configured ? '，模型配置已保留' : ''}，现在可以开始会话。</p><div class="card"><div class="card-top"><div class="terminal">&gt;_</div><div><h2>Claude Code</h2><p class="muted">${escape(state.version)} · ${escape(state.platform)}</p></div><span class="badge good">可用</span></div></div><div class="actions">${button('重新体验', 'reset', true)}</div><p class="note">原型到此结束，不会打开真实会话。</p>`
+          return
+        }
+        const info = {
+          checking: [
+            '检测 Claude Code',
+            'Clotho 需要 Claude Code 来运行会话，也可以使用你配置的第三方模型。',
+            '正在检查本机安装',
+            '检查命令位置、可执行性和版本。',
+            '检测中',
+            '◌',
+            '',
+          ],
+          missing: [
+            '先准备好 Claude Code',
+            'Clotho 使用你电脑上的 Claude Code。安装一次，也能在终端和其他应用中使用。',
+            '尚未找到 Claude Code',
+            '可以直接在这里安装，也可以指定已有安装的位置。',
+            '未安装',
+            '○',
+            '',
+          ],
+          outdated: [
+            'Claude Code 需要更新',
+            '现有版本暂不满足 Clotho 的运行要求，更新后可以继续。',
+            '当前版本 2.0.76，要求至少 2.1.0',
+            '更新共享安装也会影响终端和其他使用它的应用。',
+            '版本过旧',
+            '!',
+            'warn',
+          ],
+          preparing: [
+            `正在${state.operation} Claude Code`,
+            '请保持 Clotho 运行。完成后会自动检查安装结果。',
+            '准备官方安装器',
+            '安装到用户目录，不需要管理员权限。',
+            '准备中',
+            '◌',
+            '',
+          ],
+          downloading: [
+            `正在${state.operation} Claude Code`,
+            '请保持 Clotho 运行。完成后会自动检查安装结果。',
+            '正在下载安装',
+            '官方安装器未提供下载百分比，请稍候。',
+            '安装中',
+            '↓',
+            '',
+          ],
+          verifying: [
+            '确认安装结果',
+            '正在重新查找 Claude Code，并验证它能否正常运行。',
+            '正在验证路径和版本',
+            '完成后可直接继续，无需重启 Clotho。',
+            '验证中',
+            '◌',
+            '',
+          ],
+          failed: [
+            `${state.operation}未完成`,
+            '你可以重试，也可以在终端完成安装后返回这里检测。',
+            '下载连接超时',
+            state.error,
+            '安装失败',
+            '!',
+            'bad',
+          ],
+          ready: [
+            '运行环境已就绪',
+            '已找到可用的 Claude Code，可以继续设置 Clotho。',
+            '检测通过',
+            '无需重复安装，Clotho 会复用这个位置。',
+            '可用',
+            '✓',
+            'good',
+          ],
+        }[phase]
+        $('screen').innerHTML =
+          `<h1>${info[0]}</h1><p class="lead">${info[1]}</p><div class="card"><div class="card-top"><div class="terminal">&gt;_</div><div><h2>Claude Code</h2><p class="muted">${state.version ? escape(state.version) : '官方命令行运行环境'} · ${escape(state.platform)}</p></div><span class="badge ${info[6]}">${info[4]}</span></div><div class="status"><div class="status-head"><span class="status-icon" style="color:var(--${info[6] === 'good' ? 'green' : info[6] === 'bad' ? 'red' : info[6] === 'warn' ? 'amber' : 'muted'})">${info[5]}</span>${info[2]}</div><p>${escape(info[3])}</p></div></div>
+          <div class="facts"><div class="fact"><span>${phase === 'missing' ? '将安装到' : '安装位置'}</span><code>${escape(path())}</code></div><div class="fact"><span>安装来源</span><span>${state.source}</span></div></div>
+          <div class="actions">${['missing', 'failed', 'outdated'].includes(phase) ? button(phase === 'failed' ? '重试' + state.operation : phase === 'outdated' ? '更新 Claude Code' : '安装 Claude Code', 'install', true) : ''}${phase === 'ready' ? button(state.configured ? '进入 Clotho' : '继续配置模型', 'continue', true) : ''}${!busy.includes(phase) && phase !== 'checking' ? button('重新检测', 'check') : ''}${busy.includes(phase) ? '<button class="primary" disabled>处理中…</button>' : ''}</div>
+          ${state.logs.length ? `<details ${phase === 'failed' ? 'open' : ''}><summary>查看${state.operation}详情</summary><pre>${escape(state.logs.join('\n'))}</pre></details>` : ''}
+          ${['missing', 'failed', 'outdated'].includes(phase) ? '<div class="secondary"><a href="https://code.claude.com/docs/en/quickstart" target="_blank" rel="noreferrer">查看手动安装指引 ↗</a></div><details><summary>已安装？指定 Claude Code 路径</summary><div class="path-form"><input id="custom-path" placeholder="输入 claude 可执行文件的完整路径" /><button data-action="set-path">检测路径</button></div><p class="note">原型中，输入任意非空路径将模拟检测成功。</p></details>' : ''}`
+      }
+      document.addEventListener('click', (event) => {
+        const target = event.target.closest('button')
+        if (!target || target.disabled) return
+        if (target.dataset.scenario)
+          return dispatch({ type: 'scenario', value: target.dataset.scenario })
+        if (target.dataset.action === 'set-path') {
+          const value = $('custom-path').value.trim()
+          if (value) dispatch({ type: 'path', value })
+          return
+        }
+        if (target.dataset.action) dispatch({ type: target.dataset.action })
+      })
+      $('next-event').addEventListener('click', () => dispatch({ type: 'advance' }))
+      $('platform').addEventListener('change', (event) =>
+        dispatch({ type: 'platform', value: event.target.value }),
+      )
+      render()
+    </script>
+  </body>
+</html>

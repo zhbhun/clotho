@@ -16,6 +16,7 @@ import {
   startQuery,
   startup,
 } from './runner'
+import { resolveClaudeCodeBinary } from './sdk-binary'
 
 const sdkMocks = vi.hoisted(() => ({
   query: vi.fn(),
@@ -25,17 +26,17 @@ const loggingMocks = vi.hoisted(() => ({
   info: vi.fn(),
 }))
 
+vi.mock('./sdk-binary', () => ({ resolveClaudeCodeBinary: vi.fn(async () => '/user/claude') }))
 vi.mock('@anthropic-ai/claude-agent-sdk', () => sdkMocks)
 vi.mock('../logging/runtime', () => ({ getLogger: () => loggingMocks }))
 vi.mock('../shell-env', () => ({
   applyLoginShellEnv: vi.fn(async () => false),
 }))
 
-/** Lets the deferred login-shell-env apply (two microtasks) settle so the
+/** Lets the deferred login-shell-env apply (pending microtasks) settle so the
  * SDK query is constructed before assertions run. */
 async function flushEnvApply() {
-  await Promise.resolve()
-  await Promise.resolve()
+  for (let index = 0; index < 8; index += 1) await Promise.resolve()
 }
 
 type MockQueryOptions = {
@@ -178,6 +179,7 @@ const proxy = {
 describe('Claude SDK runner', () => {
   beforeEach(() => {
     vi.mocked(sdkQuery).mockReset()
+    vi.mocked(resolveClaudeCodeBinary).mockReset().mockResolvedValue('/user/claude')
     loggingMocks.error.mockClear()
     loggingMocks.info.mockClear()
     proxy.settingsEnv.mockClear()
@@ -384,6 +386,46 @@ describe('Claude SDK runner', () => {
     expect(close).toHaveBeenCalledOnce()
     vi.useRealTimers()
   })
+
+  it.each(['runtime resolution', 'SDK construction'])(
+    'ends a failed %s and allows a manual retry after repair',
+    async (failure) => {
+      const events = createEvents()
+      const error = new Error('Claude Code installation or update is in progress.')
+      if (failure === 'runtime resolution') {
+        vi.mocked(resolveClaudeCodeBinary).mockRejectedValueOnce(error)
+      } else {
+        vi.mocked(sdkQuery).mockImplementationOnce(() => {
+          throw error
+        })
+      }
+
+      const query = startQuery(events, { streamId: 'stream-1' }, proxy, {
+        promptQueue: parkedInput(),
+      })
+      await vi.waitFor(() => expect(events.onComplete).toHaveBeenCalledWith('stream-1', false))
+      await expect(query.initialized).resolves.toBeUndefined()
+      expect(events.onError).toHaveBeenCalledWith(
+        'stream-1',
+        `Failed to start Claude Code. Check its installation path or update status, then retry. ${error.message}`,
+        error.stack,
+      )
+      expect(events.onComplete).toHaveBeenCalledOnce()
+      await expect(controlQuery({ streamId: 'stream-1', command: 'interrupt' })).rejects.toThrow(
+        'Claude query stream not found',
+      )
+      if (failure === 'runtime resolution') expect(sdkQuery).not.toHaveBeenCalled()
+
+      const retryEvents = createEvents()
+      vi.mocked(sdkQuery).mockReturnValue(createMockQuery([]) as never)
+      const retry = startQuery(retryEvents, { streamId: 'stream-1' }, proxy, {
+        promptQueue: parkedInput(),
+      })
+      await retry.initialized
+      await vi.waitFor(() => expect(retryEvents.onComplete).toHaveBeenCalledWith('stream-1', true))
+      expect(retryEvents.onError).not.toHaveBeenCalled()
+    },
+  )
 
   it('reports SDK query errors through the event sink', async () => {
     const events = createEvents()

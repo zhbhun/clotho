@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { EventEmitter } from 'node:events'
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
@@ -21,17 +22,22 @@ import {
 // Capture every CLI spawn at the module boundary.
 const execFileMock = vi.hoisted(() => vi.fn())
 vi.mock('node:child_process', () => ({
-  execFile: execFileMock,
+  execFile: (...args: unknown[]) => {
+    const child = new EventEmitter()
+    execFileMock(...args)
+    queueMicrotask(() => child.emit('exit', 0))
+    return child
+  },
 }))
 
 vi.mock('../sdk-binary', () => ({
-  resolveClaudeCodeBinary: vi.fn(() => '/resolved/claude'),
+  resolveClaudeCodeBinary: vi.fn(async () => '/resolved/claude'),
 }))
 
 afterEach(() => {
   execFileMock.mockReset()
   vi.mocked(resolveClaudeCodeBinary).mockClear()
-  vi.mocked(resolveClaudeCodeBinary).mockReturnValue('/resolved/claude')
+  vi.mocked(resolveClaudeCodeBinary).mockResolvedValue('/resolved/claude')
 })
 
 describe('CLI invocation', () => {
@@ -48,13 +54,10 @@ describe('CLI invocation', () => {
     )
   })
 
-  it('falls back to `claude` on PATH when the packaged binary is absent', async () => {
-    vi.mocked(resolveClaudeCodeBinary).mockReturnValue(undefined)
-    execFileMock.mockImplementation((_file, _args, _options, callback) => {
-      callback(null, '[]', '')
-    })
-    await listMarketplaces()
-    expect(execFileMock.mock.calls[0]?.[0]).toBe('claude')
+  it('rejects when the verified user installation is unavailable without spawning a fallback', async () => {
+    vi.mocked(resolveClaudeCodeBinary).mockRejectedValueOnce(new Error('Claude Code is not ready'))
+    await expect(listMarketplaces()).rejects.toThrow('Claude Code is not ready')
+    expect(execFileMock).not.toHaveBeenCalled()
   })
 
   it('surfaces stderr as the operation error', async () => {

@@ -1,6 +1,38 @@
 import { type TranslationRow, messages } from '../catalog'
 
 export const workbenchCatalog = {
+  'workbench.onboarding.claudeConnected': messages(
+    'Signed in to Claude',
+    '已登录 Claude',
+    '已登入 Claude',
+    'Claude にログイン済み',
+    'Claude 로그인됨',
+    'Sesión iniciada en Claude',
+    'Connecté à Claude',
+    'Bei Claude angemeldet',
+    'Conectado ao Claude',
+    'Вход в Claude выполнен',
+    'Claude में लॉग इन है',
+    'Sudah masuk ke Claude',
+    'Claude oturumu açık',
+    'Đã đăng nhập Claude',
+  ),
+  'workbench.onboarding.claudeDefault': messages(
+    'Use the default model from Claude Code.',
+    '使用 Claude Code 的默认模型。',
+    '使用 Claude Code 的預設模型。',
+    'Claude Code の既定モデルを使用します。',
+    'Claude Code의 기본 모델을 사용합니다.',
+    'Usa el modelo predeterminado de Claude Code.',
+    'Utiliser le modèle par défaut de Claude Code.',
+    'Standardmodell von Claude Code verwenden.',
+    'Use o modelo padrão do Claude Code.',
+    'Используется модель Claude Code по умолчанию.',
+    'Claude Code का डिफ़ॉल्ट मॉडल उपयोग करें।',
+    'Gunakan model bawaan Claude Code.',
+    'Claude Code’un varsayılan modelini kullanın.',
+    'Dùng mô hình mặc định của Claude Code.',
+  ),
   'workbench.nav.extensions': messages(
     'Extension',
     '扩展',

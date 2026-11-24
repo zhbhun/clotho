@@ -3,6 +3,8 @@ import { type AgentInfo, query } from '@anthropic-ai/claude-agent-sdk'
 import { type AgentSubagentFields } from '@/shared/rpc'
 
 import { getLogger } from '../../logging/runtime'
+import { createQueryProcess } from '../query-process'
+import { resolveClaudeCodeBinary } from '../sdk-binary'
 import { type SubagentConfigFile, listSubagentConfigs, subagentFieldsFrom } from './subagents'
 
 const logger = getLogger('agent-config')
@@ -80,16 +82,26 @@ export async function resolveAvailableSubagents(
 }
 
 async function resolveViaSdk(): Promise<AgentInfo[]> {
-  const q = query({ prompt: '' })
+  const pathToClaudeCodeExecutable = await resolveClaudeCodeBinary()
+  const process = createQueryProcess()
+  const q = query({
+    prompt: '',
+    options: { pathToClaudeCodeExecutable, spawnClaudeCodeProcess: process.spawn },
+  })
   try {
     return await q.supportedAgents()
   } finally {
     q.close()
+    await process.waitForExit()
   }
 }
 
 // Module-level snapshot for the app session; a restart is the refresh path (design D2).
 let cache: AvailableSubagent[] | null = null
+
+export function resetAvailableSubagents() {
+  cache = null
+}
 
 export async function listAvailableSubagents(): Promise<AvailableSubagent[]> {
   if (!cache) {

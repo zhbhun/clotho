@@ -44,6 +44,28 @@ function initialization(
 }
 
 describe('model configuration store', () => {
+  it('clears removed providers and defaults when a runtime refresh returns current settings', () => {
+    const store = createModelConfigurationStore()
+    store.getState().initialize(initialization())
+    store.getState().initialize(
+      initialization({
+        models: [],
+        providers: [],
+        defaultModel: undefined,
+        hasClaudeAuthentication: false,
+        hasConfiguredProviders: false,
+      }),
+      { refresh: true },
+    )
+    expect(store.getState()).toMatchObject({
+      availableModels: [],
+      providers: [],
+      defaultModel: null,
+      hasClaudeAuthentication: false,
+      hasConfiguredProviders: false,
+    })
+  })
+
   it('replaces configured providers without discarding authenticated Claude models', () => {
     const store = createModelConfigurationStore()
     store.getState().initialize(initialization())

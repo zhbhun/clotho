@@ -343,11 +343,11 @@ export interface AgentCapabilityFilters {
   enabledMcpServers?: NonNullable<Options['mcpServers']>
 }
 
-function normalizeOptions(
+async function normalizeOptions(
   options: ClaudeOptions | undefined,
   proxy?: ClaudeProxyConnection,
   capabilities?: AgentCapabilityFilters,
-): Options {
+): Promise<Options> {
   const qualifiedModel = options?.model
   const isClaudeModel = qualifiedModel?.startsWith('claude/') ?? false
   const isCustomModel = Boolean(qualifiedModel?.includes('/') && !isClaudeModel)
@@ -369,10 +369,7 @@ function normalizeOptions(
   // SDK sessions otherwise run on a two-line stub system prompt; the Claude
   // Code preset keeps sessions on the same prompt as the interactive CLI.
   normalized.systemPrompt ??= { type: 'preset', preset: 'claude_code' }
-  // When packaged, the SDK's own resolution would point inside the asar
-  // archive, where the CLI binary cannot be spawned from.
-  const claudeCodeBinary = resolveClaudeCodeBinary()
-  if (claudeCodeBinary) normalized.pathToClaudeCodeExecutable = claudeCodeBinary
+  normalized.pathToClaudeCodeExecutable = await resolveClaudeCodeBinary()
   if (isClaudeModel) normalized.model = qualifiedModel?.slice('claude/'.length)
   if (isCustomModel && proxy) {
     normalized.settings = { env: { ...TOOL_SEARCH_ENV, ...proxy.settingsEnv(qualifiedModel) } }
@@ -418,7 +415,7 @@ export async function startup({
   initializeTimeoutMs = 60_000,
 }: ClaudeStartupParams = {}): Promise<ClaudeInitializationResult> {
   await applyLoginShellEnv()
-  const normalizedOptions = normalizeOptions(options)
+  const normalizedOptions = await normalizeOptions(options)
   const process = createQueryProcess()
   const sdk = sdkQuery({
     prompt: pendingPrompt(),
@@ -473,7 +470,7 @@ export async function rewindSessionFiles({
   const sdk = sdkQuery({
     prompt: pendingPrompt(),
     options: {
-      ...normalizeOptions({ cwd, resume: sessionId }),
+      ...(await normalizeOptions({ cwd, resume: sessionId })),
       spawnClaudeCodeProcess: process.spawn,
     },
   })
@@ -509,7 +506,7 @@ export async function sampleSessionContextUsage(
   const sdk = sdkQuery({
     prompt: pendingPrompt(),
     options: {
-      ...normalizeOptions({ cwd, resume: sessionId, model }, proxy),
+      ...(await normalizeOptions({ cwd, resume: sessionId, model }, proxy)),
       spawnClaudeCodeProcess: process.spawn,
     },
   })
@@ -555,7 +552,7 @@ async function startQueryInner(
     entry.sdk = sdkQuery({
       prompt: extras.promptQueue,
       options: {
-        ...normalizeOptions(options, proxy, extras.capabilities),
+        ...(await normalizeOptions(options, proxy, extras.capabilities)),
         forwardSubagentText: true,
         includePartialMessages: true,
         abortController: entry.abortController,
@@ -579,10 +576,21 @@ async function startQueryInner(
       extras.tolerateResultErrors,
     )
   } catch (caught) {
-    activeQueries.delete(streamId)
-    logQueryTerminal(entry, 'failed', caught)
-    entry.resolveFinished()
-    throw caught
+    try {
+      const error = caught instanceof Error ? caught : undefined
+      const reason = error?.message ?? String(caught)
+      events.onError(
+        streamId,
+        `Failed to start Claude Code. Check its installation path or update status, then retry. ${reason}`,
+        error?.stack,
+      )
+      events.onComplete(streamId, false)
+      logQueryTerminal(entry, 'failed', caught)
+    } finally {
+      if (activeQueries.get(streamId) === entry) activeQueries.delete(streamId)
+      resolveInitialized()
+      entry.resolveFinished()
+    }
   }
 }
 

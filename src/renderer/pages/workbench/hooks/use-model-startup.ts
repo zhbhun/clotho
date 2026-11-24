@@ -2,63 +2,57 @@ import { useCallback, useEffect, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 
 import { loadModelSettings } from '../../../services/claude/model-settings'
+import { useClaudeRuntimeStore } from '../../../stores/claude-runtime-store'
 import {
   useModelConfigurationStore,
   useModelConfigurationStoreApi,
 } from '../../../stores/model-configuration-context'
-import { type ModelStartupDestination, getModelStartupPhase } from '../model-startup'
+import { getModelStartupPhase } from '../model-startup'
 import { startModelProbe } from '../services/model-probe'
-
-const SDK_STARTUP_WAIT_MS = 1_000
 
 export function useModelStartup(isProjectCatalogLoaded: boolean, isSdkWaitBypassed: boolean) {
   const modelStore = useModelConfigurationStoreApi()
+  const runtimeGeneration = useClaudeRuntimeStore((state) => state.generation)
   const {
     hasClaudeAuthentication,
+    hasConfiguredClaudeModels,
     hasConfiguredProviders,
     isModelAccessResolved,
+    isModelProbePending,
     isProviderSettingsLoaded,
     isSdkInitializationComplete,
   } = useModelConfigurationStore(
     useShallow((state) => ({
       hasClaudeAuthentication: state.hasClaudeAuthentication,
+      hasConfiguredClaudeModels: state.hasConfiguredClaudeModels,
       hasConfiguredProviders: state.hasConfiguredProviders,
       isModelAccessResolved: state.isModelAccessResolved,
+      isModelProbePending: state.isModelProbePending,
       isProviderSettingsLoaded: state.isSettingsLoaded,
       isSdkInitializationComplete: state.isSdkInitializationComplete,
     })),
   )
   const [isBootstrapSettled, setBootstrapSettled] = useState(false)
-  const [hasModelProbeFailed, setModelProbeFailed] = useState(false)
-  const [hasSdkWaitExpired, setHasSdkWaitExpired] = useState(false)
-  const [startupDestination, setStartupDestination] = useState<ModelStartupDestination | null>(null)
+  const [failedGeneration, setFailedGeneration] = useState<number | null>(null)
   const [isModelOnboardingDismissed, setModelOnboardingDismissed] = useState(false)
+  const [isOnboardingActive, setOnboardingActive] = useState(false)
 
   useEffect(() => {
     if (isSdkWaitBypassed) return
 
     let isCancelled = false
-    let isSettled = false
-    const probe = startModelProbe(modelStore)
-    const timeoutId = window.setTimeout(() => {
-      if (!isSettled && !isCancelled) setHasSdkWaitExpired(true)
-    }, SDK_STARTUP_WAIT_MS)
-
+    const probe = startModelProbe(modelStore, undefined, runtimeGeneration)
     void probe.then(
+      () => {},
       () => {
-        isSettled = true
-      },
-      () => {
-        isSettled = true
-        if (!isCancelled) setModelProbeFailed(true)
+        if (!isCancelled) setFailedGeneration(runtimeGeneration)
       },
     )
 
     return () => {
       isCancelled = true
-      window.clearTimeout(timeoutId)
     }
-  }, [isSdkWaitBypassed, modelStore])
+  }, [isSdkWaitBypassed, modelStore, runtimeGeneration])
 
   useEffect(() => {
     if (isProviderSettingsLoaded) return
@@ -82,21 +76,20 @@ export function useModelStartup(isProjectCatalogLoaded: boolean, isSdkWaitBypass
 
   const phase = getModelStartupPhase({
     hasClaudeAuthentication,
+    hasConfiguredClaudeModels,
     hasConfiguredProviders,
-    hasModelProbeFailed,
-    hasSdkWaitExpired,
+    hasModelProbeFailed: failedGeneration === runtimeGeneration,
     isModelAccessResolved,
+    isModelProbePending,
     isProjectCatalogLoaded: isBootstrapSettled,
     isProviderSettingsLoaded,
     isSdkInitializationComplete,
     isSdkWaitBypassed,
-    startupDestination,
   })
 
   useEffect(() => {
-    if (startupDestination || (phase !== 'onboarding' && phase !== 'workbench')) return
-    setStartupDestination(phase)
-  }, [phase, startupDestination])
+    if (phase === 'onboarding') setOnboardingActive(true)
+  }, [phase])
 
   const dismissModelOnboarding = useCallback(() => {
     setModelOnboardingDismissed(true)
@@ -104,7 +97,10 @@ export function useModelStartup(isProjectCatalogLoaded: boolean, isSdkWaitBypass
 
   return {
     dismissModelOnboarding,
-    shouldShowModelOnboarding: phase === 'onboarding' && !isModelOnboardingDismissed,
+    completeOnboarding: dismissModelOnboarding,
+    initialStep: 1 as const,
+    shouldShowModelOnboarding:
+      (phase === 'onboarding' || isOnboardingActive) && !isModelOnboardingDismissed,
     phase,
   }
 }

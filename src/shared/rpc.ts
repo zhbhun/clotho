@@ -1,5 +1,6 @@
 import type { SDKMessage } from '@anthropic-ai/claude-agent-sdk'
 
+import type { ClaudeRuntimeState } from './claude-runtime'
 import type { WebviewLogBatch } from './logging'
 import type { ProviderApiType } from './provider'
 import type { DraftSession, DraftSessionIndex, LocalSession } from './session'
@@ -1056,6 +1057,7 @@ export interface ClaudeInitializationResult {
   defaultModel?: string
   hasClaudeAuthentication?: boolean
   hasConfiguredProviders?: boolean
+  hasConfiguredClaudeModels?: boolean
   account?: ClaudeAccountInfo
   output_style?: string
   available_output_styles?: string[]
@@ -1065,6 +1067,18 @@ export interface ClaudeInitializationResult {
 export type DesktopRPC = {
   main: RPCSchemaSide<{
     requests: {
+      claudeRuntimeGet: {
+        params: Record<string, never>
+        response: ClaudeRuntimeState
+      }
+      claudeRuntimeCheck: {
+        params: { customPath?: string }
+        response: ClaudeRuntimeState
+      }
+      claudeRuntimeInstall: {
+        params: Record<string, never>
+        response: ClaudeRuntimeState
+      }
       claudeStartup: {
         params: ClaudeStartupParams
         response: ClaudeInitializationResult
@@ -1569,6 +1583,7 @@ export type DesktopRPC = {
   renderer: RPCSchemaSide<{
     requests: Record<string, never>
     messages: {
+      claudeRuntimeChanged: ClaudeRuntimeState
       claudeOutput: { streamId: ClaudeStreamId; message: SDKMessage }
       claudeError: { streamId: ClaudeStreamId; message: string; stack?: string }
       claudeComplete: { streamId: ClaudeStreamId; success: boolean }

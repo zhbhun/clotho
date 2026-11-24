@@ -12,13 +12,15 @@ export type ModelConfigurationState = {
   /** App-level default model as a qualified `providerId/modelId` string. */
   defaultModel: string | null
   hasClaudeAuthentication: boolean
+  hasConfiguredClaudeModels: boolean
   hasConfiguredProviders: boolean
   isModelAccessResolved: boolean
+  isModelProbePending: boolean
   isModelCatalogLoaded: boolean
   isSdkInitializationComplete: boolean
   isSettingsLoaded: boolean
   providers: ModelProvider[]
-  initialize: (initialization: ClaudeInitializationResult) => void
+  initialize: (initialization: ClaudeInitializationResult, options?: { refresh?: boolean }) => void
   replaceSettings: (providers: ModelProvider[], defaultModel: string | null) => void
 }
 
@@ -42,15 +44,17 @@ export function createModelConfigurationStore() {
     claudeModels: [],
     defaultModel: null,
     hasClaudeAuthentication: false,
+    hasConfiguredClaudeModels: false,
     hasConfiguredProviders: false,
     isModelAccessResolved: false,
+    isModelProbePending: false,
     isModelCatalogLoaded: false,
     isSdkInitializationComplete: false,
     isSettingsLoaded: false,
     providers: [],
-    initialize: (initialization) =>
+    initialize: (initialization, { refresh = false } = {}) =>
       set((state) => {
-        if (state.isSdkInitializationComplete) return state
+        if (state.isSdkInitializationComplete && !refresh) return state
         const claudeModels = initialization.models.filter((model) => model.providerId === 'claude')
         const providers = initialization.providers ?? state.providers
         const availableModels = [...initialization.models]
@@ -71,6 +75,7 @@ export function createModelConfigurationStore() {
           availableModels,
           claudeModels,
           hasClaudeAuthentication,
+          hasConfiguredClaudeModels: initialization.hasConfiguredClaudeModels ?? false,
           hasConfiguredProviders:
             initialization.hasConfiguredProviders ??
             (!hasClaudeAuthentication && initialization.models.length > 0),
@@ -80,7 +85,10 @@ export function createModelConfigurationStore() {
           isModelCatalogLoaded: true,
           isSdkInitializationComplete: true,
           isSettingsLoaded: state.isSettingsLoaded || initialization.providers !== undefined,
-          defaultModel: initialization.defaultModel ?? state.defaultModel,
+          defaultModel:
+            initialization.providers !== undefined
+              ? (initialization.defaultModel ?? null)
+              : (initialization.defaultModel ?? state.defaultModel),
           providers,
         }
       }),
