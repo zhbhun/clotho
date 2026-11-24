@@ -1,9 +1,11 @@
+import { randomUUID } from 'node:crypto'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
 import { getLogger } from '../../logging/runtime'
 
 const logger = getLogger('agent-config')
+const writes = new Map<string, Promise<void>>()
 
 /** A parsed JSON file, or a typed failure so callers can report without guessing. */
 export type JsonReadResult<T> =
@@ -38,15 +40,27 @@ export async function readJsonFile<T>(filePath: string): Promise<JsonReadResult<
 }
 
 /**
- * Save a mutation to a CLI-shared JSON file: re-read fresh at save time (a
- * running CLI process may have rewritten it since the caller listed it),
- * apply the mutation on top, and atomically replace the file so unrelated
- * concurrent changes survive.
+ * Serialize in-process mutations per file, reading fresh inside the queue.
+ * Atomic replacement prevents partial JSON from being observed by the CLI.
  */
-export async function writeJsonAtomic<T extends object>(
+export function writeJsonAtomic<T extends object>(
   filePath: string,
   mutate: (current: T) => T,
 ): Promise<T> {
+  const key = path.resolve(filePath)
+  const result = (writes.get(key) ?? Promise.resolve()).then(() => writeJsonFile(key, mutate))
+  const tail = result.then(
+    () => undefined,
+    () => undefined,
+  )
+  writes.set(key, tail)
+  void tail.then(() => {
+    if (writes.get(key) === tail) writes.delete(key)
+  })
+  return result
+}
+
+async function writeJsonFile<T extends object>(filePath: string, mutate: (current: T) => T) {
   const read = await readJsonFile<T>(filePath)
   if (read.ok === false && read.reason !== 'missing') {
     throw new Error(`Cannot save ${filePath}: managed file failed to parse`)
@@ -56,7 +70,7 @@ export async function writeJsonAtomic<T extends object>(
   const parent = path.dirname(filePath)
   const temporary = path.join(
     parent,
-    `.${path.basename(filePath)}.${process.pid}.${Date.now()}.tmp`,
+    `.${path.basename(filePath)}.${process.pid}.${randomUUID()}.tmp`,
   )
   await fs.mkdir(parent, { recursive: true })
 

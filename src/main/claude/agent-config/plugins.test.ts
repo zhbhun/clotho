@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { EventEmitter } from 'node:events'
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
@@ -258,14 +258,30 @@ describe('mutating operations', () => {
     expect(execFileMock.mock.calls[0]?.[1]).toEqual(['plugin', 'uninstall', 'demo@example-mp'])
   })
 
-  it('enables and disables through the CLI state', async () => {
-    execFileMock.mockImplementation((_file, _args, _options, callback) => {
-      callback(null, '', '')
-    })
-    await setPluginEnabled('demo@example-mp', true)
-    expect(execFileMock.mock.calls[0]?.[1]).toEqual(['plugin', 'enable', 'demo@example-mp'])
-    await setPluginEnabled('demo@example-mp', false)
-    expect(execFileMock.mock.calls[1]?.[1]).toEqual(['plugin', 'disable', 'demo@example-mp'])
+  it('persists enable state directly without spawning the CLI or dropping other settings', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'plugin-toggles-'))
+    try {
+      const settingsPath = path.join(dir, 'settings.json')
+      await writeFile(
+        settingsPath,
+        JSON.stringify({
+          env: { EXAMPLE: 'keep' },
+          enabledPlugins: { 'other@mp': true },
+        }),
+      )
+      await setPluginEnabled('demo@example-mp', false, dir)
+      expect(JSON.parse(await readFile(settingsPath, 'utf8'))).toEqual({
+        env: { EXAMPLE: 'keep' },
+        enabledPlugins: { 'other@mp': true, 'demo@example-mp': false },
+      })
+      await setPluginEnabled('demo@example-mp', true, dir)
+      expect(
+        JSON.parse(await readFile(settingsPath, 'utf8')).enabledPlugins['demo@example-mp'],
+      ).toBe(true)
+      expect(execFileMock).not.toHaveBeenCalled()
+    } finally {
+      await rm(dir, { recursive: true, force: true })
+    }
   })
 
   it('adds and removes marketplaces by source and name', async () => {

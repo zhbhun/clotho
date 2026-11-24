@@ -5,7 +5,8 @@ import path from 'node:path'
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { claudeSettingsPath, deleteHookGroup, listHookGroups, saveHookGroup } from './hooks'
+import { deleteHookGroup, listHookGroups, saveHookGroup } from './hooks'
+import { claudeSettingsPath } from './paths'
 
 let tempDir: string
 

@@ -1,5 +1,4 @@
 import { type Dirent, promises as fs } from 'node:fs'
-import os from 'node:os'
 import path from 'node:path'
 
 import { parseDocument } from 'yaml'
@@ -7,6 +6,7 @@ import { parseDocument } from 'yaml'
 import type { AgentSkillDocument } from '@/shared/rpc'
 
 import { getLogger } from '../../logging/runtime'
+import { claudeConfigDir } from './paths'
 
 const logger = getLogger('agent-config')
 
@@ -17,9 +17,7 @@ export interface SkillInfo {
   description: string
 }
 
-export function claudeSkillsDir(
-  claudeDir = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude'),
-) {
+export function claudeSkillsDir(claudeDir = claudeConfigDir()) {
   return path.join(claudeDir, 'skills')
 }
 

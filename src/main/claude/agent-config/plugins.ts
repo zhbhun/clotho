@@ -5,15 +5,16 @@ import path from 'node:path'
 import { claudeRuntime } from '../runtime'
 import { trackClaudeProcess } from '../runtime/processes'
 import { resolveClaudeCodeBinary } from '../sdk-binary'
+import { writeJsonAtomic } from './fs-safe'
+import { claudeSettingsPath } from './paths'
 
 const CLI_TIMEOUT_MS = 30_000
 const CLI_MAX_BUFFER = 10 * 1024 * 1024
 
 /**
  * Plugin management over the Claude Code CLI's own `plugin` subcommands: the
- * CLI resolves installs, marketplaces, and enable state (`enabledPlugins` in
- * `~/.claude/settings.json`) and owns every file under `~/.claude/plugins/`.
- * Clotho only invokes the CLI and reads its JSON output.
+ * CLI resolves installs and marketplaces and owns files under `~/.claude/plugins/`.
+ * Enable toggles write `enabledPlugins` in `~/.claude/settings.json` directly.
  */
 
 export interface InstalledPlugin {
@@ -210,9 +211,19 @@ export async function removeInstalledPlugin(id: string): Promise<void> {
   await runPluginCommand(['uninstall', id])
 }
 
-export async function setPluginEnabled(id: string, enabled: boolean): Promise<void> {
+export async function setPluginEnabled(
+  id: string,
+  enabled: boolean,
+  claudeDir?: string,
+): Promise<void> {
   if (!id.trim()) throw new Error('Toggling a plugin requires a plugin id')
-  await runPluginCommand([enabled ? 'enable' : 'disable', id])
+  await writeJsonAtomic<{ enabledPlugins?: Record<string, unknown> }>(
+    claudeSettingsPath(claudeDir),
+    (current) => ({
+      ...current,
+      enabledPlugins: { ...current.enabledPlugins, [id]: enabled },
+    }),
+  )
 }
 
 export async function addMarketplace(source: string): Promise<void> {

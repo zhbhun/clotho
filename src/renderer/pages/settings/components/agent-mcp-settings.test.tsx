@@ -63,6 +63,24 @@ function renderWithProviders(element: ReactElement) {
 }
 
 describe('AgentMcpSettings', () => {
+  it.each(['url', 'command'] as const)(
+    'shows a locked off switch for a %s deny rule',
+    async (blockedBy) => {
+      mock.listAgentMcpServers.mockResolvedValue([
+        { name: 'docs', type: 'http', url: 'https://mcp.example', disabled: true, blockedBy },
+      ])
+      const user = userEvent.setup()
+      renderWithProviders(<AgentMcpSettings />)
+      const toggle = await screen.findByRole('switch')
+      expect(toggle).not.toBeChecked()
+      expect(toggle).toHaveAttribute('aria-disabled', 'true')
+      expect(screen.getByText(/需在 Claude Code 用户设置中修改规则后启用/)).toBeInTheDocument()
+      await user.click(toggle)
+      expect(mock.setAgentCapabilityToggle).not.toHaveBeenCalled()
+      expect(screen.queryByLabelText('名称')).not.toBeInTheDocument()
+    },
+  )
+
   it('lists servers with type and connection summary on the second line', async () => {
     mock.listAgentMcpServers.mockResolvedValue([
       { name: 'docs', type: 'http', url: 'https://mcp.example' },
@@ -133,7 +151,7 @@ describe('AgentMcpSettings', () => {
     const user = userEvent.setup()
     renderWithProviders(<AgentMcpSettings />)
 
-    await user.click(await screen.findByRole('switch', { name: '在 Clotho 会话中启用' }))
+    await user.click(await screen.findByRole('switch', { name: '在 Claude Code 中启用' }))
 
     await waitFor(() =>
       expect(mock.setAgentCapabilityToggle).toHaveBeenCalledWith('mcp', 'docs', false),

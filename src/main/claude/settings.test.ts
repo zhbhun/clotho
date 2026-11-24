@@ -42,7 +42,6 @@ function settings(overrides: Partial<ClaudeskSettings> = {}): ClaudeskSettings {
     providers: [],
     modelMappings: {},
     ...DEFAULT_APP_PREFERENCES,
-    agentCapabilities: { disabledSkills: [], disabledMcpServers: [] },
     ...overrides,
   }
 }
@@ -194,28 +193,6 @@ describe('Clotho settings store', () => {
     })
   })
 
-  test('sanitizes agent capability toggles from the settings file', async () => {
-    fsMock.readFile.mockResolvedValue(
-      JSON.stringify({
-        providers: [],
-        agentCapabilities: {
-          disabledSkills: ['cheatsheet', 'cheatsheet'],
-        },
-      }),
-    )
-
-    await expect(readSettings('/test/settings.json')).resolves.toMatchObject({
-      agentCapabilities: {
-        disabledSkills: ['cheatsheet'],
-      },
-    })
-
-    fsMock.readFile.mockResolvedValue(JSON.stringify({ providers: [] }))
-    await expect(readSettings('/test/settings.json')).resolves.toMatchObject({
-      agentCapabilities: { disabledSkills: [], disabledMcpServers: [] },
-    })
-  })
-
   test('rejects unreadable settings instead of treating them as defaults', async () => {
     fsMock.readFile.mockResolvedValue('{invalid json')
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
@@ -271,7 +248,6 @@ describe('Clotho settings store', () => {
       defaultModel: 'zhipu/glm-5.2/fast',
       modelMappings: {},
       ...DEFAULT_APP_PREFERENCES,
-      agentCapabilities: { disabledSkills: [], disabledMcpServers: [] },
     })
     expect(persist).toHaveBeenCalledTimes(2)
     expect(persist).toHaveBeenLastCalledWith({
@@ -279,7 +255,6 @@ describe('Clotho settings store', () => {
       defaultModel: 'zhipu/glm-5.2/fast',
       modelMappings: {},
       ...DEFAULT_APP_PREFERENCES,
-      agentCapabilities: { disabledSkills: [], disabledMcpServers: [] },
     })
   })
 
@@ -317,12 +292,10 @@ describe('Clotho settings store', () => {
     expect(persist).toHaveBeenCalledWith({
       ...recovered,
       language: 'fr',
-      agentCapabilities: { disabledSkills: [], disabledMcpServers: [] },
     })
     expect(store.get()).toEqual({
       ...recovered,
       language: 'fr',
-      agentCapabilities: { disabledSkills: [], disabledMcpServers: [] },
     })
   })
 })

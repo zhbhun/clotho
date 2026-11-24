@@ -1,7 +1,6 @@
-import path from 'node:path'
-
 import { getLogger } from '../../logging/runtime'
 import { type JsonReadResult, readJsonFile, writeJsonAtomic } from './fs-safe'
+import { claudeJsonPath } from './paths'
 
 const logger = getLogger('agent-config')
 
@@ -20,15 +19,7 @@ export interface McpServerConfig {
 /** The server config plus its key in `mcpServers`. */
 export type McpServerEntry = McpServerConfig & { name: string }
 
-/** Clotho-session-scoped disable state is keyed by server name. */
-export type McpDisabledState = { disabledServers?: string[] }
-
 type ClaudeJsonFile = { mcpServers?: Record<string, McpServerConfig> } & Record<string, unknown>
-
-export function claudeJsonPath(claudeDir = path.join(process.env.HOME ?? '', '.claude')) {
-  // The CLI's `~/.claude.json` sits beside the `~/.claude` directory.
-  return `${claudeDir}.json`
-}
 
 export async function listMcpServers(
   claudeDir?: string,
@@ -79,19 +70,6 @@ export async function deleteMcpServer(name: string, claudeDir?: string): Promise
     delete remaining[name]
     return { ...current, mcpServers: remaining }
   })
-}
-
-/**
- * Clotho-scoped disable list lives in Clotho's own settings (design D1);
- * the CLI's `~/.claude.json` entries are never touched by toggles.
- */
-export function filterDisabledServers<T extends { name: string }>(
-  servers: T[],
-  disabledServers: string[] | undefined,
-): T[] {
-  if (!disabledServers?.length) return servers
-  const disabled = new Set(disabledServers)
-  return servers.filter((server) => !disabled.has(server.name))
 }
 
 export function logSkippedServer(name: string, reason: string) {

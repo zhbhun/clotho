@@ -1,6 +1,5 @@
-import path from 'node:path'
-
 import { readJsonFile, writeJsonAtomic } from './fs-safe'
+import { claudeSettingsPath } from './paths'
 
 /**
  * Hooks in `~/.claude/settings.json` use the CLI file format (design D4):
@@ -29,12 +28,6 @@ type SettingsFile = { hooks?: HooksConfig } & Record<string, unknown>
 export interface HookGroup {
   event: string
   entries: HookMatcherEntry[]
-}
-
-export function claudeSettingsPath(
-  claudeDir = path.join(process.env.HOME ?? '', '.claude'),
-): string {
-  return path.join(claudeDir, 'settings.json')
 }
 
 export async function listHookGroups(claudeDir?: string): Promise<HookGroup[]> {

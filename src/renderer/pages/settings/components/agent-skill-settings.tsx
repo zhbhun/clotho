@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
 import { Spinner } from '@/shadcn/spinner'
+import { Switch } from '@/shadcn/switch'
 import { toast } from '@/shadcn/toast'
 
 import { AgentEmpty } from '../../../components/marketplace/agent-shared'
@@ -10,7 +11,11 @@ import { PluginAvatar } from '../../../components/marketplace/plugin-avatar'
 import { useSettingsDetailStore } from '../../../components/marketplace/settings-detail-store'
 import { SkillActions } from '../../../components/marketplace/skill-actions'
 import { SkillDetailPage } from '../../../components/marketplace/skill-detail-page'
-import { listAgentSkills } from '../../../services/claude/agent-config'
+import {
+  getAgentCapabilityToggles,
+  listAgentSkills,
+  setAgentCapabilityToggle,
+} from '../../../services/claude/agent-config'
 
 type SkillListProps = { onOpenMarketplace: () => void }
 
@@ -26,11 +31,15 @@ function SkillList({ onOpenMarketplace }: SkillListProps) {
   const openDetail = useSettingsDetailStore((state) => state.openDetail)
   const { t } = useTranslation()
   const [skills, setSkills] = useState<Array<{ name: string; description: string }>>([])
+  const [disabledSkills, setDisabledSkills] = useState<string[]>([])
+  const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
   const reload = async () => {
     try {
-      setSkills(await listAgentSkills())
+      const [skills, toggles] = await Promise.all([listAgentSkills(), getAgentCapabilityToggles()])
+      setSkills(skills)
+      setDisabledSkills(toggles.disabledSkills)
     } catch {
       toast.add({ id: 'agent-skills-load', title: t('settings.agent.loadError'), type: 'error' })
     } finally {
@@ -43,6 +52,18 @@ function SkillList({ onOpenMarketplace }: SkillListProps) {
     // Mount-only load; reload reads fresh state on every call.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const handleToggle = async (name: string, enabled: boolean) => {
+    setIsSaving(true)
+    try {
+      const toggles = await setAgentCapabilityToggle('skill', name, enabled)
+      setDisabledSkills(toggles.disabledSkills)
+    } catch {
+      toast.add({ id: 'agent-skill-toggle', title: t('settings.agent.saveError'), type: 'error' })
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   return (
     <section className="flex flex-col gap-3">
@@ -81,12 +102,20 @@ function SkillList({ onOpenMarketplace }: SkillListProps) {
                   <div className="truncate text-sm font-medium">{skill.name}</div>
                   <div className="truncate text-sm text-foreground-subtle">{skill.description}</div>
                 </div>
-                <div onClick={(event) => event.stopPropagation()}>
+                <div className="-mr-1" onClick={(event) => event.stopPropagation()}>
                   <SkillActions
                     name={skill.name}
                     className="pointer-events-none opacity-0 group-hover/skill:pointer-events-auto group-hover/skill:opacity-100 focus-visible:pointer-events-auto focus-visible:opacity-100 aria-expanded:pointer-events-auto aria-expanded:opacity-100"
                     onOpen={open}
                     onUninstall={reload}
+                  />
+                </div>
+                <div className="flex" onClick={(event) => event.stopPropagation()}>
+                  <Switch
+                    aria-label={t('settings.agent.enabled')}
+                    checked={!disabledSkills.includes(skill.name)}
+                    disabled={isSaving}
+                    onCheckedChange={(enabled) => void handleToggle(skill.name, enabled)}
                   />
                 </div>
               </div>

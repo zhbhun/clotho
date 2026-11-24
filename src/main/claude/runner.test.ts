@@ -780,41 +780,19 @@ describe('Claude SDK runner', () => {
     await expect(result).resolves.toEqual({ behavior: 'allow', updatedInput: {} })
   })
 
-  it('filters disabled skills out of the spawn options (design D7)', async () => {
-    const events = createEvents()
-    vi.mocked(sdkQuery).mockReturnValue(createMockQuery([]) as never)
-
-    startQuery(
-      events,
-      {
-        streamId: 'stream-1',
-        options: { cwd: '/tmp/app', skills: ['commit', 'review', 'deploy'] },
-      },
-      proxy,
-      {
-        promptQueue: parkedInput(),
-        capabilities: { disabledSkills: ['review'] },
-      },
-    )
-    await flushEnvApply()
-
-    expect(vi.mocked(sdkQuery).mock.calls[0]?.[0].options?.skills).toEqual(['commit', 'deploy'])
-  })
-
   it('does not inject plugins via argv; the CLI mounts enabledPlugins itself (design D3)', async () => {
     const events = createEvents()
     vi.mocked(sdkQuery).mockReturnValue(createMockQuery([]) as never)
 
     startQuery(events, { streamId: 'stream-1', options: { cwd: '/tmp/app' } }, proxy, {
       promptQueue: parkedInput(),
-      capabilities: {},
     })
     await flushEnvApply()
 
     expect(vi.mocked(sdkQuery).mock.calls[0]?.[0].options?.plugins).toBeUndefined()
   })
 
-  it('leaves skills and plugins untouched without capability filters', async () => {
+  it('leaves skills and plugins untouched and loads native capability settings', async () => {
     const events = createEvents()
     vi.mocked(sdkQuery).mockReturnValue(createMockQuery([]) as never)
 
@@ -826,7 +804,12 @@ describe('Claude SDK runner', () => {
     )
     await flushEnvApply()
 
-    expect(vi.mocked(sdkQuery).mock.calls[0]?.[0].options?.skills).toEqual(['commit'])
+    const options = vi.mocked(sdkQuery).mock.calls[0]?.[0].options
+    expect(options?.skills).toEqual(['commit'])
+    expect(options?.settings).toEqual({ env: { ENABLE_TOOL_SEARCH: 'true' } })
+    expect(options?.settingSources).toBeUndefined()
+    expect(options?.mcpServers).toBeUndefined()
+    expect(options?.strictMcpConfig).toBeUndefined()
     expect(vi.mocked(sdkQuery).mock.calls[0]?.[0].options?.plugins).toBeUndefined()
   })
 })

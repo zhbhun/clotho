@@ -48,6 +48,60 @@ describe('readJsonFile', () => {
 })
 
 describe('writeJsonAtomic', () => {
+  it('continues queued writes after an earlier mutation fails', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'fs-safe-recovery-'))
+    try {
+      const filePath = path.join(dir, 'settings.json')
+      const results = await Promise.allSettled([
+        writeJsonAtomic(filePath, () => {
+          throw new Error('failed mutation')
+        }),
+        writeJsonAtomic(filePath, (current) => ({ ...current, saved: true })),
+      ])
+      expect(results.map((result) => result.status)).toEqual(['rejected', 'fulfilled'])
+      expect(JSON.parse(await readFile(filePath, 'utf8'))).toEqual({ saved: true })
+    } finally {
+      await rm(dir, { recursive: true, force: true })
+    }
+  })
+  it('preserves concurrent mutations of the same file', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'fs-safe-race-'))
+    try {
+      const filePath = path.join(dir, 'settings.json')
+      await writeFile(filePath, JSON.stringify({ env: { KEEP: 'value' } }))
+      await Promise.all(
+        Array.from({ length: 12 }, (_, index) =>
+          writeJsonAtomic<{ skillOverrides?: Record<string, string> }>(filePath, (current) => ({
+            ...current,
+            skillOverrides: { ...current.skillOverrides, [`skill-${index}`]: 'off' },
+          })),
+        ),
+      )
+      const saved = JSON.parse(await readFile(filePath, 'utf8'))
+      expect(Object.keys(saved.skillOverrides)).toHaveLength(12)
+      expect(saved.env).toEqual({ KEEP: 'value' })
+    } finally {
+      await rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('continues queued writes after a failed mutation', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'fs-safe-recover-'))
+    try {
+      const filePath = path.join(dir, 'settings.json')
+      const results = await Promise.allSettled([
+        writeJsonAtomic(filePath, () => {
+          throw new Error('rejected mutation')
+        }),
+        writeJsonAtomic(filePath, (current) => ({ ...current, recovered: true })),
+      ])
+      expect(results.map((result) => result.status)).toEqual(['rejected', 'fulfilled'])
+      expect(JSON.parse(await readFile(filePath, 'utf8'))).toEqual({ recovered: true })
+    } finally {
+      await rm(dir, { recursive: true, force: true })
+    }
+  })
+
   it('creates a missing file with the mutation applied', async () => {
     const dir = await mkdtemp(path.join(tmpdir(), 'fs-safe-'))
     try {

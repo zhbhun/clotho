@@ -1,4 +1,4 @@
-import { EllipsisVertical } from 'lucide-react'
+import { Ellipsis } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -42,7 +42,7 @@ export function SkillActions({
           aria-label={t('settings.agent.plugins.more') + ' · ' + name}
           render={<Button className={className} size="icon" variant="ghost" />}
         >
-          <EllipsisVertical className="size-4 text-foreground-subtlest" />
+          <Ellipsis className="size-4 text-foreground-subtlest" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={onOpen}>{t('settings.agent.plugins.open')}</DropdownMenuItem>

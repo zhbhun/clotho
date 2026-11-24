@@ -205,7 +205,7 @@ describe('AgentPluginSettings list page', () => {
 
     expect(await screen.findByText('formatter')).toBeInTheDocument()
     expect(screen.getByText('acme · 1.0.0')).toBeInTheDocument()
-    expect(screen.getByRole('switch', { name: '在 Clotho 会话中启用' })).toBeChecked()
+    expect(screen.getByRole('switch', { name: '在 Claude Code 中启用' })).toBeChecked()
     // The row div is the click target, so no button names the plugin.
     expect(screen.queryByRole('button', { name: 'formatter@acme' })).toBeNull()
   })
@@ -227,7 +227,7 @@ describe('AgentPluginSettings list page', () => {
     const user = userEvent.setup()
     renderWithProviders(<AgentPluginSettings />)
 
-    await user.click(await screen.findByRole('switch', { name: '在 Clotho 会话中启用' }))
+    await user.click(await screen.findByRole('switch', { name: '在 Claude Code 中启用' }))
 
     await waitFor(() =>
       expect(mock.setAgentPluginEnabled).toHaveBeenCalledWith('formatter@acme', false),
@@ -242,7 +242,7 @@ describe('AgentPluginSettings list page', () => {
     const user = userEvent.setup()
     renderWithProviders(<AgentPluginSettings />)
 
-    const toggle = await screen.findByRole('switch', { name: '在 Clotho 会话中启用' })
+    const toggle = await screen.findByRole('switch', { name: '在 Claude Code 中启用' })
     await user.click(toggle)
 
     // The failed call rolls the optimistic flip back to enabled, and shows the error.

@@ -33,26 +33,6 @@ export interface ClaudeskSettings {
   appearance: AppAppearancePreferences
   /** Role-to-model overrides for custom-model sessions; empty when unmapped. */
   modelMappings: ClaudeModelRoleMapping
-  /**
-   * Clotho-session-scoped enable state for user-level Claude Code
-   * capabilities. Absent entries mean enabled; the CLI's own files stay the
-   * source of content. Plugin enable state is NOT here: it lives in the
-   * CLI's `enabledPlugins` in `~/.claude/settings.json`, shared with every
-   * Claude Code surface.
-   */
-  agentCapabilities?: AgentCapabilityToggles
-}
-
-/**
- * Clotho-scoped enable toggles for capabilities whose CLI files are the
- * source of content (design D1/D7): disabling hides a capability from Clotho
- * sessions only.
- */
-export interface AgentCapabilityToggles {
-  /** Disabled skill directory names under `~/.claude/skills/`. */
-  disabledSkills?: string[]
-  /** Disabled MCP server names from `~/.claude.json` `mcpServers`. */
-  disabledMcpServers?: string[]
 }
 
 const LANGUAGES: AppLanguagePreference[] = [
@@ -153,25 +133,6 @@ function sanitizeThemePalette(value: unknown, fallback: AppThemePalette): AppThe
       typeof candidate.preset === 'string' && candidate.preset.trim()
         ? candidate.preset
         : fallback.preset,
-  }
-}
-
-export function sanitizeAgentCapabilityToggles(value: unknown): AgentCapabilityToggles {
-  const candidate =
-    value && typeof value === 'object' && !Array.isArray(value)
-      ? (value as Record<string, unknown>)
-      : {}
-  const stringList = (input: unknown): string[] =>
-    Array.isArray(input)
-      ? Array.from(
-          new Set(
-            input.filter((entry): entry is string => typeof entry === 'string' && !!entry.trim()),
-          ),
-        )
-      : []
-  return {
-    disabledSkills: stringList(candidate.disabledSkills),
-    disabledMcpServers: stringList(candidate.disabledMcpServers),
   }
 }
 
@@ -287,7 +248,6 @@ export async function readSettings(filePath = settingsJsonPath()): Promise<Claud
       ),
       ...sanitizeAppPreferences(candidate),
       modelMappings: sanitizeModelMappings(candidate.modelMappings, providers),
-      agentCapabilities: sanitizeAgentCapabilityToggles(candidate.agentCapabilities),
     }
   } catch (caught) {
     if ((caught as NodeJS.ErrnoException).code === 'ENOENT') {
@@ -344,10 +304,6 @@ function cloneSettings(settings: ClaudeskSettings): ClaudeskSettings {
       },
     },
     modelMappings: { ...settings.modelMappings },
-    agentCapabilities: {
-      disabledSkills: [...(settings.agentCapabilities?.disabledSkills ?? [])],
-      disabledMcpServers: [...(settings.agentCapabilities?.disabledMcpServers ?? [])],
-    },
   }
 }
 

@@ -23,6 +23,11 @@ import type {
 } from '@/shared/rpc'
 import type { SessionListFlags } from '@/shared/session'
 
+import {
+  getCapabilityToggles,
+  getMcpServerStates,
+  setCapabilityToggle,
+} from './claude/agent-config/capabilities'
 import { deleteHookGroup, listHookGroups, saveHookGroup } from './claude/agent-config/hooks'
 import { deleteMcpServer, listMcpServers, saveMcpServer } from './claude/agent-config/mcp-servers'
 import { getPluginDetails } from './claude/agent-config/plugin-details'
@@ -63,7 +68,6 @@ import { setProjectDefaultModel } from './claude/projects'
 import { getProviderUsage } from './claude/provider-usage'
 import { normalizeProvider } from './claude/providers'
 import {
-  type AgentCapabilityFilters,
   type ClaudeEventSink,
   controlQuery,
   rewindSessionFiles,
@@ -175,64 +179,6 @@ export function createClaudeDesktopService(
   const sessionRegistry = createSessionQueryRegistry(events, proxy, {
     onRecycled: sessionHooks?.onSessionRecycled,
     onRuntimeChanged: sessionHooks?.onSessionRuntimeChanged,
-    resolveAgentCapabilities: async () => {
-      const capabilities = settingsStore.get().agentCapabilities
-      if (!capabilities) return undefined
-      const disabledSkills = capabilities.disabledSkills ?? []
-      const disabledMcpServers = capabilities.disabledMcpServers ?? []
-      // Plugins are no longer injected per-session: the CLI mounts
-      // `enabledPlugins` from `~/.claude/settings.json` itself (design D3).
-      const mcp = disabledMcpServers.length ? await listMcpServers() : null
-      const enabledServers =
-        mcp && disabledMcpServers.length
-          ? Object.fromEntries(
-              mcp.servers
-                .filter((server) => !disabledMcpServers.includes(server.name))
-                .flatMap(
-                  (
-                    server,
-                  ): Array<
-                    [string, NonNullable<AgentCapabilityFilters['enabledMcpServers']>[string]]
-                  > => {
-                    // Map the loose file config onto the SDK's strict union;
-                    // entries failing their type's required field are dropped.
-                    if (server.type === 'stdio') {
-                      return server.command
-                        ? [
-                            [
-                              server.name,
-                              {
-                                type: 'stdio',
-                                command: server.command,
-                                args: server.args,
-                                env: server.env,
-                              },
-                            ],
-                          ]
-                        : []
-                    }
-                    return server.url
-                      ? [
-                          server.type === 'sse'
-                            ? [
-                                server.name,
-                                { type: 'sse' as const, url: server.url, headers: server.headers },
-                              ]
-                            : [
-                                server.name,
-                                { type: 'http' as const, url: server.url, headers: server.headers },
-                              ],
-                        ]
-                      : []
-                  },
-                ),
-            )
-          : undefined
-      return {
-        disabledSkills,
-        enabledMcpServers: enabledServers,
-      }
-    },
   })
 
   async function persistProvider(provider: ModelProvider, operation: 'create' | 'update') {
@@ -396,15 +342,20 @@ export function createClaudeDesktopService(
     listAgentAvailableSubagents: () => listAvailableSubagents(),
     listAgentMcpServers: async () => {
       const { servers } = await listMcpServers()
-      return servers.map(({ name, type, command, args, env, url, headers }) => ({
-        name,
-        type,
-        command,
-        args,
-        env,
-        url,
-        headers,
-      }))
+      const states = await getMcpServerStates(servers)
+      return states.map(
+        ({ name, type, command, args, env, url, headers, disabled, blockedBy }) => ({
+          name,
+          disabled,
+          ...(blockedBy ? { blockedBy } : {}),
+          type,
+          command,
+          args,
+          env,
+          url,
+          headers,
+        }),
+      )
     },
     saveAgentMcpServer: ({
       server,
@@ -452,14 +403,8 @@ export function createClaudeDesktopService(
       saveWorkflow(name, content),
     renameAgentWorkflow: ({ from, to }: { from: string; to: string }) => renameWorkflow(from, to),
     deleteAgentWorkflow: ({ name }: { name: string }) => deleteWorkflow(name),
-    getAgentCapabilityToggles: async () => {
-      const toggles = settingsStore.get().agentCapabilities
-      return {
-        disabledSkills: toggles?.disabledSkills ?? [],
-        disabledMcpServers: toggles?.disabledMcpServers ?? [],
-      }
-    },
-    setAgentCapabilityToggle: async ({
+    getAgentCapabilityToggles: () => getCapabilityToggles(),
+    setAgentCapabilityToggle: ({
       kind,
       name,
       enabled,
@@ -467,20 +412,7 @@ export function createClaudeDesktopService(
       kind: 'skill' | 'mcp'
       name: string
       enabled: boolean
-    }) => {
-      const key = kind === 'mcp' ? 'disabledMcpServers' : 'disabledSkills'
-      const next = await settingsStore.update((settings) => {
-        const current = settings.agentCapabilities ?? {}
-        const disabled = new Set(current[key] ?? [])
-        if (enabled) disabled.delete(name)
-        else disabled.add(name)
-        return { ...settings, agentCapabilities: { ...current, [key]: [...disabled] } }
-      })
-      return {
-        disabledSkills: next.agentCapabilities?.disabledSkills ?? [],
-        disabledMcpServers: next.agentCapabilities?.disabledMcpServers ?? [],
-      }
-    },
+    }) => setCapabilityToggle(kind, name, enabled),
     createProvider: ({ provider }: { provider: ModelProvider }) =>
       persistProvider(provider, 'create'),
     updateProvider: ({ provider }: { provider: ModelProvider }) =>

@@ -261,6 +261,8 @@ export interface AgentMcpServerConfig {
   url?: string
   headers?: Record<string, string>
   disabled?: boolean
+  /** A broader native deny rule prevents enabling this server by name. */
+  blockedBy?: 'url' | 'command'
 }
 
 export interface AgentHookGroup {

@@ -45,6 +45,7 @@ const mock = vi.mocked(agentConfig, true)
 beforeEach(async () => {
   await appI18n.changeLanguage('zh-CN')
   vi.clearAllMocks()
+  mock.getAgentCapabilityToggles.mockResolvedValue({ disabledSkills: [], disabledMcpServers: [] })
   useSettingsDetailStore.getState().backToList()
 })
 
@@ -60,17 +61,61 @@ function renderWithProviders(element: ReactElement) {
 }
 
 describe('AgentSkillSettings', () => {
-  it('lists skills with descriptions and no enable switches', async () => {
+  it('lists skills with their persisted enable states', async () => {
     mock.listAgentSkills.mockResolvedValue([
       { name: 'commit', description: 'Commit helper' },
       { name: 'review', description: 'Review helper' },
     ])
+    mock.getAgentCapabilityToggles.mockResolvedValue({
+      disabledSkills: ['review'],
+      disabledMcpServers: [],
+    })
     renderWithProviders(<AgentSkillSettings onOpenMarketplace={vi.fn()} />)
 
     expect(await screen.findByText('commit')).toBeInTheDocument()
     expect(screen.getByText('Commit helper')).toBeInTheDocument()
     expect(screen.getByText('review')).toBeInTheDocument()
-    expect(screen.queryByRole('switch')).not.toBeInTheDocument()
+    const toggles = screen.getAllByRole('switch')
+    expect(toggles[0]).toBeChecked()
+    expect(toggles[1]).not.toBeChecked()
+  })
+
+  it.each([true, false])('saves a skill toggle when initially enabled=%s', async (enabled) => {
+    mock.listAgentSkills.mockResolvedValue([{ name: 'review', description: 'Review code' }])
+    mock.getAgentCapabilityToggles.mockResolvedValue({
+      disabledSkills: enabled ? [] : ['review'],
+      disabledMcpServers: [],
+    })
+    mock.setAgentCapabilityToggle.mockResolvedValue({
+      disabledSkills: enabled ? ['review'] : [],
+      disabledMcpServers: [],
+    })
+    const user = userEvent.setup()
+    renderWithProviders(<AgentSkillSettings onOpenMarketplace={vi.fn()} />)
+
+    const toggle = await screen.findByRole('switch')
+    await user.click(toggle)
+
+    await waitFor(() =>
+      expect(mock.setAgentCapabilityToggle).toHaveBeenCalledWith('skill', 'review', !enabled),
+    )
+    expect(toggle).toHaveAttribute('aria-checked', String(!enabled))
+    expect(mock.readAgentSkill).not.toHaveBeenCalled()
+    expect(screen.getByText('Review code')).toBeInTheDocument()
+  })
+
+  it('keeps the original enable state when saving fails', async () => {
+    mock.listAgentSkills.mockResolvedValue([{ name: 'review', description: 'Review code' }])
+    mock.setAgentCapabilityToggle.mockRejectedValue(new Error('Cannot write settings'))
+    const user = userEvent.setup()
+    renderWithProviders(<AgentSkillSettings onOpenMarketplace={vi.fn()} />)
+
+    const toggle = await screen.findByRole('switch')
+    await user.click(toggle)
+
+    expect(await screen.findByText('保存失败')).toBeInTheDocument()
+    expect(toggle).toBeChecked()
+    expect(toggle).not.toBeDisabled()
   })
 
   it.each(['row', 'menu'])('opens the installed document from the %s', async (entry) => {

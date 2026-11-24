@@ -44,6 +44,11 @@ export function McpRow({
           <div className="truncate text-sm text-foreground-subtle">
             {[server.type, summary].filter(Boolean).join(' · ')}
           </div>
+          {server.blockedBy && (
+            <div className="text-xs text-foreground-subtlest">
+              {t(`settings.agent.mcp.blockedBy.${server.blockedBy}`)}
+            </div>
+          )}
         </div>
         <div className="-mr-1" onClick={(event) => event.stopPropagation()}>
           <DropdownMenu>
@@ -69,12 +74,14 @@ export function McpRow({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <Switch
-          aria-label={t('settings.agent.enabled')}
-          checked={!server.disabled}
-          onClick={(event) => event.stopPropagation()}
-          onCheckedChange={onToggle}
-        />
+        <div className="flex" onClick={(event) => event.stopPropagation()}>
+          <Switch
+            aria-label={t('settings.agent.enabled')}
+            checked={!server.disabled && !server.blockedBy}
+            disabled={Boolean(server.blockedBy)}
+            onCheckedChange={onToggle}
+          />
+        </div>
       </div>
       <DeleteConfirmDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen} onDelete={onDelete} />
     </>

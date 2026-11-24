@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { type ExecException, type ExecFileOptions, execFile } from 'node:child_process'
-import { mkdtemp, rm } from 'node:fs/promises'
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
@@ -70,7 +70,6 @@ function completeSettings(
     ...settings,
     modelMappings: {},
     ...DEFAULT_APP_PREFERENCES,
-    agentCapabilities: { disabledSkills: [], disabledMcpServers: [] },
   }
 }
 
@@ -119,7 +118,6 @@ describe('Claude desktop service settings', () => {
       defaultModel: 'zhipu/glm-5.2',
       modelMappings: {},
       ...DEFAULT_APP_PREFERENCES,
-      agentCapabilities: { disabledSkills: [], disabledMcpServers: [] },
     })
   })
 
@@ -136,7 +134,6 @@ describe('Claude desktop service settings', () => {
       defaultModel: undefined,
       modelMappings: {},
       ...DEFAULT_APP_PREFERENCES,
-      agentCapabilities: { disabledSkills: [], disabledMcpServers: [] },
     }
     expect(persist).toHaveBeenCalledWith(expected)
     expect(proxy.replaceSettings).toHaveBeenCalledWith(expected)
@@ -207,7 +204,6 @@ describe('Claude desktop service settings', () => {
       providers: [existingProvider],
       defaultModel: 'zhipu/glm-5.2',
       ...preferences,
-      agentCapabilities: { disabledSkills: [], disabledMcpServers: [] },
     }
     expect(persist).toHaveBeenCalledWith(expected)
     expect(proxy.replaceSettings).toHaveBeenCalledWith(expected)
@@ -228,6 +224,46 @@ describe('Claude desktop service agent capability delegation', () => {
       await rm(home, { recursive: true, force: true })
     }
   }
+
+  test('persists native capability toggles and returns MCP disabled state', async () => {
+    await withIsolatedHome(async () => {
+      const { service, persist, store } = createService({ providers: [] })
+      await service.saveAgentMcpServer({
+        server: { name: 'docs', type: 'http', url: 'https://mcp.example' },
+      })
+      await service.setAgentCapabilityToggle({ kind: 'skill', name: 'deploy', enabled: false })
+      await service.setAgentCapabilityToggle({ kind: 'mcp', name: 'docs', enabled: false })
+      await service.setAgentPluginEnabled({ id: 'test@mp', enabled: false })
+
+      const settingsPath = path.join(process.env.HOME!, '.claude', 'settings.json')
+      expect(JSON.parse(await readFile(settingsPath, 'utf8'))).toEqual({
+        skillOverrides: { deploy: 'off' },
+        deniedMcpServers: [{ serverName: 'docs' }],
+        enabledPlugins: { 'test@mp': false },
+      })
+      expect(await service.getAgentCapabilityToggles()).toEqual({
+        disabledSkills: ['deploy'],
+        disabledMcpServers: ['docs'],
+      })
+      expect(await service.listAgentMcpServers()).toEqual([
+        { name: 'docs', type: 'http', url: 'https://mcp.example', disabled: true },
+      ])
+      await service.setAgentCapabilityToggle({ kind: 'mcp', name: 'docs', enabled: true })
+      expect((await service.listAgentMcpServers())[0]?.disabled).toBe(false)
+      const settings = JSON.parse(await readFile(settingsPath, 'utf8'))
+      settings.deniedMcpServers = [{ serverUrl: 'https://mcp.*' }]
+      await writeFile(settingsPath, JSON.stringify(settings))
+      expect((await service.listAgentMcpServers())[0]).toMatchObject({
+        disabled: true,
+        blockedBy: 'url',
+      })
+      await expect(
+        service.setAgentCapabilityToggle({ kind: 'mcp', name: 'docs', enabled: true }),
+      ).rejects.toThrow(/URL or command deny rule/)
+      expect(persist).not.toHaveBeenCalled()
+      expect(store.get()).not.toHaveProperty('agentCapabilities')
+    })
+  })
 
   test('delegates subagent operations with expected args', async () => {
     await withIsolatedHome(async () => {
@@ -257,7 +293,7 @@ describe('Claude desktop service agent capability delegation', () => {
         previousName: 'docs',
       })
       await expect(service.listAgentMcpServers()).resolves.toEqual([
-        { name: 'docs2', type: 'http', url: 'https://mcp.example' },
+        { name: 'docs2', disabled: false, type: 'http', url: 'https://mcp.example' },
       ])
     })
   })
@@ -306,12 +342,10 @@ describe('Claude desktop service agent capability delegation', () => {
       await expect(service.removeAgentPlugin({ id: 'p@nope' })).rejects.toThrow(
         /claude plugin uninstall p@nope failed: CLI refused/,
       )
-      expect(execFileMock).toHaveBeenCalledWith(
-        expect.any(String),
-        ['plugin', 'enable', 'p@a'],
-        expect.anything(),
-        expect.any(Function),
+      const saved = JSON.parse(
+        await readFile(path.join(process.env.HOME!, '.claude', 'settings.json'), 'utf8'),
       )
+      expect(saved.enabledPlugins).toEqual({ 'p@a': true })
     })
   })
 
@@ -327,7 +361,7 @@ describe('Claude desktop service agent capability delegation', () => {
         previousName: 'docs',
       })
       await expect(service.listAgentMcpServers()).resolves.toEqual([
-        { name: 'docs2', type: 'http', url: 'https://mcp.example' },
+        { name: 'docs2', disabled: false, type: 'http', url: 'https://mcp.example' },
       ])
     })
   })

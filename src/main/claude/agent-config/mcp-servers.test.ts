@@ -1,18 +1,12 @@
 // @vitest-environment node
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import {
-  claudeJsonPath,
-  deleteMcpServer,
-  filterDisabledServers,
-  listMcpServers,
-  saveMcpServer,
-  validateMcpServer,
-} from './mcp-servers'
+import { deleteMcpServer, listMcpServers, saveMcpServer, validateMcpServer } from './mcp-servers'
+import { claudeJsonPath } from './paths'
 
 let tempDir: string
 
@@ -23,6 +17,7 @@ afterEach(async () => {
 async function makeClaudeHome(initial: Record<string, unknown> = {}) {
   tempDir = await mkdtemp(path.join(tmpdir(), 'mcp-'))
   const claudeDir = path.join(tempDir, '.claude')
+  await mkdir(claudeDir, { recursive: true })
   await writeFile(claudeJsonPath(claudeDir), `${JSON.stringify(initial, null, 2)}\n`, 'utf8')
   return claudeDir
 }
@@ -105,13 +100,5 @@ describe('validateMcpServer', () => {
     expect(validateMcpServer({ type: 'sse' })).toMatch(/url/)
     expect(validateMcpServer({ type: 'stdio', command: 'npx' })).toBeNull()
     expect(validateMcpServer({ type: 'weird' } as never)).toMatch(/Unknown/)
-  })
-})
-
-describe('filterDisabledServers', () => {
-  it('drops Clotho-disabled servers by name', () => {
-    const servers = [{ name: 'a' }, { name: 'b' }]
-    expect(filterDisabledServers(servers, ['b']).map((s) => s.name)).toEqual(['a'])
-    expect(filterDisabledServers(servers, undefined)).toEqual(servers)
   })
 })
