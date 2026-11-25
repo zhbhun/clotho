@@ -219,7 +219,10 @@ export function InstallPluginPage({ toolbar }: { toolbar?: HTMLElement | null } 
                     }}
                   >
                     <h2 className="text-lg font-semibold tracking-tight">{sectionTitle(group)}</h2>
-                    <ChevronRight aria-hidden className="size-4 text-foreground-subtlest/60" />
+                    <ChevronRight
+                      aria-hidden
+                      className="size-4 translate-y-px text-foreground-subtlest/60"
+                    />
                   </div>
                   <Separator />
                 </div>

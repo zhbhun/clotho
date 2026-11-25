@@ -186,7 +186,10 @@ export function SkillMarketplace({ toolbar }: { toolbar?: HTMLElement | null } =
                       {t(`settings.agent.skillMarket.chart.${id}`)}
                     </h2>
                     {!chart && board && board.rows.length > 10 && (
-                      <ChevronRight aria-hidden className="size-4 text-foreground-subtlest/60" />
+                      <ChevronRight
+                        aria-hidden
+                        className="size-4 translate-y-px text-foreground-subtlest/60"
+                      />
                     )}
                   </div>
                   <Separator />
