@@ -432,7 +432,7 @@ export function MarketplaceAddPage() {
         </p>
       </div>
 
-      <div className="flex flex-col gap-4 rounded-lg border p-4">
+      <div className="flex flex-col gap-4">
         <div>
           <label className="mb-1 block text-sm font-medium" htmlFor="marketplace-source">
             {t('settings.agent.plugins.source')}
@@ -443,9 +443,6 @@ export function MarketplaceAddPage() {
             value={source}
             onChange={(event) => setSource(event.target.value)}
           />
-          <p className="mt-1 text-xs text-foreground-subtlest">
-            {t('settings.agent.plugins.sourceHint')}
-          </p>
         </div>
 
         {isRepoSource ? (

@@ -887,11 +887,6 @@ export const settingsCatalog = {
     '從 GitHub 儲存庫、Git URL 或本機目錄新增。',
   ),
   'settings.agent.plugins.source': setting('Source', '来源', '來源'),
-  'settings.agent.plugins.sourceHint': setting(
-    'GitHub owner/repo, a git URL, or a local folder path.',
-    'GitHub owner/repo、git URL 或本地目录路径。',
-    'GitHub owner/repo、git URL 或本機目錄路徑。',
-  ),
   'settings.agent.plugins.gitRefHint': setting(
     'Branch or tag to pin; appended to the source as #ref.',
     '固定到某个分支或标签，将以 #ref 追加到来源后。',
