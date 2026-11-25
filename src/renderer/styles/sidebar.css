@@ -1,32 +1,24 @@
 .app-sidebar-layout {
-  --sidebar: color-mix(in oklab, var(--background), var(--color-black) 7.81%);
+  --sidebar: #fafafa;
   /* Session rows share the session tabs' hover/selected surface, so the header
      tabs and the sidebar list speak one highlight color per theme. */
   --sidebar-accent: var(--session-tab-surface);
   --sidebar-active: color-mix(in oklab, var(--session-tab-surface), var(--color-black) 3.15%);
-  /* A subtle step toward the foreground keeps the rail edge visible without
-     making it louder than the content it separates. */
-  --sidebar-divider: color-mix(in oklab, var(--background), var(--foreground) 7.3585%);
-  --sidebar-separation-shadow: inset -4px 0 12px
-    color-mix(in oklab, var(--color-neutral-950) 2.5%, transparent);
 }
 
 .dark .app-sidebar-layout {
-  /* ~6% oklab keeps the rail just below the near-black canvas without vanishing.
-     The divider uses a subtle step toward the foreground anchor so the rail
-     edge does not read louder than the content it separates. */
+  /* ~6% oklab keeps the rail just below the near-black canvas without vanishing. */
   --sidebar: color-mix(in oklab, var(--background), var(--color-black) 5.76%);
-  --sidebar-divider: color-mix(in oklab, var(--background), var(--foreground) 4.9939%);
-  --sidebar-separation-shadow: inset -4px 0 12px
-    color-mix(in oklab, var(--color-neutral-950) 22%, transparent);
 }
 
 .app-sidebar-layout [data-slot='sidebar-container'],
 .app-sidebar-layout [data-slot='sidebar'][data-app-sidebar-panel] {
-  border-right-color: var(--sidebar-divider);
+  border-right-color: var(--divider);
 }
 
-.app-sidebar-layout [data-slot='sidebar-container'] > [data-slot='sidebar-inner'],
-.app-sidebar-layout [data-app-sidebar-panel] {
-  box-shadow: var(--sidebar-separation-shadow);
+@media (min-resolution: 2dppx) {
+  .app-sidebar-layout [data-slot='sidebar-container'],
+  .app-sidebar-layout [data-slot='sidebar'][data-app-sidebar-panel] {
+    border-right-width: 0.5px;
+  }
 }

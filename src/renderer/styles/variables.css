@@ -158,7 +158,7 @@
   --sidebar-active: var(--sidebar-accent);
 
   /* A translucent divider adapts to the surface behind it. */
-  --divider: oklch(0 0 0 / 5%);
+  --divider: oklch(0 0 0 / 7%);
 
   /* Chat tool-card borders land on #ededed too; --chat-reply (#fafafa) sits
      closer to it, so the mix is proportionally smaller. */
@@ -248,7 +248,7 @@
   --chat-input: color-mix(in oklab, var(--background), var(--color-white) 12.74%);
   --sidebar-active: var(--sidebar-accent);
 
-  --divider: oklch(1 0 0 / 5%);
+  --divider: oklch(1 0 0 / 7%);
   /* Chat-surface border tier: 0.1238 × 0.55 = 0.06809 oklab above each chat
      surface; the stock gap reads too loud on the compressed dark chat canvas. */
   --border-chat-reply: color-mix(in oklab, var(--chat-reply), var(--foreground) 9.3316%);
