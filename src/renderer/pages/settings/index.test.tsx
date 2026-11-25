@@ -173,13 +173,21 @@ describe('SettingsPage', () => {
     expect(screen.getByRole('textbox', { name: '搜索快捷键' })).toHaveValue('对话')
   })
 
-  it('renders the agent capability categories under the group label', async () => {
+  it('renders the agent categories under the group label', async () => {
+    const user = userEvent.setup()
     render(<TestSettingsPage open onOpenChange={vi.fn()} />)
 
-    expect(screen.getByText('Agent 能力')).toBeInTheDocument()
-    for (const name of ['插件', '子智能体', 'MCP', '技能']) {
+    expect(screen.getByText('Agent')).toBeInTheDocument()
+    for (const name of ['Claude Code', '插件', '子智能体', 'MCP', '技能']) {
       expect(screen.getByRole('button', { name })).toBeInTheDocument()
     }
+
+    expect(screen.queryByRole('button', { name: '重新检测' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Claude Code' }))
+    expect(screen.getByRole('heading', { level: 1, name: 'Claude Code' })).toBeVisible()
+    expect(screen.getByRole('button', { name: '重新检测' })).toBeVisible()
+    await user.click(screen.getByRole('button', { name: '常规' }))
+    expect(screen.queryByRole('button', { name: '重新检测' })).not.toBeInTheDocument()
   })
 
   it('opens a tabless plugin catalog within settings and returns to the installed list', async () => {

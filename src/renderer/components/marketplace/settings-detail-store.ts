@@ -10,6 +10,7 @@ export type SettingsCategoryId =
   | 'shortcuts'
   | 'projects'
   | 'agent-marketplace'
+  | 'agent-claude'
   | 'agent-plugins'
   | 'agent-subagents'
   | 'agent-mcp'

@@ -488,7 +488,8 @@ export const settingsCatalog = {
 
   // Agent capability groups and categories (settings page sidebar).
   'settings.groups.base': setting('Settings', '设置', '設定'),
-  'settings.groups.agent': setting('Agent capabilities', 'Agent 能力', 'Agent 能力'),
+  'settings.groups.agent': setting('Agent', 'Agent', 'Agent'),
+  'settings.categories.agentClaude': setting('Claude Code', 'Claude Code', 'Claude Code'),
   'settings.categories.agentSubagents': setting('Subagents', '子智能体', '子智慧體'),
   'settings.categories.agentMarketplace': setting('Marketplace', '插件广场', '外掛廣場'),
   'settings.categories.agentPlugins': setting('Plugins', '插件', '外掛'),

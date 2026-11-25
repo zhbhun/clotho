@@ -9,6 +9,7 @@ import {
   Server,
   Settings2,
   Sparkles,
+  Terminal,
 } from 'lucide-react'
 import {
   type CSSProperties,
@@ -90,6 +91,7 @@ const BASE_CATEGORIES = [
 ] as const
 
 const AGENT_CATEGORIES = [
+  { id: 'agent-claude', labelKey: 'settings.categories.agentClaude', icon: Terminal },
   { id: 'agent-plugins', labelKey: 'settings.categories.agentPlugins', icon: Puzzle },
   { id: 'agent-subagents', labelKey: 'settings.categories.agentSubagents', icon: Bot },
   { id: 'agent-mcp', labelKey: 'settings.categories.agentMcp', icon: Server },
@@ -504,7 +506,6 @@ function SettingsPageContent({
                         <LanguageSettings />
                         <PermissionSettings />
                         <SessionSettings />
-                        <ClaudeRuntimePanel />
                       </div>
                     </SettingsCategory>
                     <SettingsCategory isActive={category.id === 'models'}>
@@ -526,6 +527,9 @@ function SettingsPageContent({
                       />
                     </SettingsCategory>
                     {installTab ? <MarketplaceSettings initialTab={installTab} hideTabs /> : null}
+                    <SettingsCategory isActive={category.id === 'agent-claude'}>
+                      <ClaudeRuntimePanel />
+                    </SettingsCategory>
                     <SettingsCategory isActive={category.id === 'agent-plugins' && !installTab}>
                       <AgentPluginSettings onOpenMarketplace={() => setInstallTab('plugins')} />
                     </SettingsCategory>
