@@ -15,6 +15,7 @@ import { refreshCatalog, refreshInstalled, useCatalogCache } from './catalog-cac
 import { type CatalogSection, catalogSections } from './catalog-sections'
 import { type CatalogEntry, orderCatalog, searchCatalog } from './install-catalog'
 import { InstallGrid } from './install-grid'
+import { MarketplaceToolbar } from './marketplace-toolbar'
 import {
   DetailSection,
   PluginDetailIdentity,
@@ -29,7 +30,7 @@ import { useInstallActions } from './use-install-actions'
 const INSTALL_PAGE_SIZE = 100
 
 /** Section previews by default; full catalogs stay available through search. */
-export function InstallPluginPage() {
+export function InstallPluginPage({ toolbar }: { toolbar?: HTMLElement | null } = {}) {
   const { t } = useTranslation()
   const catalog = useCatalogCache((state) => state.catalog)
   const catalogLoading = useCatalogCache((state) => state.catalogLoading)
@@ -106,9 +107,9 @@ export function InstallPluginPage() {
 
   return (
     <section className="flex flex-col gap-4" data-install-page>
-      <div className="flex items-center justify-end gap-4">
+      <MarketplaceToolbar target={toolbar}>
         <Input
-          className="w-60"
+          className="w-60 max-w-full"
           placeholder={t('settings.agent.plugins.searchPlaceholder')}
           value={search}
           onChange={(event) => {
@@ -116,7 +117,7 @@ export function InstallPluginPage() {
             setRenderLimit(INSTALL_PAGE_SIZE)
           }}
         />
-      </div>
+      </MarketplaceToolbar>
       {section && !isSearching ? (
         <h1 className="px-2 text-xl font-semibold tracking-tight">{sectionTitle(section)}</h1>
       ) : null}

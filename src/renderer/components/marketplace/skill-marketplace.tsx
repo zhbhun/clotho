@@ -13,6 +13,7 @@ import {
   installMarketSkill,
   listAgentSkills,
 } from '../../services/claude/agent-config'
+import { MarketplaceToolbar } from './marketplace-toolbar'
 import { InstallPageSkeleton } from './plugin-skeletons'
 import { useSettingsDetailStore } from './settings-detail-store'
 import { ExternalLink, SkillGrid, directoryName } from './skill-grid'
@@ -47,7 +48,7 @@ function useSkillSearch(query: string) {
   }
 }
 
-export function SkillMarketplace() {
+export function SkillMarketplace({ toolbar }: { toolbar?: HTMLElement | null } = {}) {
   const { t, i18n } = useTranslation()
   const openDetail = useSettingsDetailStore((state) => state.openDetail)
   const view = useSettingsDetailStore((state) => state.view)
@@ -130,15 +131,15 @@ export function SkillMarketplace() {
 
   return (
     <section className="flex flex-col gap-4" data-skill-marketplace>
-      <div className="flex items-center justify-end gap-4">
+      <MarketplaceToolbar target={toolbar}>
         <Input
-          className="w-60"
+          className="w-60 max-w-full"
           type="search"
           value={input}
           onChange={(event) => setInput(event.target.value)}
           placeholder={t('settings.agent.skillMarket.search')}
         />
-      </div>
+      </MarketplaceToolbar>
       {query ? (
         search.rows === undefined ? (
           <InstallPageSkeleton />

@@ -4,14 +4,14 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/shadcn/button'
 import { toast } from '@/shadcn/toast'
 
-import { installAgentPlugin, refreshAgentMarketplace } from '../../services/claude/agent-config'
+import { installAgentPlugin } from '../../services/claude/agent-config'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../dropdown-menu'
-import { updateInstalled, updateMarketplaces } from './catalog-cache'
+import { updateInstalled } from './catalog-cache'
 
 /** Shared "changes apply to new sessions" hint after a plugin/marketplace change. */
 export function useRestartHint() {
@@ -38,20 +38,6 @@ export async function installPluginWithToast(
   } catch {
     toast.add({ id: 'agent-plugin-install', title: installError, type: 'error' })
     return false
-  }
-}
-
-/** Refresh every registered marketplace, reloading afterwards; error toast on failure. */
-export async function refreshAllMarketplaces(
-  reload: () => Promise<void>,
-  refreshError: string,
-): Promise<void> {
-  try {
-    await refreshAgentMarketplace()
-    updateMarketplaces()
-    await reload()
-  } catch {
-    toast.add({ id: 'agent-marketplace-refresh', title: refreshError, type: 'error' })
   }
 }
 

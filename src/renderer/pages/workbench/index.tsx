@@ -297,14 +297,18 @@ function WorkbenchContent() {
             onToggleArchiveSession={handleToggleArchiveSession}
           />
 
-          <div hidden={isExtensionsOpen} className={isExtensionsOpen ? 'hidden' : 'contents'}>
-            <SessionArea {...sessionAreaProps} />
-          </div>
-          {hasOpenedExtensions ? (
-            <div hidden={!isExtensionsOpen} className={isExtensionsOpen ? 'contents' : 'hidden'}>
-              <Extensions />
+          <div className="relative flex min-w-0 flex-1">
+            {/* Hide the whole layer at once: tab transitions can delay inherited visibility.
+                Keeping it in layout also preserves virtual row measurements. */}
+            <div className="flex min-w-0 flex-1 inert:opacity-0" inert={isExtensionsOpen}>
+              <SessionArea {...sessionAreaProps} />
             </div>
-          ) : null}
+            {hasOpenedExtensions ? (
+              <div hidden={!isExtensionsOpen} className="absolute inset-0">
+                <Extensions />
+              </div>
+            ) : null}
+          </div>
         </ErrorBoundary>
 
         <SettingsPage

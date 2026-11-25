@@ -194,18 +194,15 @@ describe('MarketplaceListPage cache', () => {
     expect(view.container.querySelector('[data-install-skeleton]')).not.toBeNull()
   })
 
-  it('updates descriptions after refreshing marketplaces', async () => {
-    const marketplace = { name: 'acme', source: { source: 'github' }, installLocation: '/acme' }
-    mock.listAgentMarketplaces
-      .mockResolvedValueOnce([{ ...marketplace, description: 'Before refresh' }])
-      .mockResolvedValueOnce([{ ...marketplace, description: 'After refresh' }])
-    mock.refreshAgentMarketplace.mockResolvedValue(undefined)
+  it('opens the add form from the marketplace toolbar', async () => {
     const user = userEvent.setup()
     renderWithProviders(<MarketplaceListPage />)
-    expect(await screen.findByText('Before refresh')).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: '更多操作' }))
-    await user.click(await screen.findByRole('menuitem', { name: '全部刷新' }))
-    expect(await screen.findByText('After refresh')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '添加市场' }))
+    expect(useSettingsDetailStore.getState().view).toMatchObject({
+      kind: 'detail',
+      page: 'marketplaces',
+      file: null,
+    })
   })
 })
 

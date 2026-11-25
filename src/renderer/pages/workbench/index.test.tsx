@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 
 import { SidebarProvider } from '@/shadcn/sidebar'
 import { Toaster, toast } from '@/shadcn/toast'
@@ -19,6 +19,7 @@ import { requestFromDesktop } from '../../services/desktop/client'
 import { commandCatalog } from '../../services/shortcuts/catalog'
 import { ShortcutRuntimeProvider, createShortcutRuntime } from '../../services/shortcuts/runtime'
 import { readUiState, updateUiState } from '../../services/ui-storage'
+import { useClaudeRuntimeStore } from '../../stores/claude-runtime-store'
 import { useProjects } from './hooks/use-projects'
 import { WorkbenchPage } from './index'
 import { sessionPersistence } from './services/session-persistence'
@@ -173,6 +174,17 @@ async function typePrompt(text: string) {
     Element.prototype.getClientRects = originalElementRects
     Range.prototype.getClientRects = originalRangeRects
   }
+}
+
+function renderWorkbenchWithReadyRuntime() {
+  const previous = useClaudeRuntimeStore.getState()
+  useClaudeRuntimeStore.setState({
+    hasContinued: true,
+    isInitializing: false,
+    initialize: async () => {},
+  })
+  onTestFinished(() => useClaudeRuntimeStore.setState(previous, true))
+  return renderWorkbenchPage()
 }
 
 function renderWorkbenchPage(shortcutOverrides: ShortcutOverrides = {}) {
@@ -366,7 +378,13 @@ function setupShortcutSessions() {
     if (command === 'claudeGetProjectGitBranch') return null
     if (command === 'claudeGetSessionMessages') return []
     if (command === 'claudeStartup') {
-      return { cwd: project.path, commands: [], agents: [], models: TEST_MODELS }
+      return {
+        cwd: project.path,
+        commands: [],
+        agents: [],
+        hasClaudeAuthentication: true,
+        models: TEST_MODELS,
+      }
     }
     return null
   })
@@ -683,7 +701,7 @@ describe('extension navigation', () => {
   it('opens the market in the main area and preserves the conversation when returning', async () => {
     const { sessions } = setupShortcutSessions()
     const user = userEvent.setup()
-    renderWorkbenchPage()
+    renderWorkbenchWithReadyRuntime()
     await screen.findByRole('tab', { name: 'Shortcut one' })
     const extensionLabel = appI18n.t('workbench.nav.extensions')
     const extension = screen.getByRole('button', { name: extensionLabel })
@@ -1018,7 +1036,7 @@ describe('blank new chat surface', () => {
   it('keeps existing tabs visible without a highlight while a blank chat is open', async () => {
     await initializeAppI18n('en', ['en-US'])
     setupShortcutSessions()
-    renderWorkbenchPage()
+    renderWorkbenchWithReadyRuntime()
     await screen.findByRole('tab', { name: 'Shortcut one' })
 
     await startAnotherChat()
@@ -3651,13 +3669,19 @@ describe('Claude runtime claudeStartup', () => {
         case 'claudeGetSessionMessages':
           return []
         case 'claudeStartup':
-          return { cwd: project.path, commands: [], agents: [], models: [] }
+          return {
+            cwd: project.path,
+            commands: [],
+            agents: [],
+            hasClaudeAuthentication: true,
+            models: [],
+          }
         default:
           return null
       }
     })
 
-    renderWorkbenchPage()
+    renderWorkbenchWithReadyRuntime()
 
     await screen.findByRole('tab', { name: 'First session' })
     const activeSurface = document.querySelector('[data-session-tab-active-surface]')

@@ -15,6 +15,7 @@ import { Button } from '@/shadcn/button'
 import { Input } from '@/shadcn/input'
 import { Spinner } from '@/shadcn/spinner'
 import { toast } from '@/shadcn/toast'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip'
 
 import {
   type AgentMarketplaceInfo,
@@ -35,13 +36,13 @@ import {
   updateMarketplaces,
   useCatalogCache,
 } from './catalog-cache'
+import { MarketplaceToolbar } from './marketplace-toolbar'
 import { PluginAvatar } from './plugin-avatar'
 import { DetailSection, PluginDetailIdentity, PluginInfoRows } from './plugin-detail-page'
 import {
   PluginOverflowMenu,
   RowChevron,
   installPluginWithToast,
-  refreshAllMarketplaces,
   useRestartHint,
 } from './plugin-shared'
 import { InstallPageSkeleton, MarketplaceDetailSkeleton } from './plugin-skeletons'
@@ -123,8 +124,8 @@ function openMarketplaceSource(marketplace: AgentMarketplaceInfo) {
   if (href) return requestFromDesktop('appOpenLink', { href, projectPath: '' })
 }
 
-/** Second-level Marketplaces page: registered sources with Add and a `⋯` menu. */
-export function MarketplaceListPage() {
+/** Second-level Marketplaces page: registered sources with an Add action. */
+export function MarketplaceListPage({ toolbar }: { toolbar?: HTMLElement | null } = {}) {
   const { t } = useTranslation()
   const marketplaces = useCatalogCache((state) => state.marketplaces)
   const marketplacesError = useCatalogCache((state) => state.marketplacesError)
@@ -133,9 +134,6 @@ export function MarketplaceListPage() {
   useEffect(() => {
     void refreshMarketplaces()
   }, [])
-
-  const handleRefreshAll = () =>
-    refreshAllMarketplaces(async () => {}, t('settings.agent.plugins.refreshError'))
 
   const openAdd = () =>
     openDetail(
@@ -147,30 +145,26 @@ export function MarketplaceListPage() {
 
   return (
     <section className="flex flex-col gap-3" data-marketplace-list-page>
-      <div className="flex min-h-7 items-center justify-between gap-4">
-        <h2 className="text-sm font-medium">
-          {t('settings.agent.plugins.registered')}{' '}
-          {marketplaces && (
-            <span className="font-normal text-foreground-subtlest">
-              {t('settings.agent.subagent.itemCount', { count: marketplaces.length })}
-            </span>
-          )}
-        </h2>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={openAdd}>
-            {t('settings.agent.plugins.addMarketplace')}
-          </Button>
-          <PluginOverflowMenu
-            items={[
-              {
-                label: t('settings.agent.plugins.refreshAll'),
-                onSelect: () => void handleRefreshAll(),
-              },
-            ]}
-            label={t('settings.agent.plugins.more')}
+      <MarketplaceToolbar target={toolbar}>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                aria-label={t('settings.agent.plugins.addMarketplace')}
+                className="text-foreground-subtle"
+                size="icon"
+                variant="ghost"
+                onClick={openAdd}
+              >
+                <Plus aria-hidden strokeWidth={1.5} />
+              </Button>
+            }
           />
-        </div>
-      </div>
+          <TooltipContent side="bottom">
+            {t('settings.agent.plugins.addMarketplace')}
+          </TooltipContent>
+        </Tooltip>
+      </MarketplaceToolbar>
 
       {marketplaces === null && !marketplacesError ? (
         <InstallPageSkeleton />

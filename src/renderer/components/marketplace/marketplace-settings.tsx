@@ -1,9 +1,11 @@
+import { Puzzle, Sparkles, Store } from 'lucide-react'
 import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shadcn/tabs'
 
 import { APP_CONTENT_CONTAINER_CLASS } from '../app-layout'
+import { TabSurface } from '../tab-surface'
 import { TransientScrollArea } from '../transient-scroll-area'
 import { InstallPluginDetailPage, InstallPluginPage } from './install-page'
 import { MarketplaceAddPage, MarketplaceDetailPage, MarketplaceListPage } from './marketplace-pages'
@@ -22,6 +24,7 @@ export function MarketplaceSettings({
 }) {
   const { t } = useTranslation()
   const [tab, setTab] = useState<string>(initialTab)
+  const [toolbar, setToolbar] = useState<HTMLDivElement | null>(null)
   const view = useSettingsDetailStore((state) => state.view)
 
   let detailContent: ReactNode = null
@@ -54,39 +57,68 @@ export function MarketplaceSettings({
     }
   }
   if (detailContent) {
-    return hideTabs ? detailContent : <MarketContent>{detailContent}</MarketContent>
+    return hideTabs ? detailContent : <MarketContent isDetail>{detailContent}</MarketContent>
   }
 
   if (hideTabs) return initialTab === 'skills' ? <SkillMarketplace /> : <InstallPluginPage />
 
   return (
     <Tabs className="min-h-0 flex-1 gap-0" value={tab} onValueChange={setTab}>
-      <div className="app-region-drag flex h-10 shrink-0 items-center justify-center px-4">
-        <TabsList className="app-region-no-drag">
-          <TabsTrigger value="plugins">{t('settings.agent.title.plugins')}</TabsTrigger>
-          <TabsTrigger value="skills">{t('settings.agent.title.skills')}</TabsTrigger>
-          <TabsTrigger value="marketplaces">{t('settings.agent.plugins.marketplaces')}</TabsTrigger>
+      <header
+        className="session-tabs app-region-drag relative flex h-10 shrink-0 items-center justify-between gap-3 bg-background px-4"
+        data-has-tabs="true"
+      >
+        <TabsList className="app-region-no-drag relative z-1 h-8 shrink-0 gap-0 rounded-none bg-transparent p-0">
+          {(
+            [
+              ['plugins', t('settings.agent.title.plugins'), Puzzle],
+              ['skills', t('settings.agent.title.skills'), Sparkles],
+              ['marketplaces', t('settings.agent.plugins.marketplaces'), Store],
+            ] as const
+          ).map(([value, label, Icon]) => (
+            <div
+              key={value}
+              className="session-tab relative h-8 min-w-16"
+              data-active={value === tab ? 'true' : undefined}
+            >
+              {value === tab && <TabSurface style={{ left: 3, width: 'calc(100% - 6px)' }} />}
+              <TabsTrigger
+                value={value}
+                className="relative h-full w-full rounded-none border-0 bg-transparent px-3 font-normal data-active:bg-transparent group-data-[variant=default]/tabs-list:data-active:shadow-none dark:data-active:bg-transparent"
+              >
+                <Icon aria-hidden className="size-4" strokeWidth={1.5} />
+                {label}
+              </TabsTrigger>
+            </div>
+          ))}
         </TabsList>
-      </div>
+        <div className="app-region-no-drag relative z-1 min-w-0" ref={setToolbar} />
+      </header>
       <MarketContent>
         <TabsContent value="plugins">
-          <InstallPluginPage />
+          <InstallPluginPage toolbar={tab === 'plugins' ? toolbar : null} />
         </TabsContent>
         <TabsContent value="skills">
-          <SkillMarketplace />
+          <SkillMarketplace toolbar={tab === 'skills' ? toolbar : null} />
         </TabsContent>
         <TabsContent value="marketplaces">
-          <MarketplaceListPage />
+          <MarketplaceListPage toolbar={tab === 'marketplaces' ? toolbar : null} />
         </TabsContent>
       </MarketContent>
     </Tabs>
   )
 }
 
-function MarketContent({ children }: { children: ReactNode }) {
+function MarketContent({
+  children,
+  isDetail = false,
+}: {
+  children: ReactNode
+  isDetail?: boolean
+}) {
   return (
     <TransientScrollArea className="min-h-0 flex-1">
-      <div className="px-6 pt-2 pb-12">
+      <div className={`px-6 pb-12 ${isDetail ? 'pt-2' : 'pt-7'}`}>
         <div className={APP_CONTENT_CONTAINER_CLASS}>{children}</div>
       </div>
     </TransientScrollArea>
