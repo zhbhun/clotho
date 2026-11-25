@@ -3,11 +3,11 @@ import { useTranslation } from 'react-i18next'
 
 import { toast } from '@/shadcn/toast'
 
-import { removeAgentPlugin, setAgentPluginEnabled } from '../../services/claude/agent-config'
+import { setAgentPluginEnabled } from '../../services/claude/agent-config'
 import { requestFromDesktop } from '../../services/desktop/client'
 import { updateInstalled, useCatalogCache } from './catalog-cache'
 import type { CatalogEntry } from './install-catalog'
-import { installPluginWithToast, useRestartHint } from './plugin-shared'
+import { installPluginWithToast, uninstallPluginWithToast, useRestartHint } from './plugin-shared'
 import { usePluginHomepages } from './use-plugin-homepages'
 
 /** Share installed state and actions across every occurrence of a plugin. */
@@ -63,17 +63,7 @@ export function useInstallActions(entries: CatalogEntry[]) {
   }
 
   const uninstall = async (pluginId: string) => {
-    try {
-      await removeAgentPlugin(pluginId)
-      notifyRestart()
-      updateInstalled(pluginId, 'remove')
-    } catch {
-      toast.add({
-        id: 'agent-plugin-remove',
-        title: t('settings.agent.deleteError'),
-        type: 'error',
-      })
-    }
+    await uninstallPluginWithToast(pluginId, notifyRestart, t('settings.agent.deleteError'))
   }
 
   const open = (entry: CatalogEntry) => {

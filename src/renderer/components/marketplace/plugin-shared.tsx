@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/shadcn/button'
 import { toast } from '@/shadcn/toast'
 
-import { installAgentPlugin } from '../../services/claude/agent-config'
+import { installAgentPlugin, removeAgentPlugin } from '../../services/claude/agent-config'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,6 +37,22 @@ export async function installPluginWithToast(
     return true
   } catch {
     toast.add({ id: 'agent-plugin-install', title: installError, type: 'error' })
+    return false
+  }
+}
+
+export async function uninstallPluginWithToast(
+  pluginId: string,
+  notifyRestart: () => void,
+  uninstallError: string,
+): Promise<boolean> {
+  try {
+    await removeAgentPlugin(pluginId)
+    updateInstalled(pluginId, 'remove')
+    notifyRestart()
+    return true
+  } catch {
+    toast.add({ id: 'agent-plugin-remove', title: uninstallError, type: 'error' })
     return false
   }
 }

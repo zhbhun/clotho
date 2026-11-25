@@ -1403,7 +1403,7 @@ describe('InstallPluginDetailPage', () => {
     })
   })
 
-  it('installs from the detail page and flips to the Installed badge', async () => {
+  it('installs and uninstalls from the detail page', async () => {
     mock.getAgentPluginDetails.mockResolvedValue({
       pluginId: 'fmt@acme',
       name: 'fmt',
@@ -1421,7 +1421,8 @@ describe('InstallPluginDetailPage', () => {
 
     await user.click(await screen.findByRole('button', { name: '安装插件' }))
     await waitFor(() => expect(mock.installAgentPlugin).toHaveBeenCalledWith('fmt@acme'))
-    expect(await screen.findByText('已安装')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: '安装插件' })).toBeNull()
+    await user.click(await screen.findByRole('button', { name: '卸载' }))
+    expect(mock.removeAgentPlugin).toHaveBeenCalledWith('fmt@acme')
+    expect(await screen.findByRole('button', { name: '安装插件' })).toBeEnabled()
   })
 })

@@ -2,7 +2,6 @@ import { ArrowDownUp, ChevronRight } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { Badge } from '@/shadcn/badge'
 import { Button } from '@/shadcn/button'
 import { Input } from '@/shadcn/input'
 import { Separator } from '@/shadcn/separator'
@@ -40,7 +39,7 @@ import {
   PluginDetailSections,
   PluginInfoRows,
 } from './plugin-detail-page'
-import { installPluginWithToast, useRestartHint } from './plugin-shared'
+import { installPluginWithToast, uninstallPluginWithToast, useRestartHint } from './plugin-shared'
 import { InstallPageSkeleton, PluginDetailSkeleton } from './plugin-skeletons'
 import { useSettingsDetailStore } from './settings-detail-store'
 import { useInstallActions } from './use-install-actions'
@@ -257,6 +256,7 @@ export function InstallPluginDetailPage({ pluginId }: { pluginId: string }) {
   const [details, setDetails] = useState<Awaited<ReturnType<typeof getAgentPluginDetails>> | null>(
     null,
   )
+  const [isPending, setIsPending] = useState(false)
   const [installed, setInstalled] = useState(false)
 
   useEffect(() => {
@@ -284,13 +284,20 @@ export function InstallPluginDetailPage({ pluginId }: { pluginId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pluginId])
 
-  const handleInstall = async () => {
-    const ok = await installPluginWithToast(
-      pluginId,
-      notifyRestart,
-      t('settings.agent.plugins.installError'),
-    )
-    if (ok) setInstalled(true)
+  const handleAction = async () => {
+    setIsPending(true)
+    try {
+      const ok = installed
+        ? await uninstallPluginWithToast(pluginId, notifyRestart, t('settings.agent.deleteError'))
+        : await installPluginWithToast(
+            pluginId,
+            notifyRestart,
+            t('settings.agent.plugins.installError'),
+          )
+      if (ok) setInstalled(!installed)
+    } finally {
+      setIsPending(false)
+    }
   }
 
   const openLink = (href: string) =>
@@ -327,13 +334,15 @@ export function InstallPluginDetailPage({ pluginId }: { pluginId: string }) {
           name={details.name}
         />
         <div className="shrink-0">
-          {installed ? (
-            <Badge variant="secondary">{t('settings.agent.plugins.installed')}</Badge>
-          ) : (
-            <Button onClick={() => void handleInstall()}>
-              {t('settings.agent.plugins.install')}
-            </Button>
-          )}
+          <Button
+            disabled={isPending}
+            variant={installed ? 'destructive' : 'default'}
+            onClick={() => void handleAction()}
+          >
+            {installed
+              ? t('settings.agent.plugins.uninstall')
+              : t('settings.agent.plugins.install')}
+          </Button>
         </div>
       </div>
       {details.description ? (
