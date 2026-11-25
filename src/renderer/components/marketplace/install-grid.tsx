@@ -35,7 +35,7 @@ export function InstallGrid({
         const isEnabled = actions.isEnabled(entry)
         return (
           <div
-            className="flex min-w-0 items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/50"
+            className="flex min-w-0 cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/50"
             data-install-tile
             data-plugin-id={entry.pluginId}
             key={entry.pluginId}
