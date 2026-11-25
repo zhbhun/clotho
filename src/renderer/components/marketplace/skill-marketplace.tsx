@@ -114,9 +114,23 @@ export function SkillMarketplace({ toolbar }: { toolbar?: HTMLElement | null } =
     installedSources,
     pending,
     onInstall: handleInstall,
-    onOpen(directory: string) {
-      if (chart) openSub('agent-marketplace', 'skill-detail', directory, directory)
-      else openDetail('agent-marketplace', directory, directory, 'skills')
+    onOpen(directory: string, marketSkill?: MarketSkill) {
+      if (chart)
+        openSub(
+          'agent-marketplace',
+          'skill-detail',
+          directory,
+          marketSkill?.name ?? directory,
+          marketSkill,
+        )
+      else
+        openDetail(
+          'agent-marketplace',
+          directory,
+          marketSkill?.name ?? directory,
+          'skills',
+          marketSkill,
+        )
     },
     onUninstall(directory: string) {
       setInstalledSources((current) => {
@@ -207,7 +221,7 @@ export function SkillMarketplace({ toolbar }: { toolbar?: HTMLElement | null } =
                     <SkillGrid
                       rows={chart ? board.rows : board.rows.slice(0, 10)}
                       {...gridActions}
-                      onOpen={(directory) => {
+                      onOpen={(directory, marketSkill) => {
                         if (!chart) {
                           openDetail(
                             'agent-marketplace',
@@ -216,7 +230,13 @@ export function SkillMarketplace({ toolbar }: { toolbar?: HTMLElement | null } =
                             'skill-section',
                           )
                         }
-                        openSub('agent-marketplace', 'skill-detail', directory, directory)
+                        openSub(
+                          'agent-marketplace',
+                          'skill-detail',
+                          directory,
+                          marketSkill?.name ?? directory,
+                          marketSkill,
+                        )
                       }}
                     />
                   ) : (

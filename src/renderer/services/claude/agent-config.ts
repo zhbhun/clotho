@@ -73,8 +73,8 @@ export function listAgentSkills() {
   return requestFromDesktop('agentListSkills', {})
 }
 
-export function readAgentSkill(name: string) {
-  return requestFromDesktop('agentReadSkill', { name })
+export function readAgentSkill(name: string, source?: string) {
+  return requestFromDesktop('agentReadSkill', { name, source })
 }
 
 export function deleteAgentSkill(name: string) {

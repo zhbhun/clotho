@@ -155,16 +155,17 @@ describe('SkillMarketplace', () => {
     expect(await screen.findByText('1,200 stars')).toBeInTheDocument()
   })
 
-  it('opens the published skill URL from rankings and CLI search titles', async () => {
+  it('opens market skill details from rankings and CLI search without installing', async () => {
     mock.findMarketSkills.mockResolvedValue([offList])
     renderMarket()
     for (const skill of [ranked, offList]) {
       if (skill === offList) search('calendar')
-      fireEvent.click(await screen.findByRole('link', { name: skill.name }))
-      expect(requestFromDesktop).toHaveBeenLastCalledWith('appOpenLink', {
-        href: skill.url,
-        projectPath: '',
-      })
+      fireEvent.click(await screen.findByText(skill.name))
+      const view = useSettingsDetailStore.getState().view
+      expect(view).toMatchObject(
+        skill === ranked ? { sub: { marketSkill: skill } } : { marketSkill: skill },
+      )
+      act(() => useSettingsDetailStore.getState().backToList())
     }
     expect(mock.installMarketSkill).not.toHaveBeenCalled()
   })

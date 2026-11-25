@@ -793,6 +793,11 @@ export const settingsCatalog = {
     '首次收录于 {{value}} 天前',
     '首次收錄於 {{value}} 天前',
   ),
+  'settings.agent.skillMarket.documentUnavailable': setting(
+    'Skill document unavailable',
+    '暂时无法查看技能正文',
+    '暫時無法查看技能正文',
+  ),
   'settings.agent.skillMarket.search': setting('Search skills...', '搜索技能…', '搜尋技能…'),
   'settings.agent.skillMarket.unavailable': setting(
     'Rankings unavailable',

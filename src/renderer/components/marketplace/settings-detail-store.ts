@@ -1,6 +1,8 @@
 import { type ReactNode, createContext, createElement, useContext, useState } from 'react'
 import { create, useStore } from 'zustand'
 
+import type { MarketSkill } from '@/shared/rpc'
+
 export type SettingsCategoryId =
   | 'general'
   | 'models'
@@ -32,10 +34,11 @@ export type SettingsDetailView =
       categoryId: SettingsCategoryId
       /** Identifies the entry being edited; `null` when creating. */
       file: string | null
+      marketSkill?: MarketSkill
       /** The second-level page the detail belongs to. */
       page: DetailPage
       /** Third-level payload: which subpage and its entry id (null = create). */
-      sub: { page: DetailSubPage; file: string | null } | null
+      sub: { page: DetailSubPage; file: string | null; marketSkill?: MarketSkill } | null
     }
   | { kind: 'list' }
 
@@ -58,6 +61,7 @@ interface SettingsDetailState {
     file: string | null,
     leaf: string,
     page?: Exclude<DetailPage, 'entry'>,
+    marketSkill?: MarketSkill,
   ) => void
   /**
    * Open a third-level subpage under the currently open second-level page.
@@ -68,6 +72,7 @@ interface SettingsDetailState {
     page: DetailSubPage,
     file: string | null,
     leaf: string,
+    marketSkill?: MarketSkill,
   ) => void
   /** Switch to another second-level page within the open detail. */
   setPage: (page: Exclude<DetailPage, 'entry'>, leaf: string, file?: string | null) => void
@@ -94,19 +99,19 @@ const createDetailStore = () =>
     subLeaf: '',
     isDirty: false,
     isLeavePending: false,
-    openDetail: (categoryId, file, leaf, page) =>
+    openDetail: (categoryId, file, leaf, page, marketSkill) =>
       set({
-        view: { kind: 'detail', categoryId, file, page: page ?? 'entry', sub: null },
+        view: { kind: 'detail', categoryId, file, marketSkill, page: page ?? 'entry', sub: null },
         leaf,
         subLeaf: '',
         isDirty: false,
         isLeavePending: false,
       }),
-    openSub: (categoryId, page, file, leaf) =>
+    openSub: (categoryId, page, file, leaf, marketSkill) =>
       set((state) => {
         if (state.view.kind !== 'detail' || state.view.categoryId !== categoryId) return state
         return {
-          view: { ...state.view, sub: { page, file } },
+          view: { ...state.view, sub: { page, file, marketSkill } },
           subLeaf: leaf,
           isDirty: false,
           isLeavePending: false,

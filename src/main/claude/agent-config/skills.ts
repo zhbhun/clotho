@@ -30,6 +30,10 @@ function skillPath(name: string, claudeDir?: string) {
 
 export async function readSkill(name: string, claudeDir?: string): Promise<AgentSkillDocument> {
   const source = await fs.readFile(path.join(skillPath(name, claudeDir), 'SKILL.md'), 'utf8')
+  return parseSkillDocument(source)
+}
+
+export function parseSkillDocument(source: string): AgentSkillDocument {
   const header = /^\uFEFF?---\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/.exec(source)
   if (!header) return { metadata: {}, body: source }
   const yaml = parseDocument(header[1], { schema: 'failsafe' })

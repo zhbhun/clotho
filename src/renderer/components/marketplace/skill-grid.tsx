@@ -50,7 +50,7 @@ export interface SkillGridProps {
   installedSources: Map<string, string | undefined>
   pending: Set<string>
   onInstall: (skill: MarketSkill) => Promise<void>
-  onOpen: (directory: string) => void
+  onOpen: (directory: string, marketSkill?: MarketSkill) => void
   onUninstall: (directory: string) => void
 }
 
@@ -71,16 +71,28 @@ export function SkillGrid({
         const directory = directoryName(name)
         const installed = installedSources.get(directory)?.toLowerCase() === source.toLowerCase()
         const nameInUse = installedSources.has(directory)
+        const isRepo = entry?.metric === 'stars'
         return (
           <div
             className="flex min-w-0 cursor-pointer items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/50"
+            onClick={
+              isRepo
+                ? undefined
+                : () =>
+                    onOpen(
+                      directory,
+                      installed || (nameInUse && !installedSources.get(directory))
+                        ? undefined
+                        : skill,
+                    )
+            }
             data-skill-tile
             key={source + '@' + name}
           >
             <PluginAvatar name={name} rank={entry?.rank} />
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <div className="truncate text-sm font-medium">
-                {skill.url ? <ExternalLink href={skill.url}>{name}</ExternalLink> : name}
+                {isRepo && skill.url ? <ExternalLink href={skill.url}>{name}</ExternalLink> : name}
               </div>
               <div className="flex items-center gap-2 text-[11px] tabular-nums text-foreground-subtlest">
                 <span className="truncate">{source}</span>
@@ -108,26 +120,28 @@ export function SkillGrid({
                 )}
               </div>
             </div>
-            {entry && !entry.installable ? null : installed ? (
-              <Badge variant="secondary">{t('settings.agent.plugins.installed')}</Badge>
-            ) : nameInUse ? (
-              <SkillActions
-                name={directory}
-                onOpen={() => onOpen(directory)}
-                onUninstall={() => onUninstall(directory)}
-              />
-            ) : (
-              <Button
-                size="icon"
-                variant="ghost"
-                className="text-foreground-subtlest"
-                aria-label={t('settings.agent.skillMarket.install', { name })}
-                disabled={pending.has(directory)}
-                onClick={() => void onInstall(skill)}
-              >
-                {pending.has(directory) ? <Spinner /> : <Plus />}
-              </Button>
-            )}
+            <div className="shrink-0" onClick={(event) => event.stopPropagation()}>
+              {entry && !entry.installable ? null : installed ? (
+                <Badge variant="secondary">{t('settings.agent.plugins.installed')}</Badge>
+              ) : nameInUse ? (
+                <SkillActions
+                  name={directory}
+                  onOpen={() => onOpen(directory)}
+                  onUninstall={() => onUninstall(directory)}
+                />
+              ) : (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="text-foreground-subtlest"
+                  aria-label={t('settings.agent.skillMarket.install', { name })}
+                  disabled={pending.has(directory)}
+                  onClick={() => void onInstall(skill)}
+                >
+                  {pending.has(directory) ? <Spinner /> : <Plus />}
+                </Button>
+              )}
+            </div>
           </div>
         )
       })}

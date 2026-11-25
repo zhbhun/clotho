@@ -274,6 +274,7 @@ export interface AgentHookGroup {
 }
 
 export interface MarketSkill {
+  description?: string
   source: string
   name: string
   installs: string
@@ -1480,7 +1481,7 @@ export type DesktopRPC = {
         response: AgentSkillInfo[]
       }
       agentReadSkill: {
-        params: { name: string }
+        params: { name: string; source?: string }
         response: AgentSkillDocument
       }
       agentDeleteSkill: {

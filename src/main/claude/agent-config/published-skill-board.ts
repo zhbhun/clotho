@@ -81,6 +81,7 @@ export function parsePublishedBoard(chart: PublishedSkillChart, csv: string): Pu
         rank,
         name,
         source: source || '',
+        ...(row.description && { description: row.description }),
         installs: '',
         installable: !!row.source_skillssh && !isRepo,
         metric,

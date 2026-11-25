@@ -31,11 +31,22 @@ export function MarketplaceSettings({
 
   let detailContent: ReactNode = null
   if (view.kind === 'detail' && view.categoryId === 'agent-marketplace') {
-    if (view.page === 'skills' && view.file) detailContent = <SkillDetailPage name={view.file} />
+    if (view.page === 'skills' && view.file)
+      detailContent = (
+        <SkillDetailPage
+          key={view.marketSkill?.source + view.file}
+          name={view.file}
+          marketSkill={view.marketSkill}
+        />
+      )
     if (view.page === 'skill-section') {
       detailContent =
         view.sub?.page === 'skill-detail' && view.sub.file ? (
-          <SkillDetailPage name={view.sub.file} />
+          <SkillDetailPage
+            key={view.sub.marketSkill?.source + view.sub.file}
+            name={view.sub.file}
+            marketSkill={view.sub.marketSkill}
+          />
         ) : (
           <SkillMarketplace />
         )

@@ -537,7 +537,7 @@ export async function bootstrap() {
               return marketSource ? { ...skill, marketSource } : skill
             }),
           ),
-        agentReadSkill: ({ name }) => service.readAgentSkill(name),
+        agentReadSkill: ({ name, source }) => service.readAgentSkill(name, source),
         agentDeleteSkill: (params) => service.deleteAgentSkill(params),
         agentSetSkillEnabled: () => {
           // Clotho-scoped toggle state lives in Clotho settings; persisted by the renderer store.

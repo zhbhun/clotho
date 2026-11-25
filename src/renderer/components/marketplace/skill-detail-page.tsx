@@ -2,17 +2,31 @@ import { Fragment, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Spinner } from '@/shadcn/spinner'
-import type { AgentSkillDocument } from '@/shared/rpc'
+import type { AgentSkillDocument, MarketSkill } from '@/shared/rpc'
 
 import { readAgentSkill } from '../../services/claude/agent-config'
 import { MarkdownRenderer } from '../markdown-renderer'
+import { ExternalLink } from './skill-grid'
 
-export function SkillDetailPage({ name }: { name: string }) {
+export function SkillDetailPage({
+  name,
+  marketSkill,
+}: {
+  name: string
+  marketSkill?: MarketSkill
+}) {
   const { t } = useTranslation()
   const [document, setDocument] = useState<AgentSkillDocument | null>()
   useEffect(() => {
     let active = true
-    readAgentSkill(name).then(
+    if (marketSkill && !marketSkill.source.includes('/')) {
+      setDocument(null)
+      return
+    }
+    const request = marketSkill
+      ? readAgentSkill(marketSkill.name, marketSkill.source)
+      : readAgentSkill(name)
+    request.then(
       (result) => {
         if (active) setDocument(result)
       },
@@ -23,11 +37,15 @@ export function SkillDetailPage({ name }: { name: string }) {
     return () => {
       active = false
     }
-  }, [name])
+  }, [name, marketSkill])
 
   if (document === undefined) return <Spinner />
-  if (!document) return <p>{t('settings.agent.loadError')}</p>
-  const fields = Object.entries(document.metadata)
+  if (!document && !marketSkill) return <p>{t('settings.agent.loadError')}</p>
+  const metadata = document?.metadata ?? {
+    name: marketSkill?.name,
+    description: marketSkill?.description,
+  }
+  const fields = Object.entries(metadata).filter(([, value]) => value)
   return (
     <div className="flex min-w-0 flex-col gap-8">
       {fields.length > 0 && (
@@ -45,7 +63,18 @@ export function SkillDetailPage({ name }: { name: string }) {
           </dl>
         </section>
       )}
-      <MarkdownRenderer content={document.body} />
+      {marketSkill?.url && (
+        <div>
+          <ExternalLink href={marketSkill.url}>{marketSkill.url}</ExternalLink>
+        </div>
+      )}
+      {document ? (
+        <MarkdownRenderer content={document.body} />
+      ) : (
+        <p className="text-sm text-foreground-subtle">
+          {t('settings.agent.skillMarket.documentUnavailable')}
+        </p>
+      )}
     </div>
   )
 }
