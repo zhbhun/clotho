@@ -32,7 +32,7 @@ export function PluginAvatar({
   return (
     <div
       aria-hidden
-      className={`relative flex size-9 shrink-0 select-none items-center justify-center rounded-lg ${palette} ${className ?? ''}`}
+      className={`relative flex size-9 shrink-0 select-none items-center justify-center rounded-lg inset-ring-1 inset-ring-current/15 ${palette} ${className ?? ''}`}
       style={style}
     >
       {letter}
