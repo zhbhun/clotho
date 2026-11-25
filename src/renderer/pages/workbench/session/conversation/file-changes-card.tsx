@@ -29,10 +29,13 @@ export function FileChangesCard({
 
   return (
     <div
-      className={cn('overflow-hidden rounded-lg border border-border-chat-reply', className)}
+      className={cn(
+        'overflow-hidden rounded-lg border border-border-chat-reply [@media(min-resolution:2dppx)]:border-[0.5px]',
+        className,
+      )}
       data-slot="file-changes-card"
     >
-      <div className="flex items-center gap-2.5 border-b border-border-chat-reply bg-chat-reply px-3 py-2.5">
+      <div className="flex items-center gap-2.5 border-b border-border-chat-reply bg-chat-reply px-3 py-2.5 [@media(min-resolution:2dppx)]:border-b-[0.5px]">
         <FileDiff aria-hidden className="size-4 shrink-0 text-foreground-subtle" />
         <span className="text-sm text-foreground">
           {translate('workbench.conversation.editedFiles', { count: files.length })}

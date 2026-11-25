@@ -696,7 +696,7 @@ function SessionAreaContent({
               <div
                 className={cn(
                   CONVERSATION_CONTAINER_CLASS,
-                  'flex min-h-full flex-col',
+                  'conversation-content flex min-h-full flex-col',
                   subagentView.selectedSubagent
                     ? taskProgress.hasTaskProgress
                       ? 'pb-20 pt-11'

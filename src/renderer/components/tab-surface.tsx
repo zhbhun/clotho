@@ -12,9 +12,8 @@ export function TabSurface({ visible = true, style }: { visible?: boolean; style
     >
       {/* Chrome-style bottom flares: quarter-circle fillets that leave the
               side edge vertically and meet the divider horizontally, tangent on
-              both ends. Fixed size so the width spring never distorts them. The
-              curve endpoints sit on the 1px divider lines' centers (0.5px in
-              from the svg edges) so the strokes join without a pixel offset. */}
+              both ends. The SVGs stay fixed in size during the width spring,
+              and CSS aligns the endpoints with the divider centers. */}
       <svg aria-hidden className="session-tab-active-flank" data-side="left" viewBox="0 0 13 12">
         <path
           className="session-tab-active-flank-fill"

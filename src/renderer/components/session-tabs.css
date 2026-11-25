@@ -1,8 +1,14 @@
 .session-tabs {
-  --session-tab-divider: color-mix(in oklab, var(--border) 80%, transparent);
+  --session-tab-line-width: 1px;
 
   isolation: isolate;
   transition: box-shadow 140ms ease;
+}
+
+@media (min-resolution: 2dppx) {
+  .session-tabs {
+    --session-tab-line-width: 0.5px;
+  }
 }
 
 .session-tabs[data-content-scrolled='true'] {
@@ -16,8 +22,8 @@
   right: 0;
   bottom: 0;
   left: 0;
-  height: 1px;
-  background: var(--session-tab-divider);
+  height: var(--session-tab-line-width);
+  background: var(--divider);
   content: '';
   pointer-events: none;
 }
@@ -50,14 +56,19 @@
   height: 36px;
   border-radius: 12px 12px 0 0;
   background: var(--session-tab-surface);
-  box-shadow:
-    inset 1px 0 var(--session-tab-divider),
-    inset -1px 0 var(--session-tab-divider),
-    inset 0 1px var(--session-tab-divider);
   clip-path: inset(-12px -12px 0 -12px);
   opacity: 0;
   pointer-events: none;
   will-change: transform, width;
+}
+
+.session-tab-active-surface::before {
+  position: absolute;
+  inset: 0;
+  border: var(--session-tab-line-width) solid var(--divider);
+  border-bottom: 0;
+  border-radius: inherit;
+  content: '';
 }
 
 .session-tab-active-surface[data-visible='true'] {
@@ -92,8 +103,11 @@
 }
 
 .session-tab-active-flank {
+  /* Move the curve to the center of the thinner side and bottom lines. */
+  --flank-offset: calc((1px - var(--session-tab-line-width)) / 2);
+
   position: absolute;
-  bottom: 0;
+  bottom: calc(-1 * var(--flank-offset));
   display: block;
   /* 13x12: a 12px fillet (matching the 12px top radius) plus a 1px column that
      overlaps the surface to cover its straight inset divider there, so the
@@ -104,11 +118,11 @@
 }
 
 .session-tab-active-flank[data-side='left'] {
-  left: -12px;
+  left: calc(-12px - var(--flank-offset));
 }
 
 .session-tab-active-flank[data-side='right'] {
-  right: -12px;
+  right: calc(-12px - var(--flank-offset));
 }
 
 .session-tab-active-flank-fill {
@@ -117,7 +131,8 @@
 
 .session-tab-active-flank-edge {
   fill: none;
-  stroke: var(--session-tab-divider);
+  stroke: var(--divider);
+  stroke-width: var(--session-tab-line-width);
 }
 
 [data-reduced-motion='reduce'] .session-tabs,

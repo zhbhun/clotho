@@ -97,6 +97,12 @@
     }
   }
 
+  @media (min-resolution: 2dppx) {
+    .conversation-content .markdown-body :is(th, td) {
+      border-width: 0.5px;
+    }
+  }
+
   /* Shiki dual-theme output (defaultColor: false): token colors live in CSS variables and follow the theme. */
   .markdown-body pre span {
     color: var(--shiki-light);

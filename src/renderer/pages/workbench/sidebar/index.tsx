@@ -165,7 +165,7 @@ export function SessionSidebar({
           </SidebarMenuItem>
         </SidebarMenu>
 
-        <Separator className="my-2" />
+        <Separator className="my-2 [@media(min-resolution:2dppx)]:data-horizontal:h-[0.5px]" />
 
         {hasTabBar ? (
           <SessionListTabs
