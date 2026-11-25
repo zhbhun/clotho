@@ -131,15 +131,17 @@ export function SkillMarketplace({ toolbar }: { toolbar?: HTMLElement | null } =
 
   return (
     <section className="flex flex-col gap-4" data-skill-marketplace>
-      <MarketplaceToolbar target={toolbar}>
-        <Input
-          className="w-60 max-w-full"
-          type="search"
-          value={input}
-          onChange={(event) => setInput(event.target.value)}
-          placeholder={t('settings.agent.skillMarket.search')}
-        />
-      </MarketplaceToolbar>
+      {!chart ? (
+        <MarketplaceToolbar target={toolbar}>
+          <Input
+            className="w-60 max-w-full"
+            type="search"
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+            placeholder={t('settings.agent.skillMarket.search')}
+          />
+        </MarketplaceToolbar>
+      ) : null}
       {query ? (
         search.rows === undefined ? (
           <InstallPageSkeleton />

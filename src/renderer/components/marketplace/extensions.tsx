@@ -1,7 +1,13 @@
-import { ArrowLeft } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-import { Button } from '@/shadcn/button'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/shadcn/breadcrumb'
 
 import { DiscardChangesDialog } from './discard-changes-dialog'
 import { MarketplaceSettings } from './marketplace-settings'
@@ -18,20 +24,52 @@ export function Extensions() {
 function ExtensionsContent() {
   const { t } = useTranslation()
   const detail = useSettingsDetailStore()
-  const isDetailOpen = detail.view.kind === 'detail'
+  const view = detail.view
+  const page = view.kind === 'detail' ? view.page : null
+  const isPlugins = page === 'install' || page === 'install-section'
+  const rootLabel = isPlugins
+    ? t('settings.agent.title.plugins')
+    : page === 'marketplaces'
+      ? t('settings.agent.plugins.marketplaces')
+      : t('settings.agent.title.skills')
 
   return (
     <div className="flex h-svh min-w-0 flex-1 flex-col overflow-hidden" data-extensions>
-      {isDetailOpen ? (
+      {view.kind === 'detail' ? (
         <div className="app-region-drag flex h-10 shrink-0 items-center px-4">
-          <Button className="app-region-no-drag" variant="ghost" onClick={detail.requestLeave}>
-            <ArrowLeft />
-            {detail.view.kind === 'detail' &&
-            (detail.view.page === 'install-section' || detail.view.page === 'skill-section') &&
-            detail.view.sub
-              ? detail.leaf
-              : t('workbench.nav.extensions')}
-          </Button>
+          <Breadcrumb className="app-region-no-drag min-w-0">
+            <BreadcrumbList className="flex-nowrap">
+              <BreadcrumbItem>
+                <BreadcrumbLink
+                  render={<button type="button" />}
+                  className="cursor-pointer"
+                  onClick={view.sub ? detail.backToList : detail.requestLeave}
+                >
+                  {rootLabel}
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              {view.sub && (
+                <>
+                  <BreadcrumbItem className="min-w-0">
+                    <BreadcrumbLink
+                      render={<button type="button" />}
+                      className="cursor-pointer truncate"
+                      onClick={detail.requestLeave}
+                    >
+                      {detail.leaf}
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                </>
+              )}
+              <BreadcrumbItem className="min-w-0">
+                <BreadcrumbPage className="truncate">
+                  {view.sub ? detail.subLeaf : detail.leaf}
+                </BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
         </div>
       ) : null}
       <MarketplaceSettings initialTab="plugins" />

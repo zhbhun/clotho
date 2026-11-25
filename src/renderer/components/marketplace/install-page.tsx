@@ -107,17 +107,19 @@ export function InstallPluginPage({ toolbar }: { toolbar?: HTMLElement | null } 
 
   return (
     <section className="flex flex-col gap-4" data-install-page>
-      <MarketplaceToolbar target={toolbar}>
-        <Input
-          className="w-60 max-w-full"
-          placeholder={t('settings.agent.plugins.searchPlaceholder')}
-          value={search}
-          onChange={(event) => {
-            setSearch(event.target.value)
-            setRenderLimit(INSTALL_PAGE_SIZE)
-          }}
-        />
-      </MarketplaceToolbar>
+      {!sectionId ? (
+        <MarketplaceToolbar target={toolbar}>
+          <Input
+            className="w-60 max-w-full"
+            placeholder={t('settings.agent.plugins.searchPlaceholder')}
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value)
+              setRenderLimit(INSTALL_PAGE_SIZE)
+            }}
+          />
+        </MarketplaceToolbar>
+      ) : null}
       {section && !isSearching ? (
         <h1 className="px-2 text-xl font-semibold tracking-tight">{sectionTitle(section)}</h1>
       ) : null}
