@@ -18,7 +18,12 @@ import {
   DropdownMenuTrigger,
 } from '../dropdown-menu'
 import { AgentEmpty } from './agent-shared'
-import { refreshCatalog, refreshInstalled, useCatalogCache } from './catalog-cache'
+import {
+  refreshCatalog,
+  refreshInstalled,
+  refreshMarketplaces,
+  useCatalogCache,
+} from './catalog-cache'
 import { type CatalogSection, catalogSections } from './catalog-sections'
 import {
   type CatalogEntry,
@@ -76,6 +81,15 @@ export function InstallPluginPage({ toolbar }: { toolbar?: HTMLElement | null } 
   )
   const sections = useMemo(() => catalogSections(entries), [entries])
   const section = sections.find((entry) => entry.id === sectionId)
+  const marketplaceName = section?.kind === 'marketplace' ? section.marketplaceName : undefined
+  const marketplace = useCatalogCache((state) =>
+    marketplaceName ? state.marketplaces?.find((item) => item.name === marketplaceName) : undefined,
+  )
+  useEffect(() => {
+    if (marketplaceName && useCatalogCache.getState().marketplaces === null)
+      void refreshMarketplaces()
+  }, [marketplaceName])
+
   const groups = sections
   const orderedEntries = useMemo(
     () => (sectionId ? orderCatalog(section?.entries ?? [], sort) : entries),
@@ -166,7 +180,17 @@ export function InstallPluginPage({ toolbar }: { toolbar?: HTMLElement | null } 
         )}
       </MarketplaceToolbar>
       {section ? (
-        <h1 className="px-2 text-xl font-semibold tracking-tight">{sectionTitle(section)}</h1>
+        <header className="space-y-1 px-2">
+          <h1 className="text-xl font-semibold tracking-tight">{sectionTitle(section)}</h1>
+          {marketplace?.description && (
+            <p className="text-sm text-foreground-subtle">{marketplace.description}</p>
+          )}
+          {marketplace?.owner && (
+            <p className="text-xs text-foreground-subtlest">
+              {t('settings.agent.plugins.byAuthor', { author: marketplace.owner })}
+            </p>
+          )}
+        </header>
       ) : null}
       {catalog === null && (catalogLoading || !catalogError) ? (
         <InstallPageSkeleton />
@@ -183,13 +207,8 @@ export function InstallPluginPage({ toolbar }: { toolbar?: HTMLElement | null } 
               >
                 <div className="flex flex-col gap-2">
                   <div
-                    className={
-                      group.entries.length > group.previewLimit
-                        ? 'flex w-fit cursor-pointer items-center gap-1 px-2'
-                        : 'flex w-fit items-center gap-1 px-2'
-                    }
+                    className="flex w-fit cursor-pointer items-center gap-1 px-2"
                     onClick={() => {
-                      if (group.entries.length <= group.previewLimit) return
                       setRenderLimit(INSTALL_PAGE_SIZE)
                       openDetail(
                         'agent-marketplace',
@@ -200,9 +219,7 @@ export function InstallPluginPage({ toolbar }: { toolbar?: HTMLElement | null } 
                     }}
                   >
                     <h2 className="text-lg font-semibold tracking-tight">{sectionTitle(group)}</h2>
-                    {group.entries.length > group.previewLimit ? (
-                      <ChevronRight aria-hidden className="size-4 text-foreground-subtlest/60" />
-                    ) : null}
+                    <ChevronRight aria-hidden className="size-4 text-foreground-subtlest/60" />
                   </div>
                   <Separator />
                 </div>

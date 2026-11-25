@@ -894,7 +894,7 @@ describe('InstallPluginPage', () => {
     },
     { group: 'marketplace:acme', title: 'acme', name: 'formatter', pluginId: 'formatter@acme' },
   ])(
-    'returns preview details through their full $group section even without View all',
+    'opens a single-entry $group section from its title and returns there from preview details',
     async ({ group, title, name, pluginId }) => {
       mock.listAgentAvailablePlugins.mockResolvedValue([
         catalogEntry(),
@@ -908,10 +908,11 @@ describe('InstallPluginPage', () => {
       const user = userEvent.setup()
       renderWithProviders(<MarketplaceSettings initialTab="plugins" hideTabs />)
       await findInstallList()
-      const preview = within(section(group))
-      expect(preview.queryByRole('button', { name: '查看全部' })).toBeNull()
+      await user.click(within(section(group)).getByRole('heading', { name: title }))
+      expect(screen.getByRole('heading', { level: 1, name: title })).toBeInTheDocument()
+      act(() => useSettingsDetailStore.getState().requestLeave())
 
-      await user.click(preview.getByText(name))
+      await user.click(within(section(group)).getByText(name))
       expect(useSettingsDetailStore.getState().view).toMatchObject({
         page: 'install-section',
         file: group,

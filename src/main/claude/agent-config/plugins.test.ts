@@ -131,9 +131,12 @@ describe('list operations', () => {
           installed: [
             { id: 'context7@official', scope: 'user', version: '1' },
             { id: 'context7@official', scope: 'project', version: '1' },
+            { id: 'cc-plugin-privacy@builtin', scope: 'user' },
+            { id: 'humanizer@skills-dir', installPath: '/home/user/.claude/skills/humanizer' },
             { id: 'demo@example-mp', version: '1' },
           ],
           available: [
+            { name: 'cc-plugin-telemetry', marketplaceName: 'builtin' },
             {
               pluginId: 'demo@example-mp',
               name: 'demo',

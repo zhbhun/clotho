@@ -159,13 +159,20 @@ export async function listMarketplacePlugins(): Promise<MarketplacePlugin[]> {
   }))
   // The CLI lists already-installed plugins separately from available listings.
   const listedIds = new Set(entries.map((entry) => entry.pluginId))
-  for (const { id, version } of catalog.installed ?? []) {
+  for (const { id, version, installPath } of catalog.installed ?? []) {
     const { name, marketplace } = splitPluginId(id)
     if (!marketplace || listedIds.has(id)) continue
+    // The CLI also reports standalone skills as installed under the synthetic skills-dir source.
+    if (
+      marketplace === 'skills-dir' &&
+      installPath &&
+      path.basename(path.dirname(installPath)) === 'skills'
+    )
+      continue
     entries.push({ pluginId: id, name, marketplaceName: marketplace, version })
     listedIds.add(id)
   }
-  return entries
+  return entries.filter((entry) => entry.marketplaceName !== 'builtin')
 }
 
 async function readMarketplaceMetadata(
