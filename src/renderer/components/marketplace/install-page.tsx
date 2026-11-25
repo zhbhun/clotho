@@ -134,26 +134,26 @@ export function InstallPluginPage() {
                 key={group.id}
               >
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-1 px-2">
+                  <div
+                    className={
+                      group.entries.length > group.previewLimit
+                        ? 'flex w-fit cursor-pointer items-center gap-1 px-2'
+                        : 'flex w-fit items-center gap-1 px-2'
+                    }
+                    onClick={() => {
+                      if (group.entries.length <= group.previewLimit) return
+                      setRenderLimit(INSTALL_PAGE_SIZE)
+                      openDetail(
+                        'agent-marketplace',
+                        group.id,
+                        sectionTitle(group),
+                        'install-section',
+                      )
+                    }}
+                  >
                     <h2 className="text-lg font-semibold tracking-tight">{sectionTitle(group)}</h2>
                     {group.entries.length > group.previewLimit ? (
-                      <Button
-                        aria-label={t('settings.agent.plugins.viewAll')}
-                        variant="ghost"
-                        size="icon-xs"
-                        className="text-foreground-subtlest/60"
-                        onClick={() => {
-                          setRenderLimit(INSTALL_PAGE_SIZE)
-                          openDetail(
-                            'agent-marketplace',
-                            group.id,
-                            sectionTitle(group),
-                            'install-section',
-                          )
-                        }}
-                      >
-                        <ChevronRight className="size-4" />
-                      </Button>
+                      <ChevronRight aria-hidden className="size-4 text-foreground-subtlest/60" />
                     ) : null}
                   </div>
                   <Separator />

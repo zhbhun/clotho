@@ -163,27 +163,27 @@ export function SkillMarketplace() {
             return (
               <section className="flex flex-col gap-2" data-skill-chart={id} key={id}>
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-1 px-2">
+                  <div
+                    className={
+                      !chart && board && board.rows.length > 10
+                        ? 'flex w-fit cursor-pointer items-center gap-1 px-2'
+                        : 'flex w-fit items-center gap-1 px-2'
+                    }
+                    onClick={() => {
+                      if (chart || !board || board.rows.length <= 10) return
+                      openDetail(
+                        'agent-marketplace',
+                        id,
+                        t(`settings.agent.skillMarket.chart.${id}`),
+                        'skill-section',
+                      )
+                    }}
+                  >
                     <h2 className="text-lg font-semibold tracking-tight">
                       {t(`settings.agent.skillMarket.chart.${id}`)}
                     </h2>
                     {!chart && board && board.rows.length > 10 && (
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        className="text-foreground-subtlest/60"
-                        aria-label={t('settings.agent.plugins.viewAll')}
-                        onClick={() =>
-                          openDetail(
-                            'agent-marketplace',
-                            id,
-                            t(`settings.agent.skillMarket.chart.${id}`),
-                            'skill-section',
-                          )
-                        }
-                      >
-                        <ChevronRight className="size-4" />
-                      </Button>
+                      <ChevronRight aria-hidden className="size-4 text-foreground-subtlest/60" />
                     )}
                   </div>
                   <Separator />

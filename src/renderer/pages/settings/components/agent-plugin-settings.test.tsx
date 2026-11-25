@@ -795,9 +795,7 @@ describe('InstallPluginPage', () => {
     )
     expect(section('popular').querySelector('[data-install-tile]')).toHaveTextContent('feature-dev')
 
-    await user.click(
-      within(section('category:developer-tools')).getByRole('button', { name: '查看全部' }),
-    )
+    await user.click(within(section('category:developer-tools')).getByRole('heading'))
     expect(useSettingsDetailStore.getState().view).toMatchObject({
       page: 'install-section',
       file: 'category:developer-tools',
@@ -815,11 +813,11 @@ describe('InstallPluginPage', () => {
     expect(document.querySelectorAll('[data-install-tile]')).toHaveLength(12)
     act(() => useSettingsDetailStore.getState().requestLeave())
 
-    await user.click(within(section('marketplace:acme')).getByRole('button', { name: '查看全部' }))
+    await user.click(within(section('marketplace:acme')).getByRole('heading'))
     expect(document.querySelectorAll('[data-install-tile]')).toHaveLength(12)
     act(() => useSettingsDetailStore.getState().requestLeave())
 
-    await user.click(within(section('popular')).getByRole('button', { name: '查看全部' }))
+    await user.click(within(section('popular')).getByRole('heading'))
     expect(document.querySelectorAll('[data-install-tile]')).toHaveLength(12)
     expect(screen.queryByText('local-0')).toBeNull()
   })

@@ -78,7 +78,7 @@ describe('SkillMarketplace', () => {
       const tile = chart.querySelector('[data-skill-tile]')!
       expect(tile.children[0].querySelector('[data-avatar-rank]')).toHaveTextContent('1')
     }
-    await user.click(within(charts[1] as HTMLElement).getByRole('button', { name: 'View all' }))
+    await user.click(within(charts[1] as HTMLElement).getByRole('heading'))
     expect(useSettingsDetailStore.getState().view).toMatchObject({
       page: 'skill-section',
       file: 'top-installs',
