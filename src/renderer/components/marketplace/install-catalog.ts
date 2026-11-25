@@ -2,21 +2,26 @@ import type { AgentMarketplacePlugin } from '../../services/claude/agent-config'
 
 export type CatalogEntry = AgentMarketplacePlugin
 
-/**
- * Order catalog entries deterministically: install count descending (entries
- * without a known count last), then alphabetical by name, tiebreak by
- * marketplace then plugin id so React keys and row order stay stable.
- */
-export function orderCatalog(entries: CatalogEntry[]): CatalogEntry[] {
+export const catalogSorts = ['downloadsDesc', 'downloadsAsc', 'nameAsc', 'nameDesc'] as const
+export type CatalogSort = (typeof catalogSorts)[number]
+
+export function orderCatalog(
+  entries: CatalogEntry[],
+  sort: CatalogSort = 'downloadsDesc',
+): CatalogEntry[] {
   return [...entries].sort((a, b) => {
-    const ca = a.installCount ?? -1
-    const cb = b.installCount ?? -1
-    if (ca !== cb) return cb - ca
-    if (a.name !== b.name) return a.name < b.name ? -1 : 1
-    if (a.marketplaceName !== b.marketplaceName) {
-      return a.marketplaceName < b.marketplaceName ? -1 : 1
+    if (sort === 'downloadsAsc' || sort === 'downloadsDesc') {
+      if (a.installCount == null && b.installCount != null) return 1
+      if (b.installCount == null && a.installCount != null) return -1
+      const difference = (a.installCount ?? 0) - (b.installCount ?? 0)
+      if (difference) return sort === 'downloadsAsc' ? difference : -difference
     }
-    return a.pluginId < b.pluginId ? -1 : 1
+    const byName = a.name.localeCompare(b.name)
+    return (
+      (sort === 'nameDesc' ? -byName : byName) ||
+      a.marketplaceName.localeCompare(b.marketplaceName) ||
+      a.pluginId.localeCompare(b.pluginId)
+    )
   })
 }
 

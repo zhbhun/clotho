@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -24,6 +25,7 @@ export function Extensions() {
 function ExtensionsContent() {
   const { t } = useTranslation()
   const detail = useSettingsDetailStore()
+  const [sectionToolbar, setSectionToolbar] = useState<HTMLDivElement | null>(null)
   const view = detail.view
   const page = view.kind === 'detail' ? view.page : null
   const isPlugins = page === 'install' || page === 'install-section'
@@ -70,9 +72,15 @@ function ExtensionsContent() {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
+          {page === 'install-section' && !view.sub && (
+            <div
+              className="app-region-no-drag ml-auto flex min-w-0 items-center gap-1 pl-3"
+              ref={setSectionToolbar}
+            />
+          )}
         </div>
       ) : null}
-      <MarketplaceSettings initialTab="plugins" />
+      <MarketplaceSettings initialTab="plugins" sectionToolbar={sectionToolbar} />
       <DiscardChangesDialog
         open={detail.isLeavePending}
         subject={detail.view.kind === 'detail' && detail.view.sub ? detail.subLeaf : detail.leaf}

@@ -18,9 +18,11 @@ export type MarketplaceEntryTab = 'plugins' | 'skills'
 export function MarketplaceSettings({
   initialTab,
   hideTabs = false,
+  sectionToolbar,
 }: {
   initialTab: MarketplaceEntryTab
   hideTabs?: boolean
+  sectionToolbar?: HTMLElement | null
 }) {
   const { t } = useTranslation()
   const [tab, setTab] = useState<string>(initialTab)
@@ -45,7 +47,7 @@ export function MarketplaceSettings({
         view.sub?.page === 'install-detail' && view.sub.file ? (
           <InstallPluginDetailPage pluginId={view.sub.file} />
         ) : (
-          <InstallPluginPage />
+          <InstallPluginPage key={view.file} toolbar={sectionToolbar} />
         )
     }
     if (view.page === 'marketplaces') {

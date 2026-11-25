@@ -1,4 +1,4 @@
-import { ChevronRight } from 'lucide-react'
+import { ArrowDownUp, ChevronRight } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -10,10 +10,23 @@ import { toast } from '@/shadcn/toast'
 
 import { getAgentPluginDetails } from '../../services/claude/agent-config'
 import { requestFromDesktop } from '../../services/desktop/client'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from '../dropdown-menu'
 import { AgentEmpty } from './agent-shared'
 import { refreshCatalog, refreshInstalled, useCatalogCache } from './catalog-cache'
 import { type CatalogSection, catalogSections } from './catalog-sections'
-import { type CatalogEntry, orderCatalog, searchCatalog } from './install-catalog'
+import {
+  type CatalogEntry,
+  type CatalogSort,
+  catalogSorts,
+  orderCatalog,
+  searchCatalog,
+} from './install-catalog'
 import { InstallGrid } from './install-grid'
 import { MarketplaceToolbar } from './marketplace-toolbar'
 import {
@@ -39,6 +52,7 @@ export function InstallPluginPage({ toolbar }: { toolbar?: HTMLElement | null } 
   const openDetail = useSettingsDetailStore((state) => state.openDetail)
   const openSub = useSettingsDetailStore((state) => state.openSub)
   const [search, setSearch] = useState('')
+  const [sort, setSort] = useState<CatalogSort>('downloadsDesc')
   const [renderLimit, setRenderLimit] = useState(INSTALL_PAGE_SIZE)
   const sentinelRef = useRef<HTMLDivElement | null>(null)
   const sectionId =
@@ -63,11 +77,18 @@ export function InstallPluginPage({ toolbar }: { toolbar?: HTMLElement | null } 
   const sections = useMemo(() => catalogSections(entries), [entries])
   const section = sections.find((entry) => entry.id === sectionId)
   const groups = sections
-  const rows = useMemo(() => {
-    // Search always covers the full catalog, including excluded and unknown entries.
-    const scope = sectionId && !isSearching ? (section?.entries ?? []) : entries
-    return searchCatalog(scope, search)
-  }, [entries, sectionId, section, isSearching, search])
+  const orderedEntries = useMemo(
+    () => (sectionId ? orderCatalog(section?.entries ?? [], sort) : entries),
+    [sectionId, section, sort, entries],
+  )
+  const rows = useMemo(() => searchCatalog(orderedEntries, search), [orderedEntries, search])
+  const ranks = useMemo(
+    () =>
+      section?.kind === 'popular'
+        ? new Map(section.entries.map((entry, index) => [entry.pluginId, index + 1]))
+        : undefined,
+    [section],
+  )
   const shown = useMemo(() => rows.slice(0, renderLimit), [rows, renderLimit])
   const visibleEntries = useMemo(
     () =>
@@ -107,20 +128,44 @@ export function InstallPluginPage({ toolbar }: { toolbar?: HTMLElement | null } 
 
   return (
     <section className="flex flex-col gap-4" data-install-page>
-      {!sectionId ? (
-        <MarketplaceToolbar target={toolbar}>
-          <Input
-            className="w-60 max-w-full"
-            placeholder={t('settings.agent.plugins.searchPlaceholder')}
-            value={search}
-            onChange={(event) => {
-              setSearch(event.target.value)
-              setRenderLimit(INSTALL_PAGE_SIZE)
-            }}
-          />
-        </MarketplaceToolbar>
-      ) : null}
-      {section && !isSearching ? (
+      <MarketplaceToolbar target={toolbar}>
+        <Input
+          className="w-60 max-w-full"
+          placeholder={t('settings.agent.plugins.searchPlaceholder')}
+          value={search}
+          onChange={(event) => {
+            setSearch(event.target.value)
+            setRenderLimit(INSTALL_PAGE_SIZE)
+          }}
+        />
+        {sectionId && (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={<Button variant="ghost" size="icon" />}
+              aria-label={t('settings.agent.plugins.sort')}
+              title={t('settings.agent.plugins.sort')}
+            >
+              <ArrowDownUp />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-max">
+              <DropdownMenuRadioGroup
+                value={sort}
+                onValueChange={(value: CatalogSort) => {
+                  setSort(value)
+                  setRenderLimit(INSTALL_PAGE_SIZE)
+                }}
+              >
+                {catalogSorts.map((option) => (
+                  <DropdownMenuRadioItem closeOnClick key={option} value={option}>
+                    {t(`settings.agent.plugins.sortOptions.${option}`)}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </MarketplaceToolbar>
+      {section ? (
         <h1 className="px-2 text-xl font-semibold tracking-tight">{sectionTitle(section)}</h1>
       ) : null}
       {catalog === null && (catalogLoading || !catalogError) ? (
@@ -173,7 +218,7 @@ export function InstallPluginPage({ toolbar }: { toolbar?: HTMLElement | null } 
             <InstallGrid
               entries={shown}
               actions={actions}
-              isRanked={!isSearching && section?.kind === 'popular'}
+              ranks={ranks}
               onDetails={handleDetails}
             />
           )}

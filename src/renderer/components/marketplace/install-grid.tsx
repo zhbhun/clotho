@@ -17,11 +17,13 @@ export function InstallGrid({
   entries,
   actions,
   isRanked = false,
+  ranks,
   onDetails,
 }: {
   entries: CatalogEntry[]
   actions: ReturnType<typeof useInstallActions>
   isRanked?: boolean
+  ranks?: Map<string, number>
   onDetails: (entry: CatalogEntry) => void
 }) {
   const { t } = useTranslation()
@@ -41,7 +43,10 @@ export function InstallGrid({
             key={entry.pluginId}
             onClick={() => onDetails(entry)}
           >
-            <PluginAvatar name={entry.name} rank={isRanked ? index + 1 : undefined} />
+            <PluginAvatar
+              name={entry.name}
+              rank={isRanked ? index + 1 : ranks?.get(entry.pluginId)}
+            />
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <div className="flex min-w-0 items-center gap-2">
                 <div className="truncate text-sm font-medium">{entry.name}</div>

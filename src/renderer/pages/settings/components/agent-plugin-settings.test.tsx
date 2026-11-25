@@ -9,6 +9,7 @@ import { Toaster } from '@/shadcn/toast'
 import { TooltipProvider } from '@/shadcn/tooltip'
 
 import { useCatalogCache } from '../../../components/marketplace/catalog-cache'
+import { Extensions } from '../../../components/marketplace/extensions'
 import {
   InstallPluginDetailPage,
   InstallPluginPage,
@@ -817,6 +818,36 @@ describe('InstallPluginPage', () => {
     await user.click(within(section('popular')).getByRole('heading'))
     expect(document.querySelectorAll('[data-install-tile]')).toHaveLength(12)
     expect(screen.queryByText('local-0')).toBeNull()
+  })
+
+  it('filters within Popular and retains the original ranks when sorting results', async () => {
+    mock.listAgentAvailablePlugins.mockResolvedValue(
+      groupedCatalog().map((entry) =>
+        entry.name === 'agent-sdk-dev' ? { ...entry, description: 'Uses code-review' } : entry,
+      ),
+    )
+    const user = userEvent.setup()
+    renderWithProviders(<Extensions />)
+    await findInstallList()
+    await user.click(within(section('popular')).getByRole('heading'))
+    const search = screen.getByPlaceholderText('搜索插件…')
+    await user.type(search, 'local-')
+    expect(document.querySelectorAll('[data-install-tile]')).toHaveLength(0)
+    await user.clear(search)
+    await user.type(search, 'ode-')
+    expect(document.querySelectorAll('[data-install-tile]')).toHaveLength(3)
+    for (const [label, first, rank] of [
+      ['下载量从低到高', 'code-simplifier', '11'],
+      ['名称降序', 'code-simplifier', '11'],
+      ['名称升序', 'code-review', '10'],
+      ['下载量从高到低', 'code-review', '10'],
+    ]) {
+      await user.click(screen.getByRole('button', { name: '插件排序' }))
+      await user.click(await screen.findByRole('menuitemradio', { name: label }))
+      const tile = document.querySelector('[data-install-tile]')
+      expect(tile).toHaveTextContent(first)
+      expect(tile?.querySelector('[data-avatar-rank]')).toHaveTextContent(rank)
+    }
   })
 
   it('keeps all excluded component shapes and unknown directory entries searchable', async () => {

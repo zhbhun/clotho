@@ -146,10 +146,10 @@ export async function listInstalledPlugins(): Promise<InstalledPlugin[]> {
 
 export async function listMarketplacePlugins(): Promise<MarketplacePlugin[]> {
   const catalog = await runPluginCommandJson<{
-    installed?: unknown
+    installed?: CliInstalledPlugin[]
     available?: CliAvailablePlugin[]
   }>(['list', '--available'])
-  return (catalog.available ?? []).map((entry) => ({
+  const entries: MarketplacePlugin[] = (catalog.available ?? []).map((entry) => ({
     pluginId: entry.pluginId ?? `${entry.name}@${entry.marketplaceName}`,
     name: entry.name,
     description: entry.description,
@@ -157,6 +157,15 @@ export async function listMarketplacePlugins(): Promise<MarketplacePlugin[]> {
     installCount: entry.installCount,
     ...(entry.version ? { version: entry.version } : {}),
   }))
+  // The CLI lists already-installed plugins separately from available listings.
+  const listedIds = new Set(entries.map((entry) => entry.pluginId))
+  for (const { id, version } of catalog.installed ?? []) {
+    const { name, marketplace } = splitPluginId(id)
+    if (!marketplace || listedIds.has(id)) continue
+    entries.push({ pluginId: id, name, marketplaceName: marketplace, version })
+    listedIds.add(id)
+  }
+  return entries
 }
 
 async function readMarketplaceMetadata(

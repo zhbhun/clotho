@@ -123,12 +123,16 @@ describe('list operations', () => {
     ])
   })
 
-  it('maps the available catalog entries', async () => {
+  it('includes installed marketplace plugins once and prefers available listing metadata', async () => {
     execFileMock.mockImplementation((_file, _args, _options, callback) => {
       callback(
         null,
         JSON.stringify({
-          installed: [],
+          installed: [
+            { id: 'context7@official', scope: 'user', version: '1' },
+            { id: 'context7@official', scope: 'project', version: '1' },
+            { id: 'demo@example-mp', version: '1' },
+          ],
           available: [
             {
               pluginId: 'demo@example-mp',
@@ -150,6 +154,12 @@ describe('list operations', () => {
         description: 'Demo plugin',
         marketplaceName: 'example-mp',
         installCount: 42,
+      },
+      {
+        pluginId: 'context7@official',
+        name: 'context7',
+        marketplaceName: 'official',
+        version: '1',
       },
     ])
     expect(execFileMock.mock.calls[0]?.[1]).toEqual(['plugin', 'list', '--available', '--json'])
