@@ -1,5 +1,4 @@
-import { ArrowUpToLine, LocateFixed } from 'lucide-react'
-import { motion } from 'motion/react'
+import { ArrowUpToLine, History, LocateFixed, type LucideIcon, MessagesSquare } from 'lucide-react'
 import { type KeyboardEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -9,11 +8,12 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip'
 import type { SessionSidebarTab } from '../hooks/use-projects'
 
 const TABS: {
+  icon: LucideIcon
   labelKey: 'workbench.nav.tabCurrent' | 'workbench.nav.tabHistory'
   value: SessionSidebarTab
 }[] = [
-  { labelKey: 'workbench.nav.tabCurrent', value: 'current' },
-  { labelKey: 'workbench.nav.tabHistory', value: 'history' },
+  { icon: MessagesSquare, labelKey: 'workbench.nav.tabCurrent', value: 'current' },
+  { icon: History, labelKey: 'workbench.nav.tabHistory', value: 'history' },
 ]
 
 /*
@@ -50,25 +50,25 @@ export function SessionListTabs({
 
   return (
     <div className="flex h-8 items-center gap-0.5 px-2" data-session-list-tabs>
-      <div className="me-auto flex items-center">
+      <div className="me-auto flex items-center gap-0.5">
         {TABS.map((tab) => (
-          <button
-            aria-pressed={tab.value === activeTab}
-            className="relative h-7 rounded-md px-2 text-xs whitespace-nowrap text-foreground-subtlest transition-colors outline-none hover:text-foreground focus-visible:bg-sidebar-accent aria-pressed:font-medium aria-pressed:text-foreground"
-            data-session-tab={tab.value}
-            key={tab.value}
-            type="button"
-            onClick={() => onTabChange(tab.value)}
-          >
-            {t(tab.labelKey)}
-            {tab.value === activeTab && (
-              <motion.span
-                layoutId="session-list-tab-indicator"
-                className="pointer-events-none absolute inset-x-2 bottom-0.5 h-[1.5px] rounded-full bg-foreground-subtlest"
-                transition={{ type: 'spring', stiffness: 500, damping: 40 }}
-              />
-            )}
-          </button>
+          <Tooltip key={tab.value}>
+            <TooltipTrigger
+              render={
+                <button
+                  aria-label={t(tab.labelKey)}
+                  aria-pressed={tab.value === activeTab}
+                  className="flex size-7 items-center justify-center rounded-md text-foreground-subtlest transition-colors outline-none hover:bg-sidebar-accent/50 hover:text-foreground focus-visible:bg-sidebar-accent aria-pressed:bg-sidebar-accent aria-pressed:text-foreground"
+                  data-session-tab={tab.value}
+                  type="button"
+                  onClick={() => onTabChange(tab.value)}
+                >
+                  <tab.icon className="size-3.5" strokeWidth={1.5} />
+                </button>
+              }
+            />
+            <TooltipContent side="bottom">{t(tab.labelKey)}</TooltipContent>
+          </Tooltip>
         ))}
       </div>
       <ActionButton
