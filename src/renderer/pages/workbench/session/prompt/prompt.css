@@ -19,6 +19,18 @@
   border: 1px solid var(--prompt-composer-border);
 }
 
+.prompt-composer-surface[data-shadow-direction='ambient'] {
+  --prompt-composer-shadow:
+    0 4px 18px -8px color-mix(in oklab, var(--color-neutral-950) 14%, transparent),
+    0 0 5px -2px color-mix(in oklab, var(--color-neutral-950) 6%, transparent);
+}
+
+.dark .prompt-composer-surface[data-shadow-direction='ambient'] {
+  --prompt-composer-shadow:
+    0 4px 22px -8px color-mix(in oklab, var(--color-neutral-950) 30%, transparent),
+    0 0 7px -2px color-mix(in oklab, var(--color-neutral-950) 14%, transparent);
+}
+
 /* Inside the composer, button hovers and muted surfaces step above the input
    surface itself instead of the global accent tier; portal-rendered menus
    (model, permission, slash) are outside this subtree and keep the global
