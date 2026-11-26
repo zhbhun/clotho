@@ -248,6 +248,7 @@ function SettingsPageContent({
 
   const detail = useSettingsDetailStore()
   const isDetailOpen = detail.view.kind === 'detail'
+  const hasTitlebar = isDetailOpen || installTab !== null
   const detailCategoryId = detail.view.kind === 'detail' ? detail.view.categoryId : null
   const detailLeaf = isDetailOpen ? detail.leaf : ''
   const detailSubLeaf = isDetailOpen ? detail.subLeaf : ''
@@ -344,7 +345,9 @@ function SettingsPageContent({
           >
             <Sidebar className="border-r" collapsible="none" data-app-sidebar-panel>
               <SidebarHeader className="gap-0 p-0">
-                <div className="app-region-drag h-10 shrink-0" />
+                <div
+                  className={cn('app-region-drag h-10 shrink-0', hasTitlebar && 'window-titlebar')}
+                />
                 <SidebarMenu className="h-10 justify-center px-2">
                   <SidebarMenuItem>
                     <SidebarMenuButton
@@ -400,9 +403,9 @@ function SettingsPageContent({
             </Sidebar>
 
             <SidebarInset className="min-w-0 overflow-hidden">
-              {isDetailOpen || installTab ? (
+              {hasTitlebar ? (
                 <div
-                  className="app-region-drag flex h-10 shrink-0 items-center px-4"
+                  className="window-titlebar content-titlebar app-region-drag flex h-10 shrink-0 items-center px-4"
                   data-settings-breadcrumb-bar
                 >
                   <Breadcrumb className="app-region-no-drag">
@@ -482,10 +485,8 @@ function SettingsPageContent({
                   </Breadcrumb>
                 </div>
               ) : null}
-              <TransientScrollArea
-                className={isDetailOpen || installTab ? 'min-h-0 flex-1' : 'h-svh'}
-              >
-                <div className={cn('px-6', isDetailOpen || installTab ? 'pb-12 pt-10' : 'py-12')}>
+              <TransientScrollArea className={hasTitlebar ? 'min-h-0 flex-1' : 'h-svh'}>
+                <div className={cn('px-6', hasTitlebar ? 'pb-12 pt-20' : 'py-12')}>
                   <div
                     className={cn(APP_CONTENT_CONTAINER_CLASS, 'flex flex-col gap-8')}
                     data-settings-content

@@ -1,24 +1,69 @@
 .app-sidebar-layout {
-  --sidebar: #fafafa;
-  /* Session rows share the session tabs' hover/selected surface, so the header
-     tabs and the sidebar list speak one highlight color per theme. */
-  --sidebar-accent: var(--session-tab-surface);
-  --sidebar-active: color-mix(in oklab, var(--session-tab-surface), var(--color-black) 3.15%);
+  --window-line-width: 1px;
+  --sidebar-foreground: var(--foreground-subtle);
+  --sidebar-accent: var(--accent);
+  --sidebar-active: var(--accent);
 }
 
-.dark .app-sidebar-layout {
-  /* ~6% oklab keeps the rail just below the near-black canvas without vanishing. */
-  --sidebar: color-mix(in oklab, var(--background), var(--color-black) 5.76%);
+.app-sidebar-layout [data-slot='sidebar-menu-button'][data-active] {
+  background-color: var(--sidebar-active);
 }
 
 .app-sidebar-layout [data-slot='sidebar-container'],
 .app-sidebar-layout [data-slot='sidebar'][data-app-sidebar-panel] {
+  --sidebar-edge-width: var(--window-line-width);
+
+  border-right-width: var(--sidebar-edge-width);
   border-right-color: var(--divider);
+  background-color: var(--sidebar);
 }
 
 @media (min-resolution: 2dppx) {
-  .app-sidebar-layout [data-slot='sidebar-container'],
-  .app-sidebar-layout [data-slot='sidebar'][data-app-sidebar-panel] {
-    border-right-width: 0.5px;
+  .app-sidebar-layout {
+    --window-line-width: 0.5px;
+  }
+}
+
+.window-titlebar {
+  position: relative;
+  background-color: var(--background);
+}
+
+/* Continue the titlebar across the sidebar's right border. */
+[data-slot='sidebar-header'] > .window-titlebar {
+  margin-right: calc(-1 * var(--sidebar-edge-width));
+  background-color: var(--sidebar);
+}
+
+.window-titlebar.content-titlebar {
+  z-index: 30;
+  isolation: isolate;
+  margin-bottom: -40px;
+  background: transparent;
+}
+
+.content-titlebar::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 -12px;
+  background: color-mix(in oklab, var(--background) 65%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  mask-image: linear-gradient(to bottom, black calc(100% - 12px), transparent 100%);
+  content: '';
+  pointer-events: none;
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .content-titlebar::before {
+    background: var(--background);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .content-titlebar::before {
+    background: var(--background);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 }

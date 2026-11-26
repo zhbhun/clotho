@@ -45,6 +45,7 @@ type VirtualConversationListProps<Row extends VirtualConversationItem> = {
   onVisibleTurnIdsChange?: (ids: Set<string>) => void
   rows: Row[]
   scrollMargin?: number
+  scrollPaddingStart?: number
   viewport: HTMLElement | null
   viewKey: string
   renderRow: (row: Row) => ReactNode
@@ -59,6 +60,7 @@ function VirtualConversationListInner<Row extends VirtualConversationItem>(
     onVisibleTurnIdsChange,
     rows,
     scrollMargin = 0,
+    scrollPaddingStart = 0,
     viewport,
     viewKey,
     renderRow,
@@ -101,6 +103,7 @@ function VirtualConversationListInner<Row extends VirtualConversationItem>(
     overscan: 6,
     rangeExtractor,
     scrollMargin,
+    scrollPaddingStart,
     useFlushSync: false,
   })
   const isPinnedToBottomRef = useRef(isPinnedToBottom)
@@ -142,7 +145,10 @@ function VirtualConversationListInner<Row extends VirtualConversationItem>(
         if (index === undefined) return false
         const offset = virtualizer.getOffsetForIndex(index, 'start')?.[0]
         if (offset === undefined) return false
-        virtualizer.scrollToOffset(offset + anchor.offset, { behavior: 'auto' })
+        // Index alignment reserves the titlebar space; anchors record the raw row offset.
+        virtualizer.scrollToOffset(offset + scrollPaddingStart + anchor.offset, {
+          behavior: 'auto',
+        })
         return true
       },
       scrollToTurn(turnId) {
@@ -151,7 +157,7 @@ function VirtualConversationListInner<Row extends VirtualConversationItem>(
         virtualizer.scrollToIndex(index, { align: 'start', behavior: 'auto' })
       },
     }),
-    [firstIndexByTurnId, rowIndexes, rows, viewport, virtualizer],
+    [firstIndexByTurnId, rowIndexes, rows, scrollPaddingStart, viewport, virtualizer],
   )
 
   useEffect(() => {

@@ -1,142 +1,26 @@
-.session-tabs {
-  --session-tab-line-width: 1px;
-
-  isolation: isolate;
-  transition: box-shadow 140ms ease;
-}
-
-@media (min-resolution: 2dppx) {
-  .session-tabs {
-    --session-tab-line-width: 0.5px;
-  }
-}
-
-.session-tabs[data-content-scrolled='true'] {
-  z-index: 10;
-  box-shadow: 0 6px 12px -12px color-mix(in oklab, var(--foreground) 18%, transparent);
-}
-
-.session-tabs[data-has-tabs='true']::after {
-  position: absolute;
-  z-index: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  height: var(--session-tab-line-width);
-  background: var(--divider);
-  content: '';
-  pointer-events: none;
-}
-
-.session-tabs > [data-slot='tabs'] {
-  position: relative;
-  z-index: 1;
-}
-
-.session-tab,
-.session-tab-actions {
-  z-index: 1;
-}
-
 .session-tab {
-  isolation: isolate;
-  transition: color 140ms ease;
+  border-radius: var(--radius-md);
+  transition: background-color 120ms ease;
 }
 
-.session-tab-active-surface {
-  position: absolute;
-  z-index: 0;
-  top: 0;
-  left: 0;
-  width: 0;
-  /* Tab row is vertically centered (h-8); the surface runs past it down to
-     the header's bottom edge, Chrome-style. Its x/width are set from JS with
-     ACTIVE_SURFACE_INSET_X applied, so the horizontal extents match the hover
-     highlight (::before, inset 0 3px) and selecting a tab does not shift. */
-  height: 36px;
-  border-radius: 12px 12px 0 0;
-  background: var(--session-tab-surface);
-  clip-path: inset(-12px -12px 0 -12px);
-  opacity: 0;
-  pointer-events: none;
-  will-change: transform, width;
+.session-tab:not([data-active]):is(:hover, :focus-within) {
+  background-color: var(--accent);
 }
 
-.session-tab-active-surface::before {
-  position: absolute;
-  inset: 0;
-  border: var(--session-tab-line-width) solid var(--divider);
-  border-bottom: 0;
-  border-radius: inherit;
-  content: '';
+.session-tabs [data-slot='tabs-trigger'] {
+  border-radius: var(--radius-md);
 }
 
-.session-tab-active-surface[data-visible='true'] {
-  opacity: 1;
+.session-tabs [data-slot='tabs-trigger']::after {
+  content: none;
 }
 
-.session-tab:not([data-active='true'])::before {
-  position: absolute;
-  z-index: -1;
-  /* 32px tall: matches the Nova header project button (h-8).
-     The 3px horizontal inset must equal ACTIVE_SURFACE_INSET_X in
-     session-tabs.tsx so hover and selected backgrounds share their extents. */
-  inset: 0 3px;
-  display: block;
-  border-radius: 10px;
-  background: var(--session-tab-surface);
-  content: '';
-  opacity: 0;
-  pointer-events: none;
-  transition:
-    inset 140ms ease,
-    opacity 120ms ease;
+.session-tabs [data-slot='tabs-trigger'][data-active] {
+  background-color: var(--accent);
+  font-weight: var(--font-weight-medium);
+  box-shadow: none;
 }
 
-.session-tab:not([data-active='true']):hover::before,
-.session-tab:not([data-active='true']):focus-within::before {
-  opacity: 1;
-}
-
-.session-tab[data-active='true'] {
-  z-index: 3;
-}
-
-.session-tab-active-flank {
-  /* Move the curve to the center of the thinner side and bottom lines. */
-  --flank-offset: calc((1px - var(--session-tab-line-width)) / 2);
-
-  position: absolute;
-  bottom: calc(-1 * var(--flank-offset));
-  display: block;
-  /* 13x12: a 12px fillet (matching the 12px top radius) plus a 1px column that
-     overlaps the surface to cover its straight inset divider there, so the
-     side line hands off to the curve exactly at the tangent point. */
-  width: 13px;
-  height: 12px;
-  pointer-events: none;
-}
-
-.session-tab-active-flank[data-side='left'] {
-  left: calc(-12px - var(--flank-offset));
-}
-
-.session-tab-active-flank[data-side='right'] {
-  right: calc(-12px - var(--flank-offset));
-}
-
-.session-tab-active-flank-fill {
-  fill: var(--session-tab-surface);
-}
-
-.session-tab-active-flank-edge {
-  fill: none;
-  stroke: var(--divider);
-  stroke-width: var(--session-tab-line-width);
-}
-
-[data-reduced-motion='reduce'] .session-tabs,
-[data-reduced-motion='reduce'] .session-tab,
-[data-reduced-motion='reduce'] .session-tab:not([data-active='true'])::before {
+[data-reduced-motion='reduce'] .session-tab {
   transition: none;
 }

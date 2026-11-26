@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shadcn/tabs'
 
 import { APP_CONTENT_CONTAINER_CLASS } from '../app-layout'
-import { TabSurface } from '../tab-surface'
 import { TransientScrollArea } from '../transient-scroll-area'
 import { InstallPluginDetailPage, InstallPluginPage } from './install-page'
 import { MarketplaceAddPage, MarketplaceDetailPage, MarketplaceListPage } from './marketplace-pages'
@@ -78,10 +77,10 @@ export function MarketplaceSettings({
   return (
     <Tabs className="min-h-0 flex-1 gap-0" value={tab} onValueChange={setTab}>
       <header
-        className="session-tabs app-region-drag relative flex h-10 shrink-0 items-center justify-between gap-3 bg-background px-4"
+        className="window-titlebar content-titlebar session-tabs app-region-drag flex h-10 shrink-0 items-center justify-between gap-3 px-4"
         data-has-tabs="true"
       >
-        <TabsList className="app-region-no-drag relative z-1 h-8 shrink-0 gap-0 rounded-none bg-transparent p-0">
+        <TabsList className="app-region-no-drag h-8 shrink-0 gap-1 bg-transparent p-0">
           {(
             [
               ['plugins', t('settings.agent.title.plugins'), Puzzle],
@@ -89,20 +88,14 @@ export function MarketplaceSettings({
               ['marketplaces', t('settings.agent.plugins.marketplaces'), Store],
             ] as const
           ).map(([value, label, Icon]) => (
-            <div
+            <TabsTrigger
               key={value}
-              className="session-tab relative h-8 min-w-16"
-              data-active={value === tab ? 'true' : undefined}
+              className="session-tab h-8 min-w-16 flex-none border-0 px-3 font-normal"
+              value={value}
             >
-              {value === tab && <TabSurface style={{ left: 3, width: 'calc(100% - 6px)' }} />}
-              <TabsTrigger
-                value={value}
-                className="relative h-full w-full rounded-none border-0 bg-transparent px-3 font-normal data-active:bg-transparent group-data-[variant=default]/tabs-list:data-active:shadow-none dark:data-active:bg-transparent"
-              >
-                <Icon aria-hidden className="size-4" strokeWidth={1.5} />
-                {label}
-              </TabsTrigger>
-            </div>
+              <Icon aria-hidden strokeWidth={1.5} />
+              {label}
+            </TabsTrigger>
           ))}
         </TabsList>
         <div className="app-region-no-drag relative z-1 min-w-0" ref={setToolbar} />
@@ -131,7 +124,7 @@ function MarketContent({
 }) {
   return (
     <TransientScrollArea className="min-h-0 flex-1">
-      <div className={`px-6 pb-12 ${isDetail ? 'pt-2' : 'pt-7'}`}>
+      <div className={`px-6 pb-12 ${isDetail ? 'pt-12' : 'pt-17'}`}>
         <div className={APP_CONTENT_CONTAINER_CLASS}>{children}</div>
       </div>
     </TransientScrollArea>

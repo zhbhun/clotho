@@ -152,7 +152,6 @@
   --project-icon-pink: var(--color-pink-600);
   --project-icon-cyan: var(--color-cyan-600);
   --project-switcher-surface: var(--muted);
-  --session-tab-surface: var(--secondary);
   --chat-message: var(--secondary);
   --chat-input: var(--card);
   --sidebar-active: var(--sidebar-accent);
@@ -243,7 +242,6 @@
   --project-icon-pink: var(--color-pink-400);
   --project-icon-cyan: var(--color-cyan-400);
   --project-switcher-surface: color-mix(in oklab, var(--card), var(--color-white) 4.99%);
-  --session-tab-surface: var(--secondary);
   --chat-message: var(--card);
   --chat-input: color-mix(in oklab, var(--background), var(--color-white) 12.74%);
   --sidebar-active: var(--sidebar-accent);

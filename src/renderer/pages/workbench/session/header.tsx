@@ -64,7 +64,7 @@ export function ConversationHeader({
   return (
     <header
       className={cn(
-        'session-tabs app-region-drag relative flex h-10 shrink-0 items-stretch bg-background pr-2 text-foreground-subtle',
+        'window-titlebar content-titlebar session-tabs app-region-drag flex h-10 shrink-0 items-stretch pr-2 text-foreground-subtle',
         showSidebarTrigger ? 'pl-[84px]' : 'pl-1.5',
       )}
       data-content-scrolled={isContentScrolled ? 'true' : undefined}

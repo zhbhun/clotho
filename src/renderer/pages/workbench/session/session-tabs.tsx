@@ -1,12 +1,10 @@
 import { CircleX, MessageCircleCode } from 'lucide-react'
-import { useMotionValue } from 'motion/react'
-import { useCallback, useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
 import { Tabs, TabsList, TabsTrigger } from '@/shadcn/tabs'
 
-import { TabSurface } from '../../../components/tab-surface'
 import { useAppReducedMotion } from '../../../components/theme-provider'
 import { SessionContextMenu } from '../components/session-context-menu'
 import { ShortcutTooltip } from '../components/shortcut-tooltip'
@@ -37,85 +35,36 @@ export function SessionTabs({
   onTogglePinSession: (session: WorkbenchSession) => void
 }) {
   const { t } = useTranslation()
-  const activeSurfaceX = useMotionValue(0)
-  const activeSurfaceWidth = useMotionValue(0)
   const scrollerRef = useRef<HTMLDivElement>(null)
-  const tabListRef = useRef<HTMLDivElement>(null)
-  const tabRefs = useRef(new Map<string, HTMLDivElement>())
+  const activeTabRef = useRef<HTMLDivElement>(null)
   const sessionOrder = sessions.map((session) => session.id).join('\u0000')
   const hasRevealedInitialTabRef = useRef(false)
   const isReducedMotion = useAppReducedMotion()
   const isPrimaryHeld = usePrimaryModifierHeld()
 
-  const handleTabRef = useCallback((sessionId: string, element: HTMLDivElement | null) => {
-    if (element) {
-      tabRefs.current.set(sessionId, element)
-    } else {
-      tabRefs.current.delete(sessionId)
-    }
-  }, [])
-
   useLayoutEffect(() => {
-    const activeTab = activeSessionId ? tabRefs.current.get(activeSessionId) : undefined
-
-    if (!activeTab) return
-
-    const updatePosition = () => {
-      // Inset the surface by ACTIVE_SURFACE_INSET_X so its horizontal extents match the
-      // hover highlight (.session-tab::before, inset 0 3px): selecting a tab
-      // then only morphs the shape vertically instead of jumping sideways.
-      activeSurfaceX.set(activeTab.offsetLeft + ACTIVE_SURFACE_INSET_X)
-      activeSurfaceWidth.set(activeTab.offsetWidth - ACTIVE_SURFACE_INSET_X * 2)
-    }
+    const scroller = scrollerRef.current
+    const activeTab = activeTabRef.current
+    if (!scroller || !activeTab) return
 
     const isInitialReveal = !hasRevealedInitialTabRef.current
     hasRevealedInitialTabRef.current = true
-    const scroller = scrollerRef.current
-    if (scroller) {
-      revealActiveTab(scroller, activeTab, isInitialReveal || isReducedMotion ? 'auto' : 'smooth')
-    }
-
-    updatePosition()
-
-    const observer =
-      typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(() => updatePosition())
-
-    if (observer) {
-      for (const tab of tabRefs.current.values()) observer.observe(tab)
-      if (tabListRef.current) observer.observe(tabListRef.current)
-    }
-
-    return () => {
-      observer?.disconnect()
-    }
-  }, [activeSessionId, activeSurfaceWidth, activeSurfaceX, sessionOrder, isReducedMotion])
+    revealActiveTab(scroller, activeTab, isInitialReveal || isReducedMotion ? 'auto' : 'smooth')
+  }, [activeSessionId, sessionOrder, isReducedMotion])
 
   const handleTabChange = (sessionId: string) => {
     const session = sessions.find((candidate) => candidate.id === sessionId)
     if (session) onSelectSession(session)
   }
 
-  // The active session can be an invisible blank draft (no tab rendered): keep
-  // the active surface hidden instead of showing it over a stale position.
-  const isActiveTabVisible = sessions.some((session) => session.id === activeSessionId)
-
   return (
     <Tabs
       ref={scrollerRef}
-      /* 3px + the tab surfaces' 3px inset = the 6px visual gap to the project
-         button, matching the gap between tab surfaces. */
       className="no-scrollbar min-w-0 flex-1 items-center gap-0 overflow-x-auto overflow-y-hidden pl-0.75 data-[orientation=horizontal]:flex-row"
       value={activeSessionId ?? ''}
       onValueChange={handleTabChange}
     >
-      <TabsList
-        className="app-region-no-drag relative isolate min-w-max justify-start gap-0 rounded-none bg-transparent p-0 group-data-[orientation=horizontal]/tabs:h-8"
-        ref={tabListRef}
-      >
-        <TabSurface
-          visible={isActiveTabVisible}
-          style={{ x: activeSurfaceX, width: activeSurfaceWidth }}
-        />
+      <TabsList className="app-region-no-drag min-w-max justify-start gap-1 bg-transparent p-0">
         {sessions.map((session, index) => {
           const title = sessionDisplayTitle(session, t)
           const displayTitle = title
@@ -136,10 +85,10 @@ export function SessionTabs({
               <div
                 className="session-tab group/tab relative h-8 min-w-16 max-w-60 shrink-0"
                 data-active={isActive ? 'true' : undefined}
-                ref={(element) => handleTabRef(session.id, element)}
+                ref={isActive ? activeTabRef : undefined}
               >
                 <TabsTrigger
-                  className="h-full w-full justify-start rounded-none border-0 bg-transparent px-3 text-sm font-normal hover:text-foreground has-data-[icon=inline-start]:pl-3 data-active:bg-transparent data-active:text-foreground data-active:hover:text-foreground group-data-[variant=default]/tabs-list:data-active:shadow-none dark:data-active:bg-transparent"
+                  className="h-full w-full justify-start border-0 px-3 font-normal has-data-[icon=inline-start]:pl-3"
                   data-session-tab={session.id}
                   // Click must not focus the tab, or dialog close returns focus to it.
                   onMouseDown={(event) => event.preventDefault()}
@@ -192,8 +141,6 @@ export function SessionTabs({
 }
 
 const REVEAL_OVERSHOOT = 100
-// Keep in sync with the hover highlight's horizontal inset in session-tabs.css.
-const ACTIVE_SURFACE_INSET_X = 3
 
 function revealActiveTab(scroller: HTMLElement, tab: HTMLElement, behavior: ScrollBehavior) {
   const scrollerRect = scroller.getBoundingClientRect()

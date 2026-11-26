@@ -38,7 +38,7 @@ function ExtensionsContent() {
   return (
     <div className="flex h-svh min-w-0 flex-1 flex-col overflow-hidden" data-extensions>
       {view.kind === 'detail' ? (
-        <div className="app-region-drag flex h-10 shrink-0 items-center px-4">
+        <div className="window-titlebar content-titlebar app-region-drag flex h-10 shrink-0 items-center px-4">
           <Breadcrumb className="app-region-no-drag min-w-0">
             <BreadcrumbList className="flex-nowrap">
               <BreadcrumbItem>

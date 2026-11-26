@@ -1,4 +1,4 @@
-import { CircleX, FolderKanban } from 'lucide-react'
+import { ChevronDown, CircleX, FolderKanban } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -53,14 +53,12 @@ export function ProjectSwitcherButton({
       render={
         <Button
           className={cn(
-            'min-w-0 max-w-[50vw]',
-            canExitProject &&
-              isExitHovered &&
-              'bg-[color-mix(in_oklab,var(--secondary),var(--foreground)_5%)] text-foreground',
+            'min-w-0 max-w-[50vw] text-xs text-foreground-subtle hover:bg-sidebar-accent aria-expanded:bg-sidebar-accent dark:hover:bg-sidebar-accent',
+            canExitProject && isExitHovered && 'bg-sidebar-accent text-foreground',
           )}
           data-window-project-title
           type="button"
-          variant="secondary"
+          variant="ghost"
         />
       }
     >
@@ -78,7 +76,12 @@ export function ProjectSwitcherButton({
       ) : (
         <FolderKanban className="size-3.5" />
       )}
-      {selectedProject ? <span className="min-w-0 truncate">{projectName}</span> : null}
+      {selectedProject ? (
+        <>
+          <span className="min-w-0 truncate">{projectName}</span>
+          <ChevronDown className="size-3 text-foreground-subtlest" aria-hidden />
+        </>
+      ) : null}
     </MenuTrigger>
   )
 

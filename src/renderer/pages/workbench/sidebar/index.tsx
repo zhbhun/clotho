@@ -2,7 +2,6 @@ import { Puzzle, Settings, SquarePen } from 'lucide-react'
 import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { Separator } from '@/shadcn/separator'
 import {
   Sidebar,
   SidebarContent,
@@ -142,7 +141,7 @@ export function SessionSidebar({
       <SidebarHeader className="gap-0 p-0">
         <MacWindowChrome />
 
-        <SidebarMenu className="mt-1 gap-0.5 px-2 py-1">
+        <SidebarMenu className="mt-1 mb-2 gap-0.5 px-2 py-1">
           <SidebarMenuItem>
             <SidebarMenuButton
               className="h-[30px] px-2 text-sm font-normal"
@@ -164,8 +163,6 @@ export function SessionSidebar({
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-
-        <Separator className="my-2 [@media(min-resolution:2dppx)]:data-horizontal:h-[0.5px]" />
 
         {hasTabBar ? (
           <SessionListTabs

@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/shadcn/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip'
-import { cn } from '@/shadcn/utils'
 
 import type { SessionSidebarTab } from '../hooks/use-projects'
 
@@ -51,33 +50,24 @@ export function SessionListTabs({
 
   return (
     <div className="flex h-8 items-center gap-0.5 px-2" data-session-list-tabs>
-      {/* The tray stays a whisper above the sidebar surface (zcode-style): a faint
-          tint, with the selected pill just one step lighter — a filled tray or a
-          high-contrast pill both read as a heavy chip. The selected pill is a
-          shared-layout motion element so switching tabs slides it across instead of
-          teleporting between per-button backgrounds. */}
-      <div className="relative me-auto flex items-center gap-0 rounded-full bg-sidebar-foreground/5 p-0.5">
+      <div className="me-auto flex items-center">
         {TABS.map((tab) => (
           <button
-            className={cn(
-              'relative h-6 rounded-full px-2 text-xs whitespace-nowrap transition-colors outline-none',
-              tab.value === activeTab
-                ? 'text-foreground'
-                : 'text-foreground-subtlest hover:text-foreground',
-            )}
+            aria-pressed={tab.value === activeTab}
+            className="relative h-7 rounded-md px-2 text-xs whitespace-nowrap text-foreground-subtlest transition-colors outline-none hover:text-foreground focus-visible:bg-sidebar-accent aria-pressed:font-medium aria-pressed:text-foreground"
             data-session-tab={tab.value}
             key={tab.value}
             type="button"
             onClick={() => onTabChange(tab.value)}
           >
+            {t(tab.labelKey)}
             {tab.value === activeTab && (
               <motion.span
-                layoutId="session-list-tab-pill"
-                className="absolute inset-0 rounded-full bg-background/50 dark:bg-input/30"
+                layoutId="session-list-tab-indicator"
+                className="pointer-events-none absolute inset-x-2 bottom-0.5 h-[1.5px] rounded-full bg-foreground-subtlest"
                 transition={{ type: 'spring', stiffness: 500, damping: 40 }}
               />
             )}
-            <span className="relative">{t(tab.labelKey)}</span>
           </button>
         ))}
       </div>

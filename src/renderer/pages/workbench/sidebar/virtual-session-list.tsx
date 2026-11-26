@@ -41,7 +41,7 @@ function hoveredSessionId(scrollElement: HTMLElement) {
 
 function GroupLabel({ label }: { label: string }) {
   return (
-    <SidebarGroupLabel className="h-8 px-2 text-sm font-normal text-foreground-subtlest">
+    <SidebarGroupLabel className="h-8 px-2 text-xs font-medium text-foreground-subtlest">
       {label}
     </SidebarGroupLabel>
   )
@@ -62,7 +62,7 @@ function ArchivedGroupHeader({
   return (
     <button
       aria-expanded={!isCollapsed}
-      className="flex h-8 w-full items-center gap-1 px-2 text-sm font-normal text-foreground-subtlest hover:text-foreground"
+      className="flex h-8 w-full items-center gap-1 px-2 text-xs font-medium text-foreground-subtlest hover:text-foreground"
       type="button"
       onClick={onToggle}
     >

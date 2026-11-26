@@ -1043,8 +1043,7 @@ describe('blank new chat surface', () => {
 
     expect(screen.getAllByRole('tab')).toHaveLength(3)
     expect(screen.queryByRole('tab', { name: 'New Chat' })).not.toBeInTheDocument()
-    expect(document.querySelector('.session-tab[data-active="true"]')).toBeNull()
-    expect(document.querySelector('.session-tab-active-surface[data-visible="true"]')).toBeNull()
+    expect(screen.queryByRole('tab', { selected: true })).not.toBeInTheDocument()
     expect(await screen.findByLabelText('Prompt')).toBeInTheDocument()
   })
 
@@ -3625,75 +3624,19 @@ describe('Claude runtime claudeStartup', () => {
     ).toHaveLength(1)
   })
 
-  it('keeps the tab transition surface mounted when selecting a session', async () => {
+  it('selects only the clicked conversation tab', async () => {
     const user = userEvent.setup()
-    const project = {
-      id: 'project-1',
-      path: '/Users/test/project',
-      sessions: ['session-1', 'session-2'],
-      created_at: 0,
-    }
-    const firstSession = {
-      id: 'session-1',
-      claudeSessionId: 'session-1',
-      project_id: project.id,
-      project_path: project.path,
-      created_at: 1,
-      title: 'First session',
-    }
-    const secondSession = {
-      id: 'session-2',
-      claudeSessionId: 'session-2',
-      project_id: project.id,
-      project_path: project.path,
-      created_at: 2,
-      title: 'Second session',
-    }
-    useWorkbenchStore.setState({
-      currentProjectId: project.id,
-      currentSessionId: firstSession.id,
-      sessionTabsByWorkspace: { 'project:project-1': [firstSession.id, secondSession.id] },
-      activeSessionByWorkspace: { 'project:project-1': firstSession.id },
-      projectMode: 'project',
-      projects: { [project.id]: project },
-      sessions: { [firstSession.id]: firstSession, [secondSession.id]: secondSession },
-    })
-    vi.mocked(requestFromDesktop).mockImplementation(async (command) => {
-      switch (command) {
-        case 'claudeListProjects':
-          return [project]
-        case 'claudeListSessions':
-          return [firstSession, secondSession]
-        case 'claudeGetProjectGitBranch':
-          return null
-        case 'claudeGetSessionMessages':
-          return []
-        case 'claudeStartup':
-          return {
-            cwd: project.path,
-            commands: [],
-            agents: [],
-            hasClaudeAuthentication: true,
-            models: [],
-          }
-        default:
-          return null
-      }
-    })
-
+    const { sessions } = setupShortcutSessions()
     renderWorkbenchWithReadyRuntime()
 
-    await screen.findByRole('tab', { name: 'First session' })
-    const activeSurface = document.querySelector('[data-session-tab-active-surface]')
+    expect(await screen.findByRole('tab', { selected: true })).toHaveAccessibleName(
+      sessions[0].title,
+    )
+    const secondTab = screen.getByRole('tab', { name: sessions[1].title })
+    await user.click(secondTab)
 
-    expect(activeSurface).not.toBeNull()
-
-    await user.click(screen.getByRole('tab', { name: 'Second session' }))
-    await waitFor(() => {
-      expect(useWorkbenchStore.getState().currentSessionId).toBe(secondSession.id)
-    })
-
-    expect(document.querySelector('[data-session-tab-active-surface]')).toBe(activeSurface)
+    expect(screen.getByRole('tab', { selected: true })).toBe(secondTab)
+    expect(useWorkbenchStore.getState().currentSessionId).toBe(sessions[1].id)
   })
 
   it('shares model settings across retained sessions', async () => {

@@ -196,6 +196,7 @@ export function SubagentConversation({
               renderRow={renderRow}
               rows={rows}
               scrollMargin={scrollMargin}
+              scrollPaddingStart={scrollMargin}
               viewport={viewport}
               viewKey={viewKey}
               onTotalSizeChange={handleTotalSizeChange}

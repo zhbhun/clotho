@@ -61,6 +61,7 @@ function VirtualListHarness({
   onVisibleTurnIdsChange,
   rows,
   scrollMargin,
+  scrollPaddingStart,
   viewportTestId = 'viewport',
 }: {
   isPinnedToBottom?: () => boolean
@@ -69,6 +70,7 @@ function VirtualListHarness({
   onVisibleTurnIdsChange?: (ids: Set<string>) => void
   rows: TestRow[]
   scrollMargin?: number
+  scrollPaddingStart?: number
   viewportTestId?: string
 }) {
   const [viewport, setViewport] = useState<HTMLDivElement | null>(null)
@@ -86,6 +88,7 @@ function VirtualListHarness({
         ref={listRef}
         rows={rows}
         scrollMargin={scrollMargin}
+        scrollPaddingStart={scrollPaddingStart}
         viewport={viewport}
         viewKey="root"
         onTotalSizeChange={onTotalSizeChange}
@@ -403,6 +406,36 @@ describe('VirtualConversationList', () => {
       behavior: 'auto',
       top: 4_044,
     })
+  })
+
+  it('keeps turn jumps below the titlebar and restores exact scroll anchors', () => {
+    let handle: VirtualConversationHandle | null = null
+    const rows = Array.from({ length: 100 }, (_, index) => ({
+      key: `row-${index}`,
+      label: `Row ${index}`,
+      turnId: `turn-${index}`,
+    }))
+    render(
+      <VirtualListHarness
+        rows={rows}
+        scrollMargin={40}
+        scrollPaddingStart={40}
+        onHandle={(nextHandle) => {
+          handle = nextHandle
+        }}
+      />,
+    )
+    const capturedHandle = handle as VirtualConversationHandle | null
+    const viewport = screen.getByTestId('viewport')
+    capturedHandle?.scrollToTurn('turn-80')
+    expect(viewport.scrollTo).toHaveBeenLastCalledWith({ behavior: 'auto', top: 4_000 })
+
+    viewport.scrollTop = 155
+    fireEvent.scroll(viewport)
+    const anchor = capturedHandle?.captureScrollAnchor()
+    expect(anchor).toEqual({ offset: 15, rowKey: 'row-2' })
+    capturedHandle?.restoreScrollAnchor(anchor!)
+    expect(viewport.scrollTo).toHaveBeenLastCalledWith({ behavior: 'auto', top: 155 })
   })
 
   it('restores the same root row offset after switching views and changing row heights', () => {

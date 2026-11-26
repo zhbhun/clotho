@@ -58,6 +58,7 @@ export const CONVERSATION_BOTTOM_PADDING_CLASS = 'pb-72'
 export const CONVERSATION_CONTAINER_CLASS = APP_CONTENT_CONTAINER_CLASS
 const HISTORY_SKELETON_DELAY_MS = 300
 const SUBAGENT_HEADER_HEIGHT = 44
+const TITLEBAR_HEIGHT = 40
 
 /** A quick-open `:` selection asks the mounted conversation to scroll to a turn. */
 type TurnScrollRequest = {
@@ -670,7 +671,7 @@ function SessionAreaContent({
         <>
           <div className="relative min-h-0 flex-1">
             {!isHistoryLoading && subagentView.selectedSubagent ? (
-              <div className="absolute inset-x-0 top-0 z-20 flex h-11 items-center bg-background px-4">
+              <div className="absolute inset-x-0 top-10 z-20 flex h-11 items-center bg-background px-4">
                 <SubagentBreadcrumb
                   current={subagentView.selectedSubagent}
                   sessionTitle={
@@ -699,9 +700,9 @@ function SessionAreaContent({
                   'conversation-content flex min-h-full flex-col',
                   subagentView.selectedSubagent
                     ? taskProgress.hasTaskProgress
-                      ? 'pb-20 pt-11'
-                      : 'pb-4 pt-11'
-                    : CONVERSATION_BOTTOM_PADDING_CLASS,
+                      ? 'pb-20 pt-21'
+                      : 'pb-4 pt-21'
+                    : `pt-10 ${CONVERSATION_BOTTOM_PADDING_CLASS}`,
                 )}
                 style={subagentView.selectedSubagent ? undefined : { paddingBottom: bottomPadding }}
               >
@@ -727,7 +728,7 @@ function SessionAreaContent({
                       pendingRequests={pendingToolRequests}
                       projectPath={projectPath}
                       status={subagentView.selectedSubagent.status}
-                      scrollMargin={SUBAGENT_HEADER_HEIGHT}
+                      scrollMargin={TITLEBAR_HEIGHT + SUBAGENT_HEADER_HEIGHT}
                       viewport={conversationViewport}
                       viewKey={activeViewKey}
                       virtualListRef={virtualConversationRef}
@@ -755,6 +756,7 @@ function SessionAreaContent({
                         onOpenSubagent={subagentView.openSubagent}
                         pendingRequests={pendingToolRequests}
                         projectPath={projectPath}
+                        scrollMargin={TITLEBAR_HEIGHT}
                         sentTurnIds={sentTurnIds}
                         interruptedTurnIds={interruptedTurnIds}
                         interruptedTurnDurations={interruptedTurnDurations}

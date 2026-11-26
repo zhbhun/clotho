@@ -16,7 +16,7 @@ export function MacWindowChrome() {
   const { t } = useTranslation()
 
   return (
-    <div className="app-region-drag flex h-10 items-center gap-1 px-3 pl-[84px] text-foreground-subtlest">
+    <div className="window-titlebar app-region-drag flex h-10 items-center gap-1 px-3 pl-[84px] text-foreground-subtlest">
       <SidebarTrigger
         className="app-region-no-drag shrink-0"
         icon={SidebarToggleIcon}

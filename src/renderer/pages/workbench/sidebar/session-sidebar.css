@@ -48,10 +48,8 @@
 
 .session-sidebar-layout:has([data-slot='sidebar-rail']:hover) [data-slot='sidebar-container'],
 .session-sidebar-layout[data-sidebar-resizing='true'] [data-slot='sidebar-container'] {
-  border-right-width: 1px;
-}
+  --sidebar-edge-width: 1px;
 
-.session-sidebar-layout:has([data-slot='sidebar-rail']:hover) [data-slot='sidebar-container'] {
   border-right-color: oklch(from var(--divider) l c h / 10%);
 }
 

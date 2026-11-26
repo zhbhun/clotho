@@ -71,6 +71,7 @@ type ConversationViewProps = {
   onVisibleTurnIdsChange?: (ids: Set<string>) => void
   pendingRequests: Record<string, ClaudeToolRequest>
   projectPath?: string
+  scrollMargin?: number
   sentTurnIds: Set<string>
   streamingElapsed: number
   turnFailures?: Record<string, TurnFailure>
@@ -98,6 +99,7 @@ export function ConversationView({
   onVisibleTurnIdsChange,
   pendingRequests,
   projectPath,
+  scrollMargin = 0,
   sentTurnIds,
   streamingElapsed,
   turnFailures,
@@ -258,6 +260,8 @@ export function ConversationView({
       ref={virtualListRef}
       renderRow={renderRow}
       rows={rows}
+      scrollMargin={scrollMargin}
+      scrollPaddingStart={scrollMargin}
       viewport={viewport}
       viewKey={viewKey}
       onTotalSizeChange={handleTotalSizeChange}

@@ -72,8 +72,8 @@ export function SessionItem({
         <span className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
           {/* shrink-0: truncate zeroes the flex minimum, so without it the title absorbs
               any content overflow in this fixed-height button and clips its own line box. */}
-          <span className="shrink-0 truncate leading-5 font-normal">{displayTitle}</span>
-          <span className="flex min-w-0 items-center gap-1.5 text-xs text-foreground-subtlest">
+          <span className="shrink-0 truncate leading-5">{displayTitle}</span>
+          <span className="flex min-w-0 items-center gap-1.5 text-xs font-normal text-foreground-subtlest">
             <span data-session-project-icon={project ? 'project' : 'default'}>
               <ProjectIcon
                 className="text-foreground-subtlest"
